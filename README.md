@@ -13,9 +13,9 @@ This repository hosts community made extensions for GDevelop. Extensions can pro
 | ❔ I want to... | 🚀 What to do |
 | --- | --- |
 | Download GDevelop to make games | Go on [GDevelop website](https://gdevelop-app.com) to download GD! |
-| Use an extension | Extensions can be searched and downloaded directly from GDevelop (more to come) |
+| Use an extension | Extensions can be searched and downloaded directly from GDevelop |
 | Contribute to GDevelop itself | Visit [GDevelop GitHub repository](https://github.com/4ian/GDevelop). |
-| Create/improve an extension | Create your extension with GDevelop and submit a PR (more to come) |
+| Create/improve an extension | Create your extension with GDevelop and [submit it here](https://github.com/4ian/GDevelop-extensions/issues/new/choose) |
 
 ## License
 
