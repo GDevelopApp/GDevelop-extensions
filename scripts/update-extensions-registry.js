@@ -61,6 +61,8 @@ readAllExtensions()
           url: `${extensionFolderName}/${extension.name}.json`,
           headerUrl: `${extensionFolderName}/${extension.name}-header.json`,
           tags: extension.tags,
+          eventsBasedBehaviorsCount: extension.eventsBasedBehaviors.length,
+          eventsFunctionsCount: extension.eventsFunctions.length,
         };
         const extensionHeader = {
           ...extensionShortHeader,
