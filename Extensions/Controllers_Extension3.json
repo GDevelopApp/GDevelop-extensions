@@ -1,0 +1,445 @@
+{
+  "author": "Bouh",
+  "description": "Add support for gamepads (or other controllers) to your game, giving access to information such as button presses, axis positions, trigger pressure, etc...\n\nUp to 4 gamepads can be connected: for each condition or expression, you'll have to enter the number of the gamepad to read. This is 1, 2,3 or 4.",
+  "extensionNamespace": "",
+  "fullName": "Gamepads (controllers)",
+  "name": "Gamepads",
+  "shortDescription": "Add support for gamepads (or other controllers) to your game, giving access to information such as button presses, axis positions, trigger pressure, etc...",
+  "tags": "controllers, gamepads, joysticks, axis, xbox, ps4",
+  "version": "0.0.5.5",
+  "eventsFunctions": [
+    {
+      "description": "Get the value of the pressure on a gamepad trigger.",
+      "fullName": "Pressure on a gamepad trigger",
+      "functionType": "Expression",
+      "name": "TriggerPressure",
+      "sentence": "Player _PARAM1_ push axis _PARAM2_ to _PARAM3_",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "/** @type {Gamepad[]} */\r\nvar gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r\n\r\nvar gamepad = gamepads[eventsFunctionContext.getArgument(\"player_ID\") - 1];\r\nif (gamepad == null) {\r\n    //we need keep this condition because when use have not yet plug her controller we can't get the controller in the gamepad variable.\r\n    //and if we delete this condition the game freeze\r\n    return;\r\n}\r\n\r\nvar param_trigger = eventsFunctionContext.getArgument(\"trigger\").toUpperCase();\r\n\r\nswitch (param_trigger) {\r\n    case 'LT':\r\n    case 'L2':\r\n        eventsFunctionContext.returnValue = gamepad.buttons[6].value;\r\n        break;\r\n\r\n    case 'RT':\r\n    case 'R2':\r\n        eventsFunctionContext.returnValue = gamepad.buttons[7].value;\r\n        break;\r\n\r\n    default:\r\n        eventsFunctionContext.returnValue = -1;\r\n        break;\r\n}",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Trigger: \"LT\", \"RT\", \"L2\", \"R2\"",
+          "name": "trigger",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get the value of axis of a gamepad stick.",
+      "fullName": "Value of a gamepad axis",
+      "functionType": "Expression",
+      "name": "AxisValue",
+      "sentence": "Player _PARAM1_ push axis _PARAM2_ to _PARAM3_",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "/** @type {Gamepad[]} */\r\nvar gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r\n\r\nvar gamepad = gamepads[eventsFunctionContext.getArgument(\"player_ID\") - 1];\r\nif (gamepad == null) return;\r\n\r\nvar getNormalizedAxisValue = function (v) {\r\n    gdjs._extensionController = gdjs._extensionController || { deadzone: 0.2 };\r\n    \r\n    // Anything smaller than this is assumed to be 0,0\r\n    var DEADZONE = gdjs._extensionController.deadzone;\r\n\r\n    if (Math.abs(v) < DEADZONE) {\r\n        // In the dead zone, set to 0\r\n        v = 0;\r\n\r\n        if (v == null) {\r\n            return 0;\r\n        } else {\r\n            return v;\r\n        }\r\n\r\n    } else {\r\n        // We're outside the dead zone, but we'd like to smooth\r\n        // this value out so it still runs nicely between 0..1.\r\n        // That is, we don't want it to jump suddenly from 0 to\r\n        // DEADZONE.\r\n\r\n        // Remap v from\r\n        //    DEADZONE..1 to 0..(1-DEADZONE)\r\n        // or from\r\n        //    -1..-DEADZONE to -(1-DEADZONE)..0\r\n\r\n        v = v - Math.sign(v) * DEADZONE;\r\n\r\n        // Remap v from\r\n        //    0..(1-DEADZONE) to 0..1\r\n        // or from\r\n        //    -(1-DEADZONE)..0 to -1..0\r\n\r\n        return v / (1 - DEADZONE);\r\n\r\n    }\r\n};\r\n\r\nvar stick = eventsFunctionContext.getArgument(\"stick\").toUpperCase();\r\nvar direction = eventsFunctionContext.getArgument(\"direction\").toUpperCase();\r\nvar axis;\r\n\r\nswitch (stick) {\r\n    case 'LEFT':\r\n        switch (direction) {\r\n            case 'LEFT':\r\n                if (getNormalizedAxisValue(gamepad.axes[0]) < 0) {\r\n                    eventsFunctionContext.returnValue = -getNormalizedAxisValue(gamepad.axes[0]);\r\n                }\r\n                break;\r\n\r\n            case 'RIGHT':\r\n                if (getNormalizedAxisValue(gamepad.axes[0]) > 0) {\r\n                    eventsFunctionContext.returnValue = getNormalizedAxisValue(gamepad.axes[0]);\r\n                }\r\n                break;\r\n\r\n            case 'UP':\r\n                if (getNormalizedAxisValue(gamepad.axes[1]) < 0) {\r\n                    eventsFunctionContext.returnValue = -getNormalizedAxisValue(gamepad.axes[1]);\r\n                }\r\n                break;\r\n\r\n            case 'DOWN':\r\n                if (getNormalizedAxisValue(gamepad.axes[1]) > 0) {\r\n                    eventsFunctionContext.returnValue = getNormalizedAxisValue(gamepad.axes[1]);\r\n                }\r\n                break;\r\n\r\n            default:\r\n                break;\r\n        }\r\n        break;\r\n\r\n    case 'RIGHT':\r\n        switch (direction) {\r\n            case 'LEFT':\r\n                if (getNormalizedAxisValue(gamepad.axes[2]) < 0) {\r\n                    eventsFunctionContext.returnValue = -getNormalizedAxisValue(gamepad.axes[2]);\r\n                }\r\n                break;\r\n\r\n            case 'RIGHT':\r\n                if (getNormalizedAxisValue(gamepad.axes[2]) > 0) {\r\n                    eventsFunctionContext.returnValue = getNormalizedAxisValue(gamepad.axes[2]);\r\n                }\r\n                break;\r\n\r\n            case 'UP':\r\n                if (getNormalizedAxisValue(gamepad.axes[3]) < 0) {\r\n                    eventsFunctionContext.returnValue = -getNormalizedAxisValue(gamepad.axes[3]);\r\n                }\r\n                break;\r\n\r\n            case 'DOWN':\r\n                if (getNormalizedAxisValue(gamepad.axes[3]) > 0) {\r\n                    eventsFunctionContext.returnValue = getNormalizedAxisValue(gamepad.axes[3]);\r\n                }\r\n                break;\r\n\r\n            default:\r\n                break;\r\n        }\r\n        break;\r\n\r\n    default:\r\n        break;\r\n}",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "\"LEFT\" or \"RIGHT\"",
+          "name": "stick",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "\"UP\", \"DOWN\", \"LEFT\" or \"RIGHT\"",
+          "name": "direction",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the index of the last button used on a gamepad",
+      "fullName": "Gamepad last pressed button",
+      "functionType": "Expression",
+      "name": "LastButtonId",
+      "sentence": "",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "var playerId = eventsFunctionContext.getArgument(\"player_ID\") - 1;\r\nif (playerId < 0 || playerId > 4) return;\r\n\r\ngdjs._extensionController = gdjs._extensionController || { deadzone: 0.2 };\r\ngdjs._extensionController.players = gdjs._extensionController.players || {};\r\ngdjs._extensionController.players[playerId] = gdjs._extensionController.players[playerId] || { lastButtonUsed: -1 };\r\n\r\neventsFunctionContext.returnValue = gdjs._extensionController.players[playerId].lastButtonUsed;",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Test if a button is pressed on a gamepad. Buttons can be:\n* Xbox: \"A\", \"B\", \"X\", \"Y\", \"LB\", \"RB\", \"LT\", \"RT\", \"BACK\", \"START\",\n* PS4: \"CROSS\", \"SQUARE\", \"CIRCLE\", \"TRIANGLE\", \"L1\", \"L2\", \"R1\", \"R2\", \"SHARE\", \"OPTIONS\", \"PS_BUTTON\", \"CLICK_TOUCHPAD\",\n* Other: \"UP\", \"DOWN\", \"LEFT\", \"RIGHT\", \"CLICK_STICK_LEFT\", \"CLICK_STICK_RIGHT\"\n",
+      "fullName": "Gamepad button pressed",
+      "functionType": "Condition",
+      "name": "C_Button_pressed",
+      "sentence": "Button _PARAM2_ of gamepad _PARAM1_ is pressed",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "/** @type {Gamepad[]} */\r\nvar gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r\n\r\nvar playerId = eventsFunctionContext.getArgument(\"player_ID\") - 1;\r\nvar gamepad = gamepads[playerId];\r\n\r\nif (gamepad == null) return;\r\n\r\nvar param_button = eventsFunctionContext.getArgument(\"button\").toUpperCase();\r\nvar btn_id;\r\n\r\nswitch (param_button) {\r\n    case 'A':\r\n    case 'CROSS':\r\n        btn_id = 0;\r\n        //console.log('A CROSS');\r\n        break;\r\n    case 'B':\r\n    case 'CIRCLE':\r\n        btn_id = 1;\r\n        //console.log('B CIRCLE');\r\n        break;\r\n    case 'X':\r\n    case 'SQUARE':\r\n        btn_id = 2;\r\n        //console.log('X SQUARE');\r\n        break;\r\n    case 'Y':\r\n    case 'TRIANGLE':\r\n        btn_id = 3;\r\n        //console.log('Y TRIANGLE');\r\n        break;\r\n    case 'LB':\r\n    case 'L1':\r\n        btn_id = 4;\r\n        //console.log('LB L1');\r\n        break;\r\n    case 'RB':\r\n    case 'R1':\r\n        btn_id = 5;\r\n        //console.log('RB R1');\r\n        break;\r\n    case 'LT':\r\n    case 'L2':\r\n        btn_id = 6;\r\n        //console.log('LT L2');\r\n        break;\r\n    case 'RT':\r\n    case 'R2':\r\n        btn_id = 7;\r\n        //console.log('RT R2');\r\n        break;\r\n\r\n    case 'UP':\r\n        btn_id = 12;\r\n        //console.log('UP');\r\n        break;\r\n    case 'DOWN':\r\n        btn_id = 13;\r\n        //console.log('DOWN');\r\n        break;\r\n    case 'LEFT':\r\n        btn_id = 14;\r\n        //console.log('LEFT');\r\n        break;\r\n    case 'RIGHT':\r\n        btn_id = 15;\r\n        //console.log('RIGHT');\r\n        break;\r\n\r\n    case 'BACK':\r\n    case 'SHARE':\r\n        btn_id = 8;\r\n        //console.log('BACK SHARE');\r\n        break;\r\n    case 'START':\r\n    case 'OPTIONS':\r\n        btn_id = 9;\r\n        //console.log('START OPTIONS');\r\n        break;\r\n\r\n    case 'CLICK_STICK_LEFT':\r\n        btn_id = 10;\r\n        //console.log('CLICK_STICK_LEFT');\r\n        break;\r\n    case 'CLICK_STICK_RIGHT':\r\n        btn_id = 11;\r\n        //console.log('CLICK_STICK_RIGHT');\r\n        break;\r\n\r\n    //PS4\r\n    case 'PS_BUTTON':\r\n        btn_id = 16;\r\n        //console.log('PS_BUTTON');\r\n        break;\r\n    case 'CLICK_TOUCHPAD':\r\n        btn_id = 17;\r\n        //console.log('CLICK_TOUCHPAD');\r\n        break;\r\n\r\n    default:\r\n        //console.log('null btn');\r\n        break;\r\n}\r\n\r\nif (!gamepad.buttons[btn_id]) {\r\n    return;\r\n}\r\n\r\ngdjs._extensionController = gdjs._extensionController || { deadzone: 0.2 };\r\ngdjs._extensionController.players = gdjs._extensionController.players || {};\r\ngdjs._extensionController.players[playerId] = gdjs._extensionController.players[playerId] || { lastButtonUsed: -1 };\r\n\r\nif (gamepad.buttons[btn_id].pressed) {\r\n    gdjs._extensionController.players[playerId].lastButtonUsed = btn_id;\r\n    eventsFunctionContext.returnValue = true;\r\n} else {\r\n    eventsFunctionContext.returnValue = false;\r\n}\r\n",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "The name of the button",
+          "name": "button",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the value of the deadzone applied to sticks",
+      "fullName": "Gamepad Deadzone for sticks",
+      "functionType": "Expression",
+      "name": "Deadzone",
+      "sentence": "",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [],
+          "events": []
+        },
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "gdjs._extensionController = gdjs._extensionController || { deadzone: 0.2 };\r\neventsFunctionContext.returnValue = gdjs._extensionController.deadzone;",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Set the deadzone for sticks of the gamepad. The deadzone is an area for which movement on sticks won't be taken into account (instead, the stick will be considered as not moved). Deadzone is between 0 and 1, and is by default 0.2.",
+      "fullName": "Set gamepad deadzone for sticks",
+      "functionType": "Action",
+      "name": "A_Set_deadzone",
+      "sentence": "Set deadzone for gamepad sticks to _PARAM1_",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [],
+          "events": []
+        },
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "var newDeadzone = eventsFunctionContext.getArgument(\"param_deadzone\");\r\nif (newDeadzone < 0 || newDeadzone >= 1) return;\r\n\r\ngdjs._extensionController = gdjs._extensionController || { deadzone: 0.2 };\r\n\r\ngdjs._extensionController.deadzone = eventsFunctionContext.getArgument(\"param_deadzone\");",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Deadzone for sticks, 0.2 by default",
+          "name": "param_deadzone",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Check if a stick of a gamepad is pushed in a given direction.",
+      "fullName": "Gamepad stick pushed in a direction (axis)",
+      "functionType": "Condition",
+      "name": "C_Axis_pushed",
+      "sentence": "_PARAM2_ stick of gamepad _PARAM1_ is pushed in direction _PARAM3_",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "/** @type {Gamepad[]} */\r\nvar gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r\n\r\nvar gamepad = gamepads[eventsFunctionContext.getArgument(\"player_ID\") - 1];\r\nif (gamepad == null) return;\r\n\r\n\r\nvar getNormalizedAxisValue = function (v) {\r\n    gdjs._extensionController = gdjs._extensionController || { deadzone: 0.2 };\r\n\r\n    // Anything smaller than this is assumed to be 0,0\r\n    var DEADZONE = gdjs._extensionController.deadzone;\r\n\r\n    if (Math.abs(v) < DEADZONE) {\r\n        // In the dead zone, set to 0\r\n        v = 0;\r\n\r\n        if (v == null) {\r\n            return 0;\r\n        } else {\r\n            return v;\r\n        }\r\n\r\n    } else {\r\n        // We're outside the dead zone, but we'd like to smooth\r\n        // this value out so it still runs nicely between 0..1.\r\n        // That is, we don't want it to jump suddenly from 0 to\r\n        // DEADZONE.\r\n\r\n        // Remap v from\r\n        //    DEADZONE..1 to 0..(1-DEADZONE)\r\n        // or from\r\n        //    -1..-DEADZONE to -(1-DEADZONE)..0\r\n\r\n        v = v - Math.sign(v) * DEADZONE;\r\n\r\n        // Remap v from\r\n        //    0..(1-DEADZONE) to 0..1\r\n        // or from\r\n        //    -(1-DEADZONE)..0 to -1..0\r\n\r\n        return v / (1 - DEADZONE);\r\n    }\r\n};\r\n\r\nvar stick = eventsFunctionContext.getArgument(\"stick\").toUpperCase();\r\nvar direction = eventsFunctionContext.getArgument(\"direction\").toUpperCase();\r\nvar axis;\r\n\r\nswitch (stick) {\r\n    case 'LEFT':\r\n        switch (direction) {\r\n            case 'LEFT':\r\n\r\n                if (getNormalizedAxisValue(gamepad.axes[0]) < 0) {\r\n                    eventsFunctionContext.returnValue = true;\r\n                }\r\n                break;\r\n\r\n            case 'RIGHT':\r\n                if (getNormalizedAxisValue(gamepad.axes[0]) > 0) {\r\n                    eventsFunctionContext.returnValue = true;\r\n                }\r\n                break;\r\n\r\n            case 'UP':\r\n                if (getNormalizedAxisValue(gamepad.axes[1]) < 0) {\r\n                    eventsFunctionContext.returnValue = true;\r\n                }\r\n                break;\r\n\r\n            case 'DOWN':\r\n                if (getNormalizedAxisValue(gamepad.axes[1]) > 0) {\r\n                    eventsFunctionContext.returnValue = true;\r\n                }\r\n                break;\r\n\r\n            default:\r\n                break;\r\n        }\r\n        break;\r\n\r\n    case 'RIGHT':\r\n        switch (direction) {\r\n            case 'LEFT':\r\n                if (getNormalizedAxisValue(gamepad.axes[2]) < 0) {\r\n                    eventsFunctionContext.returnValue = true;\r\n                }\r\n                break;\r\n\r\n            case 'RIGHT':\r\n                if (getNormalizedAxisValue(gamepad.axes[2]) > 0) {\r\n                    eventsFunctionContext.returnValue = true;\r\n                }\r\n                break;\r\n\r\n            case 'UP':\r\n                if (getNormalizedAxisValue(gamepad.axes[3]) < 0) {\r\n                    eventsFunctionContext.returnValue = true;\r\n                }\r\n                break;\r\n\r\n            case 'DOWN':\r\n                if (getNormalizedAxisValue(gamepad.axes[3]) > 0) {\r\n                    eventsFunctionContext.returnValue = true;\r\n                }\r\n                break;\r\n\r\n            default:\r\n                break;\r\n        }\r\n        break;\r\n\r\n    default:\r\n        break;\r\n}\r\n\r\nif (eventsFunctionContext.returnValue !== true) {\r\n    eventsFunctionContext.returnValue = false;\r\n}",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Stick: \"LEFT\" or \"RIGHT\"",
+          "name": "stick",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Direction: \"UP\", \"DOWN\", \"LEFT\" or \"RIGHT\"",
+          "name": "direction",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the number of connected gamepads",
+      "fullName": "Connected gamepads number",
+      "functionType": "Expression",
+      "name": "ConnectedGamepadsCount",
+      "sentence": "",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [],
+          "events": []
+        },
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "/** @type {Gamepad[]} */\r\nvar gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r\n\r\n// Gamepads can be disconnected and become null, so we have to filter them.\r\neventsFunctionContext.returnValue = Object.keys(gamepads).filter(key => !!gamepads[key]).length;\r\n",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Return a string containing information about the specified gamepad",
+      "fullName": "Gamepad information",
+      "functionType": "StringExpression",
+      "name": "GamepadType",
+      "sentence": "Player _PARAM1_ use _PARAM2_ controller",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "/** @type {Gamepad[]} */\nvar gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\nvar playerId = eventsFunctionContext.getArgument(\"player_ID\") - 1;\n\nif (gamepads[playerId] && gamepads[playerId].id) {\n    eventsFunctionContext.returnValue = gamepads[playerId].id;\n} else {\n    eventsFunctionContext.returnValue = \"empty\";\n}",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Check if the specified gamepad has the specified information in its description.",
+      "fullName": "Gamepad type/information",
+      "functionType": "Condition",
+      "name": "C_Controller_type",
+      "sentence": "Gamepad _PARAM1_ is a _PARAM2_ controller",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "/** @type {Gamepad[]} */\nvar gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\n\nvar player_ID = eventsFunctionContext.getArgument(\"player_ID\") - 1;\nvar controller_type = eventsFunctionContext.getArgument(\"controller_type\").toUpperCase();\n\nif (gamepads[player_ID] != null) {\n    if (gamepads[player_ID].id.toUpperCase().indexOf(controller_type) != -1) {\n        eventsFunctionContext.returnValue = true;\n    } else {\n        eventsFunctionContext.returnValue = false;\n    }\n}\n",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Type: \"Xbox\", \"PS4\", \"STEAM\" or \"PS3\" (among other)",
+          "name": "controller_type",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Check if a gamepad is connected.",
+      "fullName": "Gamepad connected",
+      "functionType": "Condition",
+      "name": "C_Controller_X_is_connected",
+      "sentence": "Gamepad _PARAM1_ is plugged and connected",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "/** @type {Gamepad[]} */\nvar gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\nvar playerId = eventsFunctionContext.getArgument(\"player_ID\") - 1;\n\n// If gamepad was disconnected it will be null (so this will return false)\n// If gamepad was never connected it will be undefined (so this will return false)\neventsFunctionContext.returnValue = !!gamepads[playerId];",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Generate a vibration on the specified controller. Might only work if the game is running in a recent web browser.",
+      "fullName": "Vibrate gamepad",
+      "functionType": "Action",
+      "name": "A_Vibrate_controller",
+      "sentence": "Make gamepad _PARAM1_ vibrate for _PARAM2_ seconds",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [],
+          "events": []
+        },
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "/** @type {Gamepad[]} */\nvar gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\n\nvar playerId = eventsFunctionContext.getArgument(\"player_ID\") - 1;\nvar duration = eventsFunctionContext.getArgument(\"param_duration\") || 1;\n\nif (gamepads[playerId].vibrationActuator) {\n  gamepads[playerId].vibrationActuator.playEffect(\"dual-rumble\", {\n    startDelay: 0,\n    duration: duration * 1000,\n    weakMagnitude: 1.0,\n    strongMagnitude: 1.0\n  });\n}\n",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Time of the vibration, in seconds (optional, default value is 1)",
+          "name": "duration",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": []
+}
