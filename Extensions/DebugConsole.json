@@ -1,0 +1,299 @@
+{
+  "author": "arthuro555, contact through the forum or through discord. You can always ping me ;-)",
+  "description": "An Extension that permits to create some kind of dev console. It also contains some default commands.",
+  "extensionNamespace": "",
+  "fullName": "Console Extension",
+  "name": "ConsoleExtension",
+  "shortDescription": "An Extension that permits to create some kind of dev console",
+  "tags": "command, console, debugging",
+  "version": "1.0-beta",
+  "eventsFunctions": [
+    {
+      "description": "Activate the console. Use this just before the user begins to input commads.",
+      "fullName": "Activate Console",
+      "functionType": "Action",
+      "name": "ActivateConsole",
+      "sentence": "Activate console.",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "This is only to add the text input extension",
+          "comment2": ""
+        },
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "inverted": false,
+                "value": "TextEntryObject::Activate"
+              },
+              "parameters": [
+                "kk",
+                "yes"
+              ],
+              "subInstructions": []
+            }
+          ],
+          "events": []
+        },
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "function logdata(){\n    console.warn(\"BEGIN DUMP\")\n    console.info(\"Instances: \");console.log(runtimeScene._allInstancesList);\n    console.info(\"ConsoleEntries: \");console.log(runtimeScene.getObjects(\"ConsoleEntry\"));\n    console.info(\"Objects: \");console.log(runtimeScene._objects);\n    console.info(\"Behaviors: \");\n    /** @type {gdjs.RuntimeObject} o */\n    for (var o of runtimeScene._allInstancesList){\n        for(var behavior of o._behaviors){ console.log(behavior) }\n    }\n    console.warn(\"END DUMP\")\n}\n\nif(runtimeScene.getObjects(\"ConsoleEntry\").length === 0){\n    if (gdjs.evtTools.console === undefined){\n        gdjs.evtTools.console = {}\n        gdjs.evtTools.console.evtSheetHandlers = new Hashtable();\n        gdjs.evtTools.console.evtSheetHandlersArgs = new Hashtable();\n        gdjs.evtTools.console.evtSheetHandlers.isActivated = function(commandName){\n            if (this[commandName] === true){\n                this[commandName] = false;\n                return true;\n            } else {return false};\n        }\n        gdjs.evtTools.console.evtSheetCommandHandlerGen = function(commandName){\n            gdjs.evtTools.console.evtSheetHandlers.put(commandName, false)\n            return new Function(\"commandArgs\", \"gdjs.evtTools.console.evtSheetHandlers[\\\"\"+commandName+\"\\\"] = true;\\ngdjs.evtTools.console.evtSheetHandlersArgs[\\\"\"+commandName+\"\\\"] = commandArgs;\")\n        }\n        gdjs.evtTools.console.commands = new Hashtable()\n    }\n    if (gdjs.evtTools.console.teBehaviorClass === undefined){\n        gdjs.evtTools.console.teBehaviorClass = function(runtimeScene, behaviorData, owner){\n            gdjs.RuntimeBehavior.call(this, runtimeScene, behaviorData, owner);\n            this._runtimeScene = runtimeScene;\n        }\n        gdjs.evtTools.console.teBehaviorClass.prototype = Object.create( gdjs.RuntimeBehavior.prototype );\n        gdjs.evtTools.console.teBehaviorClass.thisIsARuntimeBehaviorConstructor = \"ConsoleExtension::ConsoleEntryBehavior\"\n        gdjs.evtTools.console.teBehaviorClass.prototype.doStepPostEvents = function(runtimeScene){\n            if (this.owner.containsEnter()){\n                let str = this.owner._str.substring(0, this.owner._str.length - 1)\n                console.log(\"ConsoleExtension :: Command Entered: '\"+str+\"'\");\n                let commandArgs = str.split(\" \");\n                let commandName = commandArgs.shift()\n                if (gdjs.evtTools.console.commands.containsKey(commandName)){\n                    gdjs.evtTools.console.commands.get(commandName)(commandArgs)\n                } else {console.warn(\"Command does not exists or is not registered!\")}\n                this.owner.clear()\n            }\n        }\n        gdjs.behaviorsTypes.put(\n          gdjs.evtTools.console.teBehaviorClass.thisIsARuntimeBehaviorConstructor,\n          gdjs.evtTools.console.teBehaviorClass\n        );\n        console.log(\"Behavior types: \");console.log(gdjs.behaviorsTypes)\n    }\n    var objData = {name:\"ConsoleEntry\",type:\"TextEntryObject::TextEntry\",_forces : [], behaviors : [\"ConsoleExtension::ConsoleEntryBehavior\"] }\n\n    gdjs.evtTools.console.te = new gdjs.TextEntryRuntimeObject(runtimeScene, objData)\n    gdjs.evtTools.console.te._behaviors.push(new gdjs.evtTools.console.teBehaviorClass(runtimeScene, {name:\"ConsoleExtension::ConsoleEntryBehavior\", type:\"ConsoleExtension::ConsoleEntryBehavior\"}, gdjs.evtTools.console.te))\n    runtimeScene._objects.put(\"ConsoleEntry\", objData);\n    runtimeScene._instances.put(\"ConsoleEntry\", []); //Also reserve an array for the instances\n    runtimeScene._instancesCache.put(\"ConsoleEntry\", []); //and for cached instances\n    runtimeScene._objectsCtor.put(\"ConsoleEntry\", gdjs.getObjectConstructor(objData.type));\n    runtimeScene.addObject(gdjs.evtTools.console.te)\n}\n/** @type {gdjs.TextEntryRuntimeObject} teInstance */\nvar teInstance = runtimeScene.getObjects(\"ConsoleEntry\")[0]\nconsole.log(runtimeScene.getObjects())\nconsole.log(runtimeScene.getObjects(\"ConsoleEntry\"))\nteInstance.clear = function(){\n    this._str = \"\"\n}\nteInstance.containsEnter = function(){\n    var match = /\\r|\\n/.exec(this._str);\n    if (match){\n        return true;\n    } else {return false};\n}\nteInstance.clear()\nteInstance.activate(true)\n",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Disables the console.",
+      "fullName": "Deactivate Console",
+      "functionType": "Action",
+      "name": "DeActivate",
+      "sentence": "Disable the console.",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "",
+          "comment2": ""
+        },
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "if(gdjs.evtTools.console !== undefined){\r\n    /**@type {gdjs.TextEntryRuntimeObject} teInstance*/\r\n    var teInstance = runtimeScene.getObjects(\"ConsoleEntry\")[0]\r\n    teInstance.activate(false);\r\n    teInstance.clear();\r\n} else {\r\n    // Prevent endless alert() call\r\n    if (window.extErrorDeActivate === undefined){\r\n        alert(\"You try to disable something that was never enabled! \\nYou need to activate the console at least once before disabling it.\")\r\n        window.extErrorDeActivate = 1;\r\n    }\r\n    eventsFunctionContext.returnValue = false\r\n}",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "If a command is inputed, do...",
+      "fullName": "Command inputed",
+      "functionType": "Condition",
+      "name": "EventSheetCommand",
+      "sentence": "If command _PARAM1_ is triggered",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "let commandName = eventsFunctionContext.getArgument(\"CommandName\");\nif(gdjs.evtTools.console !== undefined){\n    if(!gdjs.evtTools.console.commands.containsKey(commandName)){\n        gdjs.evtTools.console.commands.put(commandName, gdjs.evtTools.console.evtSheetCommandHandlerGen(commandName))\n    }\n    eventsFunctionContext.returnValue = gdjs.evtTools.console.evtSheetHandlers.isActivated(commandName)\n} else {\n    // Prevent endless alert() call\n    if (window.extErrorCustomCommand === undefined){\n        alert(\"You try to handle commands without a console! \\nYou need to activate the console at least once before adding custom command handlers.\")\n        window.extErrorCustomCommand = 1;\n    }\n    eventsFunctionContext.returnValue = false\n}",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Command Name",
+          "name": "CommandName",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get one of the arguments given in the last call of a command",
+      "fullName": "Get an argument from the last call of a command",
+      "functionType": "StringExpression",
+      "name": "getArg",
+      "sentence": "",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "let commandName = eventsFunctionContext.getArgument(\"commandName\");\nlet arg = eventsFunctionContext.getArgument(\"arg\");\nif(gdjs.evtTools.console !== undefined){\n    let arr = gdjs.evtTools.console.evtSheetHandlersArgs[commandName]\n    if (arr[arg] === undefined){\n        alert(\"You are trying to get a non-set argument!\")\n    } else{\n        eventsFunctionContext.returnValue = arr[arg]\n    }\n} else {\n    // Prevent endless alert() call\n    if (window.extErrorArg === undefined){\n        alert(\"You try to get arguments without a console! \\nYou need to activate the console at least once before using it.\")\n        window.extErrorArg = 1;\n    }\n    eventsFunctionContext.returnValue = \"You try to get arguments without a console!\"\n}",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Name of the command",
+          "name": "commandName",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Argument number",
+          "name": "arg",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Store the arguments given in the last call of a command into a variable (as a struct)",
+      "fullName": "Save the args from the last call of a command to a struct",
+      "functionType": "Action",
+      "name": "getArgs",
+      "sentence": "Store the args from the last call of _PARAM2_ into struct _PARAM1_",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "let commandName = eventsFunctionContext.getArgument(\"commandName\");\nlet variab = runtimeScene.getVariables().get(eventsFunctionContext.getArgument(\"var\"));\nif(gdjs.evtTools.console !== undefined){\n    for(let i in gdjs.evtTools.console.evtSheetHandlersArgs[commandName]){\n        variab.getChild(i).setString(gdjs.evtTools.console.evtSheetHandlersArgs[commandName][i])\n    }\n} else {\n    // Prevent endless alert() call\n    if (window.extErrorArgs === undefined){\n        alert(\"You try to get arguments without a console! \\nYou need to activate the console at least once before using it.\")\n        window.extErrorArgs = 1;\n    }\n}",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Name of the variable where to store the args",
+          "name": "var",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Name of the command",
+          "name": "commandName",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Some people want their own commands only, but there are some preprogrammed. Use this to activate them",
+      "fullName": "Add Default commands",
+      "functionType": "Action",
+      "name": "AddDefaultCommands",
+      "sentence": "Add default commands _PARAM1_ to the console.",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "// Verify the json and get array\ntry{\n    var activatedCommands = JSON.parse(eventsFunctionContext.getArgument(\"commandID\"))\n} catch (e){\n    // Prevent endless alert() call\n    if (window.extErrorDefaultCommandJSON === undefined){\n        alert(\"You gave incorrect json as input.\")\n        window.extErrorDefaultCommandJSON = 1;\n    }\n}\n\n// If the extension was initialized\nif(gdjs.evtTools.console !== undefined){\n    // CreateObject command\n    if (activatedCommands.includes('CreateObject')){\n        gdjs.evtTools.console.commands.put(\"CreateObject\", function(commandArgs){\n            if(commandArgs[0] !== undefined){\n                runtimeScene.createObject(commandArgs[0])\n            }else{\n                alert(\"At least one argument was expected: \\\"Object Name\\\"\")\n            }\n        })\n    }\n\n    // bgColor command\n    if (activatedCommands.includes('bgColor')){\n        gdjs.evtTools.console.commands.put(\"bgColor\", function(commandArgs){\n            if(commandArgs[2] !== undefined){\n                runtimeScene.setBackgroundColor(commandArgs[0], commandArgs[1], commandArgs\t[2])\n            }else{\n                alert(\"At least three argument was expected: \\\"Red\\\", \\\"Green\\\" and \\\"Blue\\\"\")\n            }\n        })\n    }\n\n} else {\n    // Prevent endless alert() call\n    if (window.extErrorDefaultCommand === undefined){\n        alert(\"You try to handle commands without a console! \\nYou need to activate the console at least once before adding custom command handlers.\")\n        window.extErrorDefaultCommand = 1;\n    }\n}\n",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Command List as Json or expression for all.",
+          "name": "commandID",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Use this as command ID to activate all commands from the default commands",
+      "fullName": "All Default Commands",
+      "functionType": "StringExpression",
+      "name": "AllDefltCommnds",
+      "sentence": "",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "inverted": false,
+                "value": "SetReturnString"
+              },
+              "parameters": [
+                "\"[\\\"CreateObject\\\", \\\"bgColor\\\"]\""
+              ],
+              "subInstructions": []
+            }
+          ],
+          "events": []
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Get the text typed so far.",
+      "fullName": "Get Console Buffered Text",
+      "functionType": "StringExpression",
+      "name": "getTextBuffer",
+      "sentence": "",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "",
+          "comment2": ""
+        },
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "if(gdjs.evtTools.console !== undefined){\n    eventsFunctionContext.returnValue = runtimeScene.getObjects(\"ConsoleEntry\")[0]._str\n} else {\n    // Prevent endless alert() call\n    if (window.extErrorBuff === undefined){\n        alert(\"You try to get Buffered Text without a console! \\nYou need to activate the console at least once before getting the buffer.\")\n        window.extErrorBuff = 1;\n    }\n}",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": []
+}
