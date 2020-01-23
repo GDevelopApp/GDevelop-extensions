@@ -6,7 +6,7 @@
   "name": "Gamepads",
   "shortDescription": "Add support for gamepads (or other controllers) to your game, giving access to information such as button presses, axis positions, trigger pressure, etc...",
   "tags": "controllers, gamepads, joysticks, axis, xbox, ps4",
-  "version": "0.0.3",
+  "version": "0.0.4b",
   "eventsFunctions": [
     {
       "description": "Get the value of the pressure on a gamepad trigger.",
@@ -91,6 +91,46 @@
           "description": "\"UP\", \"DOWN\", \"LEFT\" or \"RIGHT\"",
           "longDescription": "",
           "name": "direction",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Test if a button is released on a gamepad. Buttons can be:\n* Xbox: \"A\", \"B\", \"X\", \"Y\", \"LB\", \"RB\", \"LT\", \"RT\", \"BACK\", \"START\",\n* PS4: \"CROSS\", \"SQUARE\", \"CIRCLE\", \"TRIANGLE\", \"L1\", \"L2\", \"R1\", \"R2\", \"SHARE\", \"OPTIONS\", \"PS_BUTTON\", \"CLICK_TOUCHPAD\",\n* Other: \"UP\", \"DOWN\", \"LEFT\", \"RIGHT\", \"CLICK_STICK_LEFT\", \"CLICK_STICK_RIGHT\"\n",
+      "fullName": "Gamepad button released",
+      "functionType": "Condition",
+      "name": "C_Button_released",
+      "sentence": "Button _PARAM2_ of gamepad _PARAM1_ is released",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "/** @type {Gamepad[]} */\r\nvar gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r\n\r\nvar playerId = eventsFunctionContext.getArgument(\"player_ID\") - 1;\r\nvar gamepad = gamepads[playerId];\r\n\r\nif (gamepad == null) return;\r\n\r\nvar param_button = eventsFunctionContext.getArgument(\"button\").toUpperCase();\r\nvar btn_id;\r\n\r\nswitch (param_button) {\r\n    case 'A':\r\n    case 'CROSS':\r\n        btn_id = 0;\r\n        //console.log('A CROSS');\r\n        break;\r\n    case 'B':\r\n    case 'CIRCLE':\r\n        btn_id = 1;\r\n        //console.log('B CIRCLE');\r\n        break;\r\n    case 'X':\r\n    case 'SQUARE':\r\n        btn_id = 2;\r\n        //console.log('X SQUARE');\r\n        break;\r\n    case 'Y':\r\n    case 'TRIANGLE':\r\n        btn_id = 3;\r\n        //console.log('Y TRIANGLE');\r\n        break;\r\n    case 'LB':\r\n    case 'L1':\r\n        btn_id = 4;\r\n        //console.log('LB L1');\r\n        break;\r\n    case 'RB':\r\n    case 'R1':\r\n        btn_id = 5;\r\n        //console.log('RB R1');\r\n        break;\r\n    case 'LT':\r\n    case 'L2':\r\n        btn_id = 6;\r\n        //console.log('LT L2');\r\n        break;\r\n    case 'RT':\r\n    case 'R2':\r\n        btn_id = 7;\r\n        //console.log('RT R2');\r\n        break;\r\n\r\n    case 'UP':\r\n        btn_id = 12;\r\n        //console.log('UP');\r\n        break;\r\n    case 'DOWN':\r\n        btn_id = 13;\r\n        //console.log('DOWN');\r\n        break;\r\n    case 'LEFT':\r\n        btn_id = 14;\r\n        //console.log('LEFT');\r\n        break;\r\n    case 'RIGHT':\r\n        btn_id = 15;\r\n        //console.log('RIGHT');\r\n        break;\r\n\r\n    case 'BACK':\r\n    case 'SHARE':\r\n        btn_id = 8;\r\n        //console.log('BACK SHARE');\r\n        break;\r\n    case 'START':\r\n    case 'OPTIONS':\r\n        btn_id = 9;\r\n        //console.log('START OPTIONS');\r\n        break;\r\n\r\n    case 'CLICK_STICK_LEFT':\r\n        btn_id = 10;\r\n        //console.log('CLICK_STICK_LEFT');\r\n        break;\r\n    case 'CLICK_STICK_RIGHT':\r\n        btn_id = 11;\r\n        //console.log('CLICK_STICK_RIGHT');\r\n        break;\r\n\r\n    //PS4\r\n    case 'PS_BUTTON':\r\n        btn_id = 16;\r\n        //console.log('PS_BUTTON');\r\n        break;\r\n    case 'CLICK_TOUCHPAD':\r\n        btn_id = 17;\r\n        //console.log('CLICK_TOUCHPAD');\r\n        break;\r\n\r\n    default:\r\n        //console.log('null btn');\r\n        break;\r\n}\r\n\r\nif (btn_id === undefined) {\r\n    eventsFunctionContext.returnValue = false;\r\n    return;\r\n}\r\n\r\ngdjs._extensionController = gdjs._extensionController || { deadzone: 0.2 };\r\ngdjs._extensionController.players = gdjs._extensionController.players || {};\r\ngdjs._extensionController.players[playerId] = gdjs._extensionController.players[playerId] || { lastButtonUsed: -1 };\r\n\r\nif (gamepad.buttons[btn_id].pressed === false && gamepad.buttons[btn_id].value === 0) {\r\n\r\n        eventsFunctionContext.returnValue = true;\r\n    } else {\r\n        eventsFunctionContext.returnValue = false;\r\n    }\r\n\r\n\r\n    ",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "longDescription": "",
+          "name": "player_ID",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "button",
+          "longDescription": "",
+          "name": "button",
           "optional": false,
           "supplementaryInformation": "",
           "type": "string"
