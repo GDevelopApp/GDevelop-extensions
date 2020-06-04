@@ -6,7 +6,7 @@
   "name": "Gamepads",
   "shortDescription": "Add support for gamepads (or other controllers) to your game, giving access to information such as button presses, axis positions, trigger pressure, etc...",
   "tags": "controllers, gamepads, joysticks, axis, xbox, ps4",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "eventsFunctions": [
     {
       "description": "Get the value of the pressure on a gamepad trigger.",
@@ -41,6 +41,46 @@
           "description": "Trigger: \"LT\", \"RT\", \"L2\", \"R2\"",
           "longDescription": "",
           "name": "trigger",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get the rotation value of a gamepad stick.\nIf the deadzone value is high, the angle value is rounded to main axes, left, left, up, down.\nAn zero deadzone value give a total freedom on the angle value.",
+      "fullName": "Value of a stick rotation",
+      "functionType": "Expression",
+      "name": "StickRotationValue",
+      "sentence": "Player _PARAM1_ push axis _PARAM2_ to _PARAM3_",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "/** @type {Gamepad[]} */\r\nvar gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r\n\r\n//Get function parameters\r\nconst playerId = eventsFunctionContext.getArgument(\"player_ID\") - 1;\r\nconst stick = eventsFunctionContext.getArgument(\"stick\").toUpperCase();\r\n\r\n\r\nif (playerId < 0 || playerId > 4) {\r\n    console.error('Parameter gamepad identifier is not valid in expression: \"Value of a stick rotation\"');\r\n    return;\r\n}\r\nif (stick != \"LEFT\" && stick != \"RIGHT\") {\r\n    console.error('Parameter stick is not valid in expression: \"Value of a stick rotation\"');\r\n    return;\r\n}\r\nvar gamepad = gamepads[playerId];\r\nif (gamepad == null) return;\r\n\r\nswitch (stick) {\r\n    case 'LEFT':\r\n        eventsFunctionContext.returnValue = gdjs._extensionController.axisToAngle(gdjs._extensionController.getNormalizedAxisValue(gamepad.axes[0], playerId), gdjs._extensionController.getNormalizedAxisValue(gamepad.axes[1], playerId));\r\n        break;\r\n\r\n    case 'RIGHT':        \r\n        eventsFunctionContext.returnValue = gdjs._extensionController.axisToAngle(gdjs._extensionController.getNormalizedAxisValue(gamepad.axes[2], playerId), gdjs._extensionController.getNormalizedAxisValue(gamepad.axes[3], playerId));\r\n        break;\r\n\r\n    default:\r\n        break;\r\n}",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "longDescription": "",
+          "name": "player_ID",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Stick: \"LEFT\" or \"RIGHT\"",
+          "longDescription": "",
+          "name": "stick",
           "optional": false,
           "supplementaryInformation": "",
           "type": "string"
@@ -600,7 +640,7 @@
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "//Define an new private object javascript for the gamepad extension\r\ngdjs._extensionController = {\r\n    players: {\r\n        0: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n        1: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n        2: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n        3: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n    },\r\n    controllerButtonNames: { //Map associating controller button ids to button names\r\n        \"XBOX\": {\r\n            0: \"A\",\r\n            1: \"B\",\r\n            2: \"X\",\r\n            3: \"Y\",\r\n            4: \"LB\",\r\n            5: \"RB\",\r\n            6: \"LT\",\r\n            7: \"RT\",\r\n            8: \"BACK\",\r\n            9: \"START\",\r\n            10: \"CLICK_STICK_LEFT\",\r\n            11: \"CLICK_STICK_RIGHT\",\r\n            12: \"UP\",\r\n            13: \"DOWN\",\r\n            14: \"LEFT\",\r\n            15: \"RIGHT\",\r\n            16: \"NONE\",\r\n            17: \"NONE\"\r\n        },\r\n        \"PS4\": {\r\n            0: \"CROSS\",\r\n            1: \"CIRCLE\",\r\n            2: \"SQUARE\",\r\n            3: \"TRIANGLE\",\r\n            4: \"L1\",\r\n            5: \"R1\",\r\n            6: \"L2\",\r\n            7: \"R2\",\r\n            8: \"SHARE\",\r\n            9: \"OPTIONS\",\r\n            10: \"CLICK_STICK_LEFT\",\r\n            11: \"CLICK_STICK_RIGHT\",\r\n            12: \"UP\",\r\n            13: \"DOWN\",\r\n            14: \"LEFT\",\r\n            15: \"RIGHT\",\r\n            16: \"PS_BUTTON\",\r\n            17: \"CLICK_TOUCHPAD\"\r\n        }\r\n    }\r\n};\r\n\r\ngdjs._extensionController.getInputString = function (type, buttonId) {\r\n    const controllerButtonNames = gdjs._extensionController.controllerButtonNames;\r\n    if (controllerButtonNames[type] !== undefined) {\r\n        return controllerButtonNames[type][buttonId];\r\n    }\r\n\r\n    return \"UNKNOWN_BUTTON\";\r\n}\r\n\r\n//Returns the new value taking into account the dead zone for the player_ID given\r\ngdjs._extensionController.getNormalizedAxisValue = function (v, player_ID) {\r\n    //    gdjs._extensionController = gdjs._extensionController || { deadzone: 0.2 };\r\n\r\n    // Anything smaller than this is assumed to be 0,0\r\n    var DEADZONE = gdjs._extensionController.players[player_ID].deadzone;\r\n\r\n    if (Math.abs(v) < DEADZONE) {\r\n        // In the dead zone, set to 0\r\n        v = 0;\r\n\r\n        if (v == null) {\r\n            return 0;\r\n        } else {\r\n            return v;\r\n        }\r\n\r\n    } else {\r\n        // We're outside the dead zone, but we'd like to smooth\r\n        // this value out so it still runs nicely between 0..1.\r\n        // That is, we don't want it to jump suddenly from 0 to\r\n        // DEADZONE.\r\n\r\n        // Remap v from\r\n        //    DEADZONE..1 to 0..(1-DEADZONE)\r\n        // or from\r\n        //    -1..-DEADZONE to -(1-DEADZONE)..0\r\n\r\n        v = v - Math.sign(v) * DEADZONE;\r\n\r\n        // Remap v from\r\n        //    0..(1-DEADZONE) to 0..1\r\n        // or from\r\n        //    -(1-DEADZONE)..0 to -1..0\r\n\r\n        return v / (1 - DEADZONE);\r\n    }\r\n};",
+          "inlineCode": "//Define an new private object javascript for the gamepad extension\r\ngdjs._extensionController = {\r\n    players: {\r\n        0: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n        1: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n        2: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n        3: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n    },\r\n    controllerButtonNames: { //Map associating controller button ids to button names\r\n        \"XBOX\": {\r\n            0: \"A\",\r\n            1: \"B\",\r\n            2: \"X\",\r\n            3: \"Y\",\r\n            4: \"LB\",\r\n            5: \"RB\",\r\n            6: \"LT\",\r\n            7: \"RT\",\r\n            8: \"BACK\",\r\n            9: \"START\",\r\n            10: \"CLICK_STICK_LEFT\",\r\n            11: \"CLICK_STICK_RIGHT\",\r\n            12: \"UP\",\r\n            13: \"DOWN\",\r\n            14: \"LEFT\",\r\n            15: \"RIGHT\",\r\n            16: \"NONE\",\r\n            17: \"NONE\"\r\n        },\r\n        \"PS4\": {\r\n            0: \"CROSS\",\r\n            1: \"CIRCLE\",\r\n            2: \"SQUARE\",\r\n            3: \"TRIANGLE\",\r\n            4: \"L1\",\r\n            5: \"R1\",\r\n            6: \"L2\",\r\n            7: \"R2\",\r\n            8: \"SHARE\",\r\n            9: \"OPTIONS\",\r\n            10: \"CLICK_STICK_LEFT\",\r\n            11: \"CLICK_STICK_RIGHT\",\r\n            12: \"UP\",\r\n            13: \"DOWN\",\r\n            14: \"LEFT\",\r\n            15: \"RIGHT\",\r\n            16: \"PS_BUTTON\",\r\n            17: \"CLICK_TOUCHPAD\"\r\n        }\r\n    }\r\n};\r\n\r\ngdjs._extensionController.getInputString = function (type, buttonId) {\r\n    const controllerButtonNames = gdjs._extensionController.controllerButtonNames;\r\n    if (controllerButtonNames[type] !== undefined) {\r\n        return controllerButtonNames[type][buttonId];\r\n    }\r\n\r\n    return \"UNKNOWN_BUTTON\";\r\n}\r\n\r\ngdjs._extensionController.axisToAngle = function (deltaX, deltaY) {\r\n    var rad = Math.atan2(deltaY, deltaX);\r\n    var deg = rad * (180 / Math.PI);\r\n    return deg;\r\n}\r\n\r\n//Returns the new value taking into account the dead zone for the player_ID given\r\ngdjs._extensionController.getNormalizedAxisValue = function (v, player_ID) {\r\n    //    gdjs._extensionController = gdjs._extensionController || { deadzone: 0.2 };\r\n\r\n    // Anything smaller than this is assumed to be 0,0\r\n    var DEADZONE = gdjs._extensionController.players[player_ID].deadzone;\r\n\r\n    if (Math.abs(v) < DEADZONE) {\r\n        // In the dead zone, set to 0\r\n        v = 0;\r\n\r\n        if (v == null) {\r\n            return 0;\r\n        } else {\r\n            return v;\r\n        }\r\n\r\n    } else {\r\n        // We're outside the dead zone, but we'd like to smooth\r\n        // this value out so it still runs nicely between 0..1.\r\n        // That is, we don't want it to jump suddenly from 0 to\r\n        // DEADZONE.\r\n\r\n        // Remap v from\r\n        //    DEADZONE..1 to 0..(1-DEADZONE)\r\n        // or from\r\n        //    -1..-DEADZONE to -(1-DEADZONE)..0\r\n\r\n        v = v - Math.sign(v) * DEADZONE;\r\n\r\n        // Remap v from\r\n        //    0..(1-DEADZONE) to 0..1\r\n        // or from\r\n        //    -(1-DEADZONE)..0 to -1..0\r\n\r\n        return v / (1 - DEADZONE);\r\n    }\r\n};",
           "parameterObjects": "",
           "useStrict": true
         }
