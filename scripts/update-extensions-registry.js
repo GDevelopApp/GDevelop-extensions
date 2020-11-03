@@ -61,12 +61,14 @@ readAllExtensions()
           url: `${extensionFolderName}/${extension.name}.json`,
           headerUrl: `${extensionFolderName}/${extension.name}-header.json`,
           tags: extension.tags,
+          previewIconUrl: extension.previewIconUrl,
           eventsBasedBehaviorsCount: extension.eventsBasedBehaviors.length,
           eventsFunctionsCount: extension.eventsFunctions.length,
         };
         const extensionHeader = {
           ...extensionShortHeader,
           description: extension.description,
+          iconUrl: extension.iconUrl,
         };
 
         extensionShortHeaders.push(extensionShortHeader);
