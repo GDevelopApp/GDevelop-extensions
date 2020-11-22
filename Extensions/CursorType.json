@@ -36,7 +36,7 @@
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "var styleCursor = eventsFunctionContext.getArgument(\"style_cursor\") || \"default\";\nif (typeof document !== \"undefined\") {\n    document.body.style.cursor = styleCursor;\n}",
+          "inlineCode": "gdjs.defaultCursor = eventsFunctionContext.getArgument(\"style_cursor\");\n",
           "parameterObjects": "",
           "useStrict": true
         }
@@ -54,6 +54,25 @@
         }
       ],
       "objectGroups": []
+    },
+    {
+      "description": "",
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onScenePreEvents",
+      "sentence": "",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "// Reset cross-behavior z order counting\ngdjs.cursorZOrder = 0;\n// Reset to default cursor\nruntimeScene.getGame().getRenderer().getCanvas().style.cursor = gdjs.defaultCursor || \"default\";\n",
+          "parameterObjects": "",
+          "useStrict": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
     }
   ],
   "eventsBasedBehaviors": [
@@ -67,54 +86,14 @@
           "description": "",
           "fullName": "",
           "functionType": "Action",
-          "name": "doStepPreEvents",
+          "name": "doStepPostEvents",
           "sentence": "",
           "events": [
             {
               "disabled": false,
               "folded": false,
               "type": "BuiltinCommonInstructions::JsCode",
-              "inlineCode": "objects[0]\n    .getRendererObject()\n    .cursor = objects[0]\n        .getBehavior(\n            eventsFunctionContext.getBehaviorName(\"Behavior\")\n        )\n        ._getcursor_type();\n",
-              "parameterObjects": "Object",
-              "useStrict": true
-            }
-          ],
-          "parameters": [
-            {
-              "codeOnly": false,
-              "defaultValue": "",
-              "description": "Object",
-              "longDescription": "",
-              "name": "Object",
-              "optional": false,
-              "supplementaryInformation": "",
-              "type": "object"
-            },
-            {
-              "codeOnly": false,
-              "defaultValue": "",
-              "description": "Behavior",
-              "longDescription": "",
-              "name": "Behavior",
-              "optional": false,
-              "supplementaryInformation": "CursorType::CursorHover",
-              "type": "behavior"
-            }
-          ],
-          "objectGroups": []
-        },
-        {
-          "description": "",
-          "fullName": "",
-          "functionType": "Action",
-          "name": "onCreated",
-          "sentence": "",
-          "events": [
-            {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::JsCode",
-              "inlineCode": "const renderer = objects[0].getRendererObject();\nrenderer.interactive = true; // Activate necessary pixi plugin\n",
+              "inlineCode": "const object = objects[0];\nconst inputManager = runtimeScene.getGame().getInputManager();\nif (object.getZOrder() > gdjs.cursorZOrder && object.isCollidingWithPoint(inputManager.getMouseX(), inputManager.getMouseY())) {\n    // Make sure the object with the highest z order imposes it's cursor\n    gdjs.cursorZOrder = object.getZOrder();\n    runtimeScene.getGame().getRenderer().getCanvas().style.cursor = object\n        .getBehavior(\n            eventsFunctionContext.getBehaviorName(\"Behavior\")\n        )\n        ._getcursor_type();\n}\n",
               "parameterObjects": "Object",
               "useStrict": true
             }
