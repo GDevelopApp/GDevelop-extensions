@@ -3,41 +3,13 @@
   "description": "Allow to open and close the virtual keyboard on mobile (iOS, Android). To be used with Text Entry objects.\n\nActions to open and close the keyboard are added. You can then use the Text Entry as usual.",
   "extensionNamespace": "",
   "fullName": "Mobile virtual keyboard for Text Entry",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWtleWJvYXJkLWNsb3NlIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyLDIzTDE2LDE5SDhNMTksOEgxN1Y2SDE5TTE5LDExSDE3VjlIMTlNMTYsOEgxNFY2SDE2TTE2LDExSDE0VjlIMTZNMTYsMTVIOFYxM0gxNk03LDhINVY2SDdNNywxMUg1VjlIN004LDlIMTBWMTFIOE04LDZIMTBWOEg4TTExLDlIMTNWMTFIMTFNMTEsNkgxM1Y4SDExTTIwLDNINEMyLjg5LDMgMiwzLjg5IDIsNVYxNUEyLDIgMCAwLDAgNCwxN0gyMEEyLDIgMCAwLDAgMjIsMTVWNUMyMiwzLjg5IDIxLjEsMyAyMCwzWiIgLz48L3N2Zz4=",
   "name": "TextEntryVirtualKeyboard",
+  "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/keyboard-close.svg",
   "shortDescription": "Allow to open and close the virtual keyboard on mobile (iOS, Android). To be used with Text Entry objects.",
   "tags": "javascript, virtual keyboard, mobile",
   "version": "0.0.1",
-  "eventsFunctions": [
-    {
-      "description": "",
-      "fullName": "",
-      "functionType": "Action",
-      "name": "Function",
-      "sentence": "",
-      "events": [],
-      "parameters": [
-        {
-          "codeOnly": false,
-          "defaultValue": "",
-          "description": "",
-          "name": "",
-          "optional": false,
-          "supplementaryInformation": "",
-          "type": "sceneName"
-        },
-        {
-          "codeOnly": false,
-          "defaultValue": "",
-          "description": "",
-          "name": "",
-          "optional": false,
-          "supplementaryInformation": "",
-          "type": "objectList"
-        }
-      ],
-      "objectGroups": []
-    }
-  ],
+  "eventsFunctions": [],
   "eventsBasedBehaviors": [
     {
       "description": "Allow to open and close the virtual keyboard on mobile (iOS, Android). To be used on Text Entry objects.",
@@ -89,7 +61,8 @@
                   "type": "BuiltinCommonInstructions::JsCode",
                   "inlineCode": "gdjs._extensionMobileKeyboard = gdjs._extensionMobileKeyboard || {};\n\nif (typeof document === \"undefined\") {\n    console.error(\"This behavior is only running in a Browser-like environment\");\n    return;\n}\n\n// Select and focus the input associated to the object when opening the keyboard\ngdjs._extensionMobileKeyboard.openKeyboard = function (eventsFunctionContext) {\n    var uniqueID = gdjs._extensionMobileKeyboard.getUniqueIdInObject(eventsFunctionContext);\n    var input = document.getElementById(uniqueID);\n    if (input) {\n        var textEntry = eventsFunctionContext.getObjects(\"Object\")[0];\n        input.value = textEntry.getString();\n        input.style.removeProperty(\"visibility\");\n        input.focus();\n    }\n}\n\n// Blur the input associated to an ID\ngdjs._extensionMobileKeyboard.closeKeyboardById = function (uniqueID) {\n    var input = document.getElementById(uniqueID);\n    if (input) {\n        input.blur();\n        input.style.setProperty(\"visibility\", \"hidden\");\n    }\n}\n\n// Blur the input associated to an object\ngdjs._extensionMobileKeyboard.closeKeyboard = function (eventsFunctionContext) {\n    var uniqueID = gdjs._extensionMobileKeyboard.getUniqueIdInObject(eventsFunctionContext);\n    var input = document.getElementById(uniqueID);\n    if (input) {\n        var textEntry = eventsFunctionContext.getObjects(\"Object\")[0];\n        textEntry.setString(input.value);\n        input.blur();\n        input.style.setProperty(\"visibility\", \"hidden\");\n    }\n}\n\n// Return the id of the current behavior object\ngdjs._extensionMobileKeyboard.getUniqueIdInObject = function (eventsFunctionContext) {\n    var behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\n    return eventsFunctionContext.getObjects(\"Object\")[0]._mobileKeyboardExtensionInput._uniqueId;\n}\n\n// Save an ID inside the object\nvar setUniqueIdInObject = function (id) {\n    var behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\n    eventsFunctionContext.getObjects(\"Object\")[0]._mobileKeyboardExtensionInput = { \"_uniqueId\": id };\n}\n\n// Create an input for the current object\nconst input = document.createElement(\"input\");\ninput.type = \"text\";\ninput.setAttribute(\"spellcheck\", \"false\"); // Disable spell checking (blue line on mobile under words)\ninput.style = \"background-color: transparent;border: 0px;outline: transparent;color: #0000;\";\n\n// Create an identifier that is unique\nvar uniqueId = \"GDevelop_Mobile_Keyboard_Input\" + Date.now() + '-' + Math.floor(Math.random() * 100000);\ninput.id = uniqueId; // Apply it to the input\nsetUniqueIdInObject(uniqueId); // Apply it to the object\n\ndocument.body.appendChild(input); // Add input to the document HTML\n\n// Handle key presses on the input\ninput.addEventListener(\"keyup\", function (event) {\n    input.focus();\n\n    // Force selection to be at the end (to mimic Text Entry)\n    var length_string = input.value.length;\n    input.setSelectionRange(length_string, length_string);\n\n    // Support for removing the last character\n    if (event.keyCode == 8 || event.keyCode == 46) { // 8=Backspace, 46=Del\n        input.value = input.value.slice(0, -1);\n    }\n\n    var textEntry = eventsFunctionContext.getObjects(\"Object\")[0];\n    textEntry.setString(input.value);//Edit textEntry _str value\n\n    if (event.keyCode === 13) { // 13=Enter key \n        //Send id to function for close keyboard\n        if (gdjs._extensionMobileKeyboard.closeKeyboard != undefined) {\n            gdjs._extensionMobileKeyboard.closeKeyboardById(uniqueId);\n        }\n    }\n}, { passive: false });\n",
                   "parameterObjects": "",
-                  "useStrict": true
+                  "useStrict": true,
+                  "eventsSheetExpanded": false
                 }
               ]
             }
@@ -99,6 +72,7 @@
               "codeOnly": false,
               "defaultValue": "",
               "description": "Object",
+              "longDescription": "",
               "name": "Object",
               "optional": false,
               "supplementaryInformation": "TextEntryObject::TextEntry",
@@ -108,6 +82,7 @@
               "codeOnly": false,
               "defaultValue": "",
               "description": "Behavior",
+              "longDescription": "",
               "name": "Behavior",
               "optional": false,
               "supplementaryInformation": "TextEntryVirtualKeyboard::TextEntryVirtualKeyboard",
@@ -145,7 +120,8 @@
                   "type": "BuiltinCommonInstructions::JsCode",
                   "inlineCode": "gdjs._extensionMobileKeyboard = gdjs._extensionMobileKeyboard || {};\n\nif (gdjs._extensionMobileKeyboard.openKeyboard) { \n    gdjs._extensionMobileKeyboard.openKeyboard(eventsFunctionContext);\n}",
                   "parameterObjects": "",
-                  "useStrict": true
+                  "useStrict": true,
+                  "eventsSheetExpanded": false
                 }
               ]
             }
@@ -155,6 +131,7 @@
               "codeOnly": false,
               "defaultValue": "",
               "description": "Object",
+              "longDescription": "",
               "name": "Object",
               "optional": false,
               "supplementaryInformation": "TextEntryObject::TextEntry",
@@ -164,6 +141,7 @@
               "codeOnly": false,
               "defaultValue": "",
               "description": "Behavior",
+              "longDescription": "",
               "name": "Behavior",
               "optional": false,
               "supplementaryInformation": "TextEntryVirtualKeyboard::TextEntryVirtualKeyboard",
@@ -201,7 +179,8 @@
                   "type": "BuiltinCommonInstructions::JsCode",
                   "inlineCode": "gdjs._extensionMobileKeyboard = gdjs._extensionMobileKeyboard || {};\r\n\r\nif (gdjs._extensionMobileKeyboard.closeKeyboard) { \r\n    gdjs._extensionMobileKeyboard.closeKeyboard(eventsFunctionContext);\r\n}",
                   "parameterObjects": "",
-                  "useStrict": true
+                  "useStrict": true,
+                  "eventsSheetExpanded": false
                 }
               ]
             }
@@ -211,6 +190,7 @@
               "codeOnly": false,
               "defaultValue": "",
               "description": "Object",
+              "longDescription": "",
               "name": "Object",
               "optional": false,
               "supplementaryInformation": "TextEntryObject::TextEntry",
@@ -220,6 +200,7 @@
               "codeOnly": false,
               "defaultValue": "",
               "description": "Behavior",
+              "longDescription": "",
               "name": "Behavior",
               "optional": false,
               "supplementaryInformation": "TextEntryVirtualKeyboard::TextEntryVirtualKeyboard",
@@ -272,7 +253,8 @@
                   "type": "BuiltinCommonInstructions::JsCode",
                   "inlineCode": "gdjs._extensionMobileKeyboard = gdjs._extensionMobileKeyboard || {};\n\nvar uniqueID = gdjs._extensionMobileKeyboard.getUniqueIdInObject(eventsFunctionContext);\nvar element = document.getElementById(uniqueID);\nif (element) {\n    element.parentNode.removeChild(element);\n}",
                   "parameterObjects": "",
-                  "useStrict": true
+                  "useStrict": true,
+                  "eventsSheetExpanded": false
                 }
               ]
             }
@@ -282,6 +264,7 @@
               "codeOnly": false,
               "defaultValue": "",
               "description": "Object",
+              "longDescription": "",
               "name": "Object",
               "optional": false,
               "supplementaryInformation": "TextEntryObject::TextEntry",
@@ -291,6 +274,7 @@
               "codeOnly": false,
               "defaultValue": "",
               "description": "Behavior",
+              "longDescription": "",
               "name": "Behavior",
               "optional": false,
               "supplementaryInformation": "TextEntryVirtualKeyboard::TextEntryVirtualKeyboard",
