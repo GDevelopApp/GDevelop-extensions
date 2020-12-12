@@ -6,7 +6,7 @@ const extensionsBasePath = path.join(__dirname, '..', extensionFolderName);
 
 const writeJSONFile = (path, object) => {
   return new Promise((resolve, reject) => {
-    fs.writeFile(path, JSON.stringify(object, null, 2), err => {
+    fs.writeFile(path, JSON.stringify(object, null, 2), (err) => {
       if (err) return reject(err);
 
       resolve();
@@ -14,7 +14,7 @@ const writeJSONFile = (path, object) => {
   });
 };
 
-const readFileContent = filename => {
+const readFileContent = (filename) => {
   return new Promise((resolve, reject) => {
     fs.readFile(filename, 'utf8', (err, content) => {
       if (err) return reject(err);
@@ -29,13 +29,17 @@ const readAllExtensions = () => {
     fs.readdir(extensionsBasePath, (error, filenames) => {
       if (error) return reject(error);
 
-      resolve(filenames.filter(name => name.indexOf('-header.json') === -1));
+      resolve(
+        filenames.filter(
+          (name) => name.endsWith('.json') && !name.endsWith('-header.json')
+        )
+      );
     });
-  }).then(filenames =>
+  }).then((filenames) =>
     Promise.all(
-      filenames.map(filename =>
+      filenames.map((filename) =>
         readFileContent(path.join(extensionsBasePath, filename)).then(
-          content => {
+          (content) => {
             return JSON.parse(content);
           }
         )
@@ -45,12 +49,12 @@ const readAllExtensions = () => {
 };
 
 readAllExtensions()
-  .then(extensions => {
+  .then((extensions) => {
     const allTagsSet = new Set();
     const extensionShortHeaders = [];
 
     return Promise.all(
-      extensions.map(extension => {
+      extensions.map((extension) => {
         // Generate the headers of the extension
         const extensionShortHeader = {
           shortDescription: extension.shortDescription,
@@ -72,7 +76,7 @@ readAllExtensions()
         };
 
         extensionShortHeaders.push(extensionShortHeader);
-        extension.tags.split(',').map(tag => {
+        extension.tags.split(',').map((tag) => {
           allTagsSet.add(tag.trim());
         });
 
@@ -99,7 +103,7 @@ readAllExtensions()
     () => {
       console.log(`✅ Headers and registry files successfully updated`);
     },
-    error => {
+    (error) => {
       console.error(
         `⚠️ Error while generating headers and registry files:`,
         error
