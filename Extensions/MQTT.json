@@ -1,14 +1,15 @@
 {
-  "author": "Arthur Pacaud (arthuro555)",
-  "description": "This extension wraps [MQTT.js](https://github.com/mqttjs/MQTT.js) to allow connections to a MQTT server and communication via pub/sub. Due to the web nature of GDevelop, the only transport method is Websockets. Make sure to use a broker that support those!\n\n# Dataloss\n\nThe dataloss let you chose how to handle data. Due to how the GDevelop event loop is made, only one message per topic can be processed per frame. When dataloss is on, when you get 2 messages from one topic in one frame, only the latest one is remembered. When it is off, the first message is processed and the second is queued for the next frame.\n\n# QoS\nHere is how QoS works:\n\n - QoS 0 : received at most once : The packet is sent, and that's it. There is no validation about whether it has been received.\n - QoS 1 : received at least once : The packet is sent and stored as long as the client has not received a confirmation from the server. MQTT ensures that it will be received, but there can be duplicates.\n - QoS 2 : received exactly once : Same as QoS 1 but there is no duplicates.\n\nAbout data consumption, obviously, QoS 2 > QoS 1 > QoS 0, if that's a concern to you.",
+  "author": "Arthur Pacaud (@arthuro555)",
+  "description": "This extension wraps [MQTT.js](https://github.com/mqttjs/MQTT.js) to allow connections to a MQTT server and communication via pub/sub. The only transport method is Websockets. Make sure to use a broker that support those!\n\n# Dataloss\n\nThe dataloss let you chose how to handle data. Due to how the GDevelop event loop is made, only one message per topic can be processed per frame. When dataloss is on, when you get 2 messages from one topic in one frame, only the latest one is remembered. When it is off, the first message is processed and the second is queued for the next frame.\n\n# QoS (Quality of service)\n\nHere is how QoS works:\n\n - QoS 0 (received at most once): The packet is sent, and that's it. There is no validation about whether it has been received.\n - QoS 1 (received at least once): The packet is sent and stored as long as the client has not received a confirmation from the server. MQTT ensures that it will be received, but there can be duplicates.\n - QoS 2 (received exactly once): Same as QoS 1 but there is no duplicates.\n\nAbout data consumption: QoS 2 will consume more than QoS 1, which will consume more than QoS 0.",
   "extensionNamespace": "",
-  "fullName": "MQTT Client",
+  "fullName": "MQTT Client (advanced)",
+  "helpPath": "",
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLW1lc3NhZ2UtZmxhc2giIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMjIgNEMyMiAyLjkgMjEuMSAyIDIwIDJINEMyLjkgMiAyIDIuOSAyIDRWMjJMNiAxOEgxNVYxMEgyMlY0TTIyLjUgMTZIMjAuM0wyMiAxMkgxN1YxOEgxOVYyM0wyMi41IDE2WiIgLz48L3N2Zz4=",
   "name": "MQTT",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/message-flash.svg",
-  "shortDescription": "This extension adds an MQTT client to GDevelop",
+  "shortDescription": "An MQTT client for GDevelop: allow connections to a MQTT server and send/receive messages.",
   "tags": "MQTT, IoT, connection, multiplayer",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "eventsFunctions": [
     {
       "description": "",
@@ -44,7 +45,7 @@
           "inlineCode": "// Parse settings\nconst settings = \"{\" + eventsFunctionContext.getArgument(\"settings\").slice(0, -1) + \"}\";\nlet settingsParsed;\ntry {\n    settingsParsed = JSON.parse(settings);\n} catch {\n    console.error(\"Invalid settings: \", settings);\n}\n\n// Connect to broker\ngdjs.evtTools.mqtt.connection = mqtt.connect(\n    (eventsFunctionContext.getArgument(\"secure\")\n        ? \"wss://\"\n        : \"ws://\")\n    + eventsFunctionContext.getArgument(\"host\"),\n    settingsParsed\n);\n\n// Set up listeners\ngdjs.evtTools.mqtt.connection.on(\"message\", (channel, message) => {\n    if (typeof gdjs.evtTools.mqtt.events[channel] === undefined) {\n        gdjs.evtTools.mqtt.events[channel] = {\n            loss: false,\n            data: [message],\n        };\n        return;\n    }\n    const mqttEvent = gdjs.evtTools.mqtt.events[channel];\n    if (mqttEvent.loss === true) {\n        mqttEvent.data = message;\n    } else {\n        if (!Array.isArray(mqttEvent.data)) mqttEvent.data = [];\n        mqttEvent.data.push(message);\n    }\n});\n\ngdjs.evtTools.mqtt.connection.on(\"error\", function(e) {\n    gdjs.evtTools.mqtt.lastError = e;\n});\n",
           "parameterObjects": "",
           "useStrict": true,
-          "eventsSheetExpanded": false
+          "eventsSheetExpanded": true
         }
       ],
       "parameters": [
@@ -71,7 +72,7 @@
         {
           "codeOnly": false,
           "defaultValue": "",
-          "description": "Use secure websockets?",
+          "description": "Use secure WebSockets?",
           "longDescription": "",
           "name": "secure",
           "optional": false,
