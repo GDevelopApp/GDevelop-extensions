@@ -17,7 +17,8 @@ A clear and concise description of what the extension is, how useful it is.
 - [ ] Extension has a proper name and description.
 - [ ] Extension has tags (for example: "platform, brick, breakable").
 - [ ] All behaviors have a description.
-- [ ] All functions (actions, conditions, expressions) have descriptions.
+- [ ] All functions (actions, conditions, expressions) have descriptions and proper sentences.
+- [ ] I've followed the best practices listed on http://wiki.compilgames.net/doku.php/gdevelop5/extensions/best-practices
 - [ ] I confirm that this extension can be intergrated to this GitHub repository, distributed and MIT licensed.
 
 ## Extension file
