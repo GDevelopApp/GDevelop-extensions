@@ -77,7 +77,7 @@ readAllExtensions()
 
         extensionShortHeaders.push(extensionShortHeader);
         extension.tags.split(',').map((tag) => {
-          allTagsSet.add(tag.trim());
+          allTagsSet.add(tag.trim().toLowerCase());
         });
 
         return writeJSONFile(
