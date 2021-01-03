@@ -55,6 +55,11 @@ readAllExtensions()
 
     return Promise.all(
       extensions.map((extension) => {
+        // Convert back to the old format for tags.
+        if (Array.isArray(extension.tags)) {
+          extension.tags = extension.tags.join(',');
+        }
+
         // Generate the headers of the extension
         const extensionShortHeader = {
           shortDescription: extension.shortDescription,
