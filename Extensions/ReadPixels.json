@@ -1,6 +1,6 @@
 {
   "author": "@Bouh",
-  "description": "This extension allow to read pixels on screen.\n\n| Expression | Argument  | Type  |\n|--|--|--|\n|  readPixelRed(x, y)  | position x: number, position y: number | number (255) |\n|  readPixelGreen(x, y)  | position x: number, position  y: number | number (255) |\n|  readPixelBlue(x, y)  | position x: number, position y: number | number (255) |\n|  readPixelAlpha(x, y)  | position x: number, position y: number | number (255) |",
+  "description": "\nThis extension allow to read pixels on screen.\n\n| Expression | Argument  | Type returned |\n|--|--|--|\n|  ReadPixelRed(x, y)  | position x: number, position y: number | number (0-255) |\n|  ReadPixelGreen(x, y)  | position x: number, position  y: number | number (0-255) |\n|  ReadPixelBlue(x, y)  | position x: number, position y: number | number (0-255) |\n|  ReadPixelAlpha(x, y)  | position x: number, position y: number | number (0-255) |",
   "extensionNamespace": "",
   "fullName": "Read pixels",
   "helpPath": "",
@@ -8,7 +8,7 @@
   "name": "ReadPixels",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Glyphster Pack/Master/SVG/Computers and Hardware/Computers and Hardware_screen_computer_image.svg",
   "shortDescription": "Read the values of pixels on the screen.",
-  "version": "0.0.1-rc",
+  "version": "0.0.2-rc",
   "tags": [
     "pixel",
     "colors",
@@ -18,7 +18,7 @@
   ],
   "eventsFunctions": [
     {
-      "description": "Return the alpha component of the pixel at specific position.",
+      "description": "Return the alpha component of the pixel at the specified position.",
       "fullName": "Read pixel alpha",
       "functionType": "Expression",
       "name": "ReadPixelAlpha",
@@ -67,7 +67,7 @@
       "objectGroups": []
     },
     {
-      "description": "Return the blue component of the pixel at specific position.",
+      "description": "Return the blue component of the pixel at the specified position.",
       "fullName": "Read pixel blue",
       "functionType": "Expression",
       "name": "ReadPixelBlue",
@@ -116,7 +116,7 @@
       "objectGroups": []
     },
     {
-      "description": "Return the green component of the pixel at specific position.",
+      "description": "Return the green component of the pixel at the specified position.",
       "fullName": "Read pixel green",
       "functionType": "Expression",
       "name": "ReadPixelGreen",
@@ -165,7 +165,7 @@
       "objectGroups": []
     },
     {
-      "description": "Return the red component of the pixel at specific position.",
+      "description": "Return the red component of the pixel at the specified position.",
       "fullName": "Read pixel red",
       "functionType": "Expression",
       "name": "ReadPixelRed",
@@ -224,7 +224,7 @@
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "\n// Define an new private object javascript for this extension\ngdjs._readPixels = {};\n\n// getCanvasType, the argument is HTMLCanvasElement\ngdjs._readPixels.getCanvasType = function (canvas) {\n    const is2d = canvas.getContext(\"2d\");\n    const isBitmap = canvas.getContext(\"bitmaprenderer\");\n    const isWebGL1 = canvas.getContext(\"webgl\");\n    const isWebGL2 = canvas.getContext(\"webgl2\");\n    const isExperimentalWebGL = canvas.getContext(\"experimental-webgl\");\n\n    return is2d ?\n        \"2d\" : isBitmap ?\n            \"bitmaprenderer\" : isWebGL1 ?\n                \"webgl\" : isWebGL2 ?\n                    \"webgl2\" : isExperimentalWebGL ?\n                        \"experimental-webgl\" : null;\n}\n\n\ngdjs._readPixels.getPixelColor = function (canvas, colorIndex, positionX, positionY) {\n    // colorIndex is the index to find in the pixel buffer stored in data constant below.\n    // Values can be 0, 1, 2, 3 for red, green, blue, alpha channel.\n\n    const gl = canvas.getContext(\"webgl2\");\n\n    const data = new Uint8Array(1 * 4); // [255,255,255,255] RGBA\n\n    const invertedPositionY = gl.drawingBufferHeight - positionY;\n    // mandatory because textures in webGL are invert before rendering in the canvas,\n    // otherwise the bottom left corner will be used\n\n    gl.readPixels(positionX, invertedPositionY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data); // Read 1 pixel and store it in data.\n\n    return data[colorIndex];\n\n}\n\n",
+          "inlineCode": "\n// Define an new private object javascript for this extension\ngdjs._readPixels = {};\n\n/** \n * @param {HTMLCanvasElement} canvas\n */\ngdjs._readPixels.getCanvasType = function (canvas) {\n    const is2d = canvas.getContext(\"2d\");\n    const isBitmap = canvas.getContext(\"bitmaprenderer\");\n    const isWebGL1 = canvas.getContext(\"webgl\");\n    const isWebGL2 = canvas.getContext(\"webgl2\");\n    const isExperimentalWebGL = canvas.getContext(\"experimental-webgl\");\n\n    return is2d ?\n        \"2d\" : isBitmap ?\n            \"bitmaprenderer\" : isWebGL1 ?\n                \"webgl\" : isWebGL2 ?\n                    \"webgl2\" : isExperimentalWebGL ?\n                        \"experimental-webgl\" : null;\n}\n\n/**\n * @param {HTMLCanvasElement} canvas\n * @param {number} colorIndex Should be 0, 1, 2 or 3, for red, green, blue or alpha channel.\n * @param {number} positionX The X position of the pixel on the canvas to read\n * @param {number} positionY The Y position of the pixel on the canvas to read\n */\ngdjs._readPixels.getPixelColor = function (canvas, colorIndex, positionX, positionY) {\n\n    const gl = canvas.getContext(\"webgl2\");\n\n    const data = new Uint8Array(1 * 4); // [255,255,255,255] RGBA\n\n    const invertedPositionY = gl.drawingBufferHeight - positionY;\n    // mandatory because textures in webGL are invert before rendering in the canvas,\n    // otherwise the bottom left corner will be used\n\n    gl.readPixels(positionX, invertedPositionY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data); // Read 1 pixel and store it in data.\n\n    return data[colorIndex];\n\n}\n\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": true
