@@ -99,7 +99,7 @@ readAllExtensions()
         extensionShortHeaders,
       };
       return writeJSONFile(
-        path.join('..', 'extensions-registry.json'),
+        path.join(__dirname, '..', 'extensions-registry.json'),
         registry
       );
     });
