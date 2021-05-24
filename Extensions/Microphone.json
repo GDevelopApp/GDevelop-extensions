@@ -28,7 +28,7 @@
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "window.AudioContext = window.AudioContext || window.webkitAudioContext;\nnavigator.getUserMedia = \n        \tnavigator.getUserMedia ||\n        \tnavigator.webkitGetUserMedia ||\n        \tnavigator.mozGetUserMedia;\n\ngdjs.microphone = {};\ngdjs.microphone.context = new AudioContext();\ngdjs.microphone.meter = createAudioMeter(gdjs.microphone.context);\n\n// AudioMeter, https://github.com/cwilso/volume-meter/blob/master/volume-meter.js\nfunction createAudioMeter(audioContext,clipLevel,averaging,clipLag) {\n\tvar processor = audioContext.createScriptProcessor(512);\n\tprocessor.onaudioprocess = volumeAudioProcess;\n\tprocessor.clipping = false;\n\tprocessor.lastClip = 0;\n\tprocessor.volume = 0;\n\tprocessor.clipLevel = clipLevel || 0.98;\n\tprocessor.averaging = averaging || 0.95;\n\tprocessor.clipLag = clipLag || 750;\n\n\t// this will have no effect, since we don't copy the input to the output,\n\t// but works around a current Chrome bug.\n\tprocessor.connect(audioContext.destination);\n\n\tprocessor.checkClipping =\n\t\tfunction(){\n\t\t\tif (!this.clipping)\n\t\t\t\treturn false;\n\t\t\tif ((this.lastClip + this.clipLag) < window.performance.now())\n\t\t\t\tthis.clipping = false;\n\t\t\treturn this.clipping;\n\t\t};\n\n\tprocessor.shutdown =\n\t\tfunction(){\n\t\t\tthis.disconnect();\n\t\t\tthis.onaudioprocess = null;\n\t\t};\n\n\treturn processor;\n}\n\nfunction volumeAudioProcess( event ) {\n\tvar buf = event.inputBuffer.getChannelData(0);\n    var bufLength = buf.length;\n\tvar sum = 0;\n    var x;\n\n\t// Do a root-mean-square on the samples: sum up the squares...\n    for (var i=0; i<bufLength; i++) {\n    \tx = buf[i];\n    \tif (Math.abs(x)>=this.clipLevel) {\n    \t\tthis.clipping = true;\n    \t\tthis.lastClip = window.performance.now();\n    \t}\n    \tsum += x * x;\n    }\n\n    // ... then take the square root of the sum.\n    var rms =  Math.sqrt(sum / bufLength);\n\n    // Now smooth this out with the averaging factor applied\n    // to the previous sample - take the max here because we\n    // want \"fast attack, slow release.\"\n    this.volume = Math.max(rms, this.volume*this.averaging);\n}\n",
+          "inlineCode": "window.AudioContext = window.AudioContext || window.webkitAudioContext;\nnavigator.getUserMedia = \n        \tnavigator.getUserMedia ||\n        \tnavigator.webkitGetUserMedia ||\n        \tnavigator.mozGetUserMedia;\n\ngdjs._microphoneTools = {};\ngdjs._microphoneTools.context = new AudioContext();\ngdjs._microphoneTools.meter = createAudioMeter(gdjs._microphoneTools.context);\n\n// AudioMeter, https://github.com/cwilso/volume-meter/blob/master/volume-meter.js\nfunction createAudioMeter(audioContext,clipLevel,averaging,clipLag) {\n\tvar processor = audioContext.createScriptProcessor(512);\n\tprocessor.onaudioprocess = volumeAudioProcess;\n\tprocessor.clipping = false;\n\tprocessor.lastClip = 0;\n\tprocessor.volume = 0;\n\tprocessor.clipLevel = clipLevel || 0.98;\n\tprocessor.averaging = averaging || 0.95;\n\tprocessor.clipLag = clipLag || 750;\n\n\t// this will have no effect, since we don't copy the input to the output,\n\t// but works around a current Chrome bug.\n\tprocessor.connect(audioContext.destination);\n\n\tprocessor.checkClipping =\n\t\tfunction(){\n\t\t\tif (!this.clipping)\n\t\t\t\treturn false;\n\t\t\tif ((this.lastClip + this.clipLag) < window.performance.now())\n\t\t\t\tthis.clipping = false;\n\t\t\treturn this.clipping;\n\t\t};\n\n\tprocessor.shutdown =\n\t\tfunction(){\n\t\t\tthis.disconnect();\n\t\t\tthis.onaudioprocess = null;\n\t\t};\n\n\treturn processor;\n}\n\nfunction volumeAudioProcess( event ) {\n\tvar buf = event.inputBuffer.getChannelData(0);\n    var bufLength = buf.length;\n\tvar sum = 0;\n    var x;\n\n\t// Do a root-mean-square on the samples: sum up the squares...\n    for (var i=0; i<bufLength; i++) {\n    \tx = buf[i];\n    \tif (Math.abs(x)>=this.clipLevel) {\n    \t\tthis.clipping = true;\n    \t\tthis.lastClip = window.performance.now();\n    \t}\n    \tsum += x * x;\n    }\n\n    // ... then take the square root of the sum.\n    var rms =  Math.sqrt(sum / bufLength);\n\n    // Now smooth this out with the averaging factor applied\n    // to the previous sample - take the max here because we\n    // want \"fast attack, slow release.\"\n    this.volume = Math.max(rms, this.volume*this.averaging);\n}\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -49,7 +49,7 @@
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "navigator.getUserMedia(\r\n    {\r\n        \"audio\": {\r\n            \"mandatory\": {\r\n                \"googEchoCancellation\": \"false\",\r\n                \"googAutoGainControl\": \"false\",\r\n                \"googNoiseSuppression\": \"false\",\r\n                \"googHighpassFilter\": \"false\"\r\n            },\r\n            \"optional\": []\r\n        },\r\n    }, \r\n    function(stream) {\r\n        gdjs.microphone.granted = true;\r\n        gdjs.microphone.mediaStream = gdjs.microphone.context.createMediaStreamSource(stream);\r\n        gdjs.microphone.mediaStream.connect(gdjs.microphone.meter);\r\n    },\r\n    function() {gdjs.microphone.denied = true;}\r\n);",
+          "inlineCode": "navigator.getUserMedia(\r\n    {\r\n        \"audio\": {\r\n            \"mandatory\": {\r\n                \"googEchoCancellation\": \"false\",\r\n                \"googAutoGainControl\": \"false\",\r\n                \"googNoiseSuppression\": \"false\",\r\n                \"googHighpassFilter\": \"false\"\r\n            },\r\n            \"optional\": []\r\n        },\r\n    }, \r\n    function(stream) {\r\n        gdjs._microphoneTools.granted = true;\r\n        gdjs._microphoneTools.mediaStream = gdjs._microphoneTools.context.createMediaStreamSource(stream);\r\n        gdjs._microphoneTools.mediaStream.connect(gdjs._microphoneTools.meter);\r\n    },\r\n    function() {gdjs._microphoneTools.denied = true;}\r\n);",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -70,7 +70,7 @@
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "if(gdjs.microphone.denied) {\n    gdjs.microphone.denied = false;\n    eventsFunctionContext.returnValue = true;\n}\n",
+          "inlineCode": "if(gdjs._microphoneTools.denied) {\n    gdjs._microphoneTools.denied = false;\n    eventsFunctionContext.returnValue = true;\n}\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -91,7 +91,7 @@
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "if(gdjs.microphone.granted) {\n    gdjs.microphone.granted = false;\n    eventsFunctionContext.returnValue = true;\n}\n",
+          "inlineCode": "if(gdjs._microphoneTools.granted) {\n    gdjs._microphoneTools.granted = false;\n    eventsFunctionContext.returnValue = true;\n}\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -112,7 +112,7 @@
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "if(gdjs.microphone.meter) {\r\n    eventsFunctionContext.returnValue = gdjs.microphone.meter.volume;\r\n}\r\n",
+          "inlineCode": "if(gdjs._microphoneTools.meter) {\r\n    eventsFunctionContext.returnValue = gdjs._microphoneTools.meter.volume;\r\n}\r\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
