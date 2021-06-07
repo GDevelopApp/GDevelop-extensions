@@ -1,0 +1,126 @@
+{
+  "author": "Arthur Pacaud (arthuro555)",
+  "description": "Allows getting the volume of the microphone.\n\n- Request mic access (action)\n- Mic access granted (condition)\n- Mic access denied (condition)\n- Get mic volume (expression)",
+  "extensionNamespace": "",
+  "fullName": "Microphone",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLW1pY3JvcGhvbmUiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIsMkEzLDMgMCAwLDEgMTUsNVYxMUEzLDMgMCAwLDEgMTIsMTRBMywzIDAgMCwxIDksMTFWNUEzLDMgMCAwLDEgMTIsMk0xOSwxMUMxOSwxNC41MyAxNi4zOSwxNy40NCAxMywxNy45M1YyMUgxMVYxNy45M0M3LjYxLDE3LjQ0IDUsMTQuNTMgNSwxMUg3QTUsNSAwIDAsMCAxMiwxNkE1LDUgMCAwLDAgMTcsMTFIMTlaIiAvPjwvc3ZnPg==",
+  "name": "Microphone",
+  "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/microphone.svg",
+  "shortDescription": "Integrates the microphone into your games, a request for get access to mic is required, an action is provided for that.",
+  "version": "0.0.1",
+  "tags": [
+    "microphone",
+    "input",
+    "volume"
+  ],
+  "dependencies": [],
+  "eventsFunctions": [
+    {
+      "description": "",
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onFirstSceneLoaded",
+      "private": false,
+      "sentence": "",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "window.AudioContext = window.AudioContext || window.webkitAudioContext;\nnavigator.getUserMedia = \n        \tnavigator.getUserMedia ||\n        \tnavigator.webkitGetUserMedia ||\n        \tnavigator.mozGetUserMedia;\n\ngdjs._microphoneTools = {};\ngdjs._microphoneTools.context = new AudioContext();\ngdjs._microphoneTools.meter = createAudioMeter(gdjs._microphoneTools.context);\n\n// AudioMeter, https://github.com/cwilso/volume-meter/blob/master/volume-meter.js\nfunction createAudioMeter(audioContext,clipLevel,averaging,clipLag) {\n\tvar processor = audioContext.createScriptProcessor(512);\n\tprocessor.onaudioprocess = volumeAudioProcess;\n\tprocessor.clipping = false;\n\tprocessor.lastClip = 0;\n\tprocessor.volume = 0;\n\tprocessor.clipLevel = clipLevel || 0.98;\n\tprocessor.averaging = averaging || 0.95;\n\tprocessor.clipLag = clipLag || 750;\n\n\t// this will have no effect, since we don't copy the input to the output,\n\t// but works around a current Chrome bug.\n\tprocessor.connect(audioContext.destination);\n\n\tprocessor.checkClipping =\n\t\tfunction(){\n\t\t\tif (!this.clipping)\n\t\t\t\treturn false;\n\t\t\tif ((this.lastClip + this.clipLag) < window.performance.now())\n\t\t\t\tthis.clipping = false;\n\t\t\treturn this.clipping;\n\t\t};\n\n\tprocessor.shutdown =\n\t\tfunction(){\n\t\t\tthis.disconnect();\n\t\t\tthis.onaudioprocess = null;\n\t\t};\n\n\treturn processor;\n}\n\nfunction volumeAudioProcess( event ) {\n\tvar buf = event.inputBuffer.getChannelData(0);\n    var bufLength = buf.length;\n\tvar sum = 0;\n    var x;\n\n\t// Do a root-mean-square on the samples: sum up the squares...\n    for (var i=0; i<bufLength; i++) {\n    \tx = buf[i];\n    \tif (Math.abs(x)>=this.clipLevel) {\n    \t\tthis.clipping = true;\n    \t\tthis.lastClip = window.performance.now();\n    \t}\n    \tsum += x * x;\n    }\n\n    // ... then take the square root of the sum.\n    var rms =  Math.sqrt(sum / bufLength);\n\n    // Now smooth this out with the averaging factor applied\n    // to the previous sample - take the max here because we\n    // want \"fast attack, slow release.\"\n    this.volume = Math.max(rms, this.volume*this.averaging);\n}\n",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Requests an access to the microphone.",
+      "fullName": "Request microphone access",
+      "functionType": "Action",
+      "name": "RequestMicrophoneAccess",
+      "private": false,
+      "sentence": "Request microphone access",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "navigator.getUserMedia(\r\n    {\r\n        \"audio\": {\r\n            \"mandatory\": {\r\n                \"googEchoCancellation\": \"false\",\r\n                \"googAutoGainControl\": \"false\",\r\n                \"googNoiseSuppression\": \"false\",\r\n                \"googHighpassFilter\": \"false\"\r\n            },\r\n            \"optional\": []\r\n        },\r\n    }, \r\n    function(stream) {\r\n        gdjs._microphoneTools.granted = true;\r\n        gdjs._microphoneTools.mediaStream = gdjs._microphoneTools.context.createMediaStreamSource(stream);\r\n        gdjs._microphoneTools.mediaStream.connect(gdjs._microphoneTools.meter);\r\n    },\r\n    function() {gdjs._microphoneTools.denied = true;}\r\n);",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Triggers once when the access to the microphone has been denied.",
+      "fullName": "Microphone access denied",
+      "functionType": "Condition",
+      "name": "MicrophoneDenied",
+      "private": false,
+      "sentence": "Microphone access denied",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "if(gdjs._microphoneTools.denied) {\n    gdjs._microphoneTools.denied = false;\n    eventsFunctionContext.returnValue = true;\n}\n",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Triggers once when the access to the microphone has been granted.",
+      "fullName": "Microphone access granted",
+      "functionType": "Condition",
+      "name": "MicrophoneGranted",
+      "private": false,
+      "sentence": "Microphone access granted",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "if(gdjs._microphoneTools.granted) {\n    gdjs._microphoneTools.granted = false;\n    eventsFunctionContext.returnValue = true;\n}\n",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Returns the microphone volume (how loud the sound is, 0 is silent to 1 is higher and louder). ",
+      "fullName": "Get microphone volume",
+      "functionType": "Expression",
+      "name": "Volume",
+      "private": false,
+      "sentence": "",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "if(gdjs._microphoneTools.meter) {\r\n    eventsFunctionContext.returnValue = gdjs._microphoneTools.meter.volume;\r\n}\r\n",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": []
+}
