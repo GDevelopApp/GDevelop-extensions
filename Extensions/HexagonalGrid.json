@@ -8,7 +8,7 @@
   "name": "HexagonalGrid",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/hexagon-multiple-outline.svg",
   "shortDescription": "Action to snap objects to a virtual hexagonal grid during the game.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "tags": [
     "hexagon",
     "bubble",
@@ -110,7 +110,7 @@
             "textG": 0,
             "textR": 0
           },
-          "comment": "Note: this is the exact same code as for pointy topped hexagonal grid with x and y swapped. It could be factorized when GDevelop allows to use a custom action inside a custom action.",
+          "comment": "Note: this is the exact same code as for pointy topped hexagonal grid with x and y swapped.",
           "comment2": ""
         },
         {
@@ -197,20 +197,11 @@
             "textG": 0,
             "textR": 0
           },
-          "comment": "This grid is like bottles stacking, odd lines are shifted from half a cell. \n\nOn an hexagonal grid a line height is 3/4 of sprite height but with bubbles it is sin(60°) that is around 0.866 which is near 7/8 = 0.875\n(7/6)/(3/4) = 7/6\nUsing this ratio, the cellHeigt gives the 7/8 line height and this allows integer position as assets are often a multiple of 8.\n\nNote: this is the exact same code as for pointy topped hexagonal grid with a height factor. It could be factorized when GDevelop allows to use a custom action inside a custom action.",
+          "comment": "This grid is like bottles stacking, odd lines are shifted from half a cell. \n\nOn an hexagonal grid a line height is 3/4 of sprite height but with bubbles it is sin(60°) that is around 0.866 which is near 7/8 = 0.875\n(7/6)/(3/4) = 7/6\nUsing this ratio, the cellHeigt gives the 7/8 line height and this allows integer position as assets are often a multiple of 8.",
           "comment2": ""
         },
         {
           "disabled": false,
-          "folded": false,
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "// Insired from: https://www.redblobgames.com/grids/hexagons\n\nconst cellWidth = eventsFunctionContext.getArgument(\"CellWidth\");\nconst cellHeight = eventsFunctionContext.getArgument(\"CellHeight\") * 7/6;\nconst offsetX = eventsFunctionContext.getArgument(\"OffsetX\");\nconst offsetY = eventsFunctionContext.getArgument(\"OffsetY\");\n\nfor (const object of objects)\n{\n    // Find the hexagon cube coordinates for a given position \n\n    // The following is a simplified version of this:\n    //\n    // const x = (object.getX() - offsetX) * Math.sqrt(3) / cellWidth;\n    // const y = (object.getY() - offsetY) * 2 / cellHeight;\n    //\n    // const cubeX = Math.sqrt(3) / 3 * x  -  1/3 * y;\n    // const cubeZ =                          2/3 * y;\n\n    const x = (object.getX() - offsetX) / cellWidth;\n    const y = (object.getY() - offsetY) / cellHeight;\n\n    const cubeX = x - 2/3 * y;\n    const cubeZ =     4/3 * y;\n    const cubeY = -cubeX - cubeZ;\n\n    let roundX = Math.round(cubeX);\n    let roundY = Math.round(cubeY);\n    let roundZ = Math.round(cubeZ);\n\n    const deltaX = Math.abs(roundX - cubeX);\n    const deltaY = Math.abs(roundY - cubeY);\n    const deltaZ = Math.abs(roundZ - cubeZ);\n\n    if (deltaX > deltaY && deltaX > deltaZ)\n    {\n        roundX = -roundY - roundZ;\n    }\n    else if (deltaY > deltaZ)\n    {\n        roundY = -roundX - roundZ;\n    }\n    else\n    {\n        roundZ = -roundX - roundY;\n    }\n\n    // Hexagon cube coordinates to hexagon position\n\n    // The following is a simplified version of this:\n    //\n    // const positionX = Math.sqrt(3) * roundX  + Math.sqrt(3)/2 * roundZ;\n    // const positionY =                          3/2 * roundZ;\n    //\n    // object.setX(positionX * cellWidth / Math.sqrt(3) + offsetX);\n    // object.setY(positionY * cellHeight / 2 + offsetY);\n\n    const positionX = roundX + 1/2 * roundZ;\n    const positionY =          3/4 * roundZ;\n\n    object.setX(positionX * cellWidth + offsetX);\n    object.setY(positionY * cellHeight + offsetY);\n}",
-          "parameterObjects": "Object",
-          "useStrict": true,
-          "eventsSheetExpanded": true
-        },
-        {
-          "disabled": true,
           "folded": false,
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [],
@@ -222,7 +213,7 @@
               },
               "parameters": [
                 "",
-                "Bubble",
+                "Object",
                 "GetArgumentAsNumber(\"CellWidth\")",
                 "GetArgumentAsNumber(\"CellHeight\") * 7/6",
                 "GetArgumentAsNumber(\"OffsetX\")",
