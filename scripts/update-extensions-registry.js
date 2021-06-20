@@ -40,7 +40,10 @@ const readAllExtensions = () => {
       filenames.map((filename) =>
         readFileContent(path.join(extensionsBasePath, filename)).then(
           (content) => {
-            return JSON.parse(content);
+            return {
+              filename,
+              extension: JSON.parse(content),
+            };
           }
         )
       )
@@ -49,15 +52,32 @@ const readAllExtensions = () => {
 };
 
 readAllExtensions()
-  .then((extensions) => {
+  .then((extensionWithFilenames) => {
     const allTagsSet = new Set();
     const extensionShortHeaders = [];
 
     return Promise.all(
-      extensions.map((extension) => {
+      extensionWithFilenames.map((extensionWithFilename) => {
+        const { extension, filename } = extensionWithFilename;
+
         // Convert back to the old format for tags.
         if (Array.isArray(extension.tags)) {
           extension.tags = extension.tags.join(',');
+        }
+
+        const { name } = extension;
+
+        // Do some consistency checks.
+        if (name.endsWith('Extension')) {
+          throw new Error(
+            `Extension names should not finish with \"Extension\". Please rename ${name}.`
+          );
+        }
+
+        if (name + '.json' !== filename) {
+          throw new Error(
+            `Extension filename should be exactly the name of the extension (with .json extension). Please rename ${name} and/or ${filename}.`
+          );
         }
 
         // Generate the headers of the extension
@@ -65,10 +85,10 @@ readAllExtensions()
           shortDescription: extension.shortDescription,
           extensionNamespace: extension.extensionNamespace,
           fullName: extension.fullName,
-          name: extension.name,
+          name,
           version: extension.version,
-          url: `${extensionFolderName}/${extension.name}.json`,
-          headerUrl: `${extensionFolderName}/${extension.name}-header.json`,
+          url: `${extensionFolderName}/${name}.json`,
+          headerUrl: `${extensionFolderName}/${name}-header.json`,
           tags: extension.tags,
           previewIconUrl: extension.previewIconUrl,
           eventsBasedBehaviorsCount: extension.eventsBasedBehaviors.length,
