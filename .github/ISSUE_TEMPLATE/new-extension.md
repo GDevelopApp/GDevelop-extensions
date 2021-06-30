@@ -7,13 +7,15 @@ assignees: ''
 
 ---
 
-**⚠️ Please edit and complete this before submitting your extension:**
+<!--
+⚠️ Thank you for your time and efforts on this new extension!
+⚠️ Please edit and complete this before submitting:
+-->
 
 ## Describe the extension
 A clear and concise description of what the extension is, how useful it is.
 
 ## Checklist
-
 - [ ] Extension has a proper name and description.
 - [ ] Extension has tags (for example: "platform, brick, breakable").
 - [ ] All behaviors have a description.
@@ -22,7 +24,6 @@ A clear and concise description of what the extension is, how useful it is.
 - [ ] I confirm that this extension can be intergrated to this GitHub repository, distributed and MIT licensed.
 
 ## Extension file
-
 Finally, attach the .json file of your extension here.
 
 You also may have to create an account on GitHub before posting.
