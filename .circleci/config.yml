@@ -1,0 +1,66 @@
+version: 2.1
+
+orbs:
+  aws-cli: circleci/aws-cli@2.0.2
+
+jobs:
+  install:
+    docker:
+      - image: cimg/node:14.17.0
+    steps:
+      - checkout
+      - run: npm install
+      - persist_to_workspace:
+          root: .
+          paths:
+            - node_modules
+  tests:
+    docker:
+      - image: cimg/node:14.17.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: npm run check-types
+      - run: npm test
+      - run: npm run check-format
+  build:
+    docker:
+      - image: cimg/node:14.17.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: npm run build
+      - run: npm run check-post-build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - dist
+  deploy:
+    docker:
+      - image: cimg/node:14.17.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - aws-cli/setup
+      - run: npm run deploy -- --cf-zoneid $CLOUDFLARE_ZONE_ID --cf-token $CLOUDFLARE_TOKEN
+
+workflows:
+  tests:
+    jobs:
+      - install
+      - build:
+          requires:
+            - install
+      - tests:
+          requires:
+            - install
+      - deploy:
+          requires:
+            - build
+            - tests
+          filters:
+            branches:
+              only: main
