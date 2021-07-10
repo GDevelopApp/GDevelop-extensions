@@ -96,6 +96,7 @@ const readAllExtensions = async () => {
         /** @type {ExtensionHeader} */
         const extensionHeader = {
           ...extensionShortHeader,
+          helpPath: extension.helpPath,
           description: extension.description,
           iconUrl: extension.iconUrl,
         };

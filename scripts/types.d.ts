@@ -15,6 +15,7 @@ export interface ExtensionShortHeader {
 
 export interface ExtensionHeader extends ExtensionShortHeader {
   description: string;
+  helpPath: string;
   iconUrl: string;
 }
 
