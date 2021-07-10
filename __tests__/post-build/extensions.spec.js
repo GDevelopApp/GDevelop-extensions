@@ -6,7 +6,7 @@ const path = require('path');
 
 const distExtensionsPath = path.join(__dirname, '../../dist/extensions');
 
-/** @return {Promise<ExtensionsDatabase]>} */
+/** @return {Promise<ExtensionsDatabase>} */
 const getExtensionsDatabase = async () => {
   const extensionsDatabase = await fs.readFile(
     path.join(
