@@ -4,8 +4,12 @@ about: Create a bug report about an extension (for GDevelop itself, go to https:
 
 ---
 
-## Describe the bug of the extension
+<!--
+⚠️ Thank you for your time and efforts for reporting an issue!
+⚠️ Please edit and complete this before submitting:
+-->
 
+## Describe the bug of the extension
 Enter the name of the extension.
 Then a clear and concise description of what the bug is.
 
