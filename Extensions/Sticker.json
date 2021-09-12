@@ -8,7 +8,7 @@
   "name": "Sticker",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/sticker-outline.svg",
   "shortDescription": "Stick an object on another",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "tags": [
     "sticker",
     "stick",
@@ -37,7 +37,7 @@
               "disabled": false,
               "folded": false,
               "type": "BuiltinCommonInstructions::JsCode",
-              "inlineCode": "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\n\n\nfor (const object of objects) {\n    const behavior = object.getBehavior(behaviorName);\n\n    const prototype = Object.getPrototypeOf(behavior);\n    if (!prototype.updateRelativeCoordinates) {\n        /**\n         * Update the coordinates in the basisObject basis.\n         * \n         * It uses the basisObject coordinates from the previous frame.\n         * This way, the sticker can move relatively to it and still\n         * follow basisObject.\n         * \n         * @param basisObject {gdjs.RuntimeObject}\n         */\n        prototype.updateRelativeCoordinates = function (basisObject) {\n            const object = this.owner;\n\n            // Update relative coordinates\n            this.relativeX = object.getX() - this.basisOldX;\n            this.relativeY = object.getY() - this.basisOldY;\n            if (!behavior._getOnlyFollowPosition()) {\n                this.relativeAngle = object.getAngle() - this.basisOldAngle;\n                this.relativeWidth = object.getWidth() / this.basisOldWidth;\n                this.relativeHeight = object.getHeight() / this.basisOldHeight;\n                const deltaX = object.getCenterXInScene() - this.basisOldCenterXInScene;\n                const deltaY = object.getCenterYInScene() - this.basisOldCenterYInScene;\n                const angle = this.basisOldAngle * Math.PI / 180;\n                this.relativeRotatedX = (deltaX * Math.cos(angle) + deltaY * Math.sin(angle)) / this.basisOldWidth;\n                this.relativeRotatedY = (-deltaX * Math.sin(angle) + deltaY * Math.cos(angle)) / this.basisOldHeight;\n\n                // Save initial values to avoid calculus and rounding errors\n                this.basisOriginalWidth = basisObject.getWidth();\n                this.basisOriginalHeight = basisObject.getHeight();\n                this.basisOriginalAngle = basisObject.getAngle();\n            }\n        }\n\n        /**\n         * Copy the coordinates to use it the next frame.\n         * @param basisObject {gdjs.RuntimeObject}\n         */\n        prototype.upateOldCoordinates = function (basisObject) {\n            const object = this.owner;\n\n            this.ownerOldX = object.getX();\n            this.ownerOldY = object.getY();\n\n            this.basisOldX = basisObject.getX();\n            this.basisOldY = basisObject.getY();\n\n            if (!behavior._getOnlyFollowPosition()) {\n                this.ownerOldAngle = object.getAngle();\n                this.ownerOldWidth = object.getWidth();\n                this.ownerOldHeight = object.getHeight();\n\n                this.basisOldAngle = basisObject.getAngle();\n                this.basisOldWidth = basisObject.getWidth();\n                this.basisOldHeight = basisObject.getHeight();\n                this.basisOldCenterXInScene = basisObject.getCenterXInScene();\n                this.basisOldCenterYInScene = basisObject.getCenterYInScene();\n            }\n        }\n    }\n}",
+              "inlineCode": "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\n\nfor (const object of objects) {\n    const behavior = object.getBehavior(behaviorName);\n\n    const prototype = Object.getPrototypeOf(behavior);\n    if (!prototype.updateRelativeCoordinates) {\n        // Unstick from deleted objects.\n        runtimeScene.__allStickers = new Set();\n        gdjs.registerObjectDeletedFromSceneCallback(function (runtimeScene, obj) {\n            for (const sticker of runtimeScene.__allStickers) {\n                if (sticker.basisObject === obj) {\n                    sticker.basisObject = null;\n                }\n            }\n        });\n\n        /**\n         * Update the coordinates in the basisObject basis.\n         * \n         * It uses the basisObject coordinates from the previous frame.\n         * This way, the sticker can move relatively to it and still\n         * follow basisObject.\n         * \n         * @param basisObject {gdjs.RuntimeObject}\n         */\n        prototype.updateRelativeCoordinates = function (basisObject) {\n            const object = this.owner;\n\n            // Update relative coordinates\n            this.relativeX = object.getX() - this.basisOldX;\n            this.relativeY = object.getY() - this.basisOldY;\n            if (!behavior._getOnlyFollowPosition()) {\n                this.relativeAngle = object.getAngle() - this.basisOldAngle;\n                this.relativeWidth = object.getWidth() / this.basisOldWidth;\n                this.relativeHeight = object.getHeight() / this.basisOldHeight;\n                const deltaX = object.getCenterXInScene() - this.basisOldCenterXInScene;\n                const deltaY = object.getCenterYInScene() - this.basisOldCenterYInScene;\n                const angle = this.basisOldAngle * Math.PI / 180;\n                this.relativeRotatedX = (deltaX * Math.cos(angle) + deltaY * Math.sin(angle)) / this.basisOldWidth;\n                this.relativeRotatedY = (-deltaX * Math.sin(angle) + deltaY * Math.cos(angle)) / this.basisOldHeight;\n\n                // Save initial values to avoid calculus and rounding errors\n                this.basisOriginalWidth = basisObject.getWidth();\n                this.basisOriginalHeight = basisObject.getHeight();\n                this.basisOriginalAngle = basisObject.getAngle();\n            }\n        }\n\n        /**\n         * Copy the coordinates to use it the next frame.\n         * @param basisObject {gdjs.RuntimeObject}\n         */\n        prototype.upateOldCoordinates = function (basisObject) {\n            const object = this.owner;\n\n            this.ownerOldX = object.getX();\n            this.ownerOldY = object.getY();\n\n            this.basisOldX = basisObject.getX();\n            this.basisOldY = basisObject.getY();\n\n            if (!behavior._getOnlyFollowPosition()) {\n                this.ownerOldAngle = object.getAngle();\n                this.ownerOldWidth = object.getWidth();\n                this.ownerOldHeight = object.getHeight();\n\n                this.basisOldAngle = basisObject.getAngle();\n                this.basisOldWidth = basisObject.getWidth();\n                this.basisOldHeight = basisObject.getHeight();\n                this.basisOldCenterXInScene = basisObject.getCenterXInScene();\n                this.basisOldCenterYInScene = basisObject.getCenterYInScene();\n            }\n        }\n    }\n    runtimeScene.__allStickers.add(behavior);\n}",
               "parameterObjects": "Object",
               "useStrict": true,
               "eventsSheetExpanded": true
@@ -251,6 +251,48 @@
               "optional": false,
               "supplementaryInformation": "",
               "type": "objectList"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "",
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onDestroy",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\n\nfor (const object of objects) {\n    const behavior = object.getBehavior(behaviorName);\n\n    runtimeScene.__allStickers.delete(behavior);\n}",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "Sticker::Sticker",
+              "type": "behavior"
             }
           ],
           "objectGroups": []
