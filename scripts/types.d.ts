@@ -1,4 +1,5 @@
 export interface ExtensionShortHeader {
+  authorIds: Array<string>;
   shortDescription: string;
   extensionNamespace: string;
   fullName: string;

@@ -79,6 +79,7 @@ const readAllExtensions = async () => {
         // Generate the headers of the extension
         /** @type {ExtensionShortHeader} */
         const extensionShortHeader = {
+          authorIds: extension.authorIds,
           shortDescription: extension.shortDescription,
           extensionNamespace: extension.extensionNamespace,
           fullName: extension.fullName,
