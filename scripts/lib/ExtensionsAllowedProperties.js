@@ -22,7 +22,12 @@ module.exports = {
       'Variable',
       'RuntimeObject',
     ],
-    gdjsEvtToolsAllowedProperties: ['network', 'common'],
+    gdjsEvtToolsAllowedProperties: [
+      'network',
+      'common',
+      // 'object' is not allowed by default because it contains advanced object
+      // filtering functions that should be reviewed per extension.
+    ],
     runtimeSceneAllowedProperties: ['getVariables', 'getLayer', 'getGame'],
     javaScriptObjectAllowedProperties: ['keys'],
   },
@@ -89,21 +94,18 @@ module.exports = {
       gdjsAllowedProperties: ['_extensionMobileKeyboard'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
-
       javaScriptObjectAllowedProperties: [],
     },
     RenderToSprite: {
       gdjsAllowedProperties: ['_renderToSprite'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: ['getRenderer'],
-
       javaScriptObjectAllowedProperties: [],
     },
     Gamepads: {
       gdjsAllowedProperties: ['_extensionController'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
-
       javaScriptObjectAllowedProperties: [],
     },
     Sticker: {
@@ -113,7 +115,6 @@ module.exports = {
       ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: ['__allStickers'],
-
       javaScriptObjectAllowedProperties: [
         // Extend a behavior with JavaScript:
         'getPrototypeOf',
@@ -123,21 +124,24 @@ module.exports = {
       gdjsAllowedProperties: ['_readPixels'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
-
       javaScriptObjectAllowedProperties: [],
     },
     LinkTools: {
       gdjsAllowedProperties: ['LinksManager'],
       gdjsEvtToolsAllowedProperties: ['object'],
       runtimeSceneAllowedProperties: [],
-
       javaScriptObjectAllowedProperties: [],
     },
     TextEntryConsole: {
       gdjsAllowedProperties: ['TextEntryRuntimeObject'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
-
+      javaScriptObjectAllowedProperties: [],
+    },
+    YandexGamesSDK: {
+      gdjsAllowedProperties: ['_YandexGamesSDK'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
   },
