@@ -1,6 +1,9 @@
 const path = require('path');
 const fs = require('fs').promises;
 const shell = require('shelljs');
+const {
+  checkExtensionForDisallowedProperties,
+} = require('./lib/ExtensionValidator');
 
 const extensionsBasePath = path.join(__dirname, '..', 'Extensions');
 const distBasePath = path.join(__dirname, '..', 'dist');
@@ -52,6 +55,8 @@ const readAllExtensions = async () => {
     /** @type {ExtensionShortHeader[]} */
     const extensionShortHeaders = [];
 
+    let hasErrors = false;
+
     await Promise.all(
       extensionWithFilenames.map(async (extensionWithFilename) => {
         const { extension, filename } = extensionWithFilename;
@@ -65,14 +70,26 @@ const readAllExtensions = async () => {
 
         // Do some consistency checks.
         if (name.endsWith('Extension')) {
-          throw new Error(
-            `Extension names should not finish with \"Extension\". Please rename ${name}.`
+          shell.echo(
+            `❌ Extension names should not finish with \"Extension\". Please rename ${name}.`
           );
+          hasErrors = true;
         }
 
         if (name + '.json' !== filename) {
-          throw new Error(
-            `Extension filename should be exactly the name of the extension (with .json extension). Please rename ${name} and/or ${filename}.`
+          shell.echo(
+            `❌ Extension filename should be exactly the name of the extension (with .json extension). Please rename ${name} and/or ${filename}.`
+          );
+          hasErrors = true;
+        }
+
+        const disallowedPropertyErrors =
+          checkExtensionForDisallowedProperties(extension);
+        if (disallowedPropertyErrors.length > 0) {
+          hasErrors = true;
+          console.error(
+            `❌ Found disallowed properties in extension ${name}:`,
+            disallowedPropertyErrors
           );
         }
 
@@ -120,6 +137,13 @@ const readAllExtensions = async () => {
         );
       })
     );
+
+    if (hasErrors) {
+      shell.echo(
+        `❌ Errors found in extensions - please fix them before generating the registry.`
+      );
+      shell.exit(1);
+    }
 
     // Write the registry
     /** @type {ExtensionsDatabase} */
