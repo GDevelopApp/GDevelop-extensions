@@ -8,7 +8,7 @@
   "name": "ObjectStack",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Line Hero Pack/Master/SVG/Videogames/Videogames_cards_game_solitaire_poker_blackjack_casino.svg",
   "shortDescription": "An ordered list of objects and a shuffle action",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "tags": [
     "card",
     "stack",
@@ -328,6 +328,98 @@
           "objectGroups": []
         },
         {
+          "description": "Move the object into the stack.",
+          "fullName": "Move into the stack",
+          "functionType": "Action",
+          "name": "MoveInto",
+          "private": false,
+          "sentence": "Move the object of the stack of _PARAM3_ from:_PARAM5_ to:_PARAM6_ into the stack of _PARAM0_ at height: _PARAM2_",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "const object = objects[0];\nconst behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\nconst behavior = object.getBehavior(behaviorName);\nconst stacks = eventsFunctionContext.getObjects(\"Stack\");\nconst stackBehaviorName = eventsFunctionContext.getBehaviorName(\"StackBehavior\");\nlet insertHeight = eventsFunctionContext.getArgument(\"Height\");\nconst lowerBound = Math.max(0, eventsFunctionContext.getArgument(\"LowerBound\"));\nlet upperBound = eventsFunctionContext.getArgument(\"UpperBound\");\n\nif (stacks && stacks.length > 0) {\n  /** @type {gdjs.RuntimeObject[]} */\n  const otherStack = stacks[0].getBehavior(stackBehaviorName).objectStack;\n  /** @type {gdjs.RuntimeObject[]} */\n  const stack = behavior.objectStack;\n  if (insertHeight < 0 || insertHeight > stack.length) {\n    log.error(`Tried to insert in the stack at ${insertHeight} where the stack is ${stack.length} height.`);\n    return;\n  }\n  upperBound = Math.min(upperBound, otherStack.length - 1);\n  for (let height = lowerBound; height <= upperBound; height++) {\n    stack.splice(insertHeight, 0, otherStack[height]);\n    insertHeight++;\n  }\n  if (lowerBound <= upperBound) {\n    otherStack.splice(lowerBound, upperBound - lowerBound + 1);\n  }\n}",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "ObjectStack::ObjectStack",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Height",
+              "longDescription": "",
+              "name": "Height",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Stack",
+              "longDescription": "",
+              "name": "Stack",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "objectList"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Stack behavior",
+              "longDescription": "",
+              "name": "StackBehavior",
+              "optional": false,
+              "supplementaryInformation": "ObjectStack::ObjectStack",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Lower bound",
+              "longDescription": "",
+              "name": "LowerBound",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Upper bound",
+              "longDescription": "",
+              "name": "UpperBound",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "Insert the object into the stack.",
           "fullName": "Insert into the stack",
           "functionType": "Action",
@@ -494,6 +586,48 @@
           "objectGroups": []
         },
         {
+          "description": "Remove any object from the stack.",
+          "fullName": "Clear",
+          "functionType": "Action",
+          "name": "Clear",
+          "private": false,
+          "sentence": "Remove every object of the stack of _PARAM0_",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "const object = objects[0];\nconst behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\nconst behavior = object.getBehavior(behaviorName);\n\n/** @type {gdjs.RuntimeObject[]} */\nconst stack = behavior.objectStack;\nstack.length = 0;",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "ObjectStack::ObjectStack",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "Shuffle the stack.",
           "fullName": "Shuffle",
           "functionType": "Action",
@@ -583,6 +717,58 @@
               "optional": false,
               "supplementaryInformation": "",
               "type": "objectList"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Compare the number of objects in the stack.",
+          "fullName": "Stack height",
+          "functionType": "Condition",
+          "name": "CheckHeight",
+          "private": false,
+          "sentence": "_PARAM0_ has _PARAM2_ objects in its stack.",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\nconst behavior = objects[0].getBehavior(behaviorName);\nconst height = eventsFunctionContext.getArgument(\"Height\");\n\n/** @type {gdjs.RuntimeObject[]} */\nconst stack = behavior.objectStack;\neventsFunctionContext.returnValue = stack.length === height;",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "ObjectStack::ObjectStack",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Stack height",
+              "longDescription": "",
+              "name": "Height",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
             }
           ],
           "objectGroups": []
