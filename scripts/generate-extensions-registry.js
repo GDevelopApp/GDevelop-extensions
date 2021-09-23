@@ -1,9 +1,7 @@
 const path = require('path');
 const fs = require('fs').promises;
 const shell = require('shelljs');
-const {
-  checkExtensionForDisallowedProperties,
-} = require('./lib/ExtensionValidator');
+const { validateExtension } = require('./lib/ExtensionValidator');
 
 const extensionsBasePath = path.join(__dirname, '..', 'Extensions');
 const distBasePath = path.join(__dirname, '..', 'dist');
@@ -14,6 +12,7 @@ const extensionsBaseUrl = 'https://resources.gdevelop-app.com/extensions';
 /** @typedef {import('./types').ExtensionShortHeader} ExtensionShortHeader */
 /** @typedef {import('./types').ExtensionsDatabase} ExtensionsDatabase */
 /** @typedef {import('./types').ExtensionHeader} ExtensionHeader */
+/** @typedef {import('./types').ExtensionWithFilename} ExtensionWithFilename */
 
 /**
  * @param {string} path
@@ -23,6 +22,10 @@ const extensionsBaseUrl = 'https://resources.gdevelop-app.com/extensions';
 const writeJSONFile = (path, object) =>
   fs.writeFile(path, JSON.stringify(object, null, 2));
 
+/**
+ * Reads all the extension files and parses their JSON.
+ * @returns {Promise<ExtensionWithFilename[]>}
+ */
 const readAllExtensions = async () => {
   const filenames = await fs.readdir(extensionsBasePath);
   const filteredFilenames = filenames.filter((name) => name.endsWith('.json'));
@@ -55,42 +58,30 @@ const readAllExtensions = async () => {
     /** @type {ExtensionShortHeader[]} */
     const extensionShortHeaders = [];
 
-    let hasErrors = false;
+    let totalErrors = 0;
 
     await Promise.all(
       extensionWithFilenames.map(async (extensionWithFilename) => {
-        const { extension, filename } = extensionWithFilename;
+        const { extension } = extensionWithFilename;
+        const { name } = extension;
 
         // Convert back to the old format for tags.
         if (Array.isArray(extension.tags)) {
           extension.tags = extension.tags.join(',');
         }
 
-        const { name } = extension;
-
-        // Do some consistency checks.
-        if (name.endsWith('Extension')) {
-          shell.echo(
-            `❌ Extension names should not finish with \"Extension\". Please rename ${name}.`
-          );
-          hasErrors = true;
-        }
-
-        if (name + '.json' !== filename) {
-          shell.echo(
-            `❌ Extension filename should be exactly the name of the extension (with .json extension). Please rename ${name} and/or ${filename}.`
-          );
-          hasErrors = true;
-        }
-
-        const disallowedPropertyErrors =
-          checkExtensionForDisallowedProperties(extension);
-        if (disallowedPropertyErrors.length > 0) {
-          hasErrors = true;
+        // Check for errors:
+        const errors = validateExtension(extensionWithFilename);
+        if (errors.length !== 0) {
           console.error(
-            `❌ Found disallowed properties in extension ${name}:`,
-            disallowedPropertyErrors
+            `\n❌ ${errors.length} Error${
+              errors.length > 1 ? 's' : ''
+            } found in extension '${name}':\n`
           );
+          errors.forEach((error) => {
+            totalErrors++;
+            console.error('  ❌ ' + error);
+          });
         }
 
         // Generate the headers of the extension
@@ -104,6 +95,7 @@ const readAllExtensions = async () => {
           version: extension.version,
           url: `${extensionsBaseUrl}/${name}.json`,
           headerUrl: `${extensionsBaseUrl}/${name}-header.json`,
+          //@ts-ignore Conversion to string done above
           tags: extension.tags,
           previewIconUrl: extension.previewIconUrl,
           eventsBasedBehaviorsCount: extension.eventsBasedBehaviors.length,
@@ -138,9 +130,11 @@ const readAllExtensions = async () => {
       })
     );
 
-    if (hasErrors) {
+    if (totalErrors) {
       shell.echo(
-        `❌ Errors found in extensions - please fix them before generating the registry.`
+        `\n\n❌ ${totalErrors} Error${
+          totalErrors > 1 ? 's' : ''
+        } found in extensions - please fix them before generating the registry.`
       );
       shell.exit(1);
     }

@@ -1,6 +1,51 @@
 /** @typedef {import("../types").ExtensionAllowedProperties} ExtensionAllowedProperties */
 
 /**
+ * All extensions that were added before the PascalCase best practice was defined,
+ * and therefore cannot not be changed without causing a breaking change anymore.
+ * Do not add extensions to this list, prefer to change extensions to use PascalCase.
+ */
+const legacyCamelCaseExtensions = new Set([
+  'TextEntryVirtualKeyboard',
+  'Rotate13',
+  'MQTT',
+  'MousePointerLock',
+  'MouseHelper',
+  'BackButton',
+]);
+
+/**
+ * All extensions that were added before the no Get prefix best practice was defined,
+ * and therefore cannot not be changed without causing a breaking change anymore.
+ * Do not add extensions to this list, prefer to change extensions to use expressions without the Get prefix.
+ */
+const legacyGetPrefixedExpressionsExtensions = new Set([
+  'TextEntryConsole',
+  'MQTT',
+  'ArrayTools',
+]);
+
+/**
+ * A set of all lifecycle functions to ignore some rules for them (like PascalCase).
+ */
+const lifecycleFunctions = new Set([
+  'doStepPreEvents',
+  'doStepPostEvents',
+  'onDeActivate',
+  'onActivate',
+  'onCreated',
+  'onOwnerRemovedFromScene',
+  'onDestroy',
+  'onFirstSceneLoaded',
+  'onSceneLoaded',
+  'onSceneUnloading',
+  'onScenePaused',
+  'onSceneResumed',
+  'onScenePostEvents',
+  'onScenePreEvents',
+]);
+
+/**
  * Contains the list of all public API methods or properties
  * that are allowed to be used in JavaScript by extensions.
  *
@@ -9,7 +54,7 @@
  * specific properties to just one if possible.
  * You can then add a new allowance in this list.
  */
-module.exports = {
+const extensionsAllowedProperties = {
   /**
    * Public properties/APIs that are always allowed.
    * @type {ExtensionAllowedProperties}
@@ -145,4 +190,11 @@ module.exports = {
       javaScriptObjectAllowedProperties: [],
     },
   },
+};
+
+module.exports = {
+  extensionsAllowedProperties,
+  legacyGetPrefixedExpressionsExtensions,
+  legacyCamelCaseExtensions,
+  lifecycleFunctions,
 };

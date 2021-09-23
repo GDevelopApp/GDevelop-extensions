@@ -1,128 +1,63 @@
-const extensionsAllowedProperties = require('./ExtensionsAllowedProperties.js');
+const {
+  checkExtensionForDisallowedProperties,
+} = require('./ExtensionPropertiesValidator.js');
+const {
+  checkExtensionAgainstBestPractices,
+} = require('./ExtensionBestPracticesValidator');
+const { inspect } = require('util');
 
-/** @typedef {import('../types.js').ExtensionAllowedProperties} ExtensionAllowedProperties */
-/** @typedef {import('../types.js').DisallowedPropertyError} DisallowedPropertyError */
-
-/** @type {ExtensionAllowedProperties} */
-const emptyExtensionAllowedProperties = {
-  gdjsEvtToolsAllowedProperties: [],
-  gdjsAllowedProperties: [],
-  runtimeSceneAllowedProperties: [],
-  javaScriptObjectAllowedProperties: [],
-};
-
-/**
- * @param {Set<string>} allowedProperties
- * @param {Set<string>} properties
- */
-const findDisallowedProperties = (allowedProperties, properties) => {
-  return [...properties].filter((property) => !allowedProperties.has(property));
-};
+/** @typedef {import("../types").ExtensionWithFilename} ExtensionWithFilename */
 
 /**
  * Check the extension for any properties that are not on the allow list.
- * @param {Object} parsedExtensionJson
- * @returns {DisallowedPropertyError[]}
+ * @param {ExtensionWithFilename} extensionWithFilename
+ * @returns {string[]}
  */
-const checkExtensionForDisallowedProperties = (parsedExtensionJson) => {
-  // @ts-ignore
-  const name = parsedExtensionJson.name;
-  const extensionJsonString = JSON.stringify(parsedExtensionJson);
+function validateExtension(extensionWithFilename) {
+  /** @type {string[]} */
+  const errors = [];
+  const { extension, filename } = extensionWithFilename;
+  /** @type {string} */
+  const name = extension.name;
 
-  /** @type {ExtensionAllowedProperties} */
-  const extensionSpecificAllowance =
-    extensionsAllowedProperties.extensionSpecificAllowance[name] ||
-    emptyExtensionAllowedProperties;
-  const anyExtensionAllowance =
-    extensionsAllowedProperties.anyExtensionAllowance;
-
-  const gdjsAllowedProperties = new Set([
-    ...anyExtensionAllowance.gdjsAllowedProperties,
-    ...extensionSpecificAllowance.gdjsAllowedProperties,
-  ]);
-  const gdjsEvtToolsAllowedProperties = new Set([
-    ...anyExtensionAllowance.gdjsEvtToolsAllowedProperties,
-    ...extensionSpecificAllowance.gdjsEvtToolsAllowedProperties,
-  ]);
-  const runtimeSceneAllowedProperties = new Set([
-    ...anyExtensionAllowance.runtimeSceneAllowedProperties,
-    ...extensionSpecificAllowance.runtimeSceneAllowedProperties,
-  ]);
-  const javaScriptObjectAllowedProperties = new Set([
-    ...anyExtensionAllowance.javaScriptObjectAllowedProperties,
-    ...extensionSpecificAllowance.javaScriptObjectAllowedProperties,
-  ]);
-
-  /** @type {DisallowedPropertyError[]} */
-  const disallowedPropertyErrors = [];
-
-  {
-    const gdjsPropertiesRegex = /gdjs\.\s*(\w+)/g;
-    const matches = [...extensionJsonString.matchAll(gdjsPropertiesRegex)];
-    const properties = new Set(matches.map((match) => match[1]));
-    findDisallowedProperties(gdjsAllowedProperties, properties).forEach(
-      (disallowedProperty) => {
-        disallowedPropertyErrors.push({
-          allowedProperties: Array.from(gdjsAllowedProperties),
-          disallowedProperty: disallowedProperty,
-          objectName: 'gdjs',
-        });
-      }
+  // Do some base consistency checks.
+  if (name.endsWith('Extension')) {
+    errors.push(
+      `Extension names should not finish with \"Extension\". Please rename '${name}' to '${name.slice(
+        0,
+        -9
+      )}'.`
     );
   }
-  {
-    const gdjsEvtToolsPropertiesRegex = /gdjs\.\s*evtTools\.\s*(\w+)/g;
-    const matches = [
-      ...extensionJsonString.matchAll(gdjsEvtToolsPropertiesRegex),
-    ];
-    const properties = new Set(matches.map((match) => match[1]));
-    findDisallowedProperties(gdjsEvtToolsAllowedProperties, properties).forEach(
-      (disallowedProperty) => {
-        disallowedPropertyErrors.push({
-          allowedProperties: Array.from(gdjsEvtToolsAllowedProperties),
-          disallowedProperty: disallowedProperty,
-          objectName: 'gdjs.evtTools',
-        });
-      }
+
+  const expectedFilename = name + '.json';
+  if (expectedFilename !== filename) {
+    errors.push(
+      `Extension filename should be exactly the name of the extension (with .json extension). Please rename '${filename}' to '${expectedFilename}'.`
     );
-  }
-  {
-    const runtimeScenePropertiesRegex = /runtimeScene\.\s*(\w+)/g;
-    const matches = [
-      ...extensionJsonString.matchAll(runtimeScenePropertiesRegex),
-    ];
-    const properties = new Set(matches.map((match) => match[1]));
-    findDisallowedProperties(runtimeSceneAllowedProperties, properties).forEach(
-      (disallowedProperty) => {
-        disallowedPropertyErrors.push({
-          allowedProperties: Array.from(runtimeSceneAllowedProperties),
-          disallowedProperty: disallowedProperty,
-          objectName: 'runtimeScene',
-        });
-      }
-    );
-  }
-  {
-    const javaScriptObjectPropertiesRegex = /\s+Object\.\s*([a-z]\w+)/g;
-    const matches = [
-      ...extensionJsonString.matchAll(javaScriptObjectPropertiesRegex),
-    ];
-    const properties = new Set(matches.map((match) => match[1]));
-    findDisallowedProperties(
-      javaScriptObjectAllowedProperties,
-      properties
-    ).forEach((disallowedProperty) => {
-      disallowedPropertyErrors.push({
-        allowedProperties: Array.from(javaScriptObjectAllowedProperties),
-        disallowedProperty: disallowedProperty,
-        objectName: 'Object',
-      });
-    });
   }
 
-  return disallowedPropertyErrors;
-};
+  // Check for disallowed properties
+  const disallowedPropertyErrors =
+    checkExtensionForDisallowedProperties(extension);
+  if (disallowedPropertyErrors.length > 0) {
+    const reducedError = disallowedPropertyErrors
+      .reduce(
+        (accumulator, current) =>
+          accumulator + inspect(current, undefined, undefined, true) + '\n',
+        `Found disallowed properties in extension '${name}':\n`
+      )
+      // Remove the last \n
+      .slice(0, -1);
+    errors.push(reducedError);
+  }
+
+  // Check against extension best practices
+  checkExtensionAgainstBestPractices(extension, errors);
+
+  return errors;
+}
 
 module.exports = {
-  checkExtensionForDisallowedProperties,
+  validateExtension,
 };
