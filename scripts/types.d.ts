@@ -1,4 +1,4 @@
-export interface ExtensionShortHeader {
+interface ExtensionAndShortHeaderFields {
   authorIds: Array<string>;
   shortDescription: string;
   extensionNamespace: string;
@@ -6,19 +6,26 @@ export interface ExtensionShortHeader {
   name: string;
   version: string;
   gdevelopVersion?: string;
-  url: string;
-  headerUrl: string;
   tags: Array<string>;
   previewIconUrl: string;
-  eventsBasedBehaviorsCount: number;
-  eventsFunctionsCount: number;
 }
 
-export interface ExtensionHeader extends ExtensionShortHeader {
+interface ExtensionAndHeaderFields {
   description: string;
   helpPath: string;
   iconUrl: string;
 }
+
+export interface ExtensionShortHeader extends ExtensionAndShortHeaderFields {
+  url: string;
+  headerUrl: string;
+  eventsBasedBehaviorsCount: number;
+  eventsFunctionsCount: number;
+}
+
+export interface ExtensionHeader
+  extends ExtensionShortHeader,
+    ExtensionAndHeaderFields {}
 
 export interface ExtensionsDatabase {
   version: string;
@@ -41,4 +48,48 @@ export interface DisallowedPropertyError {
   objectName: string;
   disallowedProperty: string;
   allowedProperties: string[];
+}
+
+export interface Parameter {
+  codeOnly: boolean;
+  defaultValue: string;
+  description: string;
+  longDescription: string;
+  name: string;
+  optional: boolean;
+  supplementaryInformation: string;
+  type: 'expression';
+}
+
+export interface EventsFunction {
+  description: string;
+  fullName: string;
+  functionType: 'StringExpression' | 'Expression' | 'Action' | 'Condition';
+  name: string;
+  private: boolean;
+  sentence: string;
+  events: any[];
+  parameters: Parameter[];
+  objectGroups: string[];
+}
+
+export interface EventsBasedBehaviors {
+  description: string;
+  fullName: string;
+  name: string;
+  objectType: string;
+  eventsFunctions: EventsFunction[];
+}
+
+export interface Extension
+  extends ExtensionAndShortHeaderFields,
+    ExtensionAndHeaderFields {
+  tags: string | string[];
+  eventsFunctions: EventsFunction[];
+  eventsBasedBehaviors: EventsBasedBehaviors[];
+}
+
+export interface ExtensionWithFilename {
+  filename: string;
+  extension: Extension;
 }
