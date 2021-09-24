@@ -1,0 +1,40 @@
+name: GDevelop Extensions Issues to PR convertion
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  generate-pr:
+    # Only run it on extensions submissions (tag is ensured via the new issue form)
+    if: ${{ github.event.issue.labels[0].name == '✨ New extension' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Download extension
+        env:
+          BODY: ${{ github.event.issue.body }}
+        run: |
+          curl -L $(echo $BODY | grep -ioEh 'https?://\S+.zip' -m2 | tail -n1) -o /tmp/ext.zip
+          unzip /tmp/ext.zip -d ./Extensions
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: 'Automated Extension submission for issue #${{ github.event.issue.number }}'
+          committer: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+          branch: extension/${{ github.actor }}/${{ github.event.issue }}
+          delete-branch: true
+          title: '[Auto PR] ${{ github.event.issue.title }}'
+          body: ${{ github.event.issue.body }}
+          labels: ✨ New extension
+
+      - name: Close and comment on issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue close ${{ github.event.issue.number }}
+          gh issue comment ${{ github.event.issue.number }} --body "Hi @${{ github.actor }}! 👋 This submission has been moved to a PR as part of our submission pipeline. [Please continue the submission process on this page](${{ steps.cpr.outputs.pull-request-url }}). Thanks!"
