@@ -1,12 +1,12 @@
 name: GDevelop Extensions Issues to PR convertion
 on:
   issues:
-    types: [opened]
+    types: [opened, labeled]
 
 jobs:
   generate-pr:
     # Only run it on extensions submissions (tag is ensured via the new issue form)
-    if: ${{ github.event.issue.labels.*.name == '✨ New extension' || github.event.pull_request.labels.*.name == '🔄 Extension update' }}
+    if: ${{ contains(github.event.issue.labels.*.name, '✨ New extension') || contains(github.event.issue.labels.*.name, '🔄 Extension update') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -31,6 +31,13 @@ jobs:
           title: '[Auto PR] ${{ github.event.issue.title }}'
           body: ${{ github.event.issue.body }}
           labels: ✨ New extension
+
+      - name: Add card to pending review
+        uses: peter-evans/create-or-update-project-card@v1
+        with:
+          project-name: Extensions review
+          column-name: Needs review
+          issue-number: ${{ steps.cpr.outputs.pull-request-number }}
 
       - name: Close and comment on issue
         env:
