@@ -139,7 +139,7 @@ const readAllExtensions = async () => {
           totalErrors > 1 ? 'them' : 'it'
         } before generating the registry.`
       );
-      shell.exit(args["disable-exit-code"] ? 0 : 1);
+      shell.exit(args['disable-exit-code'] ? 0 : 1);
     }
 
     // Write the registry
