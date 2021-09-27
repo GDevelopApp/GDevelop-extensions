@@ -1,9 +1,10 @@
 const {
   extensionsAllowedProperties,
-} = require('./ExtensionsBestPracticesExceptions.js');
+} = require('../ExtensionsValidatorExceptions.js');
+const { inspect } = require('util');
 
-/** @typedef {import('../types.js').ExtensionAllowedProperties} ExtensionAllowedProperties */
-/** @typedef {import('../types.js').DisallowedPropertyError} DisallowedPropertyError */
+/** @typedef {import('../../types.js').ExtensionAllowedProperties} ExtensionAllowedProperties */
+/** @typedef {import('../../types.js').DisallowedPropertyError} DisallowedPropertyError */
 
 /** @type {ExtensionAllowedProperties} */
 const emptyExtensionAllowedProperties = {
@@ -125,6 +126,26 @@ const checkExtensionForDisallowedProperties = (parsedExtensionJson) => {
   return disallowedPropertyErrors;
 };
 
+/** @type {import("./rule").Rule} */
+async function validate({ extension, onError }) {
+  // Check for disallowed properties
+  const disallowedPropertyErrors =
+    checkExtensionForDisallowedProperties(extension);
+  if (disallowedPropertyErrors.length > 0) {
+    const reducedError = disallowedPropertyErrors
+      .reduce(
+        (accumulator, current) =>
+          accumulator + inspect(current, undefined, undefined, true) + '\n',
+        `Found disallowed properties in extension '${extension.name}':\n`
+      )
+      // Remove the last \n
+      .slice(0, -1);
+    onError(reducedError);
+  }
+}
+
+/** @type {import("./rule").RuleModule} */
 module.exports = {
-  checkExtensionForDisallowedProperties,
+  name: 'JavaScript disallowed properties',
+  validate,
 };

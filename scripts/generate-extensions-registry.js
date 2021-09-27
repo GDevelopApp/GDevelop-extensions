@@ -71,7 +71,7 @@ const readAllExtensions = async () => {
         }
 
         // Check for errors:
-        const errors = validateExtension(extensionWithFilename);
+        const errors = await validateExtension(extensionWithFilename);
         if (errors.length !== 0) {
           console.error(
             `\n❌ ${errors.length} Error${

@@ -1,63 +1,71 @@
-const {
-  checkExtensionForDisallowedProperties,
-} = require('./ExtensionPropertiesValidator.js');
-const {
-  checkExtensionAgainstBestPractices,
-} = require('./ExtensionBestPracticesValidator');
-const { inspect } = require('util');
+const { lifecycleFunctions } = require('./ExtensionsValidatorExceptions');
+const { readdir } = require('fs/promises');
+const { join, extname } = require('path');
 
 /** @typedef {import("../types").ExtensionWithFilename} ExtensionWithFilename */
+/** @typedef {import("../types").EventsFunction} EventsFunction */
+/** @typedef {import("./rules/rule").RuleModule} RuleModule */
+
+const rulesPath = join(__dirname, 'rules');
+/** @type {RuleModule[]} */
+const rules = [];
+const loadRules = (async function loadRules() {
+  for (const ruleFile of await readdir(rulesPath)) {
+    if (extname(ruleFile) !== '.js' || ruleFile === '_Template.js') continue;
+    /** @type {import("./rules/rule").RuleModule} */
+    const rule = require(join(rulesPath, ruleFile));
+    rules.push(rule);
+  }
+})();
 
 /**
  * Check the extension for any properties that are not on the allow list.
  * @param {ExtensionWithFilename} extensionWithFilename
- * @returns {string[]}
+ * @returns {Promise<string[]>}
  */
-function validateExtension(extensionWithFilename) {
+async function validateExtension(extensionWithFilename) {
   /** @type {string[]} */
   const errors = [];
-  const { extension, filename } = extensionWithFilename;
-  /** @type {string} */
-  const name = extension.name;
+  const { eventsBasedBehaviors, eventsFunctions } =
+    extensionWithFilename.extension;
 
-  // Do some base consistency checks.
-  if (name.endsWith('Extension')) {
-    errors.push(
-      `Extension names should not finish with \"Extension\". Please rename '${name}' to '${name.slice(
-        0,
-        -9
-      )}'.`
+  /**
+   * A list of all events functions of the extension.
+   * @type {EventsFunction[]}
+   */
+  const allEventsFunctions = eventsFunctions.concat(
+    eventsBasedBehaviors.flatMap(({ eventsFunctions }) => eventsFunctions)
+  );
+
+  /**
+   * A list of all events functions that will be used by extension users (non-lifecycle and non-private functions).
+   * @type {EventsFunction[]}
+   */
+  const publicEventsFunctions = allEventsFunctions.filter(
+    ({ name, private: p }) => !lifecycleFunctions.has(name) && !p
+  );
+
+  // Ensure the rules are loaded before starting verification
+  if (rules.length === 0) await loadRules;
+
+  const promises = [];
+  for (const rule of rules) {
+    promises.push(
+      rule.validate({
+        allEventsFunctions,
+        publicEventsFunctions,
+        onError: (message) => errors.push(`[${rule.name}]: ${message}`),
+        ...extensionWithFilename,
+      })
     );
   }
 
-  const expectedFilename = name + '.json';
-  if (expectedFilename !== filename) {
-    errors.push(
-      `Extension filename should be exactly the name of the extension (with .json extension). Please rename '${filename}' to '${expectedFilename}'.`
-    );
-  }
-
-  // Check for disallowed properties
-  const disallowedPropertyErrors =
-    checkExtensionForDisallowedProperties(extension);
-  if (disallowedPropertyErrors.length > 0) {
-    const reducedError = disallowedPropertyErrors
-      .reduce(
-        (accumulator, current) =>
-          accumulator + inspect(current, undefined, undefined, true) + '\n',
-        `Found disallowed properties in extension '${name}':\n`
-      )
-      // Remove the last \n
-      .slice(0, -1);
-    errors.push(reducedError);
-  }
-
-  // Check against extension best practices
-  checkExtensionAgainstBestPractices(extension, errors);
+  await Promise.all(promises);
 
   return errors;
 }
 
 module.exports = {
+  loadRules,
   validateExtension,
 };
