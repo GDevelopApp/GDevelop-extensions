@@ -134,8 +134,7 @@ async function validate({ extension, onError }) {
   if (disallowedPropertyErrors.length > 0) {
     const reducedError = disallowedPropertyErrors
       .reduce(
-        (accumulator, current) =>
-          accumulator + inspect(current, undefined, undefined, true) + '\n',
+        (accumulator, current) => accumulator + inspect(current) + '\n',
         `Found disallowed properties in extension '${extension.name}':\n`
       )
       // Remove the last \n
