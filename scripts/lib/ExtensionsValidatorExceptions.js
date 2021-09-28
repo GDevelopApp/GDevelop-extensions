@@ -189,6 +189,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    WebSocketClient: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['wsc'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
   },
 };
 
