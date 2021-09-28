@@ -139,7 +139,7 @@ const readAllExtensions = async () => {
           totalErrors > 1 ? 'them' : 'it'
         } before generating the registry.`
       );
-      shell.exit(args['disable-exit-code'] ? 0 : 1);
+      shell.exit(args['check-ci'] ? 0 : 1);
     }
 
     // Write the registry
@@ -155,17 +155,10 @@ const readAllExtensions = async () => {
       registry
     );
 
-    // Also write the old format registry so that it's found by
-    // old GDevelop versions.
-    await writeJSONFile(
-      path.join(__dirname, '..', 'extensions-registry.json'),
-      registry
-    );
-
     console.log(`✅ Headers and registry files successfully updated`);
   } catch (error) {
     console.error(
-      `⚠️ Error while generating headers and registry files:`,
+      `⚠️ Internal error while generating headers and registry files:`,
       error
     );
   }
