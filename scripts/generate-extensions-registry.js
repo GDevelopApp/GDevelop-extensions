@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const shell = require('shelljs');
 const { validateExtension } = require('./lib/ExtensionValidator');
+const args = require('minimist')(process.argv.slice(2));
 
 const extensionsBasePath = path.join(__dirname, '..', 'Extensions');
 const distBasePath = path.join(__dirname, '..', 'dist');
@@ -73,14 +74,14 @@ const readAllExtensions = async () => {
         // Check for errors:
         const errors = await validateExtension(extensionWithFilename);
         if (errors.length !== 0) {
-          console.error(
+          shell.echo(
             `\n❌ ${errors.length} Error${
               errors.length > 1 ? 's' : ''
             } found in extension '${name}':\n`
           );
           errors.forEach((error) => {
             totalErrors++;
-            console.error('  ❌ ' + error);
+            shell.echo('  ⟶ ❌ ' + error);
           });
         }
 
@@ -134,9 +135,11 @@ const readAllExtensions = async () => {
       shell.echo(
         `\n\n❌ ${totalErrors} Error${
           totalErrors > 1 ? 's' : ''
-        } found in extensions - please fix them before generating the registry.`
+        } found in extensions - please fix ${
+          totalErrors > 1 ? 'them' : 'it'
+        } before generating the registry.`
       );
-      shell.exit(1);
+      shell.exit(args['disable-exit-code'] ? 0 : 1);
     }
 
     // Write the registry
