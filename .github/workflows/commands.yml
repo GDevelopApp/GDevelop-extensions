@@ -13,11 +13,6 @@ jobs:
           ref: ${{ steps.comment-branch.outputs.head_ref }}
           fetch-depth: 0
 
-      - name: Set committer
-        run: |
-          git config --global user.name '${{ github.actor }}'
-          git config --global user.email '${{ github.actor }}@users.noreply.github.com'
-
       - name: Merge new commits from main
         run: git merge -X theirs origin/main -m "Rebase from main"
 
@@ -31,7 +26,9 @@ jobs:
       - name: Commit and push
         if: ${{ contains(env.BUILD_LOGS, 'successfully updated') }}
         run: |
-          git add extensions-registry.json
+          git config --global user.name '${{ github.actor }}'
+          git config --global user.email '${{ github.actor }}@users.noreply.github.com'
+          git add Extensions
           git commit --amend --no-edit
           git push
 
@@ -39,14 +36,14 @@ jobs:
         if: ${{ contains(env.BUILD_LOGS, 'successfully updated') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr comment ${{ github.event.issue.number }} --body "✅ Successfully rebased from main!"
+        run: gh pr comment ${{ github.event.issue.number }} --body "✅ Successfully rebased from main."
 
       - name: Notify error
         if: ${{ !contains(env.BUILD_LOGS, 'successfully updated') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment ${{ github.event.issue.number }} --body "❗ A build error occured while rebasing! 
+          gh pr comment ${{ github.event.issue.number }} --body "A build error occured while rebasing:
 
           \`\`\`${{ env.BUILD_LOGS }}
           \`\`\`"
@@ -56,7 +53,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment ${{ github.event.issue.number }} --body "❗ An internal error has occured! See logs at https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}."
+          gh pr comment ${{ github.event.issue.number }} --body "❗ An internal error has occured. See logs at https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}."
 
   update:
     runs-on: ubuntu-latest
@@ -89,7 +86,7 @@ jobs:
         run: |
           git config --global user.name '${{ github.actor }}'
           git config --global user.email '${{ github.actor }}@users.noreply.github.com'
-          git add extensions-registry.json Extensions
+          git add Extensions
           git commit -m "Updated extension"
           git push
 
@@ -97,14 +94,14 @@ jobs:
         if: ${{ contains(env.BUILD_LOGS, 'successfully updated') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr comment ${{ github.event.issue.number }} --body "✅ Successfully updated the extension!"
+        run: gh pr comment ${{ github.event.issue.number }} --body "✅ Successfully updated the extension."
 
       - name: Notify build error
         if: ${{ !contains(env.BUILD_LOGS, 'successfully updated') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment ${{ github.event.issue.number }} --body "❗ A build error occured while processing the extension update! 
+          gh pr comment ${{ github.event.issue.number }} --body "A build error occured while processing the extension update:
 
           \`\`\`${{ env.BUILD_LOGS }}
           \`\`\`"
@@ -114,4 +111,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment ${{ github.event.issue.number }} --body "❗ An internal error has occured! See logs at https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}."
+          gh pr comment ${{ github.event.issue.number }} --body "❗ An internal error has occured. See logs at https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}."
