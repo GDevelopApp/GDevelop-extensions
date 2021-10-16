@@ -171,7 +171,7 @@ const extensionsAllowedProperties = {
         'RuntimeObject',
       ],
       gdjsEvtToolsAllowedProperties: ['object'],
-      runtimeSceneAllowedProperties: ['__allObjectStacks', '__allUsedObjects'],
+      runtimeSceneAllowedProperties: ['__allObjectStacks', '__objectStacks_allUsedObjects'],
       javaScriptObjectAllowedProperties: [],
     },
     ReadPixels: {
