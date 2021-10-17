@@ -1,4 +1,4 @@
-name: GDevelop PR automatic notification of build failure
+name: GDevelop PR automatic rebuild of the extensions database
 on:
   pull_request:
     types: [opened,synchronize]
@@ -14,8 +14,18 @@ jobs:
         run: |
           npm i
           echo 'BUILD_LOGS<<EOF' >> $GITHUB_ENV
-          node scripts/generate-extensions-registry.js --check-ci >> $GITHUB_ENV
+          node scripts/generate-extensions-registry.js --disable-exit-code >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
+          echo "CHANGED="$(git diff --name-only extensions-registry.json) >> $GITHUB_ENV
+
+      - name: Commit and push if changed
+        if: ${{ contains(env.CHANGED, 'extensions-registry') }}
+        run: |
+          git config --global user.name '${{ github.actor }}'
+          git config --global user.email '${{ github.actor }}@users.noreply.github.com'
+          git add extensions-registry.json
+          git commit -m "Regenerated extension registery"
+          git push
 
       - name: Notify build errors
         if: ${{ !contains(env.BUILD_LOGS, 'successfully updated') }}

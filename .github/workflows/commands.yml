@@ -13,19 +13,27 @@ jobs:
           ref: ${{ steps.comment-branch.outputs.head_ref }}
           fetch-depth: 0
 
-      - name: Merge new commits from main and push
+      - name: Set committer
         run: |
           git config --global user.name '${{ github.actor }}'
           git config --global user.email '${{ github.actor }}@users.noreply.github.com'
-          git merge -X theirs origin/main -m "Rebase from main"
-          git push
+
+      - name: Merge new commits from main
+        run: git merge -X theirs origin/main -m "Rebase from main"
 
       - name: Rebuild the database
         run: |
           npm i
           echo 'BUILD_LOGS<<EOF' >> $GITHUB_ENV
-          node scripts/generate-extensions-registry.js --check-ci >> $GITHUB_ENV
+          node scripts/generate-extensions-registry.js --disable-exit-code >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
+
+      - name: Commit and push
+        if: ${{ contains(env.BUILD_LOGS, 'successfully updated') }}
+        run: |
+          git add extensions-registry.json
+          git commit --amend --no-edit
+          git push
 
       - name: Notify success
         if: ${{ contains(env.BUILD_LOGS, 'successfully updated') }}
@@ -38,7 +46,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment ${{ github.event.issue.number }} --body "❗ The rebase introduced a build error! 
+          gh pr comment ${{ github.event.issue.number }} --body "❗ A build error occured while rebasing! 
 
           \`\`\`${{ env.BUILD_LOGS }}
           \`\`\`"
@@ -48,7 +56,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment ${{ github.event.issue.number }} --body "❗ An internal error has occured while rebasing! See logs at https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}."
+          gh pr comment ${{ github.event.issue.number }} --body "❗ An internal error has occured! See logs at https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}."
 
   update:
     runs-on: ubuntu-latest
@@ -73,7 +81,7 @@ jobs:
         run: |
           npm i
           echo 'BUILD_LOGS<<EOF' >> $GITHUB_ENV
-          node scripts/generate-extensions-registry.js --check-ci >> $GITHUB_ENV
+          node scripts/generate-extensions-registry.js --disable-exit-code >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
 
       - name: Commit and push
@@ -81,7 +89,7 @@ jobs:
         run: |
           git config --global user.name '${{ github.actor }}'
           git config --global user.email '${{ github.actor }}@users.noreply.github.com'
-          git add Extensions
+          git add extensions-registry.json Extensions
           git commit -m "Updated extension"
           git push
 
@@ -96,7 +104,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment ${{ github.event.issue.number }} --body "❗ The extension does not pass the build, could not update! 
+          gh pr comment ${{ github.event.issue.number }} --body "❗ A build error occured while processing the extension update! 
 
           \`\`\`${{ env.BUILD_LOGS }}
           \`\`\`"
