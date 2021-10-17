@@ -165,6 +165,18 @@ const extensionsAllowedProperties = {
         'getPrototypeOf',
       ],
     },
+    ObjectStack: {
+      gdjsAllowedProperties: [
+        'registerObjectDeletedFromSceneCallback',
+        'RuntimeObject',
+      ],
+      gdjsEvtToolsAllowedProperties: ['object'],
+      runtimeSceneAllowedProperties: [
+        '__allObjectStacks',
+        '__objectStacks_allUsedObjects',
+      ],
+      javaScriptObjectAllowedProperties: [],
+    },
     ReadPixels: {
       gdjsAllowedProperties: ['_readPixels'],
       gdjsEvtToolsAllowedProperties: [],
