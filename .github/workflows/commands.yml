@@ -14,7 +14,10 @@ jobs:
           fetch-depth: 0
 
       - name: Merge new commits from main
-        run: git merge -X theirs origin/main -m "Rebase from main"
+        run: |
+          git config --global user.name '${{ github.actor }}'
+          git config --global user.email '${{ github.actor }}@users.noreply.github.com'
+          git merge -X theirs origin/main -m "Rebase from main"
 
       - name: Rebuild the database
         run: |
@@ -26,10 +29,6 @@ jobs:
       - name: Commit and push
         if: ${{ contains(env.BUILD_LOGS, 'successfully updated') }}
         run: |
-          git config --global user.name '${{ github.actor }}'
-          git config --global user.email '${{ github.actor }}@users.noreply.github.com'
-          git add Extensions
-          git commit --amend --no-edit
           git push
 
       - name: Notify success
