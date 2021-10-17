@@ -155,13 +155,6 @@ const readAllExtensions = async () => {
       registry
     );
 
-    // Also write the old format registry so that it's found by
-    // old GDevelop versions.
-    await writeJSONFile(
-      path.join(__dirname, '..', 'extensions-registry.json'),
-      registry
-    );
-
     console.log(`✅ Headers and registry files successfully updated`);
   } catch (error) {
     console.error(
