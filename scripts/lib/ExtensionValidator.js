@@ -1,5 +1,5 @@
 const { lifecycleFunctions } = require('./ExtensionsValidatorExceptions');
-const { readdir } = require('fs/promises');
+const { readdir } = require('fs').promises;
 const { join, extname } = require('path');
 
 /** @typedef {import("../types").ExtensionWithFilename} ExtensionWithFilename */
