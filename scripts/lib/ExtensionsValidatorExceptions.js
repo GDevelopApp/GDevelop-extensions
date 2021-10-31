@@ -158,7 +158,7 @@ const extensionsAllowedProperties = {
         'registerObjectDeletedFromSceneCallback',
         'RuntimeObject',
       ],
-      gdjsEvtToolsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['object'],
       runtimeSceneAllowedProperties: ['__allStickers'],
       javaScriptObjectAllowedProperties: [
         // Extend a behavior with JavaScript:
