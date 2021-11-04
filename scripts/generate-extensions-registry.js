@@ -60,16 +60,12 @@ const readAllExtensions = async () => {
     const extensionShortHeaders = [];
 
     let totalErrors = 0;
+    let fixableErrors = 0;
 
     await Promise.all(
       extensionWithFilenames.map(async (extensionWithFilename) => {
         const { extension } = extensionWithFilename;
         const { name } = extension;
-
-        // Convert back to the old format for tags.
-        if (Array.isArray(extension.tags)) {
-          extension.tags = extension.tags.join(',');
-        }
 
         // Check for errors:
         const errors = await validateExtension(extensionWithFilename);
@@ -81,8 +77,25 @@ const readAllExtensions = async () => {
           );
           errors.forEach((error) => {
             totalErrors++;
-            shell.echo('  ⟶ ❌ ' + error);
+            if (error.fix)
+              if (args['fix']) {
+                totalErrors--;
+                error.fix();
+              } else fixableErrors++;
+            shell.echo(`  ⟶ ❌${error.fix ? ' (🔧)' : ''} ${error.message}`);
           });
+        }
+
+        // Override the base extensions when fixing
+        if (args['fix'])
+          await writeJSONFile(
+            path.join(extensionsBasePath, `${name}.json`),
+            extension
+          );
+
+        // Convert back to the old format for tags.
+        if (Array.isArray(extension.tags)) {
+          extension.tags = extension.tags.join(',');
         }
 
         // Generate the headers of the extension
@@ -139,6 +152,12 @@ const readAllExtensions = async () => {
           totalErrors > 1 ? 'them' : 'it'
         } before generating the registry.`
       );
+      if (!args['disable-exit-code'] && fixableErrors)
+        shell.echo(
+          `\n\n🔧 ${fixableErrors} Error${
+            fixableErrors > 1 ? 's are' : ' is'
+          } auto-fixable - pass the argument --fix to fix them automatically.`
+        );
       shell.exit(args['disable-exit-code'] ? 0 : 1);
     }
 

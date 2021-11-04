@@ -4,6 +4,7 @@ const { join, extname } = require('path');
 
 /** @typedef {import("../types").ExtensionWithFilename} ExtensionWithFilename */
 /** @typedef {import("../types").EventsFunction} EventsFunction */
+/** @typedef {import("../types").Error} Error */
 /** @typedef {import("./rules/rule").RuleModule} RuleModule */
 
 const rulesPath = join(__dirname, 'rules');
@@ -21,10 +22,10 @@ const loadRules = (async function loadRules() {
 /**
  * Check the extension for any properties that are not on the allow list.
  * @param {ExtensionWithFilename} extensionWithFilename
- * @returns {Promise<string[]>}
+ * @returns {Promise<Error[]>}
  */
-async function validateExtension(extensionWithFilename) {
-  /** @type {string[]} */
+async function validateExtension(extensionWithFilename, fix = false) {
+  /** @type {Error[]} */
   const errors = [];
   const { eventsBasedBehaviors, eventsFunctions } =
     extensionWithFilename.extension;
@@ -54,7 +55,11 @@ async function validateExtension(extensionWithFilename) {
       rule.validate({
         allEventsFunctions,
         publicEventsFunctions,
-        onError: (message) => errors.push(`[${rule.name}]: ${message}`),
+        onError: (message, fix) =>
+          errors.push({
+            message: `[${rule.name}]: ${message}`,
+            fix,
+          }),
         ...extensionWithFilename,
       })
     );

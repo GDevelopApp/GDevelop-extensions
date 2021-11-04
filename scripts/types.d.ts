@@ -93,3 +93,8 @@ export interface ExtensionWithFilename {
   filename: string;
   extension: Extension;
 }
+
+export interface Error {
+  message: `[${string}]: ${string}`;
+  fix?: () => void;
+}
