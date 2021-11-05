@@ -26,7 +26,7 @@ const NO_DOT = {
 const DOT_REQUIRED = {
   /** @type {Partial<keyof Extension>[]} */
   EXTENSION: [
-    //'description', - Not enforced since most 
+    //'description', - Not enforced since most
     'shortDescription',
   ],
   /** @type {Partial<keyof EventsFunction>[]} */
