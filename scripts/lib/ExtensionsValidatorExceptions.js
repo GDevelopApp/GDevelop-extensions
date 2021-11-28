@@ -203,7 +203,13 @@ const extensionsAllowedProperties = {
     },
     WebSocketClient: {
       gdjsAllowedProperties: [],
-      gdjsEvtToolsAllowedProperties: ['wsc'],
+      gdjsEvtToolsAllowedProperties: ['wsClient'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    Compressor: {
+      gdjsAllowedProperties: ['_pakoTools'],
+      gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
