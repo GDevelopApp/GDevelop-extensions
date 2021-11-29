@@ -115,7 +115,11 @@ const extensionsAllowedProperties = {
       ],
     },
     MarchingSquares: {
-      gdjsAllowedProperties: ['__marchingSquares'],
+      gdjsAllowedProperties: [
+        '__marchingSquares',
+        'Polygon',
+        'ShapePainterRuntimeObject',
+      ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [
