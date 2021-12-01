@@ -12,9 +12,7 @@ async function validate({ extension, publicEventsFunctions, onError }) {
       name.startsWith('Get') &&
       !legacyGetPrefixedExpressionsExtensions.has(extension.name)
     )
-      onError(`Expression '${name}' is using prohibited 'Get' prefix!`, () => {
-        func.name = func.name.replace('Get', '');
-      });
+      onError(`Expression '${name}' is using prohibited 'Get' prefix!`);
   }
 }
 
