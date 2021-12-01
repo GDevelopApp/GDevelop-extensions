@@ -47,12 +47,13 @@ const DOT_REQUIRED = {
  */
 function checkForForbiddenDot(object, fields, sourceName, onError) {
   for (let key of fields) {
-    if (object[key].trim().includes('.'))
+    const trimmed = object[key].trim();
+    // Triple dots is the exception in case two parameters have complementary descriptions
+    if (trimmed.endsWith('.') && !trimmed.endsWith('...'))
       onError(
         `Field '${key}' of ${sourceName} has a dot, but it is fobidden there!`,
         () => {
-          //@ts-ignore Not sure what it is complaining about
-          object[key] = object[key].trim().replace(/\./gm, '');
+          object[key] = trimmed.slice(0, -1);
         }
       );
   }
