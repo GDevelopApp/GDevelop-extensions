@@ -115,7 +115,11 @@ const extensionsAllowedProperties = {
       ],
     },
     MarchingSquares: {
-      gdjsAllowedProperties: ['__marchingSquares'],
+      gdjsAllowedProperties: [
+        '__marchingSquares',
+        'Polygon',
+        'ShapePainterRuntimeObject',
+      ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [
@@ -197,6 +201,12 @@ const extensionsAllowedProperties = {
     },
     YandexGamesSDK: {
       gdjsAllowedProperties: ['_YandexGamesSDK'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    Compressor: {
+      gdjsAllowedProperties: ['_pakoTools'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
