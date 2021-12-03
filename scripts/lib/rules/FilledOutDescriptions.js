@@ -8,7 +8,7 @@
  */
 const NECESSARY_FIELDS = {
   /** @type {Partial<keyof Extension>[]} */
-  EXTENSION: ['name', 'fullName', 'description', 'shortDescription', 'tags'],
+  EXTENSION: ['name', 'fullName', 'description', 'shortDescription'],
   /** @type {Partial<keyof EventsFunction>[]} */
   EXPRESSION: ['name', 'fullName', 'description', 'functionType'],
   /** @type {Partial<keyof EventsFunction>[]} */
