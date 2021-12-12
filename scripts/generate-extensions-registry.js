@@ -1,6 +1,8 @@
 const path = require('path');
 const fs = require('fs').promises;
 const shell = require('shelljs');
+const { validateExtension } = require('./lib/ExtensionValidator');
+const args = require('minimist')(process.argv.slice(2));
 
 const extensionsBasePath = path.join(__dirname, '..', 'Extensions');
 const distBasePath = path.join(__dirname, '..', 'dist');
@@ -11,6 +13,7 @@ const extensionsBaseUrl = 'https://resources.gdevelop-app.com/extensions';
 /** @typedef {import('./types').ExtensionShortHeader} ExtensionShortHeader */
 /** @typedef {import('./types').ExtensionsDatabase} ExtensionsDatabase */
 /** @typedef {import('./types').ExtensionHeader} ExtensionHeader */
+/** @typedef {import('./types').ExtensionWithFilename} ExtensionWithFilename */
 
 /**
  * @param {string} path
@@ -20,6 +23,10 @@ const extensionsBaseUrl = 'https://resources.gdevelop-app.com/extensions';
 const writeJSONFile = (path, object) =>
   fs.writeFile(path, JSON.stringify(object, null, 2));
 
+/**
+ * Reads all the extension files and parses their JSON.
+ * @returns {Promise<ExtensionWithFilename[]>}
+ */
 const readAllExtensions = async () => {
   const filenames = await fs.readdir(extensionsBasePath);
   const filteredFilenames = filenames.filter((name) => name.endsWith('.json'));
@@ -52,33 +59,49 @@ const readAllExtensions = async () => {
     /** @type {ExtensionShortHeader[]} */
     const extensionShortHeaders = [];
 
+    let totalErrors = 0;
+    let fixableErrors = 0;
+
     await Promise.all(
       extensionWithFilenames.map(async (extensionWithFilename) => {
-        const { extension, filename } = extensionWithFilename;
+        const { extension } = extensionWithFilename;
+        const { name } = extension;
+
+        // Check for errors:
+        const errors = await validateExtension(extensionWithFilename);
+        if (errors.length !== 0) {
+          shell.echo(
+            `\n❌ ${errors.length} Error${
+              errors.length > 1 ? 's' : ''
+            } found in extension '${name}':\n`
+          );
+          errors.forEach((error) => {
+            totalErrors++;
+            if (error.fix)
+              if (args['fix']) {
+                totalErrors--;
+                error.fix();
+              } else fixableErrors++;
+            shell.echo(`  ⟶ ❌${error.fix ? ' (🔧)' : ''} ${error.message}`);
+          });
+        }
+
+        // Override the base extensions when fixing
+        if (args['fix'])
+          await writeJSONFile(
+            path.join(extensionsBasePath, `${name}.json`),
+            extension
+          );
 
         // Convert back to the old format for tags.
         if (Array.isArray(extension.tags)) {
           extension.tags = extension.tags.join(',');
         }
 
-        const { name } = extension;
-
-        // Do some consistency checks.
-        if (name.endsWith('Extension')) {
-          throw new Error(
-            `Extension names should not finish with \"Extension\". Please rename ${name}.`
-          );
-        }
-
-        if (name + '.json' !== filename) {
-          throw new Error(
-            `Extension filename should be exactly the name of the extension (with .json extension). Please rename ${name} and/or ${filename}.`
-          );
-        }
-
         // Generate the headers of the extension
         /** @type {ExtensionShortHeader} */
         const extensionShortHeader = {
+          authorIds: extension.authorIds,
           shortDescription: extension.shortDescription,
           extensionNamespace: extension.extensionNamespace,
           fullName: extension.fullName,
@@ -86,6 +109,7 @@ const readAllExtensions = async () => {
           version: extension.version,
           url: `${extensionsBaseUrl}/${name}.json`,
           headerUrl: `${extensionsBaseUrl}/${name}-header.json`,
+          //@ts-ignore Conversion to string done above
           tags: extension.tags,
           previewIconUrl: extension.previewIconUrl,
           eventsBasedBehaviorsCount: extension.eventsBasedBehaviors.length,
@@ -120,6 +144,23 @@ const readAllExtensions = async () => {
       })
     );
 
+    if (totalErrors) {
+      shell.echo(
+        `\n\n❌ ${totalErrors} Error${
+          totalErrors > 1 ? 's' : ''
+        } found in extensions - please fix ${
+          totalErrors > 1 ? 'them' : 'it'
+        } before generating the registry.`
+      );
+      if (!args['disable-exit-code'] && fixableErrors)
+        shell.echo(
+          `\n\n🔧 ${fixableErrors} Error${
+            fixableErrors > 1 ? 's are' : ' is'
+          } auto-fixable - pass the argument --fix to fix them automatically.`
+        );
+      shell.exit(args['disable-exit-code'] ? 0 : 1);
+    }
+
     // Write the registry
     /** @type {ExtensionsDatabase} */
     const registry = {
@@ -130,13 +171,6 @@ const readAllExtensions = async () => {
 
     await writeJSONFile(
       path.join(distDatabasesPath, 'extensions-database.json'),
-      registry
-    );
-
-    // Also write the old format registry so that it's found by
-    // old GDevelop versions.
-    await writeJSONFile(
-      path.join(__dirname, '..', 'extensions-registry.json'),
       registry
     );
 
