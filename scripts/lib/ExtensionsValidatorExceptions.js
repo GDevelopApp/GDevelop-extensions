@@ -146,9 +146,19 @@ const extensionsAllowedProperties = {
       javaScriptObjectAllowedProperties: [],
     },
     RenderToSprite: {
-      gdjsAllowedProperties: ['_renderToSprite'],
+      gdjsAllowedProperties: [
+        '_renderToSprite',
+        // Used for better autocomplete
+        'SpriteRuntimeObject',
+      ],
       gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: ['getRenderer'],
+      runtimeSceneAllowedProperties: [
+        // Used for rendering
+        'getRenderer',
+        // Used to update culling before rendering
+        '_updateLayersPreRender',
+        '_updateObjectsPreRender',
+      ],
       javaScriptObjectAllowedProperties: [],
     },
     Gamepads: {

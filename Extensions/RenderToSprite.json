@@ -8,8 +8,10 @@
   "name": "RenderToSprite",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/camera-enhance.svg",
   "shortDescription": "Renders an object, layer or scene and puts the resulting image into a sprite.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "tags": [
+    "experimental",
+    "non-public apis",
     "visual",
     "sprite",
     "viewport",
@@ -24,6 +26,27 @@
   ],
   "dependencies": [],
   "eventsFunctions": [
+    {
+      "description": "",
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onFirstSceneLoaded",
+      "private": false,
+      "sentence": "",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "gdjs._renderToSprite = {};\ngdjs._renderToSprite.rt = PIXI.RenderTexture.create({ width: 100, height: 100 });\ngdjs._renderToSprite.sprite = PIXI.Sprite.from(gdjs._renderToSprite.rt);\n",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
     {
       "description": "Renders an object and puts the rendered image into a sprite object.",
       "fullName": "Render an object into a sprite",
@@ -78,8 +101,8 @@
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "const source = runtimeScene.getLayer(eventsFunctionContext.getArgument(\"layer\")).getRenderer().getRendererObject();\nconst height = runtimeScene.getLayer(\"\").getCameraHeight();\nconst width = runtimeScene.getLayer(\"\").getCameraWidth()\nconst renderTarget = eventsFunctionContext.getObjects(\"renderTarget\")[0].getRendererObject();\n\ngdjs._renderToSprite = (gdjs._renderToSprite || {});\ngdjs._renderToSprite.rt = (\n    gdjs._renderToSprite.rt && gdjs._renderToSprite.rt.resize(width, height) && gdjs._renderToSprite.rt \n    || PIXI.RenderTexture.create({ width, height })\n);\ngdjs._renderToSprite.sprite = (gdjs._renderToSprite.sprite || PIXI.Sprite.from(gdjs._renderToSprite.rt))\n\n// Ensure the target is a RenderTexture of the correct size\nif (renderTarget.texture instanceof PIXI.RenderTexture) {\n    renderTarget.texture.resize(width, height);\n} else {\n    renderTarget.texture = PIXI.RenderTexture.create({ width, height });\n}\n\n// Prerender to a temporary texture to prevent WebGL erroring out.\n// See https://www.html5gamedevs.com/topic/45423-why-is-this-not-allowed/\nruntimeScene\n    .getGame()\n    .getRenderer()\n    .getPIXIRenderer()\n    .render(source, { renderTexture: gdjs._renderToSprite.rt });\n\n// Actually render 😎\nruntimeScene\n    .getGame()\n    .getRenderer()\n    .getPIXIRenderer()\n    .render(gdjs._renderToSprite.sprite, { renderTexture: renderTarget.texture });\n",
-          "parameterObjects": "",
+          "inlineCode": "const source = runtimeScene.getLayer(eventsFunctionContext.getArgument(\"layer\")).getRenderer().getRendererObject();\nconst height = runtimeScene.getLayer(\"\").getCameraHeight();\nconst width = runtimeScene.getLayer(\"\").getCameraWidth()\n/** @type {gdjs.SpriteRuntimeObject} */\nconst obj = objects[0];\n/** @type {PIXI.Sprite} */\nconst renderTarget = obj.getRendererObject();\n\n// Prepare for render\nruntimeScene._updateLayersPreRender();\nruntimeScene._updateObjectsPreRender();\n\n// Ensure the target is a RenderTexture of the correct size\ngdjs._renderToSprite.rt.resize(width, height)\nif (renderTarget.texture instanceof PIXI.RenderTexture) {\n    renderTarget.texture.resize(width, height);\n} else {\n    renderTarget.texture = PIXI.RenderTexture.create({ width, height });\n}\n\n// Prerender to a temporary texture to prevent WebGL erroring out.\n// See https://www.html5gamedevs.com/topic/45423-why-is-this-not-allowed/\nruntimeScene\n    .getGame()\n    .getRenderer()\n    .getPIXIRenderer()\n    .render(source, { renderTexture: gdjs._renderToSprite.rt });\n\n// Actually render 😎\nruntimeScene\n    .getGame()\n    .getRenderer()\n    .getPIXIRenderer()\n    .render(gdjs._renderToSprite.sprite, { renderTexture: renderTarget.texture });\n\n// Ensure the original width/heigth is restored\nrenderTarget.width = obj.getWidth();\nrenderTarget.height = obj.getHeight();\n",
+          "parameterObjects": "renderTarget",
           "useStrict": true,
           "eventsSheetExpanded": false
         }
@@ -120,8 +143,8 @@
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "const source = runtimeScene.getRenderer().getPIXIContainer();\nconst height = runtimeScene.getLayer(\"\").getCameraHeight();\nconst width = runtimeScene.getLayer(\"\").getCameraWidth()\nconst renderTarget = eventsFunctionContext.getObjects(\"renderTarget\")[0].getRendererObject();\n\ngdjs._renderToSprite = (gdjs._renderToSprite || {});\ngdjs._renderToSprite.rt = (\n    gdjs._renderToSprite.rt && gdjs._renderToSprite.rt.resize(width, height) && gdjs._renderToSprite.rt \n    || PIXI.RenderTexture.create({ width, height })\n);\ngdjs._renderToSprite.sprite = (gdjs._renderToSprite.sprite || PIXI.Sprite.from(gdjs._renderToSprite.rt))\n\n// Ensure the target is a RenderTexture of the correct size\nif (renderTarget.texture instanceof PIXI.RenderTexture) {\n    renderTarget.texture.resize(width, height);\n} else {\n    renderTarget.texture = PIXI.RenderTexture.create({ width, height });\n}\n\n// Prerender to a temporary texture to prevent WebGL erroring out.\n// See https://www.html5gamedevs.com/topic/45423-why-is-this-not-allowed/\nruntimeScene\n    .getGame()\n    .getRenderer()\n    .getPIXIRenderer()\n    .render(source, { renderTexture: gdjs._renderToSprite.rt });\n\n// Actually render 😎\nruntimeScene\n    .getGame()\n    .getRenderer()\n    .getPIXIRenderer()\n    .render(gdjs._renderToSprite.sprite, { renderTexture: renderTarget.texture });\n",
-          "parameterObjects": "",
+          "inlineCode": "const source = runtimeScene.getRenderer().getPIXIContainer();\nconst height = runtimeScene.getLayer(\"\").getCameraHeight();\nconst width = runtimeScene.getLayer(\"\").getCameraWidth();\n/** @type {gdjs.SpriteRuntimeObject} */\nconst obj = objects[0];\n/** @type {PIXI.Sprite} */\nconst renderTarget = obj.getRendererObject();\n\n// Prepare for render\nruntimeScene._updateLayersPreRender();\nruntimeScene._updateObjectsPreRender();\n\n// Ensure the target is a RenderTexture of the correct size\ngdjs._renderToSprite.rt.resize(width, height);\nif (renderTarget.texture instanceof PIXI.RenderTexture) {\n    renderTarget.texture.resize(width, height);\n} else {\n    renderTarget.texture = PIXI.RenderTexture.create({ width, height });\n}\n\n// Prerender to a temporary texture to prevent WebGL erroring out.\n// See https://www.html5gamedevs.com/topic/45423-why-is-this-not-allowed/\nruntimeScene\n    .getGame()\n    .getRenderer()\n    .getPIXIRenderer()\n    .render(source, { renderTexture: gdjs._renderToSprite.rt });\n\n// Actually render 😎\nruntimeScene\n    .getGame()\n    .getRenderer()\n    .getPIXIRenderer()\n    .render(gdjs._renderToSprite.sprite, { renderTexture: renderTarget.texture });\n\n// Ensure the original width/heigth is restored\nrenderTarget.width = obj.getWidth();\nrenderTarget.height = obj.getHeight();\n",
+          "parameterObjects": "renderTarget",
           "useStrict": true,
           "eventsSheetExpanded": false
         }
