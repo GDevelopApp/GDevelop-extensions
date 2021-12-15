@@ -66,6 +66,7 @@ const extensionsAllowedProperties = {
       'evtTools',
       'Variable',
       'RuntimeObject',
+      'Logger',
     ],
     gdjsEvtToolsAllowedProperties: [
       'network',
@@ -224,6 +225,12 @@ const extensionsAllowedProperties = {
     Compressor: {
       gdjsAllowedProperties: ['_pakoTools'],
       gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    DiscordRichPresence: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['discordRP'],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
