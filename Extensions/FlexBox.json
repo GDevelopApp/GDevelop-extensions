@@ -8,7 +8,11 @@
   "name": "FlexBox",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/page-layout-body.svg",
   "shortDescription": "Allows using flexbox for positioning objects.",
-  "version": "0.0.1",
+  "version": "0.2.0",
+  "origin": {
+    "identifier": "FlexBox",
+    "name": "gdevelop-extension-store"
+  },
   "tags": [
     "flexbox",
     "layout",
@@ -16,7 +20,7 @@
     "items",
     "container",
     "html",
-    "DOM apis"
+    "dom apis"
   ],
   "authorIds": [
     "ZgrsWuRTAkXgeuPV9bo0zuEcA2w1"
@@ -34,6 +38,7 @@
           "description": "",
           "fullName": "",
           "functionType": "Action",
+          "group": "",
           "name": "doStepPreEvents",
           "private": false,
           "sentence": "",
@@ -73,7 +78,7 @@
                   "disabled": false,
                   "folded": false,
                   "type": "BuiltinCommonInstructions::JsCode",
-                  "inlineCode": "const behavior = objects[0].getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));\n// Create an HTML element for letting the Browser calculate the CSS.\nbehavior.element = Object.assign(document.createElement(\"div\"), {\n    id: objects[0].getName() + \"-\" + objects[0].getUniqueId(),\n});\n\nconst directionMap = {\n    right: \"row\",\n    left: \"row-reverse\",\n    down: \"column\",\n    up: \"column-reverse\",\n}\n\n// Set default styles\nObject.assign(behavior.element.style, {\n    top: 0,\n    left: 0,\n    display: \"flex\",\n    position: \"absolute\",\n    \"flex-direction\": directionMap[behavior._getDirection()],\n    \"flex-wrap\": behavior._getWrap(),\n    \"justify-content\": behavior._getJustifyContent(),\n    \"align-items\": behavior._getAlignItems(),\n    \"align-content\": behavior._getAlignContent(),\n});\n\n// Small hack to trick the browser into calculating \n// styles without actually putting the element in the DOM \n// (which would pollute the game website and falsify the \n// positional data as other elements would mess with the \n// objects position).\ndocument.body.appendChild(Object.assign(document.createElement(\"iframe\"), { style: \"position: absolute; width:0; height:0; border:0;\" })).contentDocument.body.appendChild(behavior.element);\n\n// Expose a \"global interface\" to allow LayoutItems to interact with the container.\n(gdjs.layoutContainers || (gdjs.layoutContainers = {}))[behavior._getID()] =\n    {\n        addChild: behavior.element.appendChild.bind(behavior.element),\n    };\n",
+                  "inlineCode": "const behavior = objects[0].getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));\n// Create an HTML element for letting the Browser calculate the CSS.\nbehavior.element = Object.assign(document.createElement(\"div\"), {\n    id: objects[0].getName() + \"-\" + objects[0].getUniqueId(),\n});\n\nconst directionMap = {\n    right: \"row\",\n    left: \"row-reverse\",\n    down: \"column\",\n    up: \"column-reverse\",\n}\n\n// Set default styles\nObject.assign(behavior.element.style, {\n    top: 0,\n    left: 0,\n    display: \"flex\",\n    position: \"absolute\",\n    \"flex-direction\": directionMap[behavior._getDirection()],\n    \"flex-wrap\": behavior._getWrap(),\n    \"gap\": behavior._getGap() + \"px\",\n    \"justify-content\": behavior._getJustifyContent(),\n    \"align-items\": behavior._getAlignItems(),\n    \"align-content\": behavior._getAlignContent(),\n});\n\n// Small hack to trick the browser into calculating \n// styles without actually putting the element in the DOM \n// (which would pollute the game website and falsify the \n// positional data as other elements would mess with the \n// objects position).\ndocument.body.appendChild(Object.assign(document.createElement(\"iframe\"), { style: \"position: absolute; width:0; height:0; border:0;\" })).contentDocument.body.appendChild(behavior.element);\n\n// Expose a \"global interface\" to allow LayoutItems to interact with the container.\n(gdjs.layoutContainers || (gdjs.layoutContainers = {}))[behavior._getID()] =\n    {\n        addChild: behavior.element.appendChild.bind(behavior.element),\n    };\n",
                   "parameterObjects": "Object",
                   "useStrict": true,
                   "eventsSheetExpanded": true
@@ -118,6 +123,7 @@
           "description": "Sets the flexbox direction property.",
           "fullName": "Set flex direction",
           "functionType": "Action",
+          "group": "",
           "name": "SetFlexDirection",
           "private": false,
           "sentence": "Set flexbox direction of _PARAM0_ to _PARAM2_",
@@ -170,6 +176,7 @@
           "description": "Sets the flexbox wrap property.",
           "fullName": "Set flex wrap",
           "functionType": "Action",
+          "group": "",
           "name": "SetFlexWrap",
           "private": false,
           "sentence": "Set flexbox wrap of _PARAM0_ to _PARAM2_",
@@ -222,6 +229,7 @@
           "description": "Sets the alignement method for items on the X axis.",
           "fullName": "Set alignement on the X axis",
           "functionType": "Action",
+          "group": "",
           "name": "SetXAlign",
           "private": false,
           "sentence": "Set flexbox X alignement of items of _PARAM0_ to _PARAM2_",
@@ -274,6 +282,7 @@
           "description": "Sets the alignement method for items on the Y axis.",
           "fullName": "Set alignement on the Y axis",
           "functionType": "Action",
+          "group": "",
           "name": "SetYAlign",
           "private": false,
           "sentence": "Set flexbox Y alignement of items of _PARAM0_ to _PARAM2_",
@@ -326,6 +335,7 @@
           "description": "Sets the alignement method for the lines/rows of objects in the box.",
           "fullName": "Set alignement of the lines",
           "functionType": "Action",
+          "group": "",
           "name": "SetLineAlign",
           "private": false,
           "sentence": "Set flexbox alignement of lines of _PARAM0_ to _PARAM2_",
@@ -379,56 +389,102 @@
         {
           "value": "Default",
           "type": "String",
-          "label": "ID",
+          "label": "The ID of the container",
           "description": "",
+          "group": "",
           "extraInformation": [],
           "hidden": false,
           "name": "ID"
         },
         {
           "value": "right",
-          "type": "String",
-          "label": "The direction of the items (right, left, up or down)",
+          "type": "Choice",
+          "label": "The direction of the items",
           "description": "",
-          "extraInformation": [],
+          "group": "Layout",
+          "extraInformation": [
+            "right",
+            "left",
+            "up",
+            "down"
+          ],
           "hidden": false,
           "name": "Direction"
         },
         {
           "value": "nowrap",
-          "type": "String",
-          "label": "Allow adding lines to fit everything inside the Flexbox (nowrap, wrap or wrap-reverse)",
+          "type": "Choice",
+          "label": "Warpping (adding lines to fit everything inside the Flexbox)",
           "description": "",
-          "extraInformation": [],
+          "group": "Layout",
+          "extraInformation": [
+            "wrap",
+            "nowrap",
+            "wrap-reverse"
+          ],
           "hidden": false,
           "name": "Wrap"
         },
         {
           "value": "flex-start",
-          "type": "String",
-          "label": "The alignement of the items on the X axis (flex-start, flex-end, center, space-between, space-around or space-evenly)",
+          "type": "Choice",
+          "label": "The alignement of the items on the X axis",
           "description": "",
-          "extraInformation": [],
+          "group": "Alignement",
+          "extraInformation": [
+            "flex-start",
+            "flex-end",
+            "center",
+            "space-between",
+            "space-around",
+            "space-evenly"
+          ],
           "hidden": false,
           "name": "JustifyContent"
         },
         {
           "value": "stretch",
-          "type": "String",
-          "label": "The alignement of the items on the Y axis (stretch, flex-start, flex-end or center)",
+          "type": "Choice",
+          "label": "The alignement of the items on the Y axis",
           "description": "",
-          "extraInformation": [],
+          "group": "Alignement",
+          "extraInformation": [
+            "stretch",
+            "flex-start",
+            "flex-end",
+            "center"
+          ],
           "hidden": false,
           "name": "AlignItems"
         },
         {
           "value": "normal",
-          "type": "String",
-          "label": "The alignement of the lines (normal, flex-start, flex-end, center, space-between, space-around, space-evenly or stretch)",
+          "type": "Choice",
+          "label": "The alignement of the lines (row/columns)",
           "description": "",
-          "extraInformation": [],
+          "group": "Alignement",
+          "extraInformation": [
+            "normal",
+            "flex-start",
+            "flex-end",
+            "center",
+            "space-between",
+            "space-around",
+            "space-evenly",
+            "stretch"
+          ],
           "hidden": false,
           "name": "AlignContent"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Minimal gap between each item in pixels",
+          "description": "",
+          "group": "Layout",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "Gap"
         }
       ]
     },
@@ -442,7 +498,8 @@
           "description": "",
           "fullName": "",
           "functionType": "Action",
-          "name": "doStepPreEvents",
+          "group": "",
+          "name": "doStepPostEvents",
           "private": false,
           "sentence": "",
           "events": [
@@ -481,12 +538,21 @@
                   "disabled": false,
                   "folded": false,
                   "type": "BuiltinCommonInstructions::JsCode",
-                  "inlineCode": "const behavior = objects[0].getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));\n// Create an HTML element for letting the Browser calculate the CSS.\nbehavior.element = Object.assign(document.createElement(\"div\"), {\n    id: objects[0].getName() + \"-\" + objects[0].getUniqueId(),\n});\n\n// Set default styles\nObject.assign(behavior.element.style, {\n    \"flex-grow\": behavior._getGrowth(),\n    \"flex-shrink\": behavior._getShrink(),\n    order: behavior._getOrder(),\n    width: objects[0].getWidth() + \"px\",\n    height: objects[0].getHeight() + \"px\",\n});\n\nif (behavior._getAlignSelf().length > 1)\n    behavior.element.style[\"align-self\"] = behavior._getAlignSelf();\n\n(gdjs.layoutContainers || (gdjs.layoutContainers = {}))[behavior._getContainerID()].addChild(behavior.element);\n",
+                  "inlineCode": "const behavior = objects[0].getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));\n// Create an HTML element for letting the Browser calculate the CSS.\nbehavior.element = Object.assign(document.createElement(\"div\"), {\n    id: objects[0].getName() + \"-\" + objects[0].getUniqueId(),\n});\n\n// Set default styles\nObject.assign(behavior.element.style, {\n    \"flex-grow\": behavior._getGrowth(),\n    \"flex-shrink\": behavior._getShrink(),\n    order: behavior._getOrder(),\n    \"min-width\": 0,\n    \"min-height\": 0,\n    width: behavior._getFullWidth() ? \"100%\" : objects[0].getWidth() + \"px\",\n    height: behavior._getFullHeight() ? \"100%\" : objects[0].getHeight() + \"px\",\n});\n\nif (behavior._getAlignSelf().length > 1)\n    behavior.element.style[\"align-self\"] = behavior._getAlignSelf();\n\n(gdjs.layoutContainers || (gdjs.layoutContainers = {}))[behavior._getContainerID()].addChild(behavior.element);\n",
                   "parameterObjects": "Object",
                   "useStrict": true,
                   "eventsSheetExpanded": false
                 }
               ]
+            },
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "const behavior = objects[0].getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));\nconst pos = behavior.element.getBoundingClientRect();\nobjects[0].setX(pos.x);\nobjects[0].setY(pos.y);\nobjects[0].setWidth(pos.width);\nobjects[0].setHeight(pos.height);\n",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
             }
           ],
           "parameters": [
@@ -517,7 +583,8 @@
           "description": "",
           "fullName": "",
           "functionType": "Action",
-          "name": "doStepPostEvents",
+          "group": "",
+          "name": "onDestroy",
           "private": false,
           "sentence": "",
           "events": [
@@ -525,7 +592,93 @@
               "disabled": false,
               "folded": false,
               "type": "BuiltinCommonInstructions::JsCode",
-              "inlineCode": "const behavior = objects[0].getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));\nconst pos = behavior.element.getBoundingClientRect();\nobjects[0].setX(pos.x);\nobjects[0].setY(pos.y);\nobjects[0].setWidth(pos.width);\nobjects[0].setHeight(pos.height);\n",
+              "inlineCode": "objects[0].getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\")).element.remove();\n",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FlexBox::FlexItem",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "",
+          "fullName": "",
+          "functionType": "Action",
+          "group": "",
+          "name": "onDeActivate",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "objects[0].getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\")).element.remove();\n",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FlexBox::FlexItem",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "",
+          "fullName": "",
+          "functionType": "Action",
+          "group": "",
+          "name": "onActivate",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "const behavior = objects[0].getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));\n(gdjs.layoutContainers || (gdjs.layoutContainers = {}))[behavior._getContainerID()].addChild(behavior.element);\n",
               "parameterObjects": "Object",
               "useStrict": true,
               "eventsSheetExpanded": false
@@ -559,6 +712,7 @@
           "description": "Sets the shrink for this object.",
           "fullName": "Set shrink of the object",
           "functionType": "Action",
+          "group": "",
           "name": "SetShrink",
           "private": false,
           "sentence": "Set flex shrink of _PARAM0_ to _PARAM2_",
@@ -611,6 +765,7 @@
           "description": "Sets the growth for this object.",
           "fullName": "Set growth of the object",
           "functionType": "Action",
+          "group": "",
           "name": "SetGrowth",
           "private": false,
           "sentence": "Set flex growth of _PARAM0_ to _PARAM2_",
@@ -663,6 +818,7 @@
           "description": "Sets the order for this object.",
           "fullName": "Set order of the object",
           "functionType": "Action",
+          "group": "",
           "name": "SetOrder",
           "private": false,
           "sentence": "Set flex order of _PARAM0_ to _PARAM2_",
@@ -715,6 +871,7 @@
           "description": "Sets the alignement method for this object.",
           "fullName": "Set alignement of the object",
           "functionType": "Action",
+          "group": "",
           "name": "SetAlign",
           "private": false,
           "sentence": "Set flex alignement of _PARAM0_ to _PARAM2_",
@@ -770,6 +927,7 @@
           "type": "String",
           "label": "The ID of the container",
           "description": "",
+          "group": "",
           "extraInformation": [],
           "hidden": false,
           "name": "ContainerID"
@@ -779,6 +937,7 @@
           "type": "Number",
           "label": "Ability to grow (flex-grow)",
           "description": "",
+          "group": "Sizing",
           "extraInformation": [],
           "hidden": false,
           "name": "Growth"
@@ -788,6 +947,7 @@
           "type": "Number",
           "label": "Ability to shrink (flex-shrink)",
           "description": "",
+          "group": "Sizing",
           "extraInformation": [],
           "hidden": false,
           "name": "Shrink"
@@ -797,18 +957,46 @@
           "type": "Number",
           "label": "The order of the object in the container",
           "description": "",
+          "group": "",
           "extraInformation": [],
           "hidden": false,
           "name": "Order"
         },
         {
           "value": "",
-          "type": "String",
-          "label": "Override the alignement for that object (auto, flex-start, flex-end, center, stretch)",
+          "type": "Choice",
+          "label": "Override the alignement for that object",
           "description": "",
-          "extraInformation": [],
+          "group": "Alignment",
+          "extraInformation": [
+            "auto",
+            "flex-start",
+            "flex-end",
+            "center",
+            "stretch"
+          ],
           "hidden": false,
           "name": "AlignSelf"
+        },
+        {
+          "value": "",
+          "type": "Boolean",
+          "label": "Occupy the maximum width possible",
+          "description": "",
+          "group": "Sizing",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "FullWidth"
+        },
+        {
+          "value": "",
+          "type": "Boolean",
+          "label": "Occupy the maximum height possible",
+          "description": "",
+          "group": "Sizing",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "FullHeight"
         }
       ]
     }
