@@ -210,6 +210,17 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    PlatformLedgeGrabber: {
+      gdjsAllowedProperties: [
+        'PlatformerObjectRuntimeBehavior',
+        'PlatformRuntimeBehavior',
+        'PlatformObjectsManager',
+        'AABB',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     PlatformerTrajectory: {
       gdjsAllowedProperties: ['PlatformerObjectRuntimeBehavior'],
       gdjsEvtToolsAllowedProperties: [],
