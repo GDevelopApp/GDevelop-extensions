@@ -1,9 +1,9 @@
 name: GDevelop Extensions PR commands
 on: issue_comment
 jobs:
-  rebase:
+  merge:
     runs-on: ubuntu-latest
-    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '!rebase') }}
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '!merge') }}
     steps:
       - uses: xt0rted/pull-request-comment-branch@v1
         id: comment-branch
@@ -17,7 +17,7 @@ jobs:
         run: |
           git config --global user.name '${{ github.actor }}'
           git config --global user.email '${{ github.actor }}@users.noreply.github.com'
-          git merge -X theirs origin/main -m "Rebase from main"
+          git merge -X theirs origin/main -m "Merge main into this branch"
 
       - name: Rebuild the database
         run: |
@@ -35,14 +35,78 @@ jobs:
         if: ${{ contains(env.BUILD_LOGS, 'successfully updated') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr comment ${{ github.event.issue.number }} --body "✅ Successfully rebased from main."
+        run: gh pr comment ${{ github.event.issue.number }} --body "✅ Successfully merged main into this branch."
 
       - name: Notify error
         if: ${{ !contains(env.BUILD_LOGS, 'successfully updated') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment ${{ github.event.issue.number }} --body "A build error occured while rebasing:
+          gh pr comment ${{ github.event.issue.number }} --body "A build error occured while merging:
+
+          \`\`\`${{ env.BUILD_LOGS }}
+          \`\`\`"
+
+      - name: Notify any error
+        if: ${{ failure() }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.issue.number }} --body "❗ An internal error has occured. See logs at https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}."
+
+  hard-reset:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '!really-hard-reset') }}
+    steps:
+      - uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
+
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ steps.comment-branch.outputs.head_ref }}
+
+      - name: Erase all changes and go back to main
+        run: |
+          git config --global user.name '${{ github.actor }}'
+          git config --global user.email '${{ github.actor }}@users.noreply.github.com'
+          git fetch origin main
+          git reset main --hard
+
+      - name: Download extension
+        env:
+          BODY: ${{ github.event.comment.body }}
+        run: |
+          curl -L $(echo $BODY | grep -ioEh 'https?://\S+.zip' -m1) -o /tmp/ext.zip
+          unzip -o /tmp/ext.zip -d ./Extensions
+
+      - name: Rebuild the database
+        run: |
+          npm i
+          echo 'BUILD_LOGS<<EOF' >> $GITHUB_ENV
+          node scripts/generate-extensions-registry.js --disable-exit-code >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+      - name: Commit and push
+        if: ${{ contains(env.BUILD_LOGS, 'successfully updated') }}
+        run: |
+          git config --global user.name '${{ github.actor }}'
+          git config --global user.email '${{ github.actor }}@users.noreply.github.com'
+          git add Extensions
+          git commit -m "Hard reset back to main and update extension"
+          git push -f
+
+      - name: Notify success
+        if: ${{ contains(env.BUILD_LOGS, 'successfully updated') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr comment ${{ github.event.issue.number }} --body "✅ Successfully hard reset to main and updated the extension."
+
+      - name: Notify build error
+        if: ${{ !contains(env.BUILD_LOGS, 'successfully updated') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.issue.number }} --body "Can't update the extension, as it doesn't pass automatic tests:
 
           \`\`\`${{ env.BUILD_LOGS }}
           \`\`\`"
@@ -64,13 +128,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: ${{ steps.comment-branch.outputs.head_ref }}
-          fetch-depth: 0
-
-      - name: Revert previous changes back to origin/main
-        run: |
-          git config --global user.name '${{ github.actor }}'
-          git config --global user.email '${{ github.actor }}@users.noreply.github.com'
-          git revert --no-commit origin/main..HEAD -m 1
 
       - name: Download extension
         env:
@@ -89,6 +146,8 @@ jobs:
       - name: Commit and push
         if: ${{ contains(env.BUILD_LOGS, 'successfully updated') }}
         run: |
+          git config --global user.name '${{ github.actor }}'
+          git config --global user.email '${{ github.actor }}@users.noreply.github.com'
           git add Extensions
           git commit -m "Updated extension"
           git push
