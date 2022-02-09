@@ -1,7 +1,7 @@
 {
   "author": "",
   "category": "",
-  "description": "## Description\n\nThis extension allows to zoom a camera on a layer at a given speed. The zoom speed is configurable and allows a constant or even variable zoom speed.\n\n### Actions\n\n- Zoom by a factor every second",
+  "description": "## Description\n\nThis extension allows to zoom a camera on a layer at a given speed. The zoom speed is configurable and allows a constant as well as a variable zoom speed. An anchor point can be defined, for instance, to keep what is under the cursor at the same place on screen.\n\n### Actions\n\n- Zoom at a given speed\n- Change the zoom with an anchor point\n- Zoom at a given speed and with an anchor point",
   "extensionNamespace": "",
   "fullName": "Camera Zoom",
   "helpPath": "",
@@ -9,7 +9,7 @@
   "name": "CameraZoom",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Line Hero Pack/Master/SVG/UI Essentials/UI Essentials_zoom_in_plus.svg",
   "shortDescription": "Allows to zoom camera on a layer with a speed (factor per second).",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "tags": [
     "Camera",
     "Layer",
@@ -58,7 +58,7 @@
           "codeOnly": false,
           "defaultValue": "",
           "description": "Zoom speed",
-          "longDescription": "Zoom by a factor per second. 1: No change, 2: Zoom in x2 every second, 0.5: Zoom out x2 every second.",
+          "longDescription": "Zoom by a factor per second. 1: no effect, 2: zoom in x2 every second, 0.5: zoom out x2 every second.",
           "name": "ZoomSpeed",
           "optional": false,
           "supplementaryInformation": "",
@@ -80,6 +80,224 @@
           "description": "Camera number (default: 0)",
           "longDescription": "",
           "name": "Camera",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Change the camera zoom and keep an anchor point fixed on screen (instead of the center).",
+      "fullName": "Zoom with anchor",
+      "functionType": "Action",
+      "group": "",
+      "name": "ZoomWithAnchor",
+      "private": false,
+      "sentence": "Change camera zoom to: _PARAM1_ with an anchor at: _PARAM4_; _PARAM5_ (layer: _PARAM2_, camera: _PARAM3_)",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "When zooming the vector in pixels from the center to the anchor must stay the same.\nIt gives this system:\n\n/ pixel_delta(t-1) = (anchor - center(t-1)) * zoom(t-1)\n| pixel_delta(t) = (anchor - center(t)) * zoom(t)\n\\ pixel_delta(t) = pixel_delta(t-1)\n\nwhere the new center can be resolved to:\n\ncenter(t) = anchor + (center(t-1) - anchor) * zoom(t-1) / zoom(t)",
+          "comment2": ""
+        },
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "inverted": false,
+                "value": "SetCameraX"
+              },
+              "parameters": [
+                "",
+                "=",
+                "GetArgumentAsNumber(\"AnchorX\")\n+ (\n   CameraX(GetArgumentAsString(\"Layer\"), GetArgumentAsNumber(\"Camera\"))\n   - GetArgumentAsNumber(\"AnchorX\")\n)\n* CameraZoom(GetArgumentAsString(\"Layer\"), GetArgumentAsNumber(\"Camera\"))\n/ GetArgumentAsNumber(\"Zoom\")",
+                "\"\"",
+                "0"
+              ],
+              "subInstructions": []
+            },
+            {
+              "type": {
+                "inverted": false,
+                "value": "SetCameraY"
+              },
+              "parameters": [
+                "",
+                "=",
+                "GetArgumentAsNumber(\"AnchorY\")\n+ (\n   CameraY(GetArgumentAsString(\"Layer\"), GetArgumentAsNumber(\"Camera\"))\n   - GetArgumentAsNumber(\"AnchorY\")\n)\n* CameraZoom(GetArgumentAsString(\"Layer\"), GetArgumentAsNumber(\"Camera\"))\n/ GetArgumentAsNumber(\"Zoom\")",
+                "\"\"",
+                "0"
+              ],
+              "subInstructions": []
+            },
+            {
+              "type": {
+                "inverted": false,
+                "value": "ZoomCamera"
+              },
+              "parameters": [
+                "",
+                "GetArgumentAsNumber(\"Zoom\")",
+                "GetArgumentAsString(\"Layer\")",
+                "GetArgumentAsNumber(\"Camera\")"
+              ],
+              "subInstructions": []
+            }
+          ],
+          "events": []
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Zoom",
+          "longDescription": "1: Initial zoom, 2: zoom in x2, 0.5: zoom out x2...",
+          "name": "Zoom",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Layer",
+          "longDescription": "",
+          "name": "Layer",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "layer"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Camera number (default: 0)",
+          "longDescription": "",
+          "name": "Camera",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Anchor X",
+          "longDescription": "",
+          "name": "AnchorX",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Anchor Y",
+          "longDescription": "",
+          "name": "AnchorY",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Change the camera zoom at a given speed (in factor per second) and keep an anchor point fixed on screen (instead of the center).",
+      "fullName": "Zoom camera with speed and anchor",
+      "functionType": "Action",
+      "group": "",
+      "name": "ZoomWithSpeedAndAnchor",
+      "private": false,
+      "sentence": "Zoom camera with speed: _PARAM1_ and an anchror at: _PARAM4_; _PARAM5_ (layer: _PARAM2_, camera: _PARAM3_)",
+      "events": [
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "inverted": false,
+                "value": "CameraZoom::ZoomWithAnchor"
+              },
+              "parameters": [
+                "",
+                "CameraZoom(GetArgumentAsString(\"Layer\"), GetArgumentAsNumber(\"Camera\")) * pow(GetArgumentAsNumber(\"ZoomSpeed\"), TimeDelta())",
+                "GetArgumentAsString(\"Layer\")",
+                "GetArgumentAsNumber(\"Camera\")",
+                "GetArgumentAsNumber(\"AnchorX\")",
+                "GetArgumentAsNumber(\"AnchorY\")",
+                ""
+              ],
+              "subInstructions": []
+            }
+          ],
+          "events": []
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Zoom speed",
+          "longDescription": "Zoom by a factor per second. 1: no effect, 2: zoom in x2 every second, 0.5: zoom out x2 every second.",
+          "name": "ZoomSpeed",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Layer",
+          "longDescription": "",
+          "name": "Layer",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "layer"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Camera number (default: 0)",
+          "longDescription": "",
+          "name": "Camera",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Anchor X",
+          "longDescription": "",
+          "name": "AnchorX",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Anchor Y",
+          "longDescription": "",
+          "name": "AnchorY",
           "optional": false,
           "supplementaryInformation": "",
           "type": "expression"
