@@ -1,5 +1,6 @@
 {
   "author": "",
+  "category": "Input",
   "description": "This extension gives access to three pop-ups. Those are Alert, Comfirm and prompt (text entry).\n## Alert\n- Gives user can alert which they can accept and close.\n- User can respond with `Ok`.\n\n## Confirmation\n- Gives user a confirmation message.\n- User can respond with `Ok` or `Cancel`.\n\n## Prompt\n**Prompt only works in browsers**.\n- Gives user a prompt with a textbox to type in .\n- User can type in the textbox (The typed string is considered the response) and click `Ok` or `Cancel`.\n",
   "extensionNamespace": "",
   "fullName": "Pop-up",
@@ -23,12 +24,13 @@
   "dependencies": [],
   "eventsFunctions": [
     {
-      "description": "Valid response was given by user (The response wasn't empty). ",
-      "fullName": "Valid Response",
+      "description": "The response to a pop-up message is valid or not empty. ",
+      "fullName": "Valid response",
       "functionType": "Condition",
+      "group": "",
       "name": "PromptValidResponse",
       "private": false,
-      "sentence": "A valid response was given by user to prompt with ID: _PARAM1_",
+      "sentence": "Response from the pop-up message with identifier: _PARAM1_ is valid or not empty",
       "events": [
         {
           "disabled": false,
@@ -44,7 +46,7 @@
         {
           "codeOnly": false,
           "defaultValue": "",
-          "description": "Prompt ID",
+          "description": "Pop-up identifier",
           "longDescription": "",
           "name": "ID",
           "optional": false,
@@ -55,9 +57,10 @@
       "objectGroups": []
     },
     {
-      "description": "Response by user to prompt.",
+      "description": "Return the text response by user to prompt.",
       "fullName": "Response to prompt",
       "functionType": "StringExpression",
+      "group": "",
       "name": "PromptResponse",
       "private": false,
       "sentence": "Open prompt with message : _PARAM1_ with ID: _PARAM2_",
@@ -66,7 +69,7 @@
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = runtimeScene.getGame().getVariables().get(eventsFunctionContext.getArgument(\"ID\")).getAsString();",
+          "inlineCode": "const id = eventsFunctionContext.getArgument(\"ID\");\r\n\r\neventsFunctionContext.returnValue = runtimeScene.getGame().getVariables().get(id).getAsString();\r\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -76,7 +79,7 @@
         {
           "codeOnly": false,
           "defaultValue": "",
-          "description": "Prompt ID",
+          "description": "Pop-up identifier",
           "longDescription": "",
           "name": "ID",
           "optional": false,
@@ -87,28 +90,29 @@
       "objectGroups": []
     },
     {
-      "description": "Prompt user with the pop-up with a text box where they can type (Only works in browsers).",
+      "description": "Displays a prompt in a pop-up that prompts the user for input. This action return the text input or the false boolean if canceled.",
       "fullName": "Prompt",
       "functionType": "Action",
+      "group": "Web browsers",
       "name": "Prompt",
       "private": false,
-      "sentence": "Open prompt with message : _PARAM1_ with ID: _PARAM3_, Default text for textbox: _PARAM2_",
+      "sentence": "Open a prompt pop-up box with message: _PARAM1_ (placeholder: _PARAM2_, identifier: _PARAM3_)",
       "events": [
         {
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "var response;\nresponse = window.prompt(eventsFunctionContext.getArgument(\"Message\"),eventsFunctionContext.getArgument(\"DefaultText\"));\nif (response !== null)\n    runtimeScene.getGame()._variables.get(eventsFunctionContext.getArgument(\"ID\")).setString(response)\nelse\n    runtimeScene.getGame()._variables.get(eventsFunctionContext.getArgument(\"ID\")).setBoolean(false)",
+          "inlineCode": "const id = eventsFunctionContext.getArgument(\"ID\");\nconst message = eventsFunctionContext.getArgument(\"Message\");\nconst defaultText = eventsFunctionContext.getArgument(\"DefaultText\");\n\nconst response = window.prompt(message, defaultText);\n\nif (response !== null){\n    runtimeScene.getGame().getVariables().get(id).setString(response);\n}else{\n    runtimeScene.getGame().getVariables().get(id).setBoolean(false);\n}",
           "parameterObjects": "",
           "useStrict": true,
-          "eventsSheetExpanded": false
+          "eventsSheetExpanded": true
         }
       ],
       "parameters": [
         {
           "codeOnly": false,
           "defaultValue": "",
-          "description": "Prompt Message",
+          "description": "Prompt message",
           "longDescription": "",
           "name": "Message",
           "optional": false,
@@ -118,7 +122,7 @@
         {
           "codeOnly": false,
           "defaultValue": "",
-          "description": "Default Text",
+          "description": "Input placeholder",
           "longDescription": "",
           "name": "DefaultText",
           "optional": false,
@@ -128,7 +132,7 @@
         {
           "codeOnly": false,
           "defaultValue": "",
-          "description": "Pop-up ID",
+          "description": "Pop-up identifier",
           "longDescription": "",
           "name": "ID",
           "optional": false,
@@ -139,12 +143,13 @@
       "objectGroups": []
     },
     {
-      "description": "Ask confirmation of user with a message in a pop-up window.",
-      "fullName": "Comfirm",
+      "description": "Ask confirmation of user with a message in a dialog box with an OK button, and a Cancel button.",
+      "fullName": "Confirm",
       "functionType": "Action",
+      "group": "",
       "name": "Confirm",
       "private": false,
-      "sentence": "Comfirm user about: _PARAM1_, Confirmation ID: _PARAM2_",
+      "sentence": "Open a confirmation pop-up box with message: _PARAM1__ (identifier: _PARAM2_)",
       "events": [
         {
           "disabled": false,
@@ -166,7 +171,7 @@
               "disabled": false,
               "folded": false,
               "type": "BuiltinCommonInstructions::JsCode",
-              "inlineCode": "runtimeScene.getGame()._variables.get(eventsFunctionContext.getArgument(\"ID\")).setBoolean(confirm(eventsFunctionContext.getArgument(\"Message\")))\n",
+              "inlineCode": "const id = eventsFunctionContext.getArgument(\"ID\");\nconst isConfirmed = confirm(eventsFunctionContext.getArgument(\"Message\"));\n\nruntimeScene.getGame().getVariables().get(id).setBoolean(isConfirmed);\n\n",
               "parameterObjects": "",
               "useStrict": true,
               "eventsSheetExpanded": false
@@ -178,8 +183,8 @@
         {
           "codeOnly": false,
           "defaultValue": "",
-          "description": "Confirmation Message",
-          "longDescription": "",
+          "description": "Confirmation message",
+          "longDescription": "The text to display in the confirm box.",
           "name": "Message",
           "optional": false,
           "supplementaryInformation": "",
@@ -188,7 +193,7 @@
         {
           "codeOnly": false,
           "defaultValue": "",
-          "description": "Confirmation ID",
+          "description": "Pop-up identifier",
           "longDescription": "",
           "name": "ID",
           "optional": false,
@@ -199,28 +204,37 @@
       "objectGroups": []
     },
     {
-      "description": "Check if the confirmation was accepted.",
-      "fullName": "Comfirmed",
+      "description": "Check if a confirmation was accepted.",
+      "fullName": "Pop-up message confirmed",
       "functionType": "Condition",
-      "name": "ComfimationResponse",
+      "group": "",
+      "name": "ConfimationResponse",
       "private": false,
-      "sentence": "Message with ID _PARAM1_ confirmed",
+      "sentence": "Pop-up message with identifier _PARAM1_ is confirmed",
       "events": [
         {
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "if (runtimeScene.getGame().getVariables().get(eventsFunctionContext.getArgument(\"ID\")).getAsBoolean() === true)\n    eventsFunctionContext.returnValue = true;\nelse\n    eventsFunctionContext.returnValue = false;",
+          "inlineCode": "const id = eventsFunctionContext.getArgument(\"ID\");\n\neventsFunctionContext.returnValue = runtimeScene.getGame().getVariables().get(id).getAsBoolean();",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
+        },
+        {
+          "disabled": false,
+          "folded": false,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [],
+          "events": []
         }
       ],
       "parameters": [
         {
           "codeOnly": false,
           "defaultValue": "",
-          "description": "Pop-up ID",
+          "description": "Pop-up identifier",
           "longDescription": "",
           "name": "ID",
           "optional": false,
@@ -231,18 +245,19 @@
       "objectGroups": []
     },
     {
-      "description": "Alert user with a message in a pop-up window.",
+      "description": "Displays an alert box with a message and an OK button in a pop-up window.",
       "fullName": "Alert",
       "functionType": "Action",
+      "group": "",
       "name": "Alert",
       "private": false,
-      "sentence": "Alert user with message: _PARAM1_",
+      "sentence": "Open an alert pop-up box with message: _PARAM1_",
       "events": [
         {
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "alert(eventsFunctionContext.getArgument(\"Message\"))",
+          "inlineCode": "alert(eventsFunctionContext.getArgument(\"Message\"));",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -252,7 +267,7 @@
         {
           "codeOnly": false,
           "defaultValue": "",
-          "description": "Alert Message",
+          "description": "Alert message",
           "longDescription": "",
           "name": "Message",
           "optional": false,
