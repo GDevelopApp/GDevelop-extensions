@@ -290,7 +290,7 @@
                         "",
                         ">",
                         "Object.Behavior::FreeAreaRight()",
-                        "Object.Behavior::PropertyLayerName()",
+                        "Object.Layer()",
                         "0"
                       ],
                       "subInstructions": []
@@ -306,7 +306,7 @@
                         "",
                         "=",
                         "Object.Behavior::FreeAreaRight()\n+ (CameraX(\"\", 0) - Object.Behavior::FreeAreaRight())\n* exp(TimeDelta() * Object.Behavior::PropertyLogLeftwardSpeed())",
-                        "Object.Behavior::PropertyLayerName()",
+                        "Object.Layer()",
                         "0"
                       ],
                       "subInstructions": []
@@ -328,7 +328,7 @@
                         "",
                         "<",
                         "Object.Behavior::FreeAreaLeft()",
-                        "Object.Behavior::PropertyLayerName()",
+                        "Object.Layer()",
                         "0"
                       ],
                       "subInstructions": []
@@ -344,7 +344,7 @@
                         "",
                         "=",
                         "Object.Behavior::FreeAreaLeft()\n+ (CameraX(\"\", 0) - Object.Behavior::FreeAreaLeft())\n* exp(TimeDelta() * Object.Behavior::PropertyLogRightwardSpeed())",
-                        "Object.Behavior::PropertyLayerName()",
+                        "Object.Layer()",
                         "0"
                       ],
                       "subInstructions": []
@@ -387,7 +387,7 @@
                         "",
                         ">",
                         "Object.Behavior::FreeAreaBottom()",
-                        "Object.Behavior::PropertyLayerName()",
+                        "Object.Layer()",
                         "0"
                       ],
                       "subInstructions": []
@@ -403,7 +403,7 @@
                         "",
                         "=",
                         "Object.Behavior::FreeAreaBottom()\n+ (CameraY(\"\", 0) - Object.Behavior::FreeAreaBottom())\n* exp(TimeDelta() * Object.Behavior::PropertyLogUpwardSpeed())",
-                        "Object.Behavior::PropertyLayerName()",
+                        "Object.Layer()",
                         "0"
                       ],
                       "subInstructions": []
@@ -425,7 +425,7 @@
                         "",
                         "<",
                         "Object.Behavior::FreeAreaTop()",
-                        "Object.Behavior::PropertyLayerName()",
+                        "Object.Layer()",
                         "0"
                       ],
                       "subInstructions": []
@@ -441,7 +441,7 @@
                         "",
                         "=",
                         "Object.Behavior::FreeAreaTop()\n+ (CameraY(\"\", 0) - Object.Behavior::FreeAreaTop())\n* exp(TimeDelta() * Object.Behavior::PropertyLogDownwardSpeed())",
-                        "Object.Behavior::PropertyLayerName()",
+                        "Object.Layer()",
                         "0"
                       ],
                       "subInstructions": []
@@ -450,42 +450,6 @@
                   "events": []
                 }
               ]
-            },
-            {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "SmoothCamera::SmoothCamera::PropertyCameraExtraDelay"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    ">",
-                    "0"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "SmoothCamera::SmoothCamera::SetPropertyCameraExtraDelay"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "=",
-                    "max(0, Object.Behavior::PropertyCameraExtraDelay() -Object.Behavior::PropertyCameraDelayCatchUpSpeed() * TimeDelta())"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "events": []
             }
           ],
           "parameters": [
@@ -519,8 +483,23 @@
           "group": "",
           "name": "WaitAndCatchUp",
           "private": false,
-          "sentence": "Delay the camera of _PARAM0_ from _PARAM2_ seconds and catch up in _PARAM3_ seconds",
+          "sentence": "Delay the camera of _PARAM0_ during: _PARAM2_ seconds according to the maximum speed _PARAM3_;_PARAM4_ seconds and catch up in _PARAM5_ seconds",
           "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Maybe the catch-up show be done in constant pixel speed instead of constant time speed.",
+              "comment2": ""
+            },
             {
               "disabled": false,
               "folded": false,
@@ -530,26 +509,52 @@
                 {
                   "type": {
                     "inverted": false,
-                    "value": "SmoothCamera::SmoothCamera::SetPropertyCameraExtraDelay"
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyWaitingEnd"
                   },
                   "parameters": [
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"CameraDelay\")"
+                    "TimeFromStart() + GetArgumentAsNumber(\"WaitingDuration\")"
                   ],
                   "subInstructions": []
                 },
                 {
                   "type": {
                     "inverted": false,
-                    "value": "SmoothCamera::SmoothCamera::SetPropertyCameraDelayCatchUpSpeed"
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyWaitingSpeedXMax"
                   },
                   "parameters": [
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"CameraDelay\") / GetArgumentAsNumber(\"CatchUpDuration\")"
+                    "GetArgumentAsNumber(\"WaitingSpeedXMax\")"
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyWaitingSpeedYMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"WaitingSpeedYMax\")"
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyCameraDelayCatchUpDuration"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"CatchUpDuration\")"
                   ],
                   "subInstructions": []
                 }
@@ -557,7 +562,7 @@
               "events": []
             },
             {
-              "disabled": false,
+              "disabled": true,
               "folded": false,
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [],
@@ -569,8 +574,8 @@
                   },
                   "parameters": [
                     "\"Wait and catch up\"",
-                    "",
-                    ""
+                    "\"info\"",
+                    "\"SmoothCamera\""
                   ],
                   "subInstructions": []
                 }
@@ -602,9 +607,29 @@
             {
               "codeOnly": false,
               "defaultValue": "",
-              "description": "Camera delay (in seconds)",
+              "description": "Waiting duration (in seconds)",
               "longDescription": "",
-              "name": "CameraDelay",
+              "name": "WaitingDuration",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Waiting maximum camera target speed X",
+              "longDescription": "",
+              "name": "WaitingSpeedXMax",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Waiting maximum camera target speed Y",
+              "longDescription": "",
+              "name": "WaitingSpeedYMax",
               "optional": false,
               "supplementaryInformation": "",
               "type": "expression"
@@ -876,10 +901,10 @@
                       },
                       "parameters": [
                         "ShapePainter",
-                        "Object.Behavior::FreeAreaLeft()",
-                        "Object.Behavior::FreeAreaTop()",
-                        "Object.Behavior::FreeAreaRight()",
-                        "Object.Behavior::FreeAreaBottom()"
+                        "Object.Behavior::FreeAreaLeft() - 1",
+                        "Object.Behavior::FreeAreaTop() - 1",
+                        "Object.Behavior::FreeAreaRight() + 1",
+                        "Object.Behavior::FreeAreaBottom() + 1"
                       ],
                       "subInstructions": []
                     }
@@ -1025,10 +1050,10 @@
                       },
                       "parameters": [
                         "ShapePainter",
-                        "CameraX(Object.Behavior::PropertyLayerName(), 0)",
-                        "CameraY(Object.Behavior::PropertyLayerName(), 0) - 4",
-                        "CameraX(Object.Behavior::PropertyLayerName(), 0)",
-                        "CameraY(Object.Behavior::PropertyLayerName(), 0) + 4",
+                        "CameraX(Object.Layer(), 0)",
+                        "CameraY(Object.Layer(), 0) - 4",
+                        "CameraX(Object.Layer(), 0)",
+                        "CameraY(Object.Layer(), 0) + 4",
                         "1"
                       ],
                       "subInstructions": []
@@ -1040,10 +1065,10 @@
                       },
                       "parameters": [
                         "ShapePainter",
-                        "CameraX(Object.Behavior::PropertyLayerName(), 0) - 4",
-                        "CameraY(Object.Behavior::PropertyLayerName(), 0)",
-                        "CameraX(Object.Behavior::PropertyLayerName(), 0) + 4",
-                        "CameraY(Object.Behavior::PropertyLayerName(), 0)",
+                        "CameraX(Object.Layer(), 0) - 4",
+                        "CameraY(Object.Layer(), 0)",
+                        "CameraX(Object.Layer(), 0) + 4",
+                        "CameraY(Object.Layer(), 0)",
                         "1"
                       ],
                       "subInstructions": []
@@ -1279,6 +1304,270 @@
               "optional": false,
               "supplementaryInformation": "",
               "type": "yesorno"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the camera follow free area right border.",
+          "fullName": "Follow free area right border",
+          "functionType": "Action",
+          "group": "Camera configuration",
+          "name": "SetFollowFreeAreaRight",
+          "private": false,
+          "sentence": "Change the camera follow free area right border of _PARAM0_: _PARAM2_",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyFollowFreeAreaTop"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "max(0, GetArgumentAsNumber(\"SetFollowFreeAreaRight\"))"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "events": []
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "SmoothCamera::SmoothCamera",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Follow free area right border",
+              "longDescription": "",
+              "name": "SetFollowFreeAreaRight",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the camera follow free area left border.",
+          "fullName": "Follow free area left border",
+          "functionType": "Action",
+          "group": "Camera configuration",
+          "name": "SetFollowFreeAreaLeft",
+          "private": false,
+          "sentence": "Change the camera follow free area left border of _PARAM0_: _PARAM2_",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyFollowFreeAreaTop"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "max(0, GetArgumentAsNumber(\"SetFollowFreeAreaLeft\"))"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "events": []
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "SmoothCamera::SmoothCamera",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Follow free area left border",
+              "longDescription": "",
+              "name": "SetFollowFreeAreaLeft",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the camera follow free area top border.",
+          "fullName": "Follow free area top border",
+          "functionType": "Action",
+          "group": "Camera configuration",
+          "name": "SetFollowFreeAreaTop",
+          "private": false,
+          "sentence": "Change the camera follow free area top border of _PARAM0_: _PARAM2_",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyFollowFreeAreaTop"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "max(0, GetArgumentAsNumber(\"FollowFreeAreaTop\"))"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "events": []
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "SmoothCamera::SmoothCamera",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Follow free area top border",
+              "longDescription": "",
+              "name": "FollowFreeAreaTop",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the camera follow free area bottom border.",
+          "fullName": "Follow free area bottom border",
+          "functionType": "Action",
+          "group": "Camera configuration",
+          "name": "SetFollowFreeAreaBottom",
+          "private": false,
+          "sentence": "Change the camera follow free area bottom border of _PARAM0_: _PARAM2_",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyFollowFreeAreaBottom"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "max(0, GetArgumentAsNumber(\"SetFollowFreeAreaBottom\"))"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "events": []
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "SmoothCamera::SmoothCamera",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Follow free area bottom border",
+              "longDescription": "",
+              "name": "SetFollowFreeAreaBottom",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
             }
           ],
           "objectGroups": []
@@ -2096,6 +2385,91 @@
                 "textG": 0,
                 "textR": 0
               },
+              "comment": "Add the previous position to have enough (2) positions to evaluate the extra delay for waiting mode.",
+              "comment2": ""
+            },
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::IsWaiting"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "Egal"
+                  },
+                  "parameters": [
+                    "Object.VariableChildCount(__SmoothCamera_ObjectTime)",
+                    "=",
+                    "0"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "ObjectVariablePushNumber"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__SmoothCamera_ObjectTime",
+                    "TimeFromStart()"
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "ObjectVariablePushNumber"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__SmoothCamera_ObjectX",
+                    "Object.Behavior::PropertyDelayedCenterX()"
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "ObjectVariablePushNumber"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__SmoothCamera_ObjectY",
+                    "Object.Behavior::PropertyDelayedCenterY()"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "events": []
+            },
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
               "comment": "Use the object center when no delay is asked.",
               "comment2": ""
             },
@@ -2179,14 +2553,35 @@
                 {
                   "type": {
                     "inverted": false,
-                    "value": "SmoothCamera::SmoothCamera::IsDelayed"
+                    "value": "BuiltinCommonInstructions::Or"
                   },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    ""
-                  ],
-                  "subInstructions": []
+                  "parameters": [],
+                  "subInstructions": [
+                    {
+                      "type": {
+                        "inverted": false,
+                        "value": "SmoothCamera::SmoothCamera::IsDelayed"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ""
+                      ],
+                      "subInstructions": []
+                    },
+                    {
+                      "type": {
+                        "inverted": false,
+                        "value": "SmoothCamera::SmoothCamera::IsWaiting"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ""
+                      ],
+                      "subInstructions": []
+                    }
+                  ]
                 }
               ],
               "actions": [
@@ -2426,6 +2821,78 @@
                         "textG": 0,
                         "textR": 0
                       },
+                      "comment": "Add the extra delay that could be needed to respect the speed limit in waiting mode.\n\nspeedRatio = min(speedMaxX / historySpeedX, speedMaxY / historySpeedY)\ndelay += min(0, timeDelta * (1 - speedRatio))",
+                      "comment2": ""
+                    },
+                    {
+                      "disabled": false,
+                      "folded": false,
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "inverted": false,
+                            "value": "SmoothCamera::SmoothCamera::IsWaiting"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            ""
+                          ],
+                          "subInstructions": []
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "inverted": false,
+                            "value": "SmoothCamera::SmoothCamera::SetPropertyCameraExtraDelay"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "+",
+                            "max(0, TimeDelta() * (1 - min(Object.Behavior::PropertyWaitingSpeedXMax() * abs(Object.Variable(__SmoothCamera_ObjectX[1]) - Object.Variable(__SmoothCamera_ObjectX[0])), Object.Behavior::PropertyWaitingSpeedYMax() * abs(Object.Variable(__SmoothCamera_ObjectY[1]) - Object.Variable(__SmoothCamera_ObjectY[0]))) / (Object.Variable(__SmoothCamera_ObjectTime[1]) - Object.Variable(__SmoothCamera_ObjectTime[0]))))"
+                          ],
+                          "subInstructions": []
+                        }
+                      ],
+                      "events": [
+                        {
+                          "disabled": true,
+                          "folded": false,
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [],
+                          "actions": [
+                            {
+                              "type": {
+                                "inverted": false,
+                                "value": "DebuggerTools::ConsoleLog"
+                              },
+                              "parameters": [
+                                "\"Extra delay: \" + ToString(Object.Behavior::PropertyCameraExtraDelay())",
+                                "\"info\"",
+                                "\"SmoothCamera\""
+                              ],
+                              "subInstructions": []
+                            }
+                          ],
+                          "events": []
+                        }
+                      ]
+                    },
+                    {
+                      "disabled": false,
+                      "folded": false,
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
+                      },
                       "comment": "The time with delay is now between the first 2 indexes",
                       "comment2": ""
                     },
@@ -2467,6 +2934,208 @@
                   ]
                 }
               ]
+            },
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "SmoothCamera::SmoothCamera::IsDelayed"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "SmoothCamera::SmoothCamera::IsWaiting"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "ObjectVariableClearChildren"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__SmoothCamera_ObjectTime"
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "ObjectVariableClearChildren"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__SmoothCamera_ObjectX"
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "ObjectVariableClearChildren"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__SmoothCamera_ObjectY"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "events": []
+            },
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "SmoothCamera::SmoothCamera::IsWaiting"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "BuiltinCommonInstructions::Once"
+                  },
+                  "parameters": [],
+                  "subInstructions": []
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyCameraDelayCatchUpSpeed"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Object.Behavior::PropertyCameraExtraDelay() / Object.Behavior::PropertyCameraDelayCatchUpDuration()"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "events": [
+                {
+                  "disabled": true,
+                  "folded": false,
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "inverted": false,
+                        "value": "DebuggerTools::ConsoleLog"
+                      },
+                      "parameters": [
+                        "\"Start to catch up\"",
+                        "\"info\"",
+                        "\"SmoothCamera\""
+                      ],
+                      "subInstructions": []
+                    }
+                  ],
+                  "events": []
+                }
+              ]
+            },
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "SmoothCamera::SmoothCamera::IsWaiting"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::PropertyCameraExtraDelay"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ">",
+                    "0"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyCameraExtraDelay"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "max(0, Object.Behavior::PropertyCameraExtraDelay() -Object.Behavior::PropertyCameraDelayCatchUpSpeed() * TimeDelta())"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "events": [
+                {
+                  "disabled": true,
+                  "folded": false,
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "inverted": false,
+                        "value": "DebuggerTools::ConsoleLog"
+                      },
+                      "parameters": [
+                        "\"Catching up delay: \" + ToString(Object.Behavior::PropertyCameraExtraDelay())",
+                        "\"info\"",
+                        "\"SmoothCamera\""
+                      ],
+                      "subInstructions": []
+                    }
+                  ],
+                  "events": []
+                }
+              ]
             }
           ],
           "parameters": [
@@ -2494,7 +3163,7 @@
           "objectGroups": []
         },
         {
-          "description": "Return the current camera delay.",
+          "description": "Check if the camera following target is delayed from the object.",
           "fullName": "Camera is delayed",
           "functionType": "Condition",
           "group": "",
@@ -2581,6 +3250,73 @@
                   },
                   "parameters": [
                     "Object.Behavior::PropertyCameraDelay() + Object.Behavior::PropertyCameraExtraDelay()"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "events": []
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "SmoothCamera::SmoothCamera",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if the camera following is waiting at a reduced speed.",
+          "fullName": "Camera is waiting",
+          "functionType": "Condition",
+          "group": "",
+          "name": "IsWaiting",
+          "private": true,
+          "sentence": "The camera of _PARAM0_ is waiting",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::PropertyWaitingEnd"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ">",
+                    "TimeFromStart()"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
                   ],
                   "subInstructions": []
                 }
@@ -4258,16 +4994,6 @@
           "name": "FollowOnY"
         },
         {
-          "value": "",
-          "type": "String",
-          "label": "Layer name",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
-          "hidden": false,
-          "name": "LayerName"
-        },
-        {
           "value": "32",
           "type": "Number",
           "label": "Follow free area left border",
@@ -4550,7 +5276,7 @@
         {
           "value": "",
           "type": "Number",
-          "label": "",
+          "label": "Index (local variable)",
           "description": "",
           "group": "",
           "extraInformation": [],
@@ -4576,6 +5302,46 @@
           "extraInformation": [],
           "hidden": true,
           "name": "CameraExtraDelay"
+        },
+        {
+          "value": "",
+          "type": "Number",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "WaitingSpeedXMax"
+        },
+        {
+          "value": "",
+          "type": "Number",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "WaitingSpeedYMax"
+        },
+        {
+          "value": "",
+          "type": "Number",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "WaitingEnd"
+        },
+        {
+          "value": "",
+          "type": "Number",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "CameraDelayCatchUpDuration"
         }
       ]
     },
@@ -4602,22 +5368,94 @@
                 {
                   "type": {
                     "inverted": true,
-                    "value": "SmoothCamera::SmoothPlatformerCamera::PropertyFollowWhenJumping"
+                    "value": "PlatformBehavior::IsJumping"
                   },
                   "parameters": [
                     "Object",
-                    "Behavior"
+                    "PlatformerCharacter"
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "PlatformBehavior::IsFalling"
+                  },
+                  "parameters": [
+                    "Object",
+                    "PlatformerCharacter"
                   ],
                   "subInstructions": []
                 }
               ],
-              "actions": [],
-              "events": [
+              "actions": [
                 {
-                  "disabled": false,
-                  "folded": false,
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetFollowFreeAreaBottom"
+                  },
+                  "parameters": [
+                    "Object",
+                    "SmoothCamera",
+                    "Object.Behavior::PropertyFloorFollowFreeAreaTop()",
+                    ""
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetFollowFreeAreaTop"
+                  },
+                  "parameters": [
+                    "Object",
+                    "SmoothCamera",
+                    "Object.Behavior::PropertyFloorFollowFreeAreaBottom()",
+                    ""
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetUpwardSpeed"
+                  },
+                  "parameters": [
+                    "Object",
+                    "SmoothCamera",
+                    "Object.Behavior::PropertyFloorUpwardSpeed()",
+                    ""
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetDownwardSpeed"
+                  },
+                  "parameters": [
+                    "Object",
+                    "SmoothCamera",
+                    "Object.Behavior::PropertyFloorDownwardSpeed()",
+                    ""
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "events": []
+            },
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "BuiltinCommonInstructions::Or"
+                  },
+                  "parameters": [],
+                  "subInstructions": [
                     {
                       "type": {
                         "inverted": false,
@@ -4632,119 +5470,72 @@
                     {
                       "type": {
                         "inverted": false,
-                        "value": "BuiltinCommonInstructions::Once"
-                      },
-                      "parameters": [],
-                      "subInstructions": []
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "SmoothCamera::SmoothPlatformerCamera::SetPropertyJumpOriginY"
+                        "value": "PlatformBehavior::IsFalling"
                       },
                       "parameters": [
                         "Object",
-                        "Behavior",
-                        "=",
-                        "Object.CenterY()"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "SmoothCamera::SmoothCamera::SetFollowOnY"
-                      },
-                      "parameters": [
-                        "Object",
-                        "SmoothCamera",
-                        "no",
-                        ""
+                        "PlatformerCharacter"
                       ],
                       "subInstructions": []
                     }
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetFollowFreeAreaBottom"
+                  },
+                  "parameters": [
+                    "Object",
+                    "SmoothCamera",
+                    "Object.Behavior::PropertyAirFollowFreeAreaTop()",
+                    ""
                   ],
-                  "events": []
+                  "subInstructions": []
                 },
                 {
-                  "disabled": false,
-                  "folded": false,
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "BuiltinCommonInstructions::Or"
-                      },
-                      "parameters": [],
-                      "subInstructions": [
-                        {
-                          "type": {
-                            "inverted": false,
-                            "value": "BuiltinCommonInstructions::And"
-                          },
-                          "parameters": [],
-                          "subInstructions": [
-                            {
-                              "type": {
-                                "inverted": true,
-                                "value": "PlatformBehavior::IsJumping"
-                              },
-                              "parameters": [
-                                "Object",
-                                "PlatformerCharacter"
-                              ],
-                              "subInstructions": []
-                            },
-                            {
-                              "type": {
-                                "inverted": true,
-                                "value": "PlatformBehavior::IsFalling"
-                              },
-                              "parameters": [
-                                "Object",
-                                "PlatformerCharacter"
-                              ],
-                              "subInstructions": []
-                            }
-                          ]
-                        },
-                        {
-                          "type": {
-                            "inverted": false,
-                            "value": "SmoothCamera::SmoothPlatformerCamera::PropertyJumpOriginY"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Behavior",
-                            "<",
-                            "Object.CenterY()"
-                          ],
-                          "subInstructions": []
-                        }
-                      ]
-                    }
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetFollowFreeAreaTop"
+                  },
+                  "parameters": [
+                    "Object",
+                    "SmoothCamera",
+                    "Object.Behavior::PropertyAirFollowFreeAreaBottom()",
+                    ""
                   ],
-                  "actions": [
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "SmoothCamera::SmoothCamera::SetFollowOnY"
-                      },
-                      "parameters": [
-                        "Object",
-                        "SmoothCamera",
-                        "yes",
-                        ""
-                      ],
-                      "subInstructions": []
-                    }
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetUpwardSpeed"
+                  },
+                  "parameters": [
+                    "Object",
+                    "SmoothCamera",
+                    "Object.Behavior::PropertyAirUpwardSpeed()",
+                    ""
                   ],
-                  "events": []
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetDownwardSpeed"
+                  },
+                  "parameters": [
+                    "Object",
+                    "SmoothCamera",
+                    "Object.Behavior::PropertyAirDownwardSpeed()",
+                    ""
+                  ],
+                  "subInstructions": []
                 }
-              ]
+              ],
+              "events": []
             }
           ],
           "parameters": [
@@ -4808,14 +5599,84 @@
           "name": "JumpOriginY"
         },
         {
-          "value": "",
-          "type": "Boolean",
-          "label": "Follow when jumping",
+          "value": "0",
+          "type": "Number",
+          "label": "Follow free area top in the air",
           "description": "",
-          "group": "",
+          "group": "Position",
           "extraInformation": [],
           "hidden": false,
-          "name": "FollowWhenJumping"
+          "name": "AirFollowFreeAreaTop"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Follow free area bottom in the air",
+          "description": "",
+          "group": "Position",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "AirFollowFreeAreaBottom"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Follow free area top on the floor",
+          "description": "",
+          "group": "Position",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "FloorFollowFreeAreaTop"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Follow free area bottom on the floor",
+          "description": "",
+          "group": "Position",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "FloorFollowFreeAreaBottom"
+        },
+        {
+          "value": "0,95",
+          "type": "Number",
+          "label": "Upward speed in the air (in ratio persecond)",
+          "description": "",
+          "group": "Speed",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "AirUpwardSpeed"
+        },
+        {
+          "value": "0,95",
+          "type": "Number",
+          "label": "Downward speed in the air (in ratio persecond)",
+          "description": "",
+          "group": "Speed",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "AirDownwardSpeed"
+        },
+        {
+          "value": "0,9",
+          "type": "Number",
+          "label": "Upward speed on the floor (in ratio persecond)",
+          "description": "",
+          "group": "Speed",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "FloorUpwardSpeed"
+        },
+        {
+          "value": "0,9",
+          "type": "Number",
+          "label": "Downward speed on the floor (in ratio persecond)",
+          "description": "",
+          "group": "Speed",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "FloorDownwardSpeed"
         }
       ]
     }
