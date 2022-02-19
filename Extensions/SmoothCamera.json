@@ -1,7 +1,7 @@
 {
   "author": "",
   "category": "",
-  "description": "The camera follows an object according to:\n- a frame rate independent speed to make the scrolling from smooth to strong\n- a follow-free zone to avoid scrolling on small movements\n- an offset to see further in one direction\n- position forecasting and delay to simulate a cameraman response time\n- an extra delay and catch-up speed to give an impression of speed (like a spin dash)\n- a platformer dedicated behavior to stabilize the camera for jumps",
+  "description": "The camera follows an object according to:\n- a frame rate independent catch-up speed to make the scrolling from smooth to strong\n- a follow-free zone to avoid scrolling on small movements\n- an offset to see further in one direction\n- a maximum speed to do linear following or slow down the camera when teleporting the object\n- position forecasting and delay to simulate a cameraman response time\n- an extra delay and catch-up speed to give an impression of speed (useful for dash)\n- a platformer dedicated behavior to stabilize the camera for jumps",
   "extensionNamespace": "",
   "fullName": "Smooth Camera",
   "helpPath": "",
@@ -49,7 +49,7 @@
                 "textG": 0,
                 "textR": 0
               },
-              "comment": "Update private properties through setters.",
+              "comment": "Update private properties through setters to check their values and initialize state.",
               "comment2": ""
             },
             {
@@ -109,30 +109,111 @@
                     "log(1 - )"
                   ],
                   "subInstructions": []
-                }
-              ],
-              "events": []
-            },
-            {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
+                },
                 {
                   "type": {
                     "inverted": false,
-                    "value": "SmoothCamera::SmoothCamera::PropertyCameraDelay"
+                    "value": "SmoothCamera::SmoothCamera::SetLeftwardSpeedMax"
                   },
                   "parameters": [
                     "Object",
                     "Behavior",
-                    "<",
-                    "0"
+                    "Object.Behavior::PropertyLeftwardSpeedMax()",
+                    "log(1 - )"
                   ],
                   "subInstructions": []
-                }
-              ],
-              "actions": [
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetRightwardSpeedMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "Object.Behavior::PropertyRightwardSpeedMax()",
+                    "log(1 - )"
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetUpwardSpeedMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "Object.Behavior::PropertyUpwardSpeedMax()",
+                    "log(1 - )"
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetDownwardSpeedMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "Object.Behavior::PropertyDownwardSpeedMax()",
+                    "log(1 - )"
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetFollowFreeAreaLeft"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "Object.Behavior::PropertyFollowFreeAreaLeft()",
+                    "log(1 - )"
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetFollowFreeAreaRight"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "Object.Behavior::PropertyFollowFreeAreaRight()",
+                    "log(1 - )"
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetFollowFreeAreaTop"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "Object.Behavior::PropertyFollowFreeAreaTop()",
+                    "log(1 - )"
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetFollowFreeAreaBottom"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "Object.Behavior::PropertyFollowFreeAreaBottom()",
+                    "log(1 - )"
+                  ],
+                  "subInstructions": []
+                },
                 {
                   "type": {
                     "inverted": false,
@@ -142,18 +223,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "0"
-                  ],
-                  "subInstructions": []
-                },
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "ObjectVariableClearChildren"
-                  },
-                  "parameters": [
-                    "Object",
-                    "__SmoothCamera_ObjectPositions"
+                    "Object.Behavior::PropertyCameraDelay()"
                   ],
                   "subInstructions": []
                 }
@@ -254,7 +324,7 @@
                 "textG": 0,
                 "textR": 0
               },
-              "comment": "pow is probably more efficient than precalculated log if the speed is changed continuously but this might be rare enough.",
+              "comment": "At each frame, the camera must catchup the target by a given ratio (speed)\ncameraX(t) - targetX = (cameraX(t - 1) - targetX) * speed\n\nThe frame rate must not impact on the catch-up speed, we don't want a speed in ratio per frame but a speed ratio per second, like this:\ncameraX(t) - targetX = (cameraX(t - 1s) - targetX) * speed\n\nOk, but we still need to process each frame, we can use a exponent for this:\ncameraX(t) - targetX = (cameraX(t - timeDelta) - targetX) * speed^timeDelta\ncameraX(t) = targetX + (cameraX(t - timeDelta) - targetX) * exp(timeDelta * ln(speed))\n\npow is probably more efficient than precalculated log if the speed is changed continuously but this might be rare enough.",
               "comment2": ""
             },
             {
@@ -274,7 +344,21 @@
                   "subInstructions": []
                 }
               ],
-              "actions": [],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyOldX"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "CameraX(Object.Layer(), 0)"
+                  ],
+                  "subInstructions": []
+                }
+              ],
               "events": [
                 {
                   "disabled": false,
@@ -305,14 +389,53 @@
                       "parameters": [
                         "",
                         "=",
-                        "Object.Behavior::FreeAreaRight()\n+ (CameraX(\"\", 0) - Object.Behavior::FreeAreaRight())\n* exp(TimeDelta() * Object.Behavior::PropertyLogLeftwardSpeed())",
+                        "Object.Behavior::FreeAreaRight()\n+ (CameraX(Object.Layer(), 0) - Object.Behavior::FreeAreaRight())\n* exp(TimeDelta() * Object.Behavior::PropertyLogLeftwardSpeed())",
                         "Object.Layer()",
                         "0"
                       ],
                       "subInstructions": []
                     }
                   ],
-                  "events": []
+                  "events": [
+                    {
+                      "disabled": false,
+                      "folded": false,
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "inverted": false,
+                            "value": "CameraX"
+                          },
+                          "parameters": [
+                            "",
+                            "<",
+                            "Object.Behavior::PropertyOldX() - Object.Behavior::PropertyLeftwardSpeedMax() * TimeDelta()",
+                            "Object.Layer()",
+                            "0"
+                          ],
+                          "subInstructions": []
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "inverted": false,
+                            "value": "SetCameraX"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "Object.Behavior::PropertyOldX() - Object.Behavior::PropertyLeftwardSpeedMax() * TimeDelta()",
+                            "Object.Layer()",
+                            "0"
+                          ],
+                          "subInstructions": []
+                        }
+                      ],
+                      "events": []
+                    }
+                  ]
                 },
                 {
                   "disabled": false,
@@ -343,14 +466,53 @@
                       "parameters": [
                         "",
                         "=",
-                        "Object.Behavior::FreeAreaLeft()\n+ (CameraX(\"\", 0) - Object.Behavior::FreeAreaLeft())\n* exp(TimeDelta() * Object.Behavior::PropertyLogRightwardSpeed())",
+                        "Object.Behavior::FreeAreaLeft()\n+ (CameraX(Object.Layer(), 0) - Object.Behavior::FreeAreaLeft())\n* exp(TimeDelta() * Object.Behavior::PropertyLogRightwardSpeed())",
                         "Object.Layer()",
                         "0"
                       ],
                       "subInstructions": []
                     }
                   ],
-                  "events": []
+                  "events": [
+                    {
+                      "disabled": false,
+                      "folded": false,
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "inverted": false,
+                            "value": "CameraX"
+                          },
+                          "parameters": [
+                            "",
+                            ">",
+                            "Object.Behavior::PropertyOldX() + Object.Behavior::PropertyRightwardSpeedMax() * TimeDelta()",
+                            "Object.Layer()",
+                            "0"
+                          ],
+                          "subInstructions": []
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "inverted": false,
+                            "value": "SetCameraX"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "Object.Behavior::PropertyOldX() - Object.Behavior::PropertyRightwardSpeedMax() * TimeDelta()",
+                            "Object.Layer()",
+                            "0"
+                          ],
+                          "subInstructions": []
+                        }
+                      ],
+                      "events": []
+                    }
+                  ]
                 }
               ]
             },
@@ -371,7 +533,21 @@
                   "subInstructions": []
                 }
               ],
-              "actions": [],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyOldY"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "CameraY(Object.Layer(), 0)"
+                  ],
+                  "subInstructions": []
+                }
+              ],
               "events": [
                 {
                   "disabled": false,
@@ -402,14 +578,53 @@
                       "parameters": [
                         "",
                         "=",
-                        "Object.Behavior::FreeAreaBottom()\n+ (CameraY(\"\", 0) - Object.Behavior::FreeAreaBottom())\n* exp(TimeDelta() * Object.Behavior::PropertyLogUpwardSpeed())",
+                        "Object.Behavior::FreeAreaBottom()\n+ (CameraY(Object.Layer(), 0) - Object.Behavior::FreeAreaBottom())\n* exp(TimeDelta() * Object.Behavior::PropertyLogUpwardSpeed())",
                         "Object.Layer()",
                         "0"
                       ],
                       "subInstructions": []
                     }
                   ],
-                  "events": []
+                  "events": [
+                    {
+                      "disabled": false,
+                      "folded": false,
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "inverted": false,
+                            "value": "CameraY"
+                          },
+                          "parameters": [
+                            "",
+                            "<",
+                            "Object.Behavior::PropertyOldY() - Object.Behavior::PropertyUpwardSpeedMax() * TimeDelta()",
+                            "Object.Layer()",
+                            "0"
+                          ],
+                          "subInstructions": []
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "inverted": false,
+                            "value": "SetCameraY"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "Object.Behavior::PropertyOldY() - Object.Behavior::PropertyUpwardSpeedMax() * TimeDelta()",
+                            "Object.Layer()",
+                            "0"
+                          ],
+                          "subInstructions": []
+                        }
+                      ],
+                      "events": []
+                    }
+                  ]
                 },
                 {
                   "disabled": false,
@@ -440,14 +655,53 @@
                       "parameters": [
                         "",
                         "=",
-                        "Object.Behavior::FreeAreaTop()\n+ (CameraY(\"\", 0) - Object.Behavior::FreeAreaTop())\n* exp(TimeDelta() * Object.Behavior::PropertyLogDownwardSpeed())",
+                        "Object.Behavior::FreeAreaTop()\n+ (CameraY(Object.Layer(), 0) - Object.Behavior::FreeAreaTop())\n* exp(TimeDelta() * Object.Behavior::PropertyLogDownwardSpeed())",
                         "Object.Layer()",
                         "0"
                       ],
                       "subInstructions": []
                     }
                   ],
-                  "events": []
+                  "events": [
+                    {
+                      "disabled": false,
+                      "folded": false,
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "inverted": false,
+                            "value": "CameraY"
+                          },
+                          "parameters": [
+                            "",
+                            ">",
+                            "Object.Behavior::PropertyOldY() + Object.Behavior::PropertyDownwardSpeedMax() * TimeDelta()",
+                            "Object.Layer()",
+                            "0"
+                          ],
+                          "subInstructions": []
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "inverted": false,
+                            "value": "SetCameraY"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "Object.Behavior::PropertyOldY() + Object.Behavior::PropertyDownwardSpeedMax() * TimeDelta()",
+                            "Object.Layer()",
+                            "0"
+                          ],
+                          "subInstructions": []
+                        }
+                      ],
+                      "events": []
+                    }
+                  ]
                 }
               ]
             }
@@ -1573,13 +1827,277 @@
           "objectGroups": []
         },
         {
+          "description": "Change the camera leftward maximum speed (in pixels per second).",
+          "fullName": "Leftward maximum speed",
+          "functionType": "Action",
+          "group": "Camera configuration",
+          "name": "SetLeftwardSpeedMax",
+          "private": false,
+          "sentence": "Change the camera leftward maximum speed of _PARAM0_: _PARAM2_",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyLeftwardSpeedMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "max(0, GetArgumentAsNumber(\"Speed\"))"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "events": []
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "SmoothCamera::SmoothCamera",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Leftward maximum speed (in ratio per second)",
+              "longDescription": "",
+              "name": "Speed",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the camera rightward maximum speed (in pixels per second).",
+          "fullName": "Rightward maximum speed",
+          "functionType": "Action",
+          "group": "Camera configuration",
+          "name": "SetRightwardSpeedMax",
+          "private": false,
+          "sentence": "Change the camera rightward maximum speed of _PARAM0_: _PARAM2_",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyLeftwardSpeedMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "max(0, GetArgumentAsNumber(\"Speed\"))"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "events": []
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "SmoothCamera::SmoothCamera",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Rightward maximum speed (in pixels per second)",
+              "longDescription": "",
+              "name": "Speed",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the camera upward maximum speed (in pixels per second).",
+          "fullName": "Upward maximum speed",
+          "functionType": "Action",
+          "group": "Camera configuration",
+          "name": "SetUpwardSpeedMax",
+          "private": false,
+          "sentence": "Change the camera upward maximum speed of _PARAM0_: _PARAM2_",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyUpwardSpeedMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "max(0, GetArgumentAsNumber(\"Speed\"))"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "events": []
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "SmoothCamera::SmoothCamera",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Upward maximum speed (in pixels per second)",
+              "longDescription": "",
+              "name": "Speed",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the camera downward maximum speed (in pixels per second).",
+          "fullName": "Downward maximum speed",
+          "functionType": "Action",
+          "group": "Camera configuration",
+          "name": "SetDownwardSpeedMax",
+          "private": false,
+          "sentence": "Change the camera downward maximum speed of _PARAM0_: _PARAM2_",
+          "events": [
+            {
+              "disabled": false,
+              "folded": false,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetPropertyDownwardSpeedMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "max(0, GetArgumentAsNumber(\"Speed\"))"
+                  ],
+                  "subInstructions": []
+                }
+              ],
+              "events": []
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "SmoothCamera::SmoothCamera",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Downward maximum speed (in pixels per second)",
+              "longDescription": "",
+              "name": "Speed",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "Change the camera leftward catch-up speed (in ratio per second).",
-          "fullName": "Leftward speed",
+          "fullName": "Leftward catch-up speed",
           "functionType": "Action",
           "group": "Camera configuration",
           "name": "SetLeftwardSpeed",
           "private": false,
-          "sentence": "Change the camera leftward speed of _PARAM0_: _PARAM2_",
+          "sentence": "Change the camera leftward catch-up speed of _PARAM0_: _PARAM2_",
           "events": [
             {
               "disabled": false,
@@ -1641,7 +2159,7 @@
             {
               "codeOnly": false,
               "defaultValue": "",
-              "description": "Leftward speed",
+              "description": "Leftward catch-up speed (in ratio per second)",
               "longDescription": "",
               "name": "LeftwardSpeed",
               "optional": false,
@@ -1653,12 +2171,12 @@
         },
         {
           "description": "Change the camera rightward catch-up speed (in ratio per second).",
-          "fullName": "Rightward speed",
+          "fullName": "Rightward catch-up speed",
           "functionType": "Action",
           "group": "Camera configuration",
           "name": "SetRightwardSpeed",
           "private": false,
-          "sentence": "Change the camera rightward speed of _PARAM0_: _PARAM2_",
+          "sentence": "Change the camera rightward catch-up speed of _PARAM0_: _PARAM2_",
           "events": [
             {
               "disabled": false,
@@ -1720,7 +2238,7 @@
             {
               "codeOnly": false,
               "defaultValue": "",
-              "description": "Rightward speed",
+              "description": "Rightward catch-up speed (in ratio per second)",
               "longDescription": "",
               "name": "RightwardSpeed",
               "optional": false,
@@ -1732,12 +2250,12 @@
         },
         {
           "description": "Change the camera downward catch-up speed (in ratio per second).",
-          "fullName": "Downward speed",
+          "fullName": "Downward catch-up speed",
           "functionType": "Action",
           "group": "Camera configuration",
           "name": "SetDownwardSpeed",
           "private": false,
-          "sentence": "Change the camera downward speed of _PARAM0_: _PARAM2_",
+          "sentence": "Change the camera downward catch-up speed of _PARAM0_: _PARAM2_",
           "events": [
             {
               "disabled": false,
@@ -1799,7 +2317,7 @@
             {
               "codeOnly": false,
               "defaultValue": "",
-              "description": "Downward speed",
+              "description": "Downward catch-up speed (in ratio per second)",
               "longDescription": "",
               "name": "DownwardSpeed",
               "optional": false,
@@ -1811,12 +2329,12 @@
         },
         {
           "description": "Change the camera upward catch-up speed (in ratio per second).",
-          "fullName": "Upward speed",
+          "fullName": "Upward catch-up speed",
           "functionType": "Action",
           "group": "Camera configuration",
           "name": "SetUpwardSpeed",
           "private": false,
-          "sentence": "Change the camera upward speed of _PARAM0_: _PARAM2_",
+          "sentence": "Change the camera upward catch-up speed of _PARAM0_: _PARAM2_",
           "events": [
             {
               "disabled": false,
@@ -1878,7 +2396,7 @@
             {
               "codeOnly": false,
               "defaultValue": "",
-              "description": "Upward speed",
+              "description": "Upward catch-up speed (in ratio per second)",
               "longDescription": "",
               "name": "UpwardSpeed",
               "optional": false,
@@ -4936,9 +5454,9 @@
         {
           "value": "0.9",
           "type": "Number",
-          "label": "Leftward speed (in ratio persecond)",
+          "label": "Leftward catch-up speed (in ratio per second)",
           "description": "",
-          "group": "Speed",
+          "group": "Catch-up speed",
           "extraInformation": [],
           "hidden": false,
           "name": "LeftwardSpeed"
@@ -4946,9 +5464,9 @@
         {
           "value": "0.9",
           "type": "Number",
-          "label": "Rightward speed (in ratio persecond)",
+          "label": "Rightward catch-up speed (in ratio per second)",
           "description": "",
-          "group": "Speed",
+          "group": "Catch-up speed",
           "extraInformation": [],
           "hidden": false,
           "name": "RightwardSpeed"
@@ -4956,9 +5474,9 @@
         {
           "value": "0.9",
           "type": "Number",
-          "label": "Upward speed (in ratio persecond)",
+          "label": "Upward catch-up speed (in ratio per second)",
           "description": "",
-          "group": "Speed",
+          "group": "Catch-up speed",
           "extraInformation": [],
           "hidden": false,
           "name": "UpwardSpeed"
@@ -4966,9 +5484,9 @@
         {
           "value": "0.9",
           "type": "Number",
-          "label": "Downward speed (in ratio persecond)",
+          "label": "Downward catch-up speed (in ratio per second)",
           "description": "",
-          "group": "Speed",
+          "group": "Catch-up speed",
           "extraInformation": [],
           "hidden": false,
           "name": "DownwardSpeed"
@@ -4994,7 +5512,7 @@
           "name": "FollowOnY"
         },
         {
-          "value": "32",
+          "value": "0",
           "type": "Number",
           "label": "Follow free area left border",
           "description": "",
@@ -5004,7 +5522,7 @@
           "name": "FollowFreeAreaLeft"
         },
         {
-          "value": "32",
+          "value": "0",
           "type": "Number",
           "label": "Follow free area right border",
           "description": "",
@@ -5014,7 +5532,7 @@
           "name": "FollowFreeAreaRight"
         },
         {
-          "value": "32",
+          "value": "0",
           "type": "Number",
           "label": "Follow free area top border",
           "description": "",
@@ -5024,7 +5542,7 @@
           "name": "FollowFreeAreaTop"
         },
         {
-          "value": "32",
+          "value": "0",
           "type": "Number",
           "label": "Follow free area bottom border",
           "description": "",
@@ -5342,11 +5860,71 @@
           "extraInformation": [],
           "hidden": true,
           "name": "CameraDelayCatchUpDuration"
+        },
+        {
+          "value": "9000",
+          "type": "Number",
+          "label": "Leftward maximum speed (in pixels per second)",
+          "description": "",
+          "group": "Maximum speed",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "LeftwardSpeedMax"
+        },
+        {
+          "value": "9000",
+          "type": "Number",
+          "label": "Rightward maximum speed (in pixels per second)",
+          "description": "",
+          "group": "Maximum speed",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "RightwardSpeedMax"
+        },
+        {
+          "value": "9000",
+          "type": "Number",
+          "label": "Upward maximum speed (in pixels per second)",
+          "description": "",
+          "group": "Maximum speed",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "UpwardSpeedMax"
+        },
+        {
+          "value": "9000",
+          "type": "Number",
+          "label": "Downward maximum speed (in pixels per second)",
+          "description": "",
+          "group": "Maximum speed",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "DownwardSpeedMax"
+        },
+        {
+          "value": "",
+          "type": "Number",
+          "label": "OldX (local variable)",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "OldX"
+        },
+        {
+          "value": "",
+          "type": "Number",
+          "label": "OldY (local variable)",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "OldY"
         }
       ]
     },
     {
-      "description": "Smoothly scroll to follow a character and disable vertical following when it jumps.",
+      "description": "Smoothly scroll to follow a character and stabilize the camera when jumping",
       "fullName": "Smooth platformer camera",
       "name": "SmoothPlatformerCamera",
       "objectType": "",
@@ -5440,6 +6018,32 @@
                     ""
                   ],
                   "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetUpwardSpeedMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "SmoothCamera",
+                    "Object.Behavior::PropertyFloorUpwardSpeedMax()",
+                    ""
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetDownwardSpeedMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "SmoothCamera",
+                    "Object.Behavior::PropertyFloorDownwardSpeedMax()",
+                    ""
+                  ],
+                  "subInstructions": []
                 }
               ],
               "events": []
@@ -5530,6 +6134,32 @@
                     "Object",
                     "SmoothCamera",
                     "Object.Behavior::PropertyAirDownwardSpeed()",
+                    ""
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetUpwardSpeedMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "SmoothCamera",
+                    "Object.Behavior::PropertyAirUpwardSpeedMax()",
+                    ""
+                  ],
+                  "subInstructions": []
+                },
+                {
+                  "type": {
+                    "inverted": false,
+                    "value": "SmoothCamera::SmoothCamera::SetDownwardSpeedMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "SmoothCamera",
+                    "Object.Behavior::PropertyAirDownwardSpeedMax()",
                     ""
                   ],
                   "subInstructions": []
@@ -5643,7 +6273,7 @@
           "type": "Number",
           "label": "Upward speed in the air (in ratio persecond)",
           "description": "",
-          "group": "Speed",
+          "group": "Catch-up speed",
           "extraInformation": [],
           "hidden": false,
           "name": "AirUpwardSpeed"
@@ -5653,7 +6283,7 @@
           "type": "Number",
           "label": "Downward speed in the air (in ratio persecond)",
           "description": "",
-          "group": "Speed",
+          "group": "Catch-up speed",
           "extraInformation": [],
           "hidden": false,
           "name": "AirDownwardSpeed"
@@ -5663,7 +6293,7 @@
           "type": "Number",
           "label": "Upward speed on the floor (in ratio persecond)",
           "description": "",
-          "group": "Speed",
+          "group": "Catch-up speed",
           "extraInformation": [],
           "hidden": false,
           "name": "FloorUpwardSpeed"
@@ -5673,10 +6303,50 @@
           "type": "Number",
           "label": "Downward speed on the floor (in ratio persecond)",
           "description": "",
-          "group": "Speed",
+          "group": "Catch-up speed",
           "extraInformation": [],
           "hidden": false,
           "name": "FloorDownwardSpeed"
+        },
+        {
+          "value": "9000",
+          "type": "Number",
+          "label": "Upward maximum speed in the air (in pixels per second)",
+          "description": "",
+          "group": "Maximum speed",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "AirUpwardSpeedMax"
+        },
+        {
+          "value": "9000",
+          "type": "Number",
+          "label": "Downward maximum speed in the air (in pixels per second)",
+          "description": "",
+          "group": "Maximum speed",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "AirDownwardSpeedMax"
+        },
+        {
+          "value": "9000",
+          "type": "Number",
+          "label": "Upward maximum speed on the floor (in pixels per second)",
+          "description": "",
+          "group": "Maximum speed",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "FloorUpwardSpeedMax"
+        },
+        {
+          "value": "9000",
+          "type": "Number",
+          "label": "Downward maximum speed on the floor (in pixels per second)",
+          "description": "",
+          "group": "Maximum speed",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "FloorDownwardSpeedMax"
         }
       ]
     }
