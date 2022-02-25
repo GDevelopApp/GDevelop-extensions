@@ -1,7 +1,7 @@
 {
   "author": "",
   "category": "Input",
-  "description": "This extension gives access to three pop-ups. Those are Alert, Comfirm and prompt (text entry).\n## Alert\n- Gives user can alert which they can accept and close.\n- User can respond with `Ok`.\n\n## Confirmation\n- Gives user a confirmation message.\n- User can respond with `Ok` or `Cancel`.\n\n## Prompt\n**Prompt only works in browsers**.\n- Gives user a prompt with a textbox to type in .\n- User can type in the textbox (The typed string is considered the response) and click `Ok` or `Cancel`.\n",
+  "description": "This extension adds actions to display three kinds of pop-ups.\n\n## Alert\n - Pops-up a message that will pause the game until dismissed by the player.\n\n## Confirmation\n - Pops-up a dialogue containing a message with the option to either confirm or cancel.\n\n## Prompt\n**Note that this pop-up type is unsupported on previews and PC exports.**\n - Displays a message to the player with a text field to write an answer in. The player will also have the option to either confirm or discard their input.\n\n### Usage to save a value from a popup box:\n![Screenshot of the way to use the extension to save a value in a variable](https://i.imgur.com/2iR5ofz.png)\n",
   "extensionNamespace": "",
   "fullName": "Pop-up",
   "helpPath": "",
@@ -19,41 +19,31 @@
     "dialog"
   ],
   "authorIds": [
-    "HBp2oDKV87gKFbdd1wyV1jRYRC13"
+    "HBp2oDKV87gKFbdd1wyV1jRYRC13",
+    "2OwwM8ToR9dx9RJ2sAKTcrLmCB92"
   ],
   "dependencies": [],
   "eventsFunctions": [
     {
-      "description": "The response to a pop-up message is valid or not empty. ",
-      "fullName": "Valid response",
+      "description": "The response to a pop-up message is filled.",
+      "fullName": "Existing prompt response",
       "functionType": "Condition",
       "group": "",
       "name": "PromptValidResponse",
       "private": false,
-      "sentence": "Response from the pop-up message with identifier: _PARAM1_ is valid or not empty",
+      "sentence": "Response from the pop-up prompt is filled",
       "events": [
         {
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = runtimeScene.getGame().getVariables().get(eventsFunctionContext.getArgument(\"ID\")).getAsBoolean()\n",
+          "inlineCode": "const promptResponse = runtimeScene.getVariables().get(\"__PopUp\").getChild(\"Prompt\").getAsString();\n\nif (promptResponse != \"\") {\n    eventsFunctionContext.returnValue = true;\n} else {\n    eventsFunctionContext.returnValue = false;\n}",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
         }
       ],
-      "parameters": [
-        {
-          "codeOnly": false,
-          "defaultValue": "",
-          "description": "Pop-up identifier",
-          "longDescription": "",
-          "name": "ID",
-          "optional": false,
-          "supplementaryInformation": "",
-          "type": "string"
-        }
-      ],
+      "parameters": [],
       "objectGroups": []
     },
     {
@@ -69,24 +59,13 @@
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "const id = eventsFunctionContext.getArgument(\"ID\");\r\n\r\neventsFunctionContext.returnValue = runtimeScene.getGame().getVariables().get(id).getAsString();\r\n",
+          "inlineCode": "eventsFunctionContext.returnValue = runtimeScene.getVariables().get(\"__PopUp\").getChild(\"Prompt\").getAsString();",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
         }
       ],
-      "parameters": [
-        {
-          "codeOnly": false,
-          "defaultValue": "",
-          "description": "Pop-up identifier",
-          "longDescription": "",
-          "name": "ID",
-          "optional": false,
-          "supplementaryInformation": "",
-          "type": "string"
-        }
-      ],
+      "parameters": [],
       "objectGroups": []
     },
     {
@@ -96,13 +75,13 @@
       "group": "Web browsers",
       "name": "Prompt",
       "private": false,
-      "sentence": "Open a prompt pop-up box with message: _PARAM1_ (placeholder: _PARAM2_, identifier: _PARAM3_)",
+      "sentence": "Open a prompt pop-up box with message: _PARAM1_ (placeholder: _PARAM2_)",
       "events": [
         {
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "const id = eventsFunctionContext.getArgument(\"ID\");\nconst message = eventsFunctionContext.getArgument(\"Message\");\nconst defaultText = eventsFunctionContext.getArgument(\"DefaultText\");\n\nconst response = window.prompt(message, defaultText);\n\nif (response !== null){\n    runtimeScene.getGame().getVariables().get(id).setString(response);\n}else{\n    runtimeScene.getGame().getVariables().get(id).setBoolean(false);\n}",
+          "inlineCode": "const message = eventsFunctionContext.getArgument(\"Message\");\nconst defaultText = eventsFunctionContext.getArgument(\"DefaultText\");\n\nconst response = window.prompt(message, defaultText);\n\nconst childVar = new gdjs.Variable();\n\nif (response !== null) {\n    childVar.setString(response);\n} else {\n    childVar.setString(\"\");\n}\n\nruntimeScene.getVariables().get(\"__PopUp\").addChild(\"Prompt\", childVar);\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": true
@@ -128,16 +107,6 @@
           "optional": false,
           "supplementaryInformation": "",
           "type": "string"
-        },
-        {
-          "codeOnly": false,
-          "defaultValue": "",
-          "description": "Pop-up identifier",
-          "longDescription": "",
-          "name": "ID",
-          "optional": false,
-          "supplementaryInformation": "",
-          "type": "string"
         }
       ],
       "objectGroups": []
@@ -149,34 +118,16 @@
       "group": "",
       "name": "Confirm",
       "private": false,
-      "sentence": "Open a confirmation pop-up box with message: _PARAM1__ (identifier: _PARAM2_)",
+      "sentence": "Open a confirmation pop-up box with message: _PARAM1_",
       "events": [
         {
           "disabled": false,
           "folded": false,
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [
-            {
-              "type": {
-                "inverted": false,
-                "value": "BuiltinCommonInstructions::Once"
-              },
-              "parameters": [],
-              "subInstructions": []
-            }
-          ],
-          "actions": [],
-          "events": [
-            {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::JsCode",
-              "inlineCode": "const id = eventsFunctionContext.getArgument(\"ID\");\nconst isConfirmed = confirm(eventsFunctionContext.getArgument(\"Message\"));\n\nruntimeScene.getGame().getVariables().get(id).setBoolean(isConfirmed);\n\n",
-              "parameterObjects": "",
-              "useStrict": true,
-              "eventsSheetExpanded": false
-            }
-          ]
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const isConfirmed = confirm(eventsFunctionContext.getArgument(\"Message\"));\n\nconst childVar = new gdjs.Variable();\nchildVar.setBoolean(isConfirmed);\n\nruntimeScene.getVariables().get(\"__PopUp\").addChild(\"Confirm\", childVar);\n",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
         }
       ],
       "parameters": [
@@ -186,16 +137,6 @@
           "description": "Confirmation message",
           "longDescription": "The text to display in the confirm box.",
           "name": "Message",
-          "optional": false,
-          "supplementaryInformation": "",
-          "type": "string"
-        },
-        {
-          "codeOnly": false,
-          "defaultValue": "",
-          "description": "Pop-up identifier",
-          "longDescription": "",
-          "name": "ID",
           "optional": false,
           "supplementaryInformation": "",
           "type": "string"
@@ -210,13 +151,13 @@
       "group": "",
       "name": "ConfimationResponse",
       "private": false,
-      "sentence": "Pop-up message with identifier _PARAM1_ is confirmed",
+      "sentence": "Pop-up message is confirmed",
       "events": [
         {
           "disabled": false,
           "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "const id = eventsFunctionContext.getArgument(\"ID\");\n\neventsFunctionContext.returnValue = runtimeScene.getGame().getVariables().get(id).getAsBoolean();",
+          "inlineCode": "eventsFunctionContext.returnValue = runtimeScene.getVariables().get(\"__PopUp\").getChild(\"Confirm\").getAsBoolean();",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -230,18 +171,7 @@
           "events": []
         }
       ],
-      "parameters": [
-        {
-          "codeOnly": false,
-          "defaultValue": "",
-          "description": "Pop-up identifier",
-          "longDescription": "",
-          "name": "ID",
-          "optional": false,
-          "supplementaryInformation": "",
-          "type": "string"
-        }
-      ],
+      "parameters": [],
       "objectGroups": []
     },
     {
