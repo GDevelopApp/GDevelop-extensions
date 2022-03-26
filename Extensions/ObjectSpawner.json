@@ -1,7 +1,7 @@
 {
   "author": "",
   "category": "",
-  "description": "Spawn (create) objects periodically.\n\nHow to use:\n- Add this behavior to an object\n- Place spawners on the scene \n- Run the \"Spawn objects\" action on every frame\n- Control spawning by adjusting behavior properties\n\nProperties:\nSpawn frequency:  Number of seconds before spawning another object\nMax quantity:  Each spawner will try to maintain this number of spawned objects\nOffset X/Y:  Use to adjust where the object are spawned, relative to the origin of the spawner\n\nTips:\n- Use \"Object was just spawned\" condition to trigger visual and sound effects (if desired)\n- Set max quantity to \"0\" to never stop spawning objects\n- Spawned objects are automatically linked to the spawner",
+  "description": "Spawn (create) objects periodically.\n\nHow to use:\n- Add this behavior to an object\n- Place spawners on the scene \n- Run the \"Spawn objects\" action on every frame\n- Control spawning by adjusting behavior properties\n\nProperties:\nSpawn period:  Number of seconds before spawning another object\nMax quantity:  Each spawner will try to maintain this number of spawned objects\nOffset X/Y:  Use to adjust where the object are spawned, relative to the origin of the spawner\n\nTips:\n- Use \"Object was just spawned\" condition to trigger visual and sound effects (if desired)\n- Set max quantity to \"0\" to never stop spawning objects\n- Spawned objects are automatically linked to the spawner",
   "extensionNamespace": "",
   "fullName": "Object spawner",
   "helpPath": "",
@@ -9,7 +9,7 @@
   "name": "ObjectSpawner",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/plus-one.svg",
   "shortDescription": "Spawn (create) objects periodically.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "tags": [
     "spawn",
     "spawner",
@@ -25,76 +25,19 @@
   "eventsBasedBehaviors": [
     {
       "description": "Spawn (create) objects periodically.",
-      "fullName": "Spawn (create) objects periodically",
+      "fullName": "Object Spawner",
       "name": "ObjectSpawner",
       "objectType": "",
       "eventsFunctions": [
         {
           "description": "Spawn (create) objects periodically.  ",
-          "fullName": "Spawn (create) objects periodically",
+          "fullName": "Spawn objects periodically",
           "functionType": "Action",
           "group": "",
           "name": "SpawnObject",
           "private": false,
           "sentence": "Periodically spawn (create) a _PARAM2_ located at spawner _PARAM0_ ",
           "events": [
-            {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::Comment",
-              "color": {
-                "b": 109,
-                "g": 230,
-                "r": 255,
-                "textB": 0,
-                "textG": 0,
-                "textR": 0
-              },
-              "comment": "Reset spawn detection",
-              "comment2": ""
-            },
-            {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "ObjectSpawner::ObjectSpawner::SetPropertyJustSpawnedAnObject"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "no"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "events": []
-            },
-            {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "ObjectSpawner::ObjectSpawner::SetPropertyMaxQuantityReached"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "no"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "events": []
-            },
             {
               "colorB": 228,
               "colorG": 176,
@@ -118,6 +61,126 @@
                     "textG": 0,
                     "textR": 0
                   },
+                  "comment": "Check if max number of instances per spawner has NOT been reached",
+                  "comment2": ""
+                },
+                {
+                  "disabled": false,
+                  "folded": false,
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "inverted": false,
+                        "value": "ObjectSpawner::ObjectSpawner::PropertyMaxQuantity"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "!=",
+                        "0"
+                      ],
+                      "subInstructions": []
+                    },
+                    {
+                      "type": {
+                        "inverted": false,
+                        "value": "LinkedObjects::PickObjectsLinkedTo"
+                      },
+                      "parameters": [
+                        "",
+                        "ObjectToSpawn",
+                        "Object",
+                        ""
+                      ],
+                      "subInstructions": []
+                    },
+                    {
+                      "type": {
+                        "inverted": false,
+                        "value": "Egal"
+                      },
+                      "parameters": [
+                        "Count(ObjectToSpawn)",
+                        "<",
+                        "Object.Behavior::PropertyMaxQuantity()"
+                      ],
+                      "subInstructions": []
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "inverted": false,
+                        "value": "ObjectSpawner::ObjectSpawner::SetPropertyMaxQuantityReached"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "no"
+                      ],
+                      "subInstructions": []
+                    }
+                  ],
+                  "events": [
+                    {
+                      "disabled": false,
+                      "folded": false,
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
+                      },
+                      "comment": "This is used so that objects are not immediately spawned after deleting an instance after max instances had been reached",
+                      "comment2": ""
+                    },
+                    {
+                      "disabled": false,
+                      "folded": false,
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "inverted": false,
+                            "value": "BuiltinCommonInstructions::Once"
+                          },
+                          "parameters": [],
+                          "subInstructions": []
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "inverted": false,
+                            "value": "ResetObjectTimer"
+                          },
+                          "parameters": [
+                            "Object",
+                            "\"__ObjectSpawner.SpawnTimer\""
+                          ],
+                          "subInstructions": []
+                        }
+                      ],
+                      "events": []
+                    }
+                  ]
+                },
+                {
+                  "disabled": false,
+                  "folded": false,
+                  "type": "BuiltinCommonInstructions::Comment",
+                  "color": {
+                    "b": 109,
+                    "g": 230,
+                    "r": 255,
+                    "textB": 0,
+                    "textG": 0,
+                    "textR": 0
+                  },
                   "comment": "Check if max number of instances per spawner has been reached",
                   "comment2": ""
                 },
@@ -126,6 +189,19 @@
                   "folded": false,
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [
+                    {
+                      "type": {
+                        "inverted": false,
+                        "value": "ObjectSpawner::ObjectSpawner::PropertyMaxQuantity"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "!=",
+                        "0"
+                      ],
+                      "subInstructions": []
+                    },
                     {
                       "type": {
                         "inverted": false,
@@ -230,6 +306,42 @@
                     "textG": 0,
                     "textR": 0
                   },
+                  "comment": "Reset spawn detection",
+                  "comment2": ""
+                },
+                {
+                  "disabled": false,
+                  "folded": false,
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "inverted": false,
+                        "value": "ObjectSpawner::ObjectSpawner::SetPropertyJustSpawnedAnObject"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "no"
+                      ],
+                      "subInstructions": []
+                    }
+                  ],
+                  "events": []
+                },
+                {
+                  "disabled": false,
+                  "folded": false,
+                  "type": "BuiltinCommonInstructions::Comment",
+                  "color": {
+                    "b": 109,
+                    "g": 230,
+                    "r": 255,
+                    "textB": 0,
+                    "textG": 0,
+                    "textR": 0
+                  },
                   "comment": "Spawn an object when conditions are met",
                   "comment2": ""
                 },
@@ -247,7 +359,7 @@
                         "Object",
                         "\"__ObjectSpawner.SpawnTimer\"",
                         ">",
-                        "Object.Behavior::PropertySpawnFrequency()"
+                        "Object.Behavior::PropertySpawnPeriod()"
                       ],
                       "subInstructions": []
                     }
@@ -632,13 +744,13 @@
           "objectGroups": []
         },
         {
-          "description": "Set spawn frequency (in seconds).",
-          "fullName": "Set spawn frequency",
+          "description": "Set spawn period (in seconds).",
+          "fullName": "Set spawn period",
           "functionType": "Action",
           "group": "",
-          "name": "SetSpawnFrequency",
+          "name": "SetSpawnPeriod",
           "private": false,
-          "sentence": "Set spawn frequency of _PARAM0_ to _PARAM2_ seconds",
+          "sentence": "Set spawn period of _PARAM0_ to _PARAM2_ seconds",
           "events": [
             {
               "disabled": false,
@@ -649,7 +761,7 @@
                 {
                   "type": {
                     "inverted": false,
-                    "value": "ObjectSpawner::ObjectSpawner::SetPropertySpawnFrequency"
+                    "value": "ObjectSpawner::ObjectSpawner::SetPropertySpawnPeriod"
                   },
                   "parameters": [
                     "Object",
@@ -887,11 +999,11 @@
           "objectGroups": []
         },
         {
-          "description": "Spawn frequency (in seconds).",
-          "fullName": "Spawn frequency",
+          "description": "Spawn period (in seconds).",
+          "fullName": "Spawn period",
           "functionType": "Expression",
           "group": "",
-          "name": "SpawnFrequency",
+          "name": "SpawnPeriod",
           "private": false,
           "sentence": "",
           "events": [
@@ -907,7 +1019,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertySpawnFrequency()"
+                    "Object.Behavior::PropertySpawnPeriod()"
                   ],
                   "subInstructions": []
                 }
@@ -1112,7 +1224,7 @@
           "objectGroups": []
         },
         {
-          "description": "An object was just created by this spawner.  Useful for triggering visual and sound effects.",
+          "description": "An object was just created by this spawner. Useful for triggering visual and sound effects.",
           "fullName": "Object was just spawned",
           "functionType": "Condition",
           "group": "",
@@ -1181,12 +1293,12 @@
         {
           "value": "1",
           "type": "Number",
-          "label": "Spawn frequency (in seconds).",
+          "label": "Spawn period (in seconds).",
           "description": "",
           "group": "",
           "extraInformation": [],
           "hidden": false,
-          "name": "SpawnFrequency"
+          "name": "SpawnPeriod"
         },
         {
           "value": "0",
