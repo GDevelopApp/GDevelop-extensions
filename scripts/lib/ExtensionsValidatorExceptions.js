@@ -140,6 +140,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    PlatformerTrajectory: {
+      gdjsAllowedProperties: ['PlatformerObjectRuntimeBehavior'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     TextEntryVirtualKeyboard: {
       gdjsAllowedProperties: ['_extensionMobileKeyboard'],
       gdjsEvtToolsAllowedProperties: [],
