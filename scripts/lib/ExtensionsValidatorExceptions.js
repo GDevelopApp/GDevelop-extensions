@@ -152,6 +152,21 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Recolorizer: {
+      gdjsAllowedProperties: [
+        '__recolorizerExtension',
+        'SpriteRuntimeObject',
+        'TiledSpriteRuntimeObject',
+        'PanelSpriteRuntimeObject',
+        'rgbOrHexToRGBColor',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [
+        // Extend a behavior with JavaScript:
+        'getPrototypeOf',
+      ],
+    },
     RenderToSprite: {
       gdjsAllowedProperties: [
         '_renderToSprite',
