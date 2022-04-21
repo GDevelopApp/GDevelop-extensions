@@ -161,9 +161,7 @@ const extensionsAllowedProperties = {
         'rgbOrHexToRGBColor',
       ],
       gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [
-        '__recolorizerExtension',
-      ],
+      runtimeSceneAllowedProperties: ['__recolorizerExtension'],
       javaScriptObjectAllowedProperties: [
         // Extend a behavior with JavaScript:
         'getPrototypeOf',
