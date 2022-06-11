@@ -1,7 +1,7 @@
 {
   "author": "",
   "category": "General",
-  "description": "Edge scroll camera allows the player to move around the scene simply by moving the cursor near the edge they want the camera to move towards.  This is common in RTS games, but it can be useful for many things.\n\nHow to use:\n- Run the action \"Enable (or disable) edge camera scrolling\" at the beginning of scene\n- Run the action \"Configure edge camera scrolling\" at the beginning of scene\n\nTips:\n- Variable speed makes the camera scroll faster the closer the cursor gets to the edge of screen\n- Use the action \"Enable (or disable) edge camera scrolling\" to turn the scrolling ON or OFF\n- Use the action \"Enforce camera boundaries\" to restrict what the player can see\n- Use the extension \"Copy camera settings\" if you want multiple layers to move",
+  "description": "Edge scroll camera allows the player to move around the scene simply by moving the cursor near the edge they want the camera to move towards.  This is common in RTS games, but it can be useful for many things.\n\nHow to use:\n- Run the action \"Enable (or disable) edge camera scrolling\" at the beginning of scene\n- Run the action \"Configure edge camera scrolling\" at the beginning of scene\n\nTips:\n- Variable speed makes the camera scroll faster the closer the cursor gets to the edge of screen\n- Use the action \"Enable (or disable) edge camera scrolling\" to turn the scrolling ON or OFF\n- Use the action \"Enforce camera boundaries\" to restrict what the player can see\n- Use the extension \"Copy camera settings\" if you want multiple layers to move\n\nExpressions:\n- EdgeScrollSpeedX() - Current scroll speed (horizontal)\n- EdgeScrollSpeedY() - Current scroll speed (vertical)\n",
   "extensionNamespace": "",
   "fullName": "Edge scroll camera",
   "helpPath": "",
@@ -22,6 +22,1065 @@
   ],
   "dependencies": [],
   "eventsFunctions": [
+    {
+      "description": "",
+      "fullName": "",
+      "functionType": "Action",
+      "group": "",
+      "name": "onSceneLoaded",
+      "private": false,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "Set default values",
+          "comment2": ""
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "EdgeScrollCamera::ConfigureEdgeScrollCamera"
+              },
+              "parameters": [
+                "",
+                "32",
+                "300",
+                "\"\"",
+                "0",
+                "yes",
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "",
+      "fullName": "",
+      "functionType": "Action",
+      "group": "",
+      "name": "onScenePreEvents",
+      "private": false,
+      "sentence": "",
+      "events": [
+        {
+          "colorB": 224,
+          "colorG": 16,
+          "colorR": 189,
+          "creationTime": 0,
+          "name": "Edge Scroll Camera",
+          "source": "",
+          "type": "BuiltinCommonInstructions::Group",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "SceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__EdgeScrollCamera.Enabled",
+                    "True"
+                  ]
+                }
+              ],
+              "actions": [],
+              "events": [
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Prevent camera movement until cursor has move away from starting position",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::Or"
+                          },
+                          "parameters": [],
+                          "subInstructions": [
+                            {
+                              "type": {
+                                "value": "MouseX"
+                              },
+                              "parameters": [
+                                "",
+                                "!=",
+                                "0",
+                                "VariableString(__EdgeScrollCamera.Layer)",
+                                "Variable(__EdgeScrollCamera.Camera)"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "MouseY"
+                              },
+                              "parameters": [
+                                "",
+                                "!=",
+                                "0",
+                                "VariableString(__EdgeScrollCamera.Layer)",
+                                "Variable(__EdgeScrollCamera.Camera)"
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::Once"
+                          },
+                          "parameters": []
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetSceneVariableAsBoolean"
+                          },
+                          "parameters": [
+                            "__EdgeScrollCamera.CursorMoved",
+                            "True"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Cursor has moved  from starting position",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "SceneVariableAsBoolean"
+                          },
+                          "parameters": [
+                            "__EdgeScrollCamera.CursorMoved",
+                            "True"
+                          ]
+                        }
+                      ],
+                      "actions": [],
+                      "events": [
+                        {
+                          "colorB": 228,
+                          "colorG": 176,
+                          "colorR": 74,
+                          "creationTime": 0,
+                          "name": "Reset variables",
+                          "source": "",
+                          "type": "BuiltinCommonInstructions::Group",
+                          "events": [
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "SetSceneVariableAsBoolean"
+                                  },
+                                  "parameters": [
+                                    "__EdgeScrollCamera.MovingUp",
+                                    "False"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "SetSceneVariableAsBoolean"
+                                  },
+                                  "parameters": [
+                                    "__EdgeScrollCamera.MovingDown",
+                                    "False"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "SetSceneVariableAsBoolean"
+                                  },
+                                  "parameters": [
+                                    "__EdgeScrollCamera.MovingLeft",
+                                    "False"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "SetSceneVariableAsBoolean"
+                                  },
+                                  "parameters": [
+                                    "__EdgeScrollCamera.MovingRight",
+                                    "False"
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "ModVarScene"
+                                  },
+                                  "parameters": [
+                                    "__EdgeScrollCamera.CurrentScrollSpeedX",
+                                    "=",
+                                    "0"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "ModVarScene"
+                                  },
+                                  "parameters": [
+                                    "__EdgeScrollCamera.CurrentScrollSpeedY",
+                                    "=",
+                                    "0"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "ModVarScene"
+                                  },
+                                  "parameters": [
+                                    "__EdgeScrollCamera.DistanceFromEdgeX",
+                                    "=",
+                                    "0"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "ModVarScene"
+                                  },
+                                  "parameters": [
+                                    "__EdgeScrollCamera.DistanceFromEdgeY",
+                                    "=",
+                                    "0"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "ModVarScene"
+                                  },
+                                  "parameters": [
+                                    "__EdgeScrollCamera.SpeedPercentageX",
+                                    "=",
+                                    "0"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "ModVarScene"
+                                  },
+                                  "parameters": [
+                                    "__EdgeScrollCamera.SpeedPercentageY",
+                                    "=",
+                                    "0"
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "parameters": []
+                        },
+                        {
+                          "colorB": 228,
+                          "colorG": 176,
+                          "colorR": 74,
+                          "creationTime": 0,
+                          "name": "Save camera borders as variables",
+                          "source": "",
+                          "type": "BuiltinCommonInstructions::Group",
+                          "events": [
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "ModVarScene"
+                                  },
+                                  "parameters": [
+                                    "__EdgeScrollCamera.CameraTop",
+                                    "=",
+                                    "CameraY(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera)) - CameraHeight(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera))/2"
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "ModVarScene"
+                                  },
+                                  "parameters": [
+                                    "__EdgeScrollCamera.CameraBottom",
+                                    "=",
+                                    "CameraY(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera)) + CameraHeight(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera))/2"
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "ModVarScene"
+                                  },
+                                  "parameters": [
+                                    "__EdgeScrollCamera.CameraLeft",
+                                    "=",
+                                    "CameraX(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera)) - CameraWidth(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera))/2"
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "ModVarScene"
+                                  },
+                                  "parameters": [
+                                    "__EdgeScrollCamera.CameraRight",
+                                    "=",
+                                    "CameraX(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera)) + CameraWidth(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera))/2"
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "parameters": []
+                        },
+                        {
+                          "colorB": 228,
+                          "colorG": 176,
+                          "colorR": 74,
+                          "creationTime": 0,
+                          "name": "Detect edge scrolling",
+                          "source": "",
+                          "type": "BuiltinCommonInstructions::Group",
+                          "events": [
+                            {
+                              "type": "BuiltinCommonInstructions::Comment",
+                              "color": {
+                                "b": 109,
+                                "g": 230,
+                                "r": 255,
+                                "textB": 0,
+                                "textG": 0,
+                                "textR": 0
+                              },
+                              "comment": "Only move camera while mouse is inside game window",
+                              "comment2": ""
+                            },
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [
+                                {
+                                  "type": {
+                                    "value": "IsMouseInsideCanvas"
+                                  },
+                                  "parameters": [
+                                    ""
+                                  ]
+                                }
+                              ],
+                              "actions": [],
+                              "events": [
+                                {
+                                  "colorB": 228,
+                                  "colorG": 176,
+                                  "colorR": 74,
+                                  "creationTime": 0,
+                                  "name": "Up",
+                                  "source": "",
+                                  "type": "BuiltinCommonInstructions::Group",
+                                  "events": [
+                                    {
+                                      "type": "BuiltinCommonInstructions::Standard",
+                                      "conditions": [
+                                        {
+                                          "type": {
+                                            "value": "MouseY"
+                                          },
+                                          "parameters": [
+                                            "",
+                                            "<",
+                                            "Variable(__EdgeScrollCamera.CameraTop) + Variable(__EdgeScrollCamera.ScreenMargin)",
+                                            "VariableString(__EdgeScrollCamera.Layer)",
+                                            "Variable(__EdgeScrollCamera.Camera)"
+                                          ]
+                                        }
+                                      ],
+                                      "actions": [
+                                        {
+                                          "type": {
+                                            "value": "SetSceneVariableAsBoolean"
+                                          },
+                                          "parameters": [
+                                            "__EdgeScrollCamera.MovingUp",
+                                            "True"
+                                          ]
+                                        },
+                                        {
+                                          "type": {
+                                            "value": "ModVarScene"
+                                          },
+                                          "parameters": [
+                                            "__EdgeScrollCamera.DistanceFromEdgeY",
+                                            "=",
+                                            "abs(Variable(__EdgeScrollCamera.CameraTop) - MouseY(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera)))"
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "parameters": []
+                                },
+                                {
+                                  "colorB": 228,
+                                  "colorG": 176,
+                                  "colorR": 74,
+                                  "creationTime": 0,
+                                  "name": "Down",
+                                  "source": "",
+                                  "type": "BuiltinCommonInstructions::Group",
+                                  "events": [
+                                    {
+                                      "type": "BuiltinCommonInstructions::Standard",
+                                      "conditions": [
+                                        {
+                                          "type": {
+                                            "value": "MouseY"
+                                          },
+                                          "parameters": [
+                                            "",
+                                            ">",
+                                            "Variable(__EdgeScrollCamera.CameraBottom) - Variable(__EdgeScrollCamera.ScreenMargin)",
+                                            "VariableString(__EdgeScrollCamera.Layer)",
+                                            "Variable(__EdgeScrollCamera.Camera)"
+                                          ]
+                                        }
+                                      ],
+                                      "actions": [
+                                        {
+                                          "type": {
+                                            "value": "SetSceneVariableAsBoolean"
+                                          },
+                                          "parameters": [
+                                            "__EdgeScrollCamera.MovingDown",
+                                            "True"
+                                          ]
+                                        },
+                                        {
+                                          "type": {
+                                            "value": "ModVarScene"
+                                          },
+                                          "parameters": [
+                                            "__EdgeScrollCamera.DistanceFromEdgeY",
+                                            "=",
+                                            "abs(Variable(__EdgeScrollCamera.CameraBottom) - MouseY(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera)))"
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "parameters": []
+                                },
+                                {
+                                  "colorB": 228,
+                                  "colorG": 176,
+                                  "colorR": 74,
+                                  "creationTime": 0,
+                                  "name": "Left",
+                                  "source": "",
+                                  "type": "BuiltinCommonInstructions::Group",
+                                  "events": [
+                                    {
+                                      "type": "BuiltinCommonInstructions::Standard",
+                                      "conditions": [
+                                        {
+                                          "type": {
+                                            "value": "MouseX"
+                                          },
+                                          "parameters": [
+                                            "",
+                                            "<",
+                                            "Variable(__EdgeScrollCamera.CameraLeft) + Variable(__EdgeScrollCamera.ScreenMargin)",
+                                            "VariableString(__EdgeScrollCamera.Layer)",
+                                            "Variable(__EdgeScrollCamera.Camera)"
+                                          ]
+                                        }
+                                      ],
+                                      "actions": [
+                                        {
+                                          "type": {
+                                            "value": "SetSceneVariableAsBoolean"
+                                          },
+                                          "parameters": [
+                                            "__EdgeScrollCamera.MovingLeft",
+                                            "True"
+                                          ]
+                                        },
+                                        {
+                                          "type": {
+                                            "value": "ModVarScene"
+                                          },
+                                          "parameters": [
+                                            "__EdgeScrollCamera.DistanceFromEdgeX",
+                                            "=",
+                                            "abs(Variable(__EdgeScrollCamera.CameraLeft) - MouseX(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera)))"
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "parameters": []
+                                },
+                                {
+                                  "colorB": 228,
+                                  "colorG": 176,
+                                  "colorR": 74,
+                                  "creationTime": 0,
+                                  "name": "Right",
+                                  "source": "",
+                                  "type": "BuiltinCommonInstructions::Group",
+                                  "events": [
+                                    {
+                                      "type": "BuiltinCommonInstructions::Standard",
+                                      "conditions": [
+                                        {
+                                          "type": {
+                                            "value": "MouseX"
+                                          },
+                                          "parameters": [
+                                            "",
+                                            ">",
+                                            "Variable(__EdgeScrollCamera.CameraRight) - Variable(__EdgeScrollCamera.ScreenMargin)",
+                                            "VariableString(__EdgeScrollCamera.Layer)",
+                                            "Variable(__EdgeScrollCamera.Camera)"
+                                          ]
+                                        }
+                                      ],
+                                      "actions": [
+                                        {
+                                          "type": {
+                                            "value": "SetSceneVariableAsBoolean"
+                                          },
+                                          "parameters": [
+                                            "__EdgeScrollCamera.MovingRight",
+                                            "True"
+                                          ]
+                                        },
+                                        {
+                                          "type": {
+                                            "value": "ModVarScene"
+                                          },
+                                          "parameters": [
+                                            "__EdgeScrollCamera.DistanceFromEdgeX",
+                                            "=",
+                                            "abs(Variable(__EdgeScrollCamera.CameraRight) - MouseX(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera)))"
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "parameters": []
+                                }
+                              ]
+                            }
+                          ],
+                          "parameters": []
+                        },
+                        {
+                          "colorB": 228,
+                          "colorG": 176,
+                          "colorR": 74,
+                          "creationTime": 0,
+                          "name": "Perform edge scrolling",
+                          "source": "",
+                          "type": "BuiltinCommonInstructions::Group",
+                          "events": [
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [
+                                {
+                                  "type": {
+                                    "value": "EdgeScrollCamera::IsCameraScrolling"
+                                  },
+                                  "parameters": [
+                                    "",
+                                    ""
+                                  ]
+                                }
+                              ],
+                              "actions": [],
+                              "events": [
+                                {
+                                  "colorB": 228,
+                                  "colorG": 176,
+                                  "colorR": 74,
+                                  "creationTime": 0,
+                                  "name": "Calculate current scroll speed",
+                                  "source": "",
+                                  "type": "BuiltinCommonInstructions::Group",
+                                  "events": [
+                                    {
+                                      "type": "BuiltinCommonInstructions::Standard",
+                                      "conditions": [
+                                        {
+                                          "type": {
+                                            "value": "SceneVariableAsBoolean"
+                                          },
+                                          "parameters": [
+                                            "__EdgeScrollCamera.VariableSpeedEnabled",
+                                            "False"
+                                          ]
+                                        }
+                                      ],
+                                      "actions": [],
+                                      "events": [
+                                        {
+                                          "type": "BuiltinCommonInstructions::Standard",
+                                          "conditions": [
+                                            {
+                                              "type": {
+                                                "value": "BuiltinCommonInstructions::Or"
+                                              },
+                                              "parameters": [],
+                                              "subInstructions": [
+                                                {
+                                                  "type": {
+                                                    "value": "EdgeScrollCamera::IsCameraScrollingLeft"
+                                                  },
+                                                  "parameters": [
+                                                    "",
+                                                    ""
+                                                  ]
+                                                },
+                                                {
+                                                  "type": {
+                                                    "value": "EdgeScrollCamera::IsCameraScrollingRight"
+                                                  },
+                                                  "parameters": [
+                                                    "",
+                                                    ""
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ],
+                                          "actions": [
+                                            {
+                                              "type": {
+                                                "value": "ModVarScene"
+                                              },
+                                              "parameters": [
+                                                "__EdgeScrollCamera.CurrentScrollSpeedX",
+                                                "=",
+                                                "Variable(__EdgeScrollCamera.ScrollSpeed)"
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "BuiltinCommonInstructions::Standard",
+                                          "conditions": [
+                                            {
+                                              "type": {
+                                                "value": "BuiltinCommonInstructions::Or"
+                                              },
+                                              "parameters": [],
+                                              "subInstructions": [
+                                                {
+                                                  "type": {
+                                                    "value": "EdgeScrollCamera::IsCameraScrollingUp"
+                                                  },
+                                                  "parameters": [
+                                                    "",
+                                                    ""
+                                                  ]
+                                                },
+                                                {
+                                                  "type": {
+                                                    "value": "EdgeScrollCamera::IsCameraScrollingDown"
+                                                  },
+                                                  "parameters": [
+                                                    "",
+                                                    ""
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ],
+                                          "actions": [
+                                            {
+                                              "type": {
+                                                "value": "ModVarScene"
+                                              },
+                                              "parameters": [
+                                                "__EdgeScrollCamera.CurrentScrollSpeedY",
+                                                "=",
+                                                "Variable(__EdgeScrollCamera.ScrollSpeed)"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "BuiltinCommonInstructions::Standard",
+                                      "conditions": [
+                                        {
+                                          "type": {
+                                            "value": "SceneVariableAsBoolean"
+                                          },
+                                          "parameters": [
+                                            "__EdgeScrollCamera.VariableSpeedEnabled",
+                                            "True"
+                                          ]
+                                        }
+                                      ],
+                                      "actions": [],
+                                      "events": [
+                                        {
+                                          "type": "BuiltinCommonInstructions::Standard",
+                                          "conditions": [
+                                            {
+                                              "type": {
+                                                "value": "BuiltinCommonInstructions::Or"
+                                              },
+                                              "parameters": [],
+                                              "subInstructions": [
+                                                {
+                                                  "type": {
+                                                    "value": "EdgeScrollCamera::IsCameraScrollingLeft"
+                                                  },
+                                                  "parameters": [
+                                                    "",
+                                                    ""
+                                                  ]
+                                                },
+                                                {
+                                                  "type": {
+                                                    "value": "EdgeScrollCamera::IsCameraScrollingRight"
+                                                  },
+                                                  "parameters": [
+                                                    "",
+                                                    ""
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ],
+                                          "actions": [
+                                            {
+                                              "type": {
+                                                "value": "ModVarScene"
+                                              },
+                                              "parameters": [
+                                                "__EdgeScrollCamera.SpeedPercentageX",
+                                                "=",
+                                                "1 - (Variable(__EdgeScrollCamera.DistanceFromEdgeX) / Variable(__EdgeScrollCamera.ScreenMargin))"
+                                              ]
+                                            },
+                                            {
+                                              "type": {
+                                                "value": "ModVarScene"
+                                              },
+                                              "parameters": [
+                                                "__EdgeScrollCamera.CurrentScrollSpeedX",
+                                                "=",
+                                                "Variable(__EdgeScrollCamera.SpeedPercentageX) * Variable(__EdgeScrollCamera.ScrollSpeed)"
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "BuiltinCommonInstructions::Standard",
+                                          "conditions": [
+                                            {
+                                              "type": {
+                                                "value": "BuiltinCommonInstructions::Or"
+                                              },
+                                              "parameters": [],
+                                              "subInstructions": [
+                                                {
+                                                  "type": {
+                                                    "value": "EdgeScrollCamera::IsCameraScrollingUp"
+                                                  },
+                                                  "parameters": [
+                                                    "",
+                                                    ""
+                                                  ]
+                                                },
+                                                {
+                                                  "type": {
+                                                    "value": "EdgeScrollCamera::IsCameraScrollingDown"
+                                                  },
+                                                  "parameters": [
+                                                    "",
+                                                    ""
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ],
+                                          "actions": [
+                                            {
+                                              "type": {
+                                                "value": "ModVarScene"
+                                              },
+                                              "parameters": [
+                                                "__EdgeScrollCamera.SpeedPercentageY",
+                                                "=",
+                                                "1 - (Variable(__EdgeScrollCamera.DistanceFromEdgeY) / Variable(__EdgeScrollCamera.ScreenMargin))"
+                                              ]
+                                            },
+                                            {
+                                              "type": {
+                                                "value": "ModVarScene"
+                                              },
+                                              "parameters": [
+                                                "__EdgeScrollCamera.CurrentScrollSpeedY",
+                                                "=",
+                                                "Variable(__EdgeScrollCamera.SpeedPercentageY) * Variable(__EdgeScrollCamera.ScrollSpeed)"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "parameters": []
+                                },
+                                {
+                                  "colorB": 228,
+                                  "colorG": 176,
+                                  "colorR": 74,
+                                  "creationTime": 0,
+                                  "name": "Move camera",
+                                  "source": "",
+                                  "type": "BuiltinCommonInstructions::Group",
+                                  "events": [
+                                    {
+                                      "colorB": 228,
+                                      "colorG": 176,
+                                      "colorR": 74,
+                                      "creationTime": 0,
+                                      "name": "Up",
+                                      "source": "",
+                                      "type": "BuiltinCommonInstructions::Group",
+                                      "events": [
+                                        {
+                                          "type": "BuiltinCommonInstructions::Standard",
+                                          "conditions": [
+                                            {
+                                              "type": {
+                                                "value": "SceneVariableAsBoolean"
+                                              },
+                                              "parameters": [
+                                                "__EdgeScrollCamera.MovingUp",
+                                                "True"
+                                              ]
+                                            }
+                                          ],
+                                          "actions": [
+                                            {
+                                              "type": {
+                                                "value": "SetCameraY"
+                                              },
+                                              "parameters": [
+                                                "",
+                                                "-",
+                                                "Variable(__EdgeScrollCamera.CurrentScrollSpeedY) * TimeDelta()",
+                                                "VariableString(__EdgeScrollCamera.Layer)",
+                                                "Variable(__EdgeScrollCamera.Camera)"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "parameters": []
+                                    },
+                                    {
+                                      "colorB": 228,
+                                      "colorG": 176,
+                                      "colorR": 74,
+                                      "creationTime": 0,
+                                      "name": "Down",
+                                      "source": "",
+                                      "type": "BuiltinCommonInstructions::Group",
+                                      "events": [
+                                        {
+                                          "type": "BuiltinCommonInstructions::Standard",
+                                          "conditions": [
+                                            {
+                                              "type": {
+                                                "value": "SceneVariableAsBoolean"
+                                              },
+                                              "parameters": [
+                                                "__EdgeScrollCamera.MovingDown",
+                                                "True"
+                                              ]
+                                            }
+                                          ],
+                                          "actions": [
+                                            {
+                                              "type": {
+                                                "value": "SetCameraY"
+                                              },
+                                              "parameters": [
+                                                "",
+                                                "+",
+                                                "Variable(__EdgeScrollCamera.CurrentScrollSpeedY) * TimeDelta()",
+                                                "VariableString(__EdgeScrollCamera.Layer)",
+                                                "Variable(__EdgeScrollCamera.Camera)"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "parameters": []
+                                    },
+                                    {
+                                      "colorB": 228,
+                                      "colorG": 176,
+                                      "colorR": 74,
+                                      "creationTime": 0,
+                                      "name": "Left",
+                                      "source": "",
+                                      "type": "BuiltinCommonInstructions::Group",
+                                      "events": [
+                                        {
+                                          "type": "BuiltinCommonInstructions::Standard",
+                                          "conditions": [
+                                            {
+                                              "type": {
+                                                "value": "SceneVariableAsBoolean"
+                                              },
+                                              "parameters": [
+                                                "__EdgeScrollCamera.MovingLeft",
+                                                "True"
+                                              ]
+                                            }
+                                          ],
+                                          "actions": [
+                                            {
+                                              "type": {
+                                                "value": "SetCameraX"
+                                              },
+                                              "parameters": [
+                                                "",
+                                                "-",
+                                                "Variable(__EdgeScrollCamera.CurrentScrollSpeedX) * TimeDelta()",
+                                                "VariableString(__EdgeScrollCamera.Layer)",
+                                                "Variable(__EdgeScrollCamera.Camera)"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "parameters": []
+                                    },
+                                    {
+                                      "colorB": 228,
+                                      "colorG": 176,
+                                      "colorR": 74,
+                                      "creationTime": 0,
+                                      "name": "Right",
+                                      "source": "",
+                                      "type": "BuiltinCommonInstructions::Group",
+                                      "events": [
+                                        {
+                                          "type": "BuiltinCommonInstructions::Standard",
+                                          "conditions": [
+                                            {
+                                              "type": {
+                                                "value": "SceneVariableAsBoolean"
+                                              },
+                                              "parameters": [
+                                                "__EdgeScrollCamera.MovingRight",
+                                                "True"
+                                              ]
+                                            }
+                                          ],
+                                          "actions": [
+                                            {
+                                              "type": {
+                                                "value": "SetCameraX"
+                                              },
+                                              "parameters": [
+                                                "",
+                                                "+",
+                                                "Variable(__EdgeScrollCamera.CurrentScrollSpeedX) * TimeDelta()",
+                                                "VariableString(__EdgeScrollCamera.Layer)",
+                                                "Variable(__EdgeScrollCamera.Camera)"
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "parameters": []
+                                    }
+                                  ],
+                                  "parameters": []
+                                }
+                              ]
+                            }
+                          ],
+                          "parameters": []
+                        }
+                      ]
+                    }
+                  ],
+                  "parameters": []
+                }
+              ]
+            }
+          ],
+          "parameters": []
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
     {
       "description": "Enable (or disable) edge scrolling camera.  Use \"Configure edge scrolling camera\" to adjust settings.",
       "fullName": "Enable (or disable) edge scrolling camera",
@@ -46,32 +1105,18 @@
         },
         {
           "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [
-            {
-              "type": {
-                "inverted": true,
-                "value": "GetArgumentAsBoolean"
-              },
-              "parameters": [
-                "\"EnableEdgeScrolling\""
-              ],
-              "subInstructions": []
-            }
-          ],
+          "conditions": [],
           "actions": [
             {
               "type": {
-                "inverted": false,
                 "value": "SetSceneVariableAsBoolean"
               },
               "parameters": [
                 "__EdgeScrollCamera.Enabled",
                 "False"
-              ],
-              "subInstructions": []
+              ]
             }
-          ],
-          "events": []
+          ]
         },
         {
           "type": "BuiltinCommonInstructions::Comment",
@@ -91,39 +1136,34 @@
           "conditions": [
             {
               "type": {
-                "inverted": false,
                 "value": "GetArgumentAsBoolean"
               },
               "parameters": [
                 "\"EnableEdgeScrolling\""
-              ],
-              "subInstructions": []
+              ]
             }
           ],
           "actions": [
             {
               "type": {
-                "inverted": false,
                 "value": "SetSceneVariableAsBoolean"
               },
               "parameters": [
                 "__EdgeScrollCamera.Enabled",
                 "True"
-              ],
-              "subInstructions": []
+              ]
             }
-          ],
-          "events": []
+          ]
         }
       ],
       "parameters": [
         {
           "codeOnly": false,
-          "defaultValue": "",
+          "defaultValue": "yes",
           "description": "Enable edge scrolling camera?",
           "longDescription": "",
           "name": "EnableEdgeScrolling",
-          "optional": false,
+          "optional": true,
           "supplementaryInformation": "",
           "type": "yesorno"
         }
@@ -137,14 +1177,14 @@
       "group": "",
       "name": "ConfigureEdgeScrollCamera",
       "private": false,
-      "sentence": "Configure edge scrolling camera on layer: _PARAM3_, screen margin: _PARAM1_, scroll speed: _PARAM2_, use variable speed? _PARAM5_ ",
+      "sentence": "Configure edge scrolling camera on layer _PARAM3_, screen margin _PARAM1_, scroll speed _PARAM2_, use variable speed? _PARAM5_ ",
       "events": [
         {
           "colorB": 228,
           "colorG": 176,
           "colorR": 74,
           "creationTime": 0,
-          "name": "Save values to use in pre-events lifecycle function",
+          "name": "Save values to use in the pre-events lifecycle function",
           "source": "",
           "type": "BuiltinCommonInstructions::Group",
           "events": [
@@ -158,53 +1198,44 @@
                   },
                   "parameters": [
                     "\"VariableSpeed\""
-                  ],
-                  "subInstructions": []
+                  ]
                 }
               ],
               "actions": [
                 {
                   "type": {
-                    "inverted": false,
                     "value": "SetSceneVariableAsBoolean"
                   },
                   "parameters": [
                     "__EdgeScrollCamera.VariableSpeedEnabled",
                     "False"
-                  ],
-                  "subInstructions": []
+                  ]
                 }
-              ],
-              "events": []
+              ]
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
                   "type": {
-                    "inverted": false,
                     "value": "GetArgumentAsBoolean"
                   },
                   "parameters": [
                     "\"VariableSpeed\""
-                  ],
-                  "subInstructions": []
+                  ]
                 }
               ],
               "actions": [
                 {
                   "type": {
-                    "inverted": false,
                     "value": "SetSceneVariableAsBoolean"
                   },
                   "parameters": [
                     "__EdgeScrollCamera.VariableSpeedEnabled",
                     "True"
-                  ],
-                  "subInstructions": []
+                  ]
                 }
-              ],
-              "events": []
+              ]
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -212,75 +1243,45 @@
               "actions": [
                 {
                   "type": {
-                    "inverted": false,
                     "value": "ModVarSceneTxt"
                   },
                   "parameters": [
                     "__EdgeScrollCamera.Layer",
                     "=",
                     "GetArgumentAsString(\"Layer\")"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "events": []
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
+                  ]
+                },
                 {
                   "type": {
-                    "inverted": false,
                     "value": "ModVarScene"
                   },
                   "parameters": [
                     "__EdgeScrollCamera.Camera",
                     "=",
                     "GetArgumentAsNumber(\"Camera\")"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "events": []
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
+                  ]
+                },
                 {
                   "type": {
-                    "inverted": false,
                     "value": "ModVarScene"
                   },
                   "parameters": [
                     "__EdgeScrollCamera.ScrollSpeed",
                     "=",
                     "GetArgumentAsNumber(\"ScrollSpeed\")"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "events": []
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
+                  ]
+                },
                 {
                   "type": {
-                    "inverted": false,
                     "value": "ModVarScene"
                   },
                   "parameters": [
                     "__EdgeScrollCamera.ScreenMargin",
                     "=",
                     "GetArgumentAsNumber(\"ScreenMargin\")"
-                  ],
-                  "subInstructions": []
+                  ]
                 }
-              ],
-              "events": []
+              ]
             }
           ],
           "parameters": []
@@ -342,7 +1343,7 @@
     },
     {
       "description": "Check if the camera is scrolling.",
-      "fullName": "Is camera scrolling?",
+      "fullName": "Camera is scrolling",
       "functionType": "Condition",
       "group": "",
       "name": "IsCameraScrolling",
@@ -354,65 +1355,54 @@
           "conditions": [
             {
               "type": {
-                "inverted": false,
                 "value": "SceneVariableAsBoolean"
               },
               "parameters": [
                 "__EdgeScrollCamera.Enabled",
                 "True"
-              ],
-              "subInstructions": []
+              ]
             },
             {
               "type": {
-                "inverted": false,
                 "value": "BuiltinCommonInstructions::Or"
               },
               "parameters": [],
               "subInstructions": [
                 {
                   "type": {
-                    "inverted": false,
                     "value": "EdgeScrollCamera::IsCameraScrollingUp"
                   },
                   "parameters": [
                     "",
                     ""
-                  ],
-                  "subInstructions": []
+                  ]
                 },
                 {
                   "type": {
-                    "inverted": false,
                     "value": "EdgeScrollCamera::IsCameraScrollingDown"
                   },
                   "parameters": [
                     "",
                     ""
-                  ],
-                  "subInstructions": []
+                  ]
                 },
                 {
                   "type": {
-                    "inverted": false,
                     "value": "EdgeScrollCamera::IsCameraScrollingLeft"
                   },
                   "parameters": [
                     "",
                     ""
-                  ],
-                  "subInstructions": []
+                  ]
                 },
                 {
                   "type": {
-                    "inverted": false,
                     "value": "EdgeScrollCamera::IsCameraScrollingRight"
                   },
                   "parameters": [
                     "",
                     ""
-                  ],
-                  "subInstructions": []
+                  ]
                 }
               ]
             }
@@ -420,16 +1410,13 @@
           "actions": [
             {
               "type": {
-                "inverted": false,
                 "value": "SetReturnBoolean"
               },
               "parameters": [
                 "True"
-              ],
-              "subInstructions": []
+              ]
             }
-          ],
-          "events": []
+          ]
         }
       ],
       "parameters": [],
@@ -437,7 +1424,7 @@
     },
     {
       "description": "Check if the camera is scrolling up.",
-      "fullName": "Is camera scrolling up?",
+      "fullName": "Camera is scrolling up",
       "functionType": "Condition",
       "group": "",
       "name": "IsCameraScrollingUp",
@@ -449,40 +1436,33 @@
           "conditions": [
             {
               "type": {
-                "inverted": false,
                 "value": "SceneVariableAsBoolean"
               },
               "parameters": [
                 "__EdgeScrollCamera.Enabled",
                 "True"
-              ],
-              "subInstructions": []
+              ]
             },
             {
               "type": {
-                "inverted": false,
                 "value": "SceneVariableAsBoolean"
               },
               "parameters": [
                 "__EdgeScrollCamera.MovingUp",
                 "True"
-              ],
-              "subInstructions": []
+              ]
             }
           ],
           "actions": [
             {
               "type": {
-                "inverted": false,
                 "value": "SetReturnBoolean"
               },
               "parameters": [
                 "True"
-              ],
-              "subInstructions": []
+              ]
             }
-          ],
-          "events": []
+          ]
         }
       ],
       "parameters": [],
@@ -490,7 +1470,7 @@
     },
     {
       "description": "Check if the camera is scrolling down.",
-      "fullName": "Is camera scrolling down?",
+      "fullName": "Camera is scrolling down",
       "functionType": "Condition",
       "group": "",
       "name": "IsCameraScrollingDown",
@@ -502,40 +1482,33 @@
           "conditions": [
             {
               "type": {
-                "inverted": false,
                 "value": "SceneVariableAsBoolean"
               },
               "parameters": [
                 "__EdgeScrollCamera.Enabled",
                 "True"
-              ],
-              "subInstructions": []
+              ]
             },
             {
               "type": {
-                "inverted": false,
                 "value": "SceneVariableAsBoolean"
               },
               "parameters": [
                 "__EdgeScrollCamera.MovingDown",
                 "True"
-              ],
-              "subInstructions": []
+              ]
             }
           ],
           "actions": [
             {
               "type": {
-                "inverted": false,
                 "value": "SetReturnBoolean"
               },
               "parameters": [
                 "True"
-              ],
-              "subInstructions": []
+              ]
             }
-          ],
-          "events": []
+          ]
         }
       ],
       "parameters": [],
@@ -543,7 +1516,7 @@
     },
     {
       "description": "Check if the camera is scrolling left.",
-      "fullName": "Is camera scrolling left?",
+      "fullName": "Camera is scrolling left",
       "functionType": "Condition",
       "group": "",
       "name": "IsCameraScrollingLeft",
@@ -555,40 +1528,33 @@
           "conditions": [
             {
               "type": {
-                "inverted": false,
                 "value": "SceneVariableAsBoolean"
               },
               "parameters": [
                 "__EdgeScrollCamera.Enabled",
                 "True"
-              ],
-              "subInstructions": []
+              ]
             },
             {
               "type": {
-                "inverted": false,
                 "value": "SceneVariableAsBoolean"
               },
               "parameters": [
                 "__EdgeScrollCamera.MovingLeft",
                 "True"
-              ],
-              "subInstructions": []
+              ]
             }
           ],
           "actions": [
             {
               "type": {
-                "inverted": false,
                 "value": "SetReturnBoolean"
               },
               "parameters": [
                 "True"
-              ],
-              "subInstructions": []
+              ]
             }
-          ],
-          "events": []
+          ]
         }
       ],
       "parameters": [],
@@ -596,7 +1562,7 @@
     },
     {
       "description": "Check if the camera is scrolling right.",
-      "fullName": "Is camera scrolling right?",
+      "fullName": "Camera is scrolling right",
       "functionType": "Condition",
       "group": "",
       "name": "IsCameraScrollingRight",
@@ -608,40 +1574,33 @@
           "conditions": [
             {
               "type": {
-                "inverted": false,
                 "value": "SceneVariableAsBoolean"
               },
               "parameters": [
                 "__EdgeScrollCamera.Enabled",
                 "True"
-              ],
-              "subInstructions": []
+              ]
             },
             {
               "type": {
-                "inverted": false,
                 "value": "SceneVariableAsBoolean"
               },
               "parameters": [
                 "__EdgeScrollCamera.MovingRight",
                 "True"
-              ],
-              "subInstructions": []
+              ]
             }
           ],
           "actions": [
             {
               "type": {
-                "inverted": false,
                 "value": "SetReturnBoolean"
               },
               "parameters": [
                 "True"
-              ],
-              "subInstructions": []
+              ]
             }
-          ],
-          "events": []
+          ]
         }
       ],
       "parameters": [],
@@ -670,14 +1629,12 @@
               "conditions": [
                 {
                   "type": {
-                    "inverted": false,
                     "value": "SceneVariableAsBoolean"
                   },
                   "parameters": [
                     "__EdgeScrollCamera.Enabled",
                     "True"
-                  ],
-                  "subInstructions": []
+                  ]
                 }
               ],
               "actions": [],
@@ -697,18 +1654,15 @@
                       "actions": [
                         {
                           "type": {
-                            "inverted": false,
                             "value": "ModVarScene"
                           },
                           "parameters": [
                             "__EdgeScrollCamera.CameraTop",
                             "=",
                             "CameraY(GetArgumentAsString(\"Layer\"),GetArgumentAsNumber(\"Camera\")) - CameraHeight(GetArgumentAsString(\"Layer\"),GetArgumentAsNumber(\"Camera\"))/2"
-                          ],
-                          "subInstructions": []
+                          ]
                         }
-                      ],
-                      "events": []
+                      ]
                     },
                     {
                       "type": "BuiltinCommonInstructions::Standard",
@@ -716,18 +1670,15 @@
                       "actions": [
                         {
                           "type": {
-                            "inverted": false,
                             "value": "ModVarScene"
                           },
                           "parameters": [
                             "__EdgeScrollCamera.CameraBottom",
                             "=",
                             "CameraY(GetArgumentAsString(\"Layer\"),GetArgumentAsNumber(\"Camera\")) + CameraHeight(GetArgumentAsString(\"Layer\"),GetArgumentAsNumber(\"Camera\"))/2"
-                          ],
-                          "subInstructions": []
+                          ]
                         }
-                      ],
-                      "events": []
+                      ]
                     },
                     {
                       "type": "BuiltinCommonInstructions::Standard",
@@ -735,18 +1686,15 @@
                       "actions": [
                         {
                           "type": {
-                            "inverted": false,
                             "value": "ModVarScene"
                           },
                           "parameters": [
                             "__EdgeScrollCamera.CameraLeft",
                             "=",
                             "CameraX(GetArgumentAsString(\"Layer\"),GetArgumentAsNumber(\"Camera\")) - CameraWidth(GetArgumentAsString(\"Layer\"),GetArgumentAsNumber(\"Camera\"))/2"
-                          ],
-                          "subInstructions": []
+                          ]
                         }
-                      ],
-                      "events": []
+                      ]
                     },
                     {
                       "type": "BuiltinCommonInstructions::Standard",
@@ -754,18 +1702,15 @@
                       "actions": [
                         {
                           "type": {
-                            "inverted": false,
                             "value": "ModVarScene"
                           },
                           "parameters": [
                             "__EdgeScrollCamera.CameraRight",
                             "=",
                             "CameraX(GetArgumentAsString(\"Layer\"),GetArgumentAsNumber(\"Camera\")) + CameraWidth(GetArgumentAsString(\"Layer\"),GetArgumentAsNumber(\"Camera\"))/2"
-                          ],
-                          "subInstructions": []
+                          ]
                         }
-                      ],
-                      "events": []
+                      ]
                     }
                   ],
                   "parameters": []
@@ -797,7 +1742,6 @@
                       "conditions": [
                         {
                           "type": {
-                            "inverted": false,
                             "value": "SceneInstancesCount"
                           },
                           "parameters": [
@@ -805,14 +1749,12 @@
                             "ShapePainter",
                             "<",
                             "1"
-                          ],
-                          "subInstructions": []
+                          ]
                         }
                       ],
                       "actions": [
                         {
                           "type": {
-                            "inverted": false,
                             "value": "Create"
                           },
                           "parameters": [
@@ -821,45 +1763,37 @@
                             "0",
                             "0",
                             "GetArgumentAsString(\"Layer\")"
-                          ],
-                          "subInstructions": []
+                          ]
                         },
                         {
                           "type": {
-                            "inverted": false,
                             "value": "PrimitiveDrawing::FillOpacity"
                           },
                           "parameters": [
                             "ShapePainter",
                             "=",
                             "0"
-                          ],
-                          "subInstructions": []
+                          ]
                         },
                         {
                           "type": {
-                            "inverted": false,
                             "value": "PrimitiveDrawing::UseRelativeCoordinates"
                           },
                           "parameters": [
                             "ShapePainter",
                             "no"
-                          ],
-                          "subInstructions": []
+                          ]
                         },
                         {
                           "type": {
-                            "inverted": false,
                             "value": "PrimitiveDrawing::ClearBetweenFrames"
                           },
                           "parameters": [
                             "ShapePainter",
                             "yes"
-                          ],
-                          "subInstructions": []
+                          ]
                         }
-                      ],
-                      "events": []
+                      ]
                     },
                     {
                       "type": "BuiltinCommonInstructions::Standard",
@@ -867,7 +1801,6 @@
                       "actions": [
                         {
                           "type": {
-                            "inverted": false,
                             "value": "PrimitiveDrawing::Rectangle"
                           },
                           "parameters": [
@@ -876,11 +1809,9 @@
                             "Variable(__EdgeScrollCamera.CameraTop) + Variable(__EdgeScrollCamera.ScreenMargin)",
                             "Variable(__EdgeScrollCamera.CameraRight) - Variable(__EdgeScrollCamera.ScreenMargin)",
                             "Variable(__EdgeScrollCamera.CameraBottom) - Variable(__EdgeScrollCamera.ScreenMargin)"
-                          ],
-                          "subInstructions": []
+                          ]
                         }
-                      ],
-                      "events": []
+                      ]
                     }
                   ],
                   "parameters": []
@@ -916,1016 +1847,54 @@
       "objectGroups": []
     },
     {
-      "description": "",
-      "fullName": "",
-      "functionType": "Action",
+      "description": "Speed the camera is currently scrolling in horizontal direction (in pixels per second)",
+      "fullName": "Current edge scroll speed (horizontal)",
+      "functionType": "Expression",
       "group": "",
-      "name": "onScenePreEvents",
+      "name": "EdgeScrollSpeedX",
       "private": false,
       "sentence": "",
       "events": [
         {
-          "colorB": 224,
-          "colorG": 16,
-          "colorR": 189,
-          "creationTime": 0,
-          "name": "Edge Scroll Camera",
-          "source": "",
-          "type": "BuiltinCommonInstructions::Group",
-          "events": [
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
             {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "SceneVariableAsBoolean"
-                  },
-                  "parameters": [
-                    "__EdgeScrollCamera.Enabled",
-                    "True"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "actions": [],
-              "events": [
-                {
-                  "colorB": 228,
-                  "colorG": 176,
-                  "colorR": 74,
-                  "creationTime": 0,
-                  "name": "Prevent camera movement until cursor has move away from starting position",
-                  "source": "",
-                  "type": "BuiltinCommonInstructions::Group",
-                  "events": [
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "inverted": false,
-                            "value": "BuiltinCommonInstructions::Or"
-                          },
-                          "parameters": [],
-                          "subInstructions": [
-                            {
-                              "type": {
-                                "inverted": false,
-                                "value": "MouseX"
-                              },
-                              "parameters": [
-                                "",
-                                "!=",
-                                "0",
-                                "VariableString(__EdgeScrollCamera.Layer)",
-                                "Variable(__EdgeScrollCamera.Camera)"
-                              ],
-                              "subInstructions": []
-                            },
-                            {
-                              "type": {
-                                "inverted": false,
-                                "value": "MouseY"
-                              },
-                              "parameters": [
-                                "",
-                                "!=",
-                                "0",
-                                "VariableString(__EdgeScrollCamera.Layer)",
-                                "Variable(__EdgeScrollCamera.Camera)"
-                              ],
-                              "subInstructions": []
-                            }
-                          ]
-                        },
-                        {
-                          "type": {
-                            "inverted": false,
-                            "value": "BuiltinCommonInstructions::Once"
-                          },
-                          "parameters": [],
-                          "subInstructions": []
-                        }
-                      ],
-                      "actions": [
-                        {
-                          "type": {
-                            "inverted": false,
-                            "value": "SetSceneVariableAsBoolean"
-                          },
-                          "parameters": [
-                            "__EdgeScrollCamera.CursorMoved",
-                            "True"
-                          ],
-                          "subInstructions": []
-                        }
-                      ],
-                      "events": []
-                    }
-                  ],
-                  "parameters": []
-                },
-                {
-                  "colorB": 228,
-                  "colorG": 176,
-                  "colorR": 74,
-                  "creationTime": 0,
-                  "name": "Cursor has moved  from starting position",
-                  "source": "",
-                  "type": "BuiltinCommonInstructions::Group",
-                  "events": [
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "inverted": false,
-                            "value": "SceneVariableAsBoolean"
-                          },
-                          "parameters": [
-                            "__EdgeScrollCamera.CursorMoved",
-                            "True"
-                          ],
-                          "subInstructions": []
-                        }
-                      ],
-                      "actions": [],
-                      "events": [
-                        {
-                          "colorB": 228,
-                          "colorG": 176,
-                          "colorR": 74,
-                          "creationTime": 0,
-                          "name": "Reset detections",
-                          "source": "",
-                          "type": "BuiltinCommonInstructions::Group",
-                          "events": [
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "inverted": false,
-                                    "value": "SetSceneVariableAsBoolean"
-                                  },
-                                  "parameters": [
-                                    "__EdgeScrollCamera.MovingUp",
-                                    "False"
-                                  ],
-                                  "subInstructions": []
-                                },
-                                {
-                                  "type": {
-                                    "inverted": false,
-                                    "value": "SetSceneVariableAsBoolean"
-                                  },
-                                  "parameters": [
-                                    "__EdgeScrollCamera.MovingDown",
-                                    "False"
-                                  ],
-                                  "subInstructions": []
-                                },
-                                {
-                                  "type": {
-                                    "inverted": false,
-                                    "value": "SetSceneVariableAsBoolean"
-                                  },
-                                  "parameters": [
-                                    "__EdgeScrollCamera.MovingLeft",
-                                    "False"
-                                  ],
-                                  "subInstructions": []
-                                },
-                                {
-                                  "type": {
-                                    "inverted": false,
-                                    "value": "SetSceneVariableAsBoolean"
-                                  },
-                                  "parameters": [
-                                    "__EdgeScrollCamera.MovingRight",
-                                    "False"
-                                  ],
-                                  "subInstructions": []
-                                }
-                              ],
-                              "events": []
-                            }
-                          ],
-                          "parameters": []
-                        },
-                        {
-                          "colorB": 228,
-                          "colorG": 176,
-                          "colorR": 74,
-                          "creationTime": 0,
-                          "name": "Save camera borders as variables",
-                          "source": "",
-                          "type": "BuiltinCommonInstructions::Group",
-                          "events": [
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "inverted": false,
-                                    "value": "ModVarScene"
-                                  },
-                                  "parameters": [
-                                    "__EdgeScrollCamera.CameraTop",
-                                    "=",
-                                    "CameraY(VariableString(__EdgeScrollCamera.Layer),Variable(__EdgeScrollCamera.Camera)) - CameraHeight(VariableString(__EdgeScrollCamera.Layer),Variable(__EdgeScrollCamera.Camera))/2"
-                                  ],
-                                  "subInstructions": []
-                                }
-                              ],
-                              "events": []
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "inverted": false,
-                                    "value": "ModVarScene"
-                                  },
-                                  "parameters": [
-                                    "__EdgeScrollCamera.CameraBottom",
-                                    "=",
-                                    "CameraY(VariableString(__EdgeScrollCamera.Layer),Variable(__EdgeScrollCamera.Camera)) + CameraHeight(VariableString(__EdgeScrollCamera.Layer),Variable(__EdgeScrollCamera.Camera))/2"
-                                  ],
-                                  "subInstructions": []
-                                }
-                              ],
-                              "events": []
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "inverted": false,
-                                    "value": "ModVarScene"
-                                  },
-                                  "parameters": [
-                                    "__EdgeScrollCamera.CameraLeft",
-                                    "=",
-                                    "CameraX(VariableString(__EdgeScrollCamera.Layer),Variable(__EdgeScrollCamera.Camera)) - CameraWidth(VariableString(__EdgeScrollCamera.Layer),Variable(__EdgeScrollCamera.Camera))/2"
-                                  ],
-                                  "subInstructions": []
-                                }
-                              ],
-                              "events": []
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "inverted": false,
-                                    "value": "ModVarScene"
-                                  },
-                                  "parameters": [
-                                    "__EdgeScrollCamera.CameraRight",
-                                    "=",
-                                    "CameraX(VariableString(__EdgeScrollCamera.Layer),Variable(__EdgeScrollCamera.Camera)) + CameraWidth(VariableString(__EdgeScrollCamera.Layer),Variable(__EdgeScrollCamera.Camera))/2"
-                                  ],
-                                  "subInstructions": []
-                                }
-                              ],
-                              "events": []
-                            }
-                          ],
-                          "parameters": []
-                        },
-                        {
-                          "colorB": 228,
-                          "colorG": 176,
-                          "colorR": 74,
-                          "creationTime": 0,
-                          "name": "Detect Edge Scrolling",
-                          "source": "",
-                          "type": "BuiltinCommonInstructions::Group",
-                          "events": [
-                            {
-                              "type": "BuiltinCommonInstructions::Comment",
-                              "color": {
-                                "b": 109,
-                                "g": 230,
-                                "r": 255,
-                                "textB": 0,
-                                "textG": 0,
-                                "textR": 0
-                              },
-                              "comment": "Only move camera while mouse is inside game window",
-                              "comment2": ""
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [
-                                {
-                                  "type": {
-                                    "inverted": false,
-                                    "value": "IsMouseInsideCanvas"
-                                  },
-                                  "parameters": [
-                                    ""
-                                  ],
-                                  "subInstructions": []
-                                }
-                              ],
-                              "actions": [],
-                              "events": [
-                                {
-                                  "colorB": 228,
-                                  "colorG": 176,
-                                  "colorR": 74,
-                                  "creationTime": 0,
-                                  "name": "Up",
-                                  "source": "",
-                                  "type": "BuiltinCommonInstructions::Group",
-                                  "events": [
-                                    {
-                                      "type": "BuiltinCommonInstructions::Standard",
-                                      "conditions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "MouseY"
-                                          },
-                                          "parameters": [
-                                            "",
-                                            "<",
-                                            "Variable(__EdgeScrollCamera.CameraTop) + Variable(__EdgeScrollCamera.ScreenMargin)",
-                                            "VariableString(__EdgeScrollCamera.Layer)",
-                                            "Variable(__EdgeScrollCamera.Camera)"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "actions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SetSceneVariableAsBoolean"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.MovingUp",
-                                            "True"
-                                          ],
-                                          "subInstructions": []
-                                        },
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "ModVarScene"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.DistanceFromEdge",
-                                            "=",
-                                            "abs(Variable(__EdgeScrollCamera.CameraTop) - MouseY(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera)))"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "events": []
-                                    }
-                                  ],
-                                  "parameters": []
-                                },
-                                {
-                                  "colorB": 228,
-                                  "colorG": 176,
-                                  "colorR": 74,
-                                  "creationTime": 0,
-                                  "name": "Down",
-                                  "source": "",
-                                  "type": "BuiltinCommonInstructions::Group",
-                                  "events": [
-                                    {
-                                      "type": "BuiltinCommonInstructions::Standard",
-                                      "conditions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "MouseY"
-                                          },
-                                          "parameters": [
-                                            "",
-                                            ">",
-                                            "Variable(__EdgeScrollCamera.CameraBottom) - Variable(__EdgeScrollCamera.ScreenMargin)",
-                                            "VariableString(__EdgeScrollCamera.Layer)",
-                                            "Variable(__EdgeScrollCamera.Camera)"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "actions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SetSceneVariableAsBoolean"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.MovingDown",
-                                            "True"
-                                          ],
-                                          "subInstructions": []
-                                        },
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "ModVarScene"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.DistanceFromEdge",
-                                            "=",
-                                            "abs(Variable(__EdgeScrollCamera.CameraBottom) - MouseY(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera)))"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "events": []
-                                    }
-                                  ],
-                                  "parameters": []
-                                },
-                                {
-                                  "colorB": 228,
-                                  "colorG": 176,
-                                  "colorR": 74,
-                                  "creationTime": 0,
-                                  "name": "Left",
-                                  "source": "",
-                                  "type": "BuiltinCommonInstructions::Group",
-                                  "events": [
-                                    {
-                                      "type": "BuiltinCommonInstructions::Standard",
-                                      "conditions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "MouseX"
-                                          },
-                                          "parameters": [
-                                            "",
-                                            "<",
-                                            "Variable(__EdgeScrollCamera.CameraLeft) + Variable(__EdgeScrollCamera.ScreenMargin)",
-                                            "VariableString(__EdgeScrollCamera.Layer)",
-                                            "Variable(__EdgeScrollCamera.Camera)"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "actions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SetSceneVariableAsBoolean"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.MovingLeft",
-                                            "True"
-                                          ],
-                                          "subInstructions": []
-                                        },
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "ModVarScene"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.DistanceFromEdge",
-                                            "=",
-                                            "abs(Variable(__EdgeScrollCamera.CameraLeft) - MouseX(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera)))"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "events": []
-                                    }
-                                  ],
-                                  "parameters": []
-                                },
-                                {
-                                  "colorB": 228,
-                                  "colorG": 176,
-                                  "colorR": 74,
-                                  "creationTime": 0,
-                                  "name": "Right",
-                                  "source": "",
-                                  "type": "BuiltinCommonInstructions::Group",
-                                  "events": [
-                                    {
-                                      "type": "BuiltinCommonInstructions::Standard",
-                                      "conditions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "MouseX"
-                                          },
-                                          "parameters": [
-                                            "",
-                                            ">",
-                                            "Variable(__EdgeScrollCamera.CameraRight) - Variable(__EdgeScrollCamera.ScreenMargin)",
-                                            "VariableString(__EdgeScrollCamera.Layer)",
-                                            "Variable(__EdgeScrollCamera.Camera)"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "actions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SetSceneVariableAsBoolean"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.MovingRight",
-                                            "True"
-                                          ],
-                                          "subInstructions": []
-                                        },
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "ModVarScene"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.DistanceFromEdge",
-                                            "=",
-                                            "abs(Variable(__EdgeScrollCamera.CameraRight) - MouseX(VariableString(__EdgeScrollCamera.Layer), Variable(__EdgeScrollCamera.Camera)))"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "events": []
-                                    }
-                                  ],
-                                  "parameters": []
-                                }
-                              ]
-                            }
-                          ],
-                          "parameters": []
-                        },
-                        {
-                          "colorB": 228,
-                          "colorG": 176,
-                          "colorR": 74,
-                          "creationTime": 0,
-                          "name": "Calculate variable speed percentage",
-                          "source": "",
-                          "type": "BuiltinCommonInstructions::Group",
-                          "events": [
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [
-                                {
-                                  "type": {
-                                    "inverted": false,
-                                    "value": "SceneVariableAsBoolean"
-                                  },
-                                  "parameters": [
-                                    "__EdgeScrollCamera.VariableSpeedEnabled",
-                                    "True"
-                                  ],
-                                  "subInstructions": []
-                                }
-                              ],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "inverted": false,
-                                    "value": "ModVarScene"
-                                  },
-                                  "parameters": [
-                                    "__EdgeScrollCamera.SpeedPercentage",
-                                    "=",
-                                    "1 - (Variable(__EdgeScrollCamera.DistanceFromEdge) / Variable(__EdgeScrollCamera.ScreenMargin))"
-                                  ],
-                                  "subInstructions": []
-                                }
-                              ],
-                              "events": []
-                            }
-                          ],
-                          "parameters": []
-                        },
-                        {
-                          "colorB": 228,
-                          "colorG": 176,
-                          "colorR": 74,
-                          "creationTime": 0,
-                          "name": "Move camera",
-                          "source": "",
-                          "type": "BuiltinCommonInstructions::Group",
-                          "events": [
-                            {
-                              "colorB": 228,
-                              "colorG": 176,
-                              "colorR": 74,
-                              "creationTime": 0,
-                              "name": "Up",
-                              "source": "",
-                              "type": "BuiltinCommonInstructions::Group",
-                              "events": [
-                                {
-                                  "type": "BuiltinCommonInstructions::Standard",
-                                  "conditions": [
-                                    {
-                                      "type": {
-                                        "inverted": false,
-                                        "value": "SceneVariableAsBoolean"
-                                      },
-                                      "parameters": [
-                                        "__EdgeScrollCamera.MovingUp",
-                                        "True"
-                                      ],
-                                      "subInstructions": []
-                                    }
-                                  ],
-                                  "actions": [],
-                                  "events": [
-                                    {
-                                      "type": "BuiltinCommonInstructions::Standard",
-                                      "conditions": [
-                                        {
-                                          "type": {
-                                            "inverted": true,
-                                            "value": "SceneVariableAsBoolean"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.VariableSpeedEnabled",
-                                            "True"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "actions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SetCameraY"
-                                          },
-                                          "parameters": [
-                                            "",
-                                            "-",
-                                            "Variable(__EdgeScrollCamera.ScrollSpeed) * TimeDelta()",
-                                            "VariableString(__EdgeScrollCamera.Layer)",
-                                            "Variable(__EdgeScrollCamera.Camera)"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "events": []
-                                    },
-                                    {
-                                      "type": "BuiltinCommonInstructions::Standard",
-                                      "conditions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SceneVariableAsBoolean"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.VariableSpeedEnabled",
-                                            "True"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "actions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SetCameraY"
-                                          },
-                                          "parameters": [
-                                            "",
-                                            "-",
-                                            "Variable(__EdgeScrollCamera.SpeedPercentage) * Variable(__EdgeScrollCamera.ScrollSpeed) * TimeDelta()",
-                                            "VariableString(__EdgeScrollCamera.Layer)",
-                                            "Variable(__EdgeScrollCamera.Camera)"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "events": []
-                                    }
-                                  ]
-                                }
-                              ],
-                              "parameters": []
-                            },
-                            {
-                              "colorB": 228,
-                              "colorG": 176,
-                              "colorR": 74,
-                              "creationTime": 0,
-                              "name": "Down",
-                              "source": "",
-                              "type": "BuiltinCommonInstructions::Group",
-                              "events": [
-                                {
-                                  "type": "BuiltinCommonInstructions::Standard",
-                                  "conditions": [
-                                    {
-                                      "type": {
-                                        "inverted": false,
-                                        "value": "SceneVariableAsBoolean"
-                                      },
-                                      "parameters": [
-                                        "__EdgeScrollCamera.MovingDown",
-                                        "True"
-                                      ],
-                                      "subInstructions": []
-                                    }
-                                  ],
-                                  "actions": [],
-                                  "events": [
-                                    {
-                                      "type": "BuiltinCommonInstructions::Standard",
-                                      "conditions": [
-                                        {
-                                          "type": {
-                                            "inverted": true,
-                                            "value": "SceneVariableAsBoolean"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.VariableSpeedEnabled",
-                                            "True"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "actions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SetCameraY"
-                                          },
-                                          "parameters": [
-                                            "",
-                                            "+",
-                                            "Variable(__EdgeScrollCamera.ScrollSpeed) * TimeDelta()",
-                                            "VariableString(__EdgeScrollCamera.Layer)",
-                                            "Variable(__EdgeScrollCamera.Camera)"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "events": []
-                                    },
-                                    {
-                                      "type": "BuiltinCommonInstructions::Standard",
-                                      "conditions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SceneVariableAsBoolean"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.VariableSpeedEnabled",
-                                            "True"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "actions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SetCameraY"
-                                          },
-                                          "parameters": [
-                                            "",
-                                            "+",
-                                            "Variable(__EdgeScrollCamera.SpeedPercentage) * Variable(__EdgeScrollCamera.ScrollSpeed) * TimeDelta()",
-                                            "VariableString(__EdgeScrollCamera.Layer)",
-                                            "Variable(__EdgeScrollCamera.Camera)"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "events": []
-                                    }
-                                  ]
-                                }
-                              ],
-                              "parameters": []
-                            },
-                            {
-                              "colorB": 228,
-                              "colorG": 176,
-                              "colorR": 74,
-                              "creationTime": 0,
-                              "name": "Left",
-                              "source": "",
-                              "type": "BuiltinCommonInstructions::Group",
-                              "events": [
-                                {
-                                  "type": "BuiltinCommonInstructions::Standard",
-                                  "conditions": [
-                                    {
-                                      "type": {
-                                        "inverted": false,
-                                        "value": "SceneVariableAsBoolean"
-                                      },
-                                      "parameters": [
-                                        "__EdgeScrollCamera.MovingLeft",
-                                        "True"
-                                      ],
-                                      "subInstructions": []
-                                    }
-                                  ],
-                                  "actions": [],
-                                  "events": [
-                                    {
-                                      "type": "BuiltinCommonInstructions::Standard",
-                                      "conditions": [
-                                        {
-                                          "type": {
-                                            "inverted": true,
-                                            "value": "SceneVariableAsBoolean"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.VariableSpeedEnabled",
-                                            "True"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "actions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SetCameraX"
-                                          },
-                                          "parameters": [
-                                            "",
-                                            "-",
-                                            "Variable(__EdgeScrollCamera.ScrollSpeed) * TimeDelta()",
-                                            "VariableString(__EdgeScrollCamera.Layer)",
-                                            "Variable(__EdgeScrollCamera.Camera)"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "events": []
-                                    },
-                                    {
-                                      "type": "BuiltinCommonInstructions::Standard",
-                                      "conditions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SceneVariableAsBoolean"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.VariableSpeedEnabled",
-                                            "True"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "actions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SetCameraX"
-                                          },
-                                          "parameters": [
-                                            "",
-                                            "-",
-                                            "Variable(__EdgeScrollCamera.SpeedPercentage) * Variable(__EdgeScrollCamera.ScrollSpeed) * TimeDelta()",
-                                            "VariableString(__EdgeScrollCamera.Layer)",
-                                            "Variable(__EdgeScrollCamera.Camera)"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "events": []
-                                    }
-                                  ]
-                                }
-                              ],
-                              "parameters": []
-                            },
-                            {
-                              "colorB": 228,
-                              "colorG": 176,
-                              "colorR": 74,
-                              "creationTime": 0,
-                              "name": "Right",
-                              "source": "",
-                              "type": "BuiltinCommonInstructions::Group",
-                              "events": [
-                                {
-                                  "type": "BuiltinCommonInstructions::Standard",
-                                  "conditions": [
-                                    {
-                                      "type": {
-                                        "inverted": false,
-                                        "value": "SceneVariableAsBoolean"
-                                      },
-                                      "parameters": [
-                                        "__EdgeScrollCamera.MovingRight",
-                                        "True"
-                                      ],
-                                      "subInstructions": []
-                                    }
-                                  ],
-                                  "actions": [],
-                                  "events": [
-                                    {
-                                      "type": "BuiltinCommonInstructions::Standard",
-                                      "conditions": [
-                                        {
-                                          "type": {
-                                            "inverted": true,
-                                            "value": "SceneVariableAsBoolean"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.VariableSpeedEnabled",
-                                            "True"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "actions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SetCameraX"
-                                          },
-                                          "parameters": [
-                                            "",
-                                            "+",
-                                            "Variable(__EdgeScrollCamera.ScrollSpeed) * TimeDelta()",
-                                            "VariableString(__EdgeScrollCamera.Layer)",
-                                            "Variable(__EdgeScrollCamera.Camera)"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "events": []
-                                    },
-                                    {
-                                      "type": "BuiltinCommonInstructions::Standard",
-                                      "conditions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SceneVariableAsBoolean"
-                                          },
-                                          "parameters": [
-                                            "__EdgeScrollCamera.VariableSpeedEnabled",
-                                            "True"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "actions": [
-                                        {
-                                          "type": {
-                                            "inverted": false,
-                                            "value": "SetCameraX"
-                                          },
-                                          "parameters": [
-                                            "",
-                                            "+",
-                                            "Variable(__EdgeScrollCamera.SpeedPercentage) * Variable(__EdgeScrollCamera.ScrollSpeed) * TimeDelta()",
-                                            "VariableString(__EdgeScrollCamera.Layer)",
-                                            "Variable(__EdgeScrollCamera.Camera)"
-                                          ],
-                                          "subInstructions": []
-                                        }
-                                      ],
-                                      "events": []
-                                    }
-                                  ]
-                                }
-                              ],
-                              "parameters": []
-                            }
-                          ],
-                          "parameters": []
-                        }
-                      ]
-                    }
-                  ],
-                  "parameters": []
-                }
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "Variable(__EdgeScrollCamera.CurrentScrollSpeedX)"
               ]
             }
-          ],
-          "parameters": []
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Speed the camera is currently scrolling in vertical direction (in pixels per second)",
+      "fullName": "Current edge scroll speed (vertical)",
+      "functionType": "Expression",
+      "group": "",
+      "name": "EdgeScrollSpeedY",
+      "private": false,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "Variable(__EdgeScrollCamera.CurrentScrollSpeedY)"
+              ]
+            }
+          ]
         }
       ],
       "parameters": [],
