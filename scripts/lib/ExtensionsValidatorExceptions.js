@@ -91,6 +91,19 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    BoidsMovement: {
+      gdjsAllowedProperties: [
+        '__boidsExtension',
+        'RuntimeBehavior',
+        'BehaviorRBushAABB',
+        'randomFloatInRange',
+        'staticObject',
+        'staticArray',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['__boidsExtension'],
+      javaScriptObjectAllowedProperties: [],
+    },
     FlexBox: {
       gdjsAllowedProperties: ['layoutContainers'],
       gdjsEvtToolsAllowedProperties: [],
