@@ -1,7 +1,7 @@
 {
   "author": "@4ian",
   "category": "",
-  "description": "Allow the object to fire bullets, with customizable speed, angle and fire rate.\n\nCooldown: Time between shots (seconds)\nBullet Quantity: Number of bullets shot at once\nAngle Variance: Each bullet angle will be randomized in this range (degrees)\nFiring Arc: Range of angles that bullets will shoot.  Bullets are evenly spread within this range.",
+  "description": "Allow the object to fire bullets, with customizable speed, angle and fire rate.\n\nCooldown: Time between shots (seconds)\nBullet Quantity: Number of bullets shot at once\nAngle Variance: Each bullet angle will be randomized in this range (degrees)\nFiring Arc: Range of angles (in degrees) that bullets will shoot. Bullets are evenly spread within this range.\n",
   "extensionNamespace": "",
   "fullName": "Fire bullets",
   "helpPath": "",
@@ -196,70 +196,163 @@
                     "Behavior",
                     "yes"
                   ]
-                },
-                {
-                  "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyCurrentBulletAngle"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "=",
-                    "GetArgumentAsNumber(\"Angle\") - Object.Behavior::PropertyFiringArc()/2"
-                  ]
                 }
               ],
               "events": [
                 {
-                  "type": "BuiltinCommonInstructions::Repeat",
-                  "repeatExpression": "max(1,Object.Behavior::PropertyBulletQuantity())",
-                  "conditions": [],
-                  "actions": [
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Single bullet",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
                     {
-                      "type": {
-                        "value": "Create"
-                      },
-                      "parameters": [
-                        "",
-                        "Bullet",
-                        "GetArgumentAsNumber(\"XPosition\")",
-                        "GetArgumentAsNumber(\"YPosition\")",
-                        "\"\""
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "AddForceAL"
-                      },
-                      "parameters": [
-                        "Bullet",
-                        "Object.Behavior::PropertyCurrentBulletAngle() + RandomInRange(-Object.Behavior::PropertyAngleVariance(),Object.Behavior::PropertyAngleVariance())",
-                        "GetArgumentAsNumber(\"Speed\")",
-                        "1"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "SetAngle"
-                      },
-                      "parameters": [
-                        "Bullet",
-                        "=",
-                        "Object.Behavior::PropertyCurrentBulletAngle()"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "FireBullet::FireBullet::SetPropertyCurrentBulletAngle"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "+",
-                        "Object.Behavior::PropertyFiringArc() / (Object.Behavior::PropertyBulletQuantity() - 1)"
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                          },
+                          "parameters": [
+                            "Object.Behavior::PropertyBulletQuantity()",
+                            "=",
+                            "1"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "Create"
+                          },
+                          "parameters": [
+                            "",
+                            "Bullet",
+                            "GetArgumentAsNumber(\"XPosition\")",
+                            "GetArgumentAsNumber(\"YPosition\")",
+                            "\"\""
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "AddForceAL"
+                          },
+                          "parameters": [
+                            "Bullet",
+                            "GetArgumentAsNumber(\"Angle\") + RandomInRange(-Object.Behavior::PropertyAngleVariance(),Object.Behavior::PropertyAngleVariance())",
+                            "GetArgumentAsNumber(\"Speed\")",
+                            "1"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetAngle"
+                          },
+                          "parameters": [
+                            "Bullet",
+                            "=",
+                            "GetArgumentAsNumber(\"Angle\")"
+                          ]
+                        }
                       ]
                     }
-                  ]
+                  ],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Multiple bullets",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                          },
+                          "parameters": [
+                            "Object.Behavior::PropertyBulletQuantity()",
+                            ">",
+                            "1"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "FireBullet::FireBullet::SetPropertyCurrentBulletAngle"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "=",
+                            "GetArgumentAsNumber(\"Angle\") - Object.Behavior::PropertyFiringArc()/2"
+                          ]
+                        }
+                      ],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Repeat",
+                          "repeatExpression": "Object.Behavior::PropertyBulletQuantity()",
+                          "conditions": [],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "Create"
+                              },
+                              "parameters": [
+                                "",
+                                "Bullet",
+                                "GetArgumentAsNumber(\"XPosition\")",
+                                "GetArgumentAsNumber(\"YPosition\")",
+                                "\"\""
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "AddForceAL"
+                              },
+                              "parameters": [
+                                "Bullet",
+                                "Object.Behavior::PropertyCurrentBulletAngle() + RandomInRange(-Object.Behavior::PropertyAngleVariance(),Object.Behavior::PropertyAngleVariance())",
+                                "GetArgumentAsNumber(\"Speed\")",
+                                "1"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "SetAngle"
+                              },
+                              "parameters": [
+                                "Bullet",
+                                "=",
+                                "Object.Behavior::PropertyCurrentBulletAngle()"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "FireBullet::FireBullet::SetPropertyCurrentBulletAngle"
+                              },
+                              "parameters": [
+                                "Object",
+                                "Behavior",
+                                "+",
+                                "Object.Behavior::PropertyFiringArc() / (Object.Behavior::PropertyBulletQuantity() - 1)"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "parameters": []
                 }
               ]
             }
@@ -569,7 +662,7 @@
           "objectGroups": []
         },
         {
-          "description": "Change the firing arc where bullets will be shot (evenly spaced out).",
+          "description": "Change the firing arc (in degrees) where bullets will be shot. Bullets will be evenly spaced out inside the firing arc.",
           "fullName": "Set firing arc",
           "functionType": "Action",
           "group": "",
@@ -630,13 +723,13 @@
           "objectGroups": []
         },
         {
-          "description": "Change the angle variance applied to each bullet.",
+          "description": "Change the angle variance (in degrees) applied to each bullet.",
           "fullName": "Set angle variance",
           "functionType": "Action",
           "group": "",
           "name": "SetAngleVariance",
           "private": false,
-          "sentence": "Set angle variance of _PARAM0_ to _PARAM2_",
+          "sentence": "Set angle variance of _PARAM0_ to _PARAM2_ degrees",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -813,150 +906,6 @@
           "objectGroups": []
         },
         {
-          "description": "Angle variance in degrees.",
-          "fullName": "Angle variance",
-          "functionType": "Expression",
-          "group": "",
-          "name": "AngleVariance",
-          "private": false,
-          "sentence": "",
-          "events": [
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "value": "SetReturnNumber"
-                  },
-                  "parameters": [
-                    "Object.Behavior::PropertyAngleVariance()"
-                  ]
-                }
-              ]
-            }
-          ],
-          "parameters": [
-            {
-              "codeOnly": false,
-              "defaultValue": "",
-              "description": "Object",
-              "longDescription": "",
-              "name": "Object",
-              "optional": false,
-              "supplementaryInformation": "",
-              "type": "object"
-            },
-            {
-              "codeOnly": false,
-              "defaultValue": "",
-              "description": "Behavior",
-              "longDescription": "",
-              "name": "Behavior",
-              "optional": false,
-              "supplementaryInformation": "FireBullet::FireBullet",
-              "type": "behavior"
-            }
-          ],
-          "objectGroups": []
-        },
-        {
-          "description": "Bullet quantity.",
-          "fullName": "Bullet quantity",
-          "functionType": "Expression",
-          "group": "",
-          "name": "BulletQuantity",
-          "private": false,
-          "sentence": "",
-          "events": [
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "value": "SetReturnNumber"
-                  },
-                  "parameters": [
-                    "Object.Behavior::PropertyBulletQuantity()"
-                  ]
-                }
-              ]
-            }
-          ],
-          "parameters": [
-            {
-              "codeOnly": false,
-              "defaultValue": "",
-              "description": "Object",
-              "longDescription": "",
-              "name": "Object",
-              "optional": false,
-              "supplementaryInformation": "",
-              "type": "object"
-            },
-            {
-              "codeOnly": false,
-              "defaultValue": "",
-              "description": "Behavior",
-              "longDescription": "",
-              "name": "Behavior",
-              "optional": false,
-              "supplementaryInformation": "FireBullet::FireBullet",
-              "type": "behavior"
-            }
-          ],
-          "objectGroups": []
-        },
-        {
-          "description": "Firing arc in degrees.",
-          "fullName": "Firing arc",
-          "functionType": "Expression",
-          "group": "",
-          "name": "FiringArc",
-          "private": false,
-          "sentence": "",
-          "events": [
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "value": "SetReturnNumber"
-                  },
-                  "parameters": [
-                    "Object.Behavior::PropertyFiringArc()"
-                  ]
-                }
-              ]
-            }
-          ],
-          "parameters": [
-            {
-              "codeOnly": false,
-              "defaultValue": "",
-              "description": "Object",
-              "longDescription": "",
-              "name": "Object",
-              "optional": false,
-              "supplementaryInformation": "",
-              "type": "object"
-            },
-            {
-              "codeOnly": false,
-              "defaultValue": "",
-              "description": "Behavior",
-              "longDescription": "",
-              "name": "Behavior",
-              "optional": false,
-              "supplementaryInformation": "FireBullet::FireBullet",
-              "type": "behavior"
-            }
-          ],
-          "objectGroups": []
-        },
-        {
           "description": "Cooldown of the fire rate in seconds.",
           "fullName": "Cooldown",
           "functionType": "Expression",
@@ -975,6 +924,54 @@
                   },
                   "parameters": [
                     "Object.Behavior::PropertyFireCooldown()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Seconds remaining before the cooldown will permit a bullet to be fired.",
+          "fullName": "Time remaining before a bullet may be fired",
+          "functionType": "Expression",
+          "group": "",
+          "name": "CooldownTimeLeft",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "max(0,Object.Behavior::Cooldown() - Object.ObjectTimerElapsedTime(\"FireCooldown\"))"
                   ]
                 }
               ]
