@@ -42,41 +42,82 @@
           "group": "",
           "name": "FireTowardPosition",
           "private": false,
-          "sentence": "Fire _PARAM4_ from _PARAM0_, at position _PARAM2_;_PARAM3_, toward position _PARAM5_;_PARAM6_ with speed _PARAM7_ px/s",
+          "sentence": "Fire _PARAM4_ from _PARAM0_, at position _PARAM2_;_PARAM3_, toward position _PARAM5_;_PARAM6_ with speed _PARAM7_ px/s. Rotate bullet: _PARAM8_.",
           "events": [
             {
-              "type": "BuiltinCommonInstructions::Comment",
-              "color": {
-                "b": 109,
-                "g": 230,
-                "r": 255,
-                "textB": 0,
-                "textG": 0,
-                "textR": 0
-              },
-              "comment": "Calculate angle to fire bullets",
-              "comment2": ""
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
+              "colorB": 228,
+              "colorG": 176,
+              "colorR": 74,
+              "creationTime": 0,
+              "name": "Calculating the trajectory angle and use \"fire\" action",
+              "source": "",
+              "type": "BuiltinCommonInstructions::Group",
+              "events": [
                 {
-                  "type": {
-                    "value": "FireBullet::FireBullet::Fire"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "GetArgumentAsNumber(\"XPosition\")",
-                    "GetArgumentAsNumber(\"YPosition\")",
-                    "Bullet",
-                    "Object.AngleToPosition(GetArgumentAsNumber(\"TargetXPosition\"),GetArgumentAsNumber(\"TargetYPosition\"))",
-                    "GetArgumentAsNumber(\"Speed\")",
-                    ""
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "GetArgumentAsBoolean"
+                      },
+                      "parameters": [
+                        "\"RotateBullet\""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "FireBullet::FireBullet::Fire"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "GetArgumentAsNumber(\"XPosition\")",
+                        "GetArgumentAsNumber(\"YPosition\")",
+                        "Bullet",
+                        "Object.AngleToPosition(GetArgumentAsNumber(\"TargetXPosition\"),GetArgumentAsNumber(\"TargetYPosition\"))",
+                        "GetArgumentAsNumber(\"Speed\")",
+                        "",
+                        ""
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "inverted": true,
+                        "value": "GetArgumentAsBoolean"
+                      },
+                      "parameters": [
+                        "\"RotateBullet\""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "FireBullet::FireBullet::Fire"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "GetArgumentAsNumber(\"XPosition\")",
+                        "GetArgumentAsNumber(\"YPosition\")",
+                        "Bullet",
+                        "Object.AngleToPosition(GetArgumentAsNumber(\"TargetXPosition\"),GetArgumentAsNumber(\"TargetYPosition\"))",
+                        "GetArgumentAsNumber(\"Speed\")",
+                        "no",
+                        ""
+                      ]
+                    }
                   ]
                 }
-              ]
+              ],
+              "parameters": []
             }
           ],
           "parameters": [
@@ -159,6 +200,16 @@
               "optional": false,
               "supplementaryInformation": "",
               "type": "expression"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "yes",
+              "description": "Rotate bullet to match trajectory",
+              "longDescription": "",
+              "name": "RotateBullet",
+              "optional": true,
+              "supplementaryInformation": "",
+              "type": "yesorno"
             }
           ],
           "objectGroups": []
@@ -170,7 +221,7 @@
           "group": "",
           "name": "Fire",
           "private": false,
-          "sentence": "Fire _PARAM4_ from _PARAM0_, at position _PARAM2_;_PARAM3_, with angle _PARAM5_ and speed _PARAM6_ px/s",
+          "sentence": "Fire _PARAM4_ from _PARAM0_, at position _PARAM2_;_PARAM3_, with angle _PARAM5_ and speed _PARAM6_ px/s.  Rotate bullet: _PARAM7_.",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -245,15 +296,32 @@
                             "GetArgumentAsNumber(\"Speed\")",
                             "1"
                           ]
-                        },
+                        }
+                      ],
+                      "events": [
                         {
-                          "type": {
-                            "value": "SetAngle"
-                          },
-                          "parameters": [
-                            "Bullet",
-                            "=",
-                            "GetArgumentAsNumber(\"Angle\")"
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "GetArgumentAsBoolean"
+                              },
+                              "parameters": [
+                                "\"RotateBullet\""
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetAngle"
+                              },
+                              "parameters": [
+                                "Bullet",
+                                "=",
+                                "GetArgumentAsNumber(\"Angle\")"
+                              ]
+                            }
                           ]
                         }
                       ]
@@ -325,26 +393,49 @@
                                 "GetArgumentAsNumber(\"Speed\")",
                                 "1"
                               ]
-                            },
+                            }
+                          ],
+                          "events": [
                             {
-                              "type": {
-                                "value": "SetAngle"
-                              },
-                              "parameters": [
-                                "Bullet",
-                                "=",
-                                "Object.Behavior::PropertyCurrentBulletAngle()"
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [
+                                {
+                                  "type": {
+                                    "value": "GetArgumentAsBoolean"
+                                  },
+                                  "parameters": [
+                                    "\"RotateBullet\""
+                                  ]
+                                }
+                              ],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "SetAngle"
+                                  },
+                                  "parameters": [
+                                    "Bullet",
+                                    "=",
+                                    "Object.Behavior::PropertyCurrentBulletAngle()"
+                                  ]
+                                }
                               ]
                             },
                             {
-                              "type": {
-                                "value": "FireBullet::FireBullet::SetPropertyCurrentBulletAngle"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                "+",
-                                "Object.Behavior::PropertyFiringArc() / (Object.Behavior::PropertyBulletQuantity() - 1)"
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "FireBullet::FireBullet::SetPropertyCurrentBulletAngle"
+                                  },
+                                  "parameters": [
+                                    "Object",
+                                    "Behavior",
+                                    "+",
+                                    "Object.Behavior::PropertyFiringArc() / (Object.Behavior::PropertyBulletQuantity() - 1)"
+                                  ]
+                                }
                               ]
                             }
                           ]
@@ -427,6 +518,16 @@
               "optional": false,
               "supplementaryInformation": "",
               "type": "expression"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "yes",
+              "description": "Rotate bullet to match trajectory",
+              "longDescription": "",
+              "name": "RotateBullet",
+              "optional": true,
+              "supplementaryInformation": "",
+              "type": "yesorno"
             }
           ],
           "objectGroups": []
@@ -1036,7 +1137,7 @@
         {
           "value": "0",
           "type": "Number",
-          "label": "Angle variance (to simulate imperfect aim) Range: 0 to 180 degrees.",
+          "label": "Angle variance (to simulate imperfect aim) Range: 0 to 180 degrees",
           "description": "",
           "group": "",
           "extraInformation": [],
