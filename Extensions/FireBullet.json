@@ -1,15 +1,15 @@
 {
   "author": "@4ian",
   "category": "",
-  "description": "Allow the object to fire bullets, with customizable speed, angle and fire rate.\n\nCooldown: Time between shots (seconds)\nBullet Quantity: Number of bullets shot at once\nAngle Variance: Each bullet angle will be randomized in this range (degrees)\nFiring Arc: Range of angles (in degrees) that bullets will shoot. Bullets are evenly spread within this range.\n",
+  "description": "Allow the object to fire bullets with customizable speed, angle and fire rate.\n\nCooldown: Time between shots (seconds)\nBullet Quantity: Number of bullets shot at once\nAngle Variance: Each bullet trajectory will be adjusted by a random value within this range (degrees)\nFiring Arc: Range of angles (in degrees) that bullets will shoot. Bullets are evenly spread within this range.\nRotate bullet: Change angle of bullet to match the direction it is travelling (enabled by default)\n",
   "extensionNamespace": "",
   "fullName": "Fire bullets",
   "helpPath": "",
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWJ1bGxldCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xNCwyMkgxMFYyMUgxNFYyMk0xMywxMFY3SDExVjEwTDEwLDExLjVWMjBIMTRWMTEuNUwxMywxME0xMiwyQzEyLDIgMTEsMyAxMSw1VjZIMTNWNUMxMyw1IDEzLDMgMTIsMloiIC8+PC9zdmc+",
   "name": "FireBullet",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/bullet.svg",
-  "shortDescription": "Allow the object to fire bullets, with customizable speed, angle and fire rate.",
-  "version": "0.2.0",
+  "shortDescription": "Allow the object to fire bullets with customizable speed, angle and fire rate.",
+  "version": "0.2.1",
   "origin": {
     "identifier": "FireBullet",
     "name": "gdevelop-extension-store"
@@ -49,7 +49,7 @@
               "colorG": 176,
               "colorR": 74,
               "creationTime": 0,
-              "name": "Calculating the trajectory angle and use \"fire\" action",
+              "name": "Calculate the trajectory angle and use the \"Fire\" bullet action",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
               "events": [
@@ -221,7 +221,7 @@
           "group": "",
           "name": "Fire",
           "private": false,
-          "sentence": "Fire _PARAM4_ from _PARAM0_, at position _PARAM2_;_PARAM3_, with angle _PARAM5_ and speed _PARAM6_ px/s, rotate bullet: _PARAM7_",
+          "sentence": "Fire _PARAM4_ from _PARAM0_, at position _PARAM2_;_PARAM3_, with angle _PARAM5_ and speed _PARAM6_ px/s",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -304,10 +304,11 @@
                           "conditions": [
                             {
                               "type": {
-                                "value": "GetArgumentAsBoolean"
+                                "value": "FireBullet::FireBullet::PropertyRotateBullet"
                               },
                               "parameters": [
-                                "\"RotateBullet\""
+                                "Object",
+                                "Behavior"
                               ]
                             }
                           ],
@@ -401,10 +402,11 @@
                               "conditions": [
                                 {
                                   "type": {
-                                    "value": "GetArgumentAsBoolean"
+                                    "value": "FireBullet::FireBullet::PropertyRotateBullet"
                                   },
                                   "parameters": [
-                                    "\"RotateBullet\""
+                                    "Object",
+                                    "Behavior"
                                   ]
                                 }
                               ],
@@ -518,16 +520,6 @@
               "optional": false,
               "supplementaryInformation": "",
               "type": "expression"
-            },
-            {
-              "codeOnly": false,
-              "defaultValue": "yes",
-              "description": "Rotate bullet to match trajectory",
-              "longDescription": "",
-              "name": "RotateBullet",
-              "optional": true,
-              "supplementaryInformation": "",
-              "type": "yesorno"
             }
           ],
           "objectGroups": []
@@ -561,6 +553,64 @@
                 {
                   "type": {
                     "value": "FireBullet::FireBullet::PropertyHasJustFired"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if bullet rotates to match trajectory.",
+          "fullName": "Is bullet rotation enabled",
+          "functionType": "Condition",
+          "group": "",
+          "name": "BulletRotationEnabled",
+          "private": false,
+          "sentence": "Bullet rotation enabled on _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::PropertyRotateBullet"
                   },
                   "parameters": [
                     "Object",
@@ -946,6 +996,101 @@
           "objectGroups": []
         },
         {
+          "description": "Enable bullet rotation.",
+          "fullName": "Enable (or disable) bullet rotation",
+          "functionType": "Action",
+          "group": "",
+          "name": "SetRotateBullet",
+          "private": false,
+          "sentence": "Enable bullet rotation on _PARAM0_:  _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"RotateBullet\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::SetPropertyRotateBullet"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "no"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"RotateBullet\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::SetPropertyRotateBullet"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "yes"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "yes",
+              "description": "Rotate bullet to match trajetory",
+              "longDescription": "",
+              "name": "RotateBullet",
+              "optional": true,
+              "supplementaryInformation": "",
+              "type": "yesorno"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "Change the cooldown of the fire rate.",
           "fullName": "Set cooldown",
           "functionType": "Action",
@@ -1297,6 +1442,16 @@
           "extraInformation": [],
           "hidden": false,
           "name": "BulletQuantity"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "Rotate bullet to match trajectory",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "RotateBullet"
         },
         {
           "value": "0",
