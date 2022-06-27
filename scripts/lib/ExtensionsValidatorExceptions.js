@@ -244,6 +244,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    TextToSpeech: {
+      gdjsAllowedProperties: ['_ttsWait'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     YandexGamesSDK: {
       gdjsAllowedProperties: ['_YandexGamesSDK'],
       gdjsEvtToolsAllowedProperties: [],
