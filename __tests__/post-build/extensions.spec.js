@@ -53,7 +53,7 @@ describe('extensions database post check', () => {
 
     // Check the content of some extension headers
     expect(fireBulletExtensionShortHeader.tier).toBe('reviewed');
-    expect(iframeExtensionShortHeader.tier).toBe('community');
+    expect(iframeExtensionShortHeader.tier).toBe('reviewed');
   });
   test('extensions', async () => {
     // Check that extensions are present.

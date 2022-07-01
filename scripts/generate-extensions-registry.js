@@ -1,7 +1,10 @@
 const path = require('path');
 const fs = require('fs').promises;
 const shell = require('shelljs');
-const { validateExtension } = require('./lib/ExtensionValidator');
+const {
+  validateExtension,
+  validateNoDuplicates,
+} = require('./lib/ExtensionValidator');
 const args = require('minimist')(process.argv.slice(2));
 
 const extensionsBasePath = path.join(__dirname, '..', 'extensions');
@@ -85,6 +88,10 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
       path.join(extensionsBasePath, communityExtensionsTier),
       communityExtensionsTier
     );
+    const allExtensionWithFileInfos = [
+      ...reviewedExtensionWithFileInfos,
+      ...communityExtensionWithFileInfos,
+    ];
 
     const allTagsSet = new Set();
 
@@ -94,11 +101,14 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
     let totalErrors = 0;
     let fixableErrors = 0;
 
+    const errors = validateNoDuplicates(allExtensionWithFileInfos);
+    errors.forEach((error) => {
+      totalErrors++;
+      shell.echo(`❌ ${error.message}`);
+    });
+
     await Promise.all(
-      [
-        ...reviewedExtensionWithFileInfos,
-        ...communityExtensionWithFileInfos,
-      ].map(async (extensionWithFileInfo) => {
+      allExtensionWithFileInfos.map(async (extensionWithFileInfo) => {
         if (extensionWithFileInfo.state === 'error') {
           const error = extensionWithFileInfo.error;
           shell.echo(
@@ -160,7 +170,13 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
           eventsBasedBehaviorsCount: extension.eventsBasedBehaviors.length,
           eventsFunctionsCount: extension.eventsFunctions.length,
         };
-        extensionShortHeaders.push(extensionShortHeader);
+
+        // For now, limit the extensions to only reviewed extensions while
+        // we wait for a new version of GDevelop that supports filtering community
+        // vs reviewed extensions (so that reviewed extensions are shown first).
+        if (tier === 'reviewed') {
+          extensionShortHeaders.push(extensionShortHeader);
+        }
 
         /** @type {ExtensionHeader} */
         const extensionHeader = {

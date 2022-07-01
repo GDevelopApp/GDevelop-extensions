@@ -3,6 +3,7 @@ const { readdir } = require('fs').promises;
 const { join, extname } = require('path');
 
 /** @typedef {import("../types").ExtensionWithProperFileInfo} ExtensionWithProperFileInfo */
+/** @typedef {import("../types").ExtensionWithFileInfo} ExtensionWithFileInfo */
 /** @typedef {import("../types").EventsFunction} EventsFunction */
 /** @typedef {import("../types").Error} Error */
 /** @typedef {import("./rules/rule").RuleModule} RuleModule */
@@ -70,7 +71,35 @@ async function validateExtension(extensionWithFileInfo) {
   return errors;
 }
 
+/**
+ * Check there are no duplicates in extension names.
+ * @param {ExtensionWithFileInfo[]} extensionWithFileInfos
+ * @returns {Error[]}
+ */
+function validateNoDuplicates(extensionWithFileInfos) {
+  /** @type {Error[]} */
+  const errors = [];
+
+  /** @type {Set<string>} */
+  const nameAlreadyFound = new Set();
+  extensionWithFileInfos.forEach((extensionWithFileInfo) => {
+    if (extensionWithFileInfo.state === 'success') {
+      const { name } = extensionWithFileInfo.extension;
+      if (nameAlreadyFound.has(name)) {
+        errors.push({
+          message: `[${name}]: There are multiple extensions using this name.`,
+        });
+      } else {
+        nameAlreadyFound.add(name);
+      }
+    }
+  });
+
+  return errors;
+}
+
 module.exports = {
   loadRules,
+  validateNoDuplicates,
   validateExtension,
 };
