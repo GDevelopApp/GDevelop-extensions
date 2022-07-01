@@ -9,7 +9,7 @@
   "name": "InternetConnectivity",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/access-point-network.svg",
   "shortDescription": "Checks if the device running the game is connected to the internet.",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "origin": {
     "identifier": "InternetConnectivity",
     "name": "gdevelop-extension-store"
@@ -21,7 +21,8 @@
     "online"
   ],
   "authorIds": [
-    "jy7FXnGX0ZZcWfrAI9YuQaeIphi1"
+    "jy7FXnGX0ZZcWfrAI9YuQaeIphi1",
+    "rotBq28wITdtfsrE7McHQri4k2w2"
   ],
   "dependencies": [],
   "eventsFunctions": [
@@ -30,16 +31,16 @@
       "fullName": "",
       "functionType": "Action",
       "group": "",
-      "name": "onFirstSceneLoaded",
+      "name": "onSceneLoaded",
       "private": false,
       "sentence": "",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "  window._extensionInternetStatusChecker = {\r\n    Status: false,\r\n    UrlBasis: 'https://example.com/',\r\n    FrequencyCheckSeconds: 5\r\n  };\r\n\r\n\r\n  // Checks internet via ping method\r\n  const checkOnlineStatus = async () => {\r\n    try {\r\n      const online = await fetch(window._extensionInternetStatusChecker.UrlBasis, {\r\n        method: 'GET',\r\n        mode: 'no-cors',\r\n        cache: 'no-cache',\r\n      });\r\n\r\n      return online.status == 0;\r\n    } catch (e) {\r\n      return false;\r\n    }\r\n  };\r\n\r\n  // Check internet if browser/device detects an event\r\n  window.addEventListener('load', detectInternet);\r\n  window.addEventListener('online', detectInternet);\r\n  window.addEventListener('offline', detectInternet);\r\n  setInterval(detectInternet, window._extensionInternetStatusChecker.FrequencyCheckSeconds*1000);\r\n\r\n  // Update Status in a variable\r\n  async function detectInternet() {\r\n    if(await checkOnlineStatus()) {\r\n        window._extensionInternetStatusChecker.Status = true;\r\n    } else {\r\n        window._extensionInternetStatusChecker.Status = false;\r\n    }\r\n  }\r\n\r\n  detectInternet();",
+          "inlineCode": "  gdjs._extensionInternetConnectivity = {\n    Status: false,\n    UrlBasis: 'https://example.com/',\n    FrequencyCheckSeconds: 5\n  };\n\n\n  // Checks internet via ping method\n  const CheckOnlineStatus = async () => {\n    try {\n      const online = await fetch(gdjs._extensionInternetConnectivity.UrlBasis, {\n        method: 'GET',\n        mode: 'no-cors',\n        cache: 'no-cache',\n      });\n\n      return online.status == 0;\n    } catch (e) {\n      return false;\n    }\n  };\n\n  // Check internet if browser/device detects an event\n  window.addEventListener('load', DetectInternet);\n  window.addEventListener('online', DetectInternet);\n  window.addEventListener('offline', DetectInternet);\n\n  // Update Status in a variable\n  async function DetectInternet() {\n    if(await CheckOnlineStatus()) {\n        gdjs._extensionInternetConnectivity.Status = true;\n    } else {\n        gdjs._extensionInternetConnectivity.Status = false;\n    }\n\n    setTimeout(DetectInternet, gdjs._extensionInternetConnectivity.FrequencyCheckSeconds*1000);\n  }\n\n  DetectInternet();",
           "parameterObjects": "",
           "useStrict": true,
-          "eventsSheetExpanded": true
+          "eventsSheetExpanded": false
         }
       ],
       "parameters": [],
@@ -56,13 +57,54 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = window._extensionInternetStatusChecker;\n\n",
+          "inlineCode": "eventsFunctionContext.returnValue = gdjs._extensionInternetConnectivity.Status;\n\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
         }
       ],
       "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Change Internet Connectivity URL and Seconds Settings.",
+      "fullName": "Change Internet Connectivity Settings",
+      "functionType": "Action",
+      "group": "",
+      "name": "ChangeInternetConnectivitySettings",
+      "private": false,
+      "sentence": "Change internet connectivity to ping website __PARAM1_ every _PARAM2_ seconds",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "  // Update Url Settings\r\n  gdjs._extensionInternetConnectivity.UrlBasis = eventsFunctionContext.getArgument('Url').toString();\r\n  \r\n  // Update Frequency Settings\r\n  gdjs._extensionInternetConnectivity.FrequencyCheckSeconds = eventsFunctionContext.getArgument('Seconds').valueOf();",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Website Url E.g. \"https://example.com/\"",
+          "longDescription": "",
+          "name": "Url",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "string"
+        },
+        {
+          "codeOnly": false,
+          "defaultValue": "",
+          "description": "Seconds",
+          "longDescription": "",
+          "name": "Seconds",
+          "optional": false,
+          "supplementaryInformation": "",
+          "type": "expression"
+        }
+      ],
       "objectGroups": []
     }
   ],
