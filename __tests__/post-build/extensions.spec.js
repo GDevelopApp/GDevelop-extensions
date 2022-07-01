@@ -52,7 +52,7 @@ describe('extensions database post check', () => {
       throw new Error('Iframe extension not found.');
 
     // Check the content of some extension headers
-    expect(draggableSliderControlExtensionShortHeader.tier).toBe('reviewed');
+    expect(fireBulletExtensionShortHeader.tier).toBe('reviewed');
     expect(iframeExtensionShortHeader.tier).toBe('community');
   });
   test('extensions', async () => {
