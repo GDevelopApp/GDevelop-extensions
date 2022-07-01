@@ -24,7 +24,7 @@ If you've created an extension with GDevelop, you can submit it to be shared wit
 3. **Export** your extension to a _.json file_ from GDevelop.
 4. Submit it! You can either:
    - **Easy**: [submit it here](https://github.com/4ian/GDevelop-extensions/issues/new/choose), attaching the _.json file_ (as a zip, because GitHub won't accept json files directly).
-   - **Faster to review**: fork this repository, clone the git, add your .json file in `Extensions` folder. Finally [open a Pull Request](https://github.com/4ian/GDevelop-extensions/compare). Deployment is done automatically when pushed to `main` branch: [![CircleCI](https://circleci.com/gh/GDevelopApp/GDevelop-extensions/tree/main.svg?style=svg)](https://circleci.com/gh/GDevelopApp/GDevelop-extensions/tree/main)
+   - **Faster to review**: fork this repository, clone the git, add your .json file in `extensions/community` folder. Finally [open a Pull Request](https://github.com/4ian/GDevelop-extensions/compare). Deployment is done automatically when pushed to `main` branch: [![CircleCI](https://circleci.com/gh/GDevelopApp/GDevelop-extensions/tree/main.svg?style=svg)](https://circleci.com/gh/GDevelopApp/GDevelop-extensions/tree/main)
 
 ## License
 

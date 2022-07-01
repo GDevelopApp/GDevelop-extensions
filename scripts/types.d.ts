@@ -16,7 +16,10 @@ interface ExtensionAndHeaderFields {
   iconUrl: string;
 }
 
+type ExtensionTier = 'community' | 'reviewed';
+
 export interface ExtensionShortHeader extends ExtensionAndShortHeaderFields {
+  tier: ExtensionTier;
   url: string;
   headerUrl: string;
   eventsBasedBehaviorsCount: number;
@@ -89,10 +92,22 @@ export interface Extension
   eventsBasedBehaviors: EventsBasedBehaviors[];
 }
 
-export interface ExtensionWithFilename {
+export interface ExtensionWithProperFileInfo {
+  state: 'success';
   filename: string;
+  tier: ExtensionTier;
   extension: Extension;
 }
+interface ExtensionWithErroredFileInfo {
+  state: 'error';
+  filename: string;
+  tier: ExtensionTier;
+  error: Error;
+}
+
+export type ExtensionWithFileInfo =
+  | ExtensionWithProperFileInfo
+  | ExtensionWithErroredFileInfo;
 
 export interface Error {
   message: `[${string}]: ${string}`;

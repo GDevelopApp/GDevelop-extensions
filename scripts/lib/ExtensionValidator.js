@@ -2,7 +2,7 @@ const { lifecycleFunctions } = require('./ExtensionsValidatorExceptions');
 const { readdir } = require('fs').promises;
 const { join, extname } = require('path');
 
-/** @typedef {import("../types").ExtensionWithFilename} ExtensionWithFilename */
+/** @typedef {import("../types").ExtensionWithProperFileInfo} ExtensionWithProperFileInfo */
 /** @typedef {import("../types").EventsFunction} EventsFunction */
 /** @typedef {import("../types").Error} Error */
 /** @typedef {import("./rules/rule").RuleModule} RuleModule */
@@ -21,14 +21,14 @@ const loadRules = (async function loadRules() {
 
 /**
  * Check the extension for any properties that are not on the allow list.
- * @param {ExtensionWithFilename} extensionWithFilename
+ * @param {ExtensionWithProperFileInfo} extensionWithFileInfo
  * @returns {Promise<Error[]>}
  */
-async function validateExtension(extensionWithFilename, fix = false) {
+async function validateExtension(extensionWithFileInfo) {
   /** @type {Error[]} */
   const errors = [];
   const { eventsBasedBehaviors, eventsFunctions } =
-    extensionWithFilename.extension;
+    extensionWithFileInfo.extension;
 
   /**
    * A list of all events functions of the extension.
@@ -60,7 +60,7 @@ async function validateExtension(extensionWithFilename, fix = false) {
             message: `[${rule.name}]: ${message}`,
             fix,
           }),
-        ...extensionWithFilename,
+        ...extensionWithFileInfo,
       })
     );
   }
