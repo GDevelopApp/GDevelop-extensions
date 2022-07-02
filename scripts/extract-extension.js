@@ -1,5 +1,4 @@
-/** @type {import("jszip")} */
-const JSZip = require('./jszip.min.js'); // Don't use node_modules to not have to run npm on the CI
+const JSZip = require('jszip');
 const { isValidExtensionName } = require('./lib/ExtensionNameValidator');
 const { createWriteStream } = require('fs');
 const { readFile } = require('fs/promises');
