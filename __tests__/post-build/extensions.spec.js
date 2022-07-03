@@ -22,24 +22,42 @@ describe('extensions database post check', () => {
   test('extensions-database.json', async () => {
     const extensionsDatabase = await getExtensionsDatabase();
 
+    expect(extensionsDatabase.views.default.firstExtensionIds).toContain(
+      'Health'
+    );
+
     // Check that the headers seem correct
     expect(extensionsDatabase.extensionShortHeaders.length).toBeGreaterThan(70);
 
-    expect(
+    const draggableSliderControlExtensionShortHeader =
       extensionsDatabase.extensionShortHeaders.find(
         ({ name }) => name === 'DraggableSliderControl'
-      )
-    ).toBeDefined();
-    expect(
+      );
+    const fireBulletExtensionShortHeader =
       extensionsDatabase.extensionShortHeaders.find(
         ({ name }) => name === 'FireBullet'
-      )
-    ).toBeDefined();
-    expect(
+      );
+    const followObjectsWithCameraExtensionShortHeader =
       extensionsDatabase.extensionShortHeaders.find(
         ({ name }) => name === 'FollowObjectsWithCamera'
-      )
-    ).toBeDefined();
+      );
+    const iframeExtensionShortHeader =
+      extensionsDatabase.extensionShortHeaders.find(
+        ({ name }) => name === 'Iframe'
+      );
+
+    if (!draggableSliderControlExtensionShortHeader)
+      throw new Error('DraggableSliderControl extension not found.');
+    if (!fireBulletExtensionShortHeader)
+      throw new Error('FireBullet extension not found.');
+    if (!followObjectsWithCameraExtensionShortHeader)
+      throw new Error('FollowObjectsWithCamera extension not found.');
+    if (!iframeExtensionShortHeader)
+      throw new Error('Iframe extension not found.');
+
+    // Check the content of some extension headers
+    expect(fireBulletExtensionShortHeader.tier).toBe('reviewed');
+    expect(iframeExtensionShortHeader.tier).toBe('reviewed');
   });
   test('extensions', async () => {
     // Check that extensions are present.
@@ -47,9 +65,7 @@ describe('extensions database post check', () => {
       fs.stat(path.join(distExtensionsPath, '/FireBullet.json'))
     ).resolves.toBeDefined();
     await expect(
-      fs.stat(
-        path.join(distExtensionsPath, '/FireBullet-header.json')
-      )
+      fs.stat(path.join(distExtensionsPath, '/FireBullet-header.json'))
     ).resolves.toBeDefined();
   });
 });
