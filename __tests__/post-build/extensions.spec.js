@@ -22,6 +22,10 @@ describe('extensions database post check', () => {
   test('extensions-database.json', async () => {
     const extensionsDatabase = await getExtensionsDatabase();
 
+    expect(extensionsDatabase.views.default.firstExtensionIds).toContain(
+      'Health'
+    );
+
     // Check that the headers seem correct
     expect(extensionsDatabase.extensionShortHeaders.length).toBeGreaterThan(70);
 

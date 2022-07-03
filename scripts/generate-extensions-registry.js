@@ -7,6 +7,12 @@ const {
 } = require('./lib/ExtensionValidator');
 const args = require('minimist')(process.argv.slice(2));
 
+/** @typedef {import('./types').ExtensionShortHeader} ExtensionShortHeader */
+/** @typedef {import('./types').ExtensionsDatabase} ExtensionsDatabase */
+/** @typedef {import('./types').ExtensionHeader} ExtensionHeader */
+/** @typedef {import('./types').ExtensionWithFileInfo} ExtensionWithFileInfo */
+/** @typedef {import('./types').ExtensionTier} ExtensionTier */
+
 const extensionsBasePath = path.join(__dirname, '..', 'extensions');
 const reviewedExtensionsTier = 'reviewed';
 const communityExtensionsTier = 'community';
@@ -14,12 +20,6 @@ const distBasePath = path.join(__dirname, '..', 'dist');
 const distDatabasesPath = path.join(distBasePath, 'extensions-database');
 const distExtensionsPath = path.join(distBasePath, 'extensions');
 const extensionsBaseUrl = 'https://resources.gdevelop-app.com/extensions';
-
-/** @typedef {import('./types').ExtensionShortHeader} ExtensionShortHeader */
-/** @typedef {import('./types').ExtensionsDatabase} ExtensionsDatabase */
-/** @typedef {import('./types').ExtensionHeader} ExtensionHeader */
-/** @typedef {import('./types').ExtensionWithFileInfo} ExtensionWithFileInfo */
-/** @typedef {import('./types').ExtensionTier} ExtensionTier */
 
 /**
  * @param {string} path
@@ -222,12 +222,17 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
       shell.exit(args['disable-exit-code'] ? 0 : 1);
     }
 
+    const views = JSON.parse(
+      await fs.readFile(path.join(extensionsBasePath, 'views.json'), 'utf8')
+    );
+
     // Write the registry
     /** @type {ExtensionsDatabase} */
     const registry = {
       version: '0.0.1',
       allTags: Array.from(allTagsSet),
       extensionShortHeaders,
+      views,
     };
 
     await writeJSONFile(
