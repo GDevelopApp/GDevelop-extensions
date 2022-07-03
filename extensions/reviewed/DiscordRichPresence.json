@@ -1,6 +1,7 @@
 {
   "author": "Arthur Pacaud (arthuro555)",
-  "description": "Allows adding discord rich presence to your games. Only works on Windows/Mac/Linux exports. \nYou can get more infos on each field via [the discord docs](https://discord.com/developers/docs/rich-presence/how-to#updating-presence-update-presence-payload-fields).",
+  "category": "Third-party",
+  "description": "Allows adding discord rich presence to your games. Only works on Windows/Mac/Linux exports. To test it on a preview, restart the discord desktop client while GDevelop is already opened, and start a preview.\n\nYou can get more infos on each field via [the discord documentation](https://discord.com/developers/docs/rich-presence/how-to#updating-presence-update-presence-payload-fields).",
   "extensionNamespace": "",
   "fullName": "Discord rich presence (Windows, Mac, Linux)",
   "helpPath": "",
@@ -8,7 +9,7 @@
   "name": "DiscordRichPresence",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/discord.svg",
   "shortDescription": "Adds discord rich presence to your games.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "tags": [
     "discord",
     "rich",
@@ -32,13 +33,12 @@
       "description": "",
       "fullName": "",
       "functionType": "Action",
+      "group": "",
       "name": "onFirstSceneLoaded",
       "private": false,
       "sentence": "",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "gdjs.evtTools.discordRP = {\n    client: null,\n};\n",
           "parameterObjects": "",
@@ -53,15 +53,14 @@
       "description": "Attempts to connect to discord if it is installed, and initialize rich presence.",
       "fullName": "Initialize rich presence",
       "functionType": "Action",
+      "group": "",
       "name": "ConnectToDiscord",
       "private": false,
       "sentence": "Initialize rich presence with ID _PARAM1_",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "const electron = runtimeScene.getGame().getRenderer().getElectron();\nif (!electron) return;\nconst DRP = electron.remote.require(\"discord-rich-presence\");\n\nif (gdjs.evtTools.discordRP.client) gdjs.evtTools.discordRP.client.disconnect();\ngdjs.evtTools.discordRP.client = new DRP(eventsFunctionContext.getArgument(\"clientId\"))\n    .on(\"error\", (e) => gdjs.Logger.getLoggerOutput().log(\"Discord Rich Presence\", e));\n\nwindow.addEventListener(\"beforeunload\", () => gdjs.evtTools.discordRP.client.disconnect());\n",
+          "inlineCode": "const remote = runtimeScene.getGame().getRenderer().getElectronRemote\n    ? runtimeScene.getGame().getRenderer().getElectronRemote()\n    : runtimeScene.getGame().getRenderer().getElectron() && runtimeScene.getGame().getRenderer().getElectron().remote;\n\nif (!remote) return;\nconst DRP = remote.require(\"discord-rich-presence\");\n\nif (gdjs.evtTools.discordRP.client) gdjs.evtTools.discordRP.client.disconnect();\ngdjs.evtTools.discordRP.client = new DRP(eventsFunctionContext.getArgument(\"clientId\"))\n    .on(\"error\", (e) => gdjs.Logger.getLoggerOutput().log(\"Discord Rich Presence\", e));\n\nwindow.addEventListener(\"beforeunload\", () => gdjs.evtTools.discordRP.client.disconnect());\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -85,13 +84,12 @@
       "description": "Update the data in the rich presence. See the discord documentation for more info on each field. Each field except state is optional.",
       "fullName": "Update rich presence",
       "functionType": "Action",
+      "group": "",
       "name": "UpdateRichPresence",
       "private": false,
       "sentence": "Update rich presence to state _PARAM1_, details _PARAM2_, begin timestamp _PARAM3_, end timestamp _PARAM4_, large image _PARAM5_ with text _PARAM6_ and small image _PARAM7_ with text _PARAM8_",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "if (!gdjs.evtTools.discordRP.client) return;\n\nconst payload = {\n    state: undefined,\n    details: undefined,\n    startTimestamp: undefined,\n    endTimestamp: undefined,\n    largeImageKey: undefined,\n    largeImageText: undefined,\n    smallImageKey: undefined,\n    smallImageText: undefined,\n};\n\nfor (const i in payload) {\n    payload[i] = eventsFunctionContext.getArgument(i);\n    if (payload[i] === 0 || payload[i] === \"\") delete payload[i];\n};\n\ngdjs.evtTools.discordRP.client.updatePresence(payload);\n",
           "parameterObjects": "",
