@@ -2,11 +2,9 @@
 exports.isValidExtensionName = (extensionName) => {
   if (extensionName.length === 0) return false;
 
-  {
-    // Ensure that the first character is an uppercase character
-    const firstCharCode = extensionName.charCodeAt(0);
-    if (firstCharCode < 65 || firstCharCode > 90) return false;
-  }
+  // Ensure that the first character is an uppercase character
+  const firstCharCode = extensionName.charCodeAt(0);
+  if (firstCharCode < 65 || firstCharCode > 90) return false;
 
   const len = extensionName.length;
   for (let i = 1; i < len; i++) {
