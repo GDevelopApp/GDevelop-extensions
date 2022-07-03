@@ -1,6 +1,7 @@
 const JSZip = require('jszip');
 const { isValidExtensionName } = require('./lib/ExtensionNameValidator');
 const { createWriteStream } = require('fs');
+const { parse: parsePath } = require('path');
 const { readFile } = require('fs/promises');
 const pipeline = require('util').promisify(require('stream').pipeline);
 
@@ -29,11 +30,12 @@ exports.extractExtension = async function (
   if (jsonFiles.length > 1) return { error: 'too-many-files' };
   const [file] = jsonFiles;
 
-  if (file.name.slice(-5) !== '.json') return { error: 'invalid-file-name' };
-  const extensionName = file.name.slice(0, -5);
+  const { name: extensionName, dir, ext } = parsePath(file.name);
+  if (ext !== '.json') return { error: 'invalid-file-name' };
 
   // Ensure no special characters are in the extension name to prevent relative path
   // name schenanigans with dots that could put the extension in the reviewed folder
+  if (dir) return { error: 'invalid-file-name' };
   if (!isValidExtensionName(extensionName))
     return { error: 'invalid-file-name' };
 
