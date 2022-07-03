@@ -34,6 +34,11 @@ export interface ExtensionsDatabase {
   version: string;
   allTags: Array<string>;
   extensionShortHeaders: Array<ExtensionShortHeader>;
+  views: {
+    default: {
+      firstExtensionIds: Array<string>;
+    };
+  };
 }
 
 /**
