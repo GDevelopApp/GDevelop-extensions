@@ -33,7 +33,7 @@ exports.extractExtension = async function (
   const extensionName = file.name.slice(0, -5);
 
   // Ensure no special characters are in the extension name to prevent relative path
-  // name schenanigans with dots that could put the extension in the reviewed folder
+  // name schenanigans with dots that could put the extension in the reviewed folder.
   if (!isValidExtensionName(extensionName))
     return { error: 'invalid-file-name' };
 
