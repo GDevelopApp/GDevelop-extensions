@@ -2,8 +2,10 @@ const { lifecycleFunctions } = require('./ExtensionsValidatorExceptions');
 const { readdir } = require('fs').promises;
 const { join, extname } = require('path');
 
-/** @typedef {import("../types").ExtensionWithFilename} ExtensionWithFilename */
+/** @typedef {import("../types").ExtensionWithProperFileInfo} ExtensionWithProperFileInfo */
+/** @typedef {import("../types").ExtensionWithFileInfo} ExtensionWithFileInfo */
 /** @typedef {import("../types").EventsFunction} EventsFunction */
+/** @typedef {import("../types").Error} Error */
 /** @typedef {import("./rules/rule").RuleModule} RuleModule */
 
 const rulesPath = join(__dirname, 'rules');
@@ -20,14 +22,14 @@ const loadRules = (async function loadRules() {
 
 /**
  * Check the extension for any properties that are not on the allow list.
- * @param {ExtensionWithFilename} extensionWithFilename
- * @returns {Promise<string[]>}
+ * @param {ExtensionWithProperFileInfo} extensionWithFileInfo
+ * @returns {Promise<Error[]>}
  */
-async function validateExtension(extensionWithFilename) {
-  /** @type {string[]} */
+async function validateExtension(extensionWithFileInfo) {
+  /** @type {Error[]} */
   const errors = [];
   const { eventsBasedBehaviors, eventsFunctions } =
-    extensionWithFilename.extension;
+    extensionWithFileInfo.extension;
 
   /**
    * A list of all events functions of the extension.
@@ -54,8 +56,12 @@ async function validateExtension(extensionWithFilename) {
       rule.validate({
         allEventsFunctions,
         publicEventsFunctions,
-        onError: (message) => errors.push(`[${rule.name}]: ${message}`),
-        ...extensionWithFilename,
+        onError: (message, fix) =>
+          errors.push({
+            message: `[${rule.name}]: ${message}`,
+            fix,
+          }),
+        ...extensionWithFileInfo,
       })
     );
   }
@@ -65,7 +71,35 @@ async function validateExtension(extensionWithFilename) {
   return errors;
 }
 
+/**
+ * Check there are no duplicates in extension names.
+ * @param {ExtensionWithFileInfo[]} extensionWithFileInfos
+ * @returns {Error[]}
+ */
+function validateNoDuplicates(extensionWithFileInfos) {
+  /** @type {Error[]} */
+  const errors = [];
+
+  /** @type {Set<string>} */
+  const nameAlreadyFound = new Set();
+  extensionWithFileInfos.forEach((extensionWithFileInfo) => {
+    if (extensionWithFileInfo.state === 'success') {
+      const { name } = extensionWithFileInfo.extension;
+      if (nameAlreadyFound.has(name)) {
+        errors.push({
+          message: `[${name}]: There are multiple extensions using this name.`,
+        });
+      } else {
+        nameAlreadyFound.add(name);
+      }
+    }
+  });
+
+  return errors;
+}
+
 module.exports = {
   loadRules,
+  validateNoDuplicates,
   validateExtension,
 };

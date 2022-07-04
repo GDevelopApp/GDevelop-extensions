@@ -63,18 +63,57 @@ const extensionsAllowedProperties = {
     gdjsAllowedProperties: [
       'makeUuid',
       'rgbToHex',
+      'rgbOrHexToRGBColor',
+      'rgbToHexNumber',
+      'hexNumberToRGB',
+      'hexToRGBColor',
+      'copyArray',
+      'staticArray',
+      'staticArray2',
+      'staticObject',
+      'toDegrees',
+      'toRad',
+      'random',
+      'randomFloat',
+      'randomFloatInRange',
+      'randomInRange',
+      'randomWithStep',
       'evtTools',
       'Variable',
       'RuntimeObject',
+      'Logger',
     ],
-    gdjsEvtToolsAllowedProperties: [
-      'network',
-      'common',
-      // 'object' is not allowed by default because it contains advanced object
-      // filtering functions that should be reviewed per extension.
+    // Events tools are wrappers of the JavaScript APIs allowing them to be called by events.
+    // They should not be used 99% of the time, the only base exception being
+    // `common` as it contains utility functions like `clamp` that are not available
+    // in JavaScript by default. Appart from this, the JavaScript functions should be used instead.
+    gdjsEvtToolsAllowedProperties: ['common'],
+    runtimeSceneAllowedProperties: [
+      'getVariables',
+      'getLayer',
+      'getGame',
+      'getBackgroundColor',
+      'getName',
+      'createObject',
+      'createObjectsFrom',
+      'setBackgroundColor',
+      'sceneJustResumed',
+      'requestChange',
+      'hasLayer',
+      'enableDebugDraw',
     ],
-    runtimeSceneAllowedProperties: ['getVariables', 'getLayer', 'getGame'],
-    javaScriptObjectAllowedProperties: ['keys'],
+    javaScriptObjectAllowedProperties: [
+      'keys',
+      'create',
+      'assign',
+      'is',
+      'values',
+      'entries',
+      'fromEntries',
+      'defineProperty',
+      'getOwnPropertyNames',
+      'defineProperties',
+    ],
   },
   /** @type {Record<string, ExtensionAllowedProperties>}} */
   extensionSpecificAllowance: {
@@ -90,6 +129,19 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    BoidsMovement: {
+      gdjsAllowedProperties: [
+        '__boidsExtension',
+        'RuntimeBehavior',
+        'BehaviorRBushAABB',
+        'randomFloatInRange',
+        'staticObject',
+        'staticArray',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['__boidsExtension'],
+      javaScriptObjectAllowedProperties: [],
+    },
     FlexBox: {
       gdjsAllowedProperties: ['layoutContainers'],
       gdjsEvtToolsAllowedProperties: [],
@@ -101,17 +153,12 @@ const extensionsAllowedProperties = {
       gdjsEvtToolsAllowedProperties: ['mqtt'],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [
-        'create',
-        'defineProperty',
-        'assign',
         'prototype',
         'getPrototypeOf',
-        'getOwnPropertyNames',
         'setPrototypeOf',
         'getOwnPropertySymbols',
         'getOwnPropertyDescriptor',
         'getOwnPropertyDescriptors',
-        'defineProperties',
       ],
     },
     MarchingSquares: {
@@ -139,16 +186,47 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    PlatformerTrajectory: {
+      gdjsAllowedProperties: ['PlatformerObjectRuntimeBehavior'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     TextEntryVirtualKeyboard: {
       gdjsAllowedProperties: ['_extensionMobileKeyboard'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
-    RenderToSprite: {
-      gdjsAllowedProperties: ['_renderToSprite'],
+    Recolorizer: {
+      gdjsAllowedProperties: [
+        '__recolorizerExtension',
+        'SpriteRuntimeObject',
+        'TiledSpriteRuntimeObject',
+        'PanelSpriteRuntimeObject',
+        'rgbOrHexToRGBColor',
+      ],
       gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: ['getRenderer'],
+      runtimeSceneAllowedProperties: ['__recolorizerExtension'],
+      javaScriptObjectAllowedProperties: [
+        // Extend a behavior with JavaScript:
+        'getPrototypeOf',
+      ],
+    },
+    RenderToSprite: {
+      gdjsAllowedProperties: [
+        '_renderToSprite',
+        // Used for better autocomplete
+        'SpriteRuntimeObject',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [
+        // Used for rendering
+        'getRenderer',
+        // Used to update culling before rendering
+        '_updateLayersPreRender',
+        '_updateObjectsPreRender',
+      ],
       javaScriptObjectAllowedProperties: [],
     },
     Gamepads: {
@@ -199,15 +277,33 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    TextToSpeech: {
+      gdjsAllowedProperties: ['_ttsWait'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     YandexGamesSDK: {
       gdjsAllowedProperties: ['_YandexGamesSDK'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    WebSocketClient: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['wsClient'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     Compressor: {
       gdjsAllowedProperties: ['_pakoTools'],
       gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    DiscordRichPresence: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['discordRP'],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
