@@ -142,11 +142,17 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: ['__boidsExtension'],
       javaScriptObjectAllowedProperties: [],
     },
+    DialogBox: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getObjects', 'getSoundManager'],
+      javaScriptObjectAllowedProperties: [],
+    },
     FlexBox: {
       gdjsAllowedProperties: ['layoutContainers'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: ['assign'],
+      javaScriptObjectAllowedProperties: [],
     },
     MQTT: {
       gdjsAllowedProperties: [],
