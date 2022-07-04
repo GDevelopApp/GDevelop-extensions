@@ -1,0 +1,2109 @@
+{
+  "author": "",
+  "category": "",
+  "description": "Simulates swarms or flocks movement following the separation, alignment, cohesion principles. The flock can be attracted to a location or avoid some obstacles.",
+  "extensionNamespace": "",
+  "fullName": "Boids movement (experimental)",
+  "helpPath": "https://en.wikipedia.org/wiki/Boids",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyMy4wLjMsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iSWNvbnMiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4Ig0KCSB2aWV3Qm94PSIwIDAgMzIgMzIiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDMyIDMyOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8Zz4NCgk8cGF0aCBkPSJNMjkuMywxMC4xYy0wLjQtMC4xLTAuOCwwLTEuMSwwLjNsLTMuMiw0Yy0xLjctMi01LjktNi40LTExLTYuNGMtMC4yLDAtMC4zLDAtMC41LDBjMS40LDIuNCwyLjEsNS4xLDIuMSw4DQoJCWMwLDIuOC0wLjcsNS42LTIuMSw4YzAuMiwwLDAuMywwLDAuNSwwYzUuMSwwLDkuMy00LjMsMTEtNi40bDMuMiw0YzAuMiwwLjIsMC41LDAuNCwwLjgsMC40YzAuMSwwLDAuMiwwLDAuMy0wLjENCgkJYzAuNC0wLjEsMC43LTAuNSwwLjctMC45VjExQzMwLDEwLjYsMjkuNywxMC4yLDI5LjMsMTAuMXoiLz4NCgk8cGF0aCBkPSJNMTEuNCw4LjRjLTUuMiwxLjUtOSw2LjgtOS4yLDdjLTAuMiwwLjMtMC4yLDAuOCwwLDEuMmMwLjIsMC4zLDQsNS42LDkuMiw3YzEuNS0yLjMsMi4yLTQuOSwyLjItNy42DQoJCUMxMy42LDEzLjMsMTIuOCwxMC42LDExLjQsOC40eiBNMTAsMTZjMCwwLjYtMC40LDEtMSwxcy0xLTAuNC0xLTF2LTJjMC0wLjYsMC40LTEsMS0xczEsMC40LDEsMVYxNnoiLz4NCjwvZz4NCjwvc3ZnPg0K",
+  "name": "BoidsMovement",
+  "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Glyphster Pack/Master/SVG/Restaurant/Restaurant_restaurant_seafood_animal_fish.svg",
+  "shortDescription": "Simulates flocks movement.",
+  "version": "0.1.0",
+  "tags": [
+    "flock",
+    "swarm",
+    "boids",
+    "crowd",
+    "horde"
+  ],
+  "authorIds": [
+    "rotBq28wITdtfsrE7McHQri4k2w2",
+    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
+  ],
+  "dependencies": [],
+  "eventsFunctions": [
+    {
+      "description": "Define JavaScript classes.",
+      "fullName": "Define JavaScript classes",
+      "functionType": "Action",
+      "group": "",
+      "name": "DefineJavaScript",
+      "private": true,
+      "sentence": "Define JavaScript classes",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "GlobalVariableAsBoolean"
+              },
+              "parameters": [
+                "__BoidsMovement_ClassesDefined",
+                ""
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetGlobalVariableAsBoolean"
+              },
+              "parameters": [
+                "__BoidsMovement_ClassesDefined",
+                "True"
+              ]
+            }
+          ],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "\ngdjs.__boidsExtension = gdjs.__boidsExtension || {};\n\n/**\n * A vector\n * @param {float} x - coordinate of the vectors starting position\n * @param {float} y - coordinate of the vectors starting position\n * @constructor\n */\ngdjs.__boidsExtension.Vector =  /** @class */ (function () {\n  \n  /**\n   * Create a vector.\n   * @param {number} x\n   * @param {number} y\n   */\n  function Vector(x, y) {\n    this.x = x;\n    this.y = y;\n  }\n\n  /**\n   * @param {number} x\n   * @param {number} y\n   * @returns {Vector} this object\n   */\n  Vector.prototype.set = function (x, y) {\n    this.x = x;\n    this.y = y;\n    return this;\n  }\n\n  /**\n   * Adds a velocity to this vector\n   * @param {Vector} referenceVector gets the velocity to be added\n   * @returns {Vector} this object\n   */\n  Vector.prototype.add = function (referenceVector) {\n    this.x += referenceVector.x;\n    this.y += referenceVector.y;\n\n    return this;\n  }\n\n  /**\n   * Normalize the vector\n   * @returns {Vector}\n   */\n  Vector.prototype.normalize = function () {\n    var len = this.magnitude();\n    if (len !== 0) this.multiply(1 / len);\n    return this;\n  }\n\n  /**\n   * Multiply vectors verticies\n   * @param {float} amount\n   * @returns {Vector}\n   */\n  Vector.prototype.multiply = function (amount) {\n    this.x *= amount;\n    this.y *= amount;\n    return this;\n  }\n\n  /**\n   * Divide vectors verticies\n   * @param {float} amount\n   * @returns {Vector}\n   */\n  Vector.prototype.divide = function (amount) {\n    this.x /= amount;\n    this.y /= amount;\n\n    return this;\n  }\n\n  /**\n   * Subtracts vectors verticies from a reference vector\n   * @param {Vector} referenceVector\n   * @returns {Vector}\n   */\n  Vector.prototype.subtract = function (referenceVector) {\n    this.x -= referenceVector.x;\n    this.y -= referenceVector.y;\n\n    return this;\n  }\n\n  /**\n   * Limits Vectors speed\n   * @returns {Vector}\n   */\n  Vector.prototype.limit = function limit(max) {\n    var mSq = this.magnitudeSquare();\n    if (mSq > max * max) {\n      this.divide(Math.sqrt(mSq)).multiply(max);\n    }\n    return this;\n  }\n\n  /**\n   * Calculate the vectors direction\n   * @returns {float}\n   */\n  Vector.prototype.heading = function () {\n    let h = Math.atan2(this.y, this.x);\n    return h;\n  }\n\n  /**\n   * Calculate the vectors magnitude squared\n   * @returns {float}\n   */\n  Vector.prototype.magnitudeSquare = function () {\n    var x = this.x;\n    var y = this.y;\n    return x * x + y * y;\n  };\n\n  /**\n   * Calculate the vectors magnitude\n   * @returns {float}\n   */\n  Vector.prototype.magnitude = function () {\n    return Math.sqrt(this.magnitudeSquare());\n  }\n  \n  return Vector;\n}());\n\n/**\n * A boid agent\n * Methods for Separation, Cohesion, Alignment added\n * Inspired from The Nature of Code - Daniel Shiffman\n * http://natureofcode.com\n * \n * Original source code:\n * https://github.com/nature-of-code/noc-examples-processing/blob/master/chp06_agents/NOC_6_09_Flocking/Boid.pde\n */\ngdjs.__boidsExtension.Boid =  /** @class */ (function () {\n\n  /**\n   * Create a boid agent.\n   * @parameter {gdjs.RuntimeBehavior} behavior\n   */\n  function Boid(behavior) {\n    this.behavior = behavior;\n    this.acceleration = new gdjs.__boidsExtension.Vector(0, 0);\n    this.velocity = new gdjs.__boidsExtension.Vector(gdjs.randomFloatInRange(-1, 1), gdjs.randomFloatInRange(-1, 1));\n    this.separationDirection = new gdjs.__boidsExtension.Vector(0, 0);\n    this.alignmentDirection = new gdjs.__boidsExtension.Vector(0, 0);\n    this.cohesionDirection = new gdjs.__boidsExtension.Vector(0, 0);\n    this.customIntentsDirectionSum = new gdjs.__boidsExtension.Vector(0, 0);\n    this.separateWorkingVector = new gdjs.__boidsExtension.Vector(0, 0);\n  }\n\n  /**\n   * Add a custom intent.\n   * @param {Boid} boid\n   * @param {number} directionX\n   * @param {number} directionY\n   * @param {number} weight\n   */\n  Boid.prototype.addIntent = function (directionX, directionY, weight) {\n\n    if (directionX === 0 && directionY === 0) {\n      return;\n    }\n\n    const length = Math.hypot(directionX, directionY);\n    const unitX = directionX / length;\n    const unitY = directionY / length;\n\n    this.customIntentsDirectionSum.x += unitX * weight;\n    this.customIntentsDirectionSum.y += unitY * weight;\n  }\n\n  /**\n   * Vector between 2 boids.\n   * @param {Boid} boid\n   * @param {Vector} vector the vector to return the result\n   * @returns {Vector} vector\n   */\n  Boid.prototype.getVectorTo = function (boid, vector) {\n    const object = this.behavior.owner;\n    const otherObject = boid.behavior.owner;\n    let x = otherObject.x - object.x;\n    let y = otherObject.y - object.y;\n    vector.set(x, y);\n    return vector;\n  }\n\n  /**\n   * Applys the three rules of boids\n   */\n  Boid.prototype.flock = function () {\n    const separationDirection = this.separate();\n    const alignmentDirection = this.align();\n    const cohesionDirection = this.cohesion();\n\n    separationDirection.multiply(this.behavior.SeparationWeight());\n    alignmentDirection.multiply(this.behavior.AlignmentWeight());\n    cohesionDirection.multiply(this.behavior.CohesionWeight());\n\n    const direction = separationDirection.add(alignmentDirection).add(cohesionDirection).add(this.customIntentsDirectionSum);\n    this.acceleration.add(this.steer(direction));\n\n    this.customIntentsDirectionSum.set(0, 0);\n  }\n\n  /**\n   * Apply the acceleration from the steer force.\n   */\n  Boid.prototype.move = function () {\n    const object = this.behavior.owner;\n    const timeDelta = object.getElapsedTime(runtimeScene) / 1000;\n    this.acceleration.multiply(timeDelta);\n\n    const previousVelocityX = this.velocity.x;\n    const previousVelocityY = this.velocity.y;\n\n    this.velocity.add(this.acceleration);\n    this.velocity.limit(this.behavior.MaxSpeed());\n    this.acceleration.set(0, 0);\n\n    if (this.behavior.ShouldRotate()) {\n      let theta = this.velocity.heading() * 180 / Math.PI;\n      object.setAngle(theta);\n    }\n    // Verlet integration\n    object.setX(object.x + (previousVelocityX + this.velocity.x) / 2 * timeDelta);\n    object.setY(object.y + (previousVelocityY + this.velocity.y) / 2 * timeDelta);\n  }\n\n  /**\n   * Calculates and applies steering force towards a direction\n   * @param desiredDirection {Vector}\n   * @return {Vector} alignment force\n   */\n  Boid.prototype.steer = function (desiredDirection) {\n    desiredDirection.normalize();\n    desiredDirection.multiply(this.behavior.MaxSpeed());\n    let steer = desiredDirection.subtract(this.velocity);\n    steer.limit(this.behavior.MaxAcceleration());\n    return steer;\n  }\n\n  /**\n   * Separation: checks for nearby boids.\n   * @return {Vector} separation direction\n   */\n  Boid.prototype.separate = function () {\n    /** @type {BoidsManager} */\n    const manager = runtimeScene.__boidsExtension.boidsManager;\n    const separationRadius = this.behavior.SeparationRadius();\n    this.separationDirection.set(0, 0);\n    let diff = this.separateWorkingVector;\n    const object = this.behavior.owner;\n\n    const nearbyBoids = manager.getAllBoidsAround(this, separationRadius);\n    for (let i = 0; i < nearbyBoids.length; i++) {\n      const boid = nearbyBoids[i];\n      const otherObject = boid.behavior.owner;\n      const distance = object.getDistanceToObject(otherObject);\n      if (distance > 0) {\n        diff = boid.getVectorTo(this, diff);\n        diff.normalize();\n        diff.divide(distance);\n        this.separationDirection.add(diff);\n      }\n    }\n    if (this.separationDirection.magnitudeSquare() > 0) {\n      this.separationDirection.normalize();\n    }\n    return this.separationDirection;\n  }\n\n  /**\n   * Alignment: calculate the average velocity for every nearby boid in the system\n   * @return {Vector} alignment direction\n   */\n  Boid.prototype.align = function () {\n    /** @type {BoidsManager} */\n    const manager = runtimeScene.__boidsExtension.boidsManager;\n    const alignmentRadius = this.behavior.AlignmentRadius();\n    this.alignmentDirection.set(0, 0);\n    let count = 0;\n    const object = this.behavior.owner;\n\n    const nearbyBoids = manager.getAllBoidsAround(this, alignmentRadius);\n    for (let i = 0; i < nearbyBoids.length; i++) {\n      const boid = nearbyBoids[i];\n      this.alignmentDirection.add(boid.velocity);\n      count++;\n    }\n    if (count > 0) {\n      this.alignmentDirection.normalize();\n    }\n    return this.alignmentDirection;\n  }\n\n  /**\n   * Cohesion: calculate direction vector towards the average location of all nearby boids\n   * @return {Vector} cohesion direction\n   */\n  Boid.prototype.cohesion = function () {\n    /** @type {BoidsManager} */\n    const manager = runtimeScene.__boidsExtension.boidsManager;\n    const cohesionRadius = this.behavior.CohesionRadius();\n    let count = 0;\n    let sumX = 0;\n    let sumY = 0;\n    const object = this.behavior.owner;\n\n    const nearbyBoids = manager.getAllBoidsAround(this, cohesionRadius);\n    for (let i = 0; i < nearbyBoids.length; i++) {\n      const boid = nearbyBoids[i];\n      const otherObject = boid.behavior.owner;\n      sumX += otherObject.getCenterXInScene();\n      sumY += otherObject.getCenterYInScene();\n      count++;\n    }\n    if (count > 0) {\n      sumX /= count;\n      sumY /= count;\n    }\n    // A vector pointing from the position to the target\n    this.cohesionDirection.set(\n      sumX - object.getCenterXInScene(),\n      sumY - object.getCenterYInScene()\n    )\n    return this.cohesionDirection.normalize();\n  }\n\n  return Boid;\n}());\n\n/**\n * A boids manager\n */\ngdjs.__boidsExtension.BoidsManager =  /** @class */ (function () {\n  /**\n   * Create a manager.\n   */\n  function BoidsManager() {\n    /**\n     * @type {Map<string, Boid>}\n     */\n    this.boids = new Map();\n    this.boidsRBush = new rbush();\n  }\n\n  /**\n   * Create and register a boid.\n   * @param {gdjs.RuntimeBehavior} behavior\n   * @returns {Boid} the created Boid\n   */\n  BoidsManager.prototype.add = function (behavior) {\n    const boid = new gdjs.__boidsExtension.Boid(behavior);\n    this.boids.set(behavior.owner.id, boid);\n    this.addToRBush(boid);\n    return boid;\n  }\n\n  /**\n   * Add a boid to the R-Tree.\n   * @param {Boid} boid\n   */\n  BoidsManager.prototype.addToRBush = function (boid) {\n    if (boid.currentRBushAABB) {\n      boid.currentRBushAABB.updateAABBFromOwner();\n    }\n    else {\n      boid.currentRBushAABB = new gdjs.BehaviorRBushAABB(\n        boid.behavior\n      );\n    }\n    this.boidsRBush.insert(boid.currentRBushAABB);\n  }\n\n  /**\n   * Unregister the boid.\n   * @param {gdjs.RuntimeBehavior} behavior\n   */\n  BoidsManager.prototype.remove = function (behavior) {\n    this.boids.delete(behavior.owner.id);\n\n    this.removeFromRBush(behavior.__boidsExtension.boid.currentRBushAABB);\n  }\n\n  /**\n   * Remove a boid from the R-Tree.\n   * @param {Boid} boid\n   */\n  BoidsManager.prototype.removeFromRBush = function (boid) {\n    this.boidsRBush.remove(boid.currentRBushAABB);\n  }\n\n  /**\n   * Move all instances.\n   */\n  BoidsManager.prototype.moveAll = function () {\n    this.boids.forEach(boid => boid.flock());\n    this.boids.forEach(boid => {\n      boid.move();\n      this.removeFromRBush(boid);\n      this.addToRBush(boid);\n    });\n  }\n\n  /**\n   * Returns all the boids around the specified boid.\n   * @param {Boid} boid\n   * @param {number} radius\n   * @return {Boid[]} An array with all boids near the object.\n   */\n  BoidsManager.prototype.getAllBoidsAround = function (boid, radius, results) {\n    const object = boid.behavior.owner;\n\n    const x = object.getCenterXInScene();\n    const y = object.getCenterYInScene();\n    const searchArea = gdjs.staticObject(\n      gdjs.__boidsExtension.BoidsManager.prototype.getAllBoidsAround\n    );\n    searchArea.minX = x - radius;\n    searchArea.minY = y - radius;\n    searchArea.maxX = x + radius;\n    searchArea.maxY = y + radius;\n    // TODO The R-Tree should not allocate an array.\n    const nearbys = this.boidsRBush.search(searchArea);\n\n    const radiusSq = radius * radius;\n    const result = gdjs.staticArray(\n      gdjs.__boidsExtension.BoidsManager.prototype.getAllBoidsAround\n    );\n    result.length = 0;\n    // Cap the number of boids between 20 and 40.\n    const step = Math.ceil(nearbys.length / 40);\n    for (let i = 0; i < nearbys.length; i += step) {\n      const behavior = nearbys[i].behavior;\n      const otherObject = behavior.owner;\n      if (object === otherObject) {\n        continue;\n      }\n      const distanceSq = object.getSqDistanceToObject(otherObject);\n      if (distanceSq < radiusSq) {\n        result.push(behavior.__boidsExtension.boid);\n      }\n    }\n    return result;\n  }\n\n  return BoidsManager;\n}());\n\nruntimeScene.__boidsExtension = runtimeScene.__boidsExtension || {};\nruntimeScene.__boidsExtension.boidsManager = new gdjs.__boidsExtension.BoidsManager();\n",
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [
+    {
+      "description": "Move as part of a flock.",
+      "fullName": "Boids Movement (experimental)",
+      "name": "BoidsMovement",
+      "objectType": "",
+      "eventsFunctions": [
+        {
+          "description": "",
+          "fullName": "",
+          "functionType": "Action",
+          "group": "",
+          "name": "onCreated",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Initiate and attach properties as objects variables",
+              "comment2": ""
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::DefineJavaScript"
+                  },
+                  "parameters": [
+                    "",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "\r\nconst object = objects[0];\r\nconst behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\r\nconst behavior = object.getBehavior(behaviorName);\r\nbehavior.__boidsExtension = behavior.__boidsExtension || {};\r\nbehavior.__boidsExtension.boid = runtimeScene.__boidsExtension.boidsManager.add(behavior);",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "",
+          "fullName": "",
+          "functionType": "Action",
+          "group": "",
+          "name": "doStepPreEvents",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Update boids position every frame",
+              "comment2": ""
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "SceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__BoidsBehaviour_hasAlreadyRunThisFrame",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetSceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__BoidsBehaviour_hasAlreadyRunThisFrame",
+                    "True"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::JsCode",
+                  "inlineCode": "runtimeScene.__boidsExtension.boidsManager.moveAll();",
+                  "parameterObjects": "Object",
+                  "useStrict": true,
+                  "eventsSheetExpanded": true
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "",
+          "fullName": "",
+          "functionType": "Action",
+          "group": "",
+          "name": "doStepPostEvents",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetSceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__BoidsBehaviour_hasAlreadyRunThisFrame",
+                    "False"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "",
+          "fullName": "",
+          "functionType": "Action",
+          "group": "",
+          "name": "onActivate",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "\nconst object = objects[0];\nconst behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\nconst behavior = object.getBehavior(behaviorName);\nruntimeScene.__boidsExtension.boidsManager.add(behavior);",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "",
+          "fullName": "",
+          "functionType": "Action",
+          "group": "",
+          "name": "onDeActivate",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "\nconst object = objects[0];\nconst behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\nconst behavior = object.getBehavior(behaviorName);\nruntimeScene.__boidsExtension.boidsManager.remove(behavior);",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "",
+          "fullName": "",
+          "functionType": "Action",
+          "group": "",
+          "name": "onDestroy",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "\r\nconst object = objects[0];\r\nconst behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\r\nconst behavior = object.getBehavior(behaviorName);\r\nruntimeScene.__boidsExtension.boidsManager.remove(behavior);",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Intend to move in a given direction.",
+          "fullName": "Move in a direction",
+          "functionType": "Action",
+          "group": "",
+          "name": "MoveInDirection",
+          "private": false,
+          "sentence": "_PARAM0_ intent to move in the direction _PARAM2_; _PARAM3_ (decision weight: _PARAM4_)",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "\nconst object = objects[0];\nconst behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\nconst behavior = object.getBehavior(behaviorName);\nconst directionX = eventsFunctionContext.getArgument(\"DirectionX\");\nconst directionY = eventsFunctionContext.getArgument(\"DirectionY\");\nconst decisionWeight = eventsFunctionContext.getArgument(\"DecisionWeight\");\n\nbehavior.__boidsExtension.boid.addIntent(directionX, directionY, decisionWeight);",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Direction X",
+              "longDescription": "",
+              "name": "DirectionX",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Direction Y",
+              "longDescription": "",
+              "name": "DirectionY",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Decision weight",
+              "longDescription": "",
+              "name": "DecisionWeight",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Intend to move toward a position.",
+          "fullName": "Move toward a position",
+          "functionType": "Action",
+          "group": "",
+          "name": "MoveToPosition",
+          "private": false,
+          "sentence": "_PARAM0_ intend to move toward _PARAM2_; _PARAM3_ (decision weight: _PARAM4_)",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::MoveInDirection"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "GetArgumentAsNumber(\"TargetX\") - Object.CenterX()",
+                    "GetArgumentAsNumber(\"TargetY\") - Object.CenterY()",
+                    "GetArgumentAsNumber(\"DecisionWeight\")",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Target X",
+              "longDescription": "",
+              "name": "TargetX",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Target Y",
+              "longDescription": "",
+              "name": "TargetY",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Decision weight",
+              "longDescription": "",
+              "name": "DecisionWeight",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Intend to move toward an object.",
+          "fullName": "Move toward an object",
+          "functionType": "Action",
+          "group": "",
+          "name": "MoveToObject",
+          "private": false,
+          "sentence": "_PARAM0_ intend to move toward _PARAM2_ (decision weight: _PARAM3_)",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::ForEach",
+              "object": "TargetedObject",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::MoveToPosition"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "TargetedObject.CenterX()",
+                    "TargetedObject.CenterY()",
+                    "GetArgumentAsNumber(\"DecisionWeight\")",
+                    "GetArgumentAsNumber(\"DecisionWeight\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Targeted object",
+              "longDescription": "",
+              "name": "TargetedObject",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "objectList"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Decision weight",
+              "longDescription": "",
+              "name": "DecisionWeight",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Intend to avoid an area with a given center and radius.",
+          "fullName": "Avoid a position",
+          "functionType": "Action",
+          "group": "",
+          "name": "AvoidPosition",
+          "private": false,
+          "sentence": "_PARAM0_ intend to avoid a radius of _PARAM4_ around _PARAM2_; _PARAM3_ (decision weight: _PARAM5_)",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Evaluate at which distance the object will go past a location if it were to continue in its current direction.\n\nspeedUnitX = velocityX / speed\nspeedUnitY = velocityY / speed\n\ndeltaX = centerX - object.CenterX\ndeltaY = centerY - object.CenterY\n\nnormalX = -deltaY;\nnormalY = deltaX;\n\ntrajectoryDistance = speedUnitX * normalX + speedUnitY * normalY",
+              "comment2": ""
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::SetPropertyTrajectoryDistance"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "(Object.Behavior::VelocityX() * (Object.CenterY() - GetArgumentAsNumber(\"CenterY\")) + Object.Behavior::VelocityY() * (GetArgumentAsNumber(\"CenterX\") - Object.CenterX())) / Object.Behavior::Speed()"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "If this distance is smaller than the specified radius, the Boid must try turn in the right direction to avoid the area.",
+              "comment2": ""
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::PropertyTrajectoryDistance"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ">",
+                    "- GetArgumentAsNumber(\"Radius\")"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::PropertyTrajectoryDistance"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "<",
+                    "GetArgumentAsNumber(\"Radius\")"
+                  ]
+                }
+              ],
+              "actions": [],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Comment",
+                  "color": {
+                    "b": 109,
+                    "g": 230,
+                    "r": 255,
+                    "textB": 0,
+                    "textG": 0,
+                    "textR": 0
+                  },
+                  "comment": "(normalX ; normalY)",
+                  "comment2": ""
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "BoidsMovement::BoidsMovement::PropertyTrajectoryDistance"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ">",
+                        "0"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "BoidsMovement::BoidsMovement::MoveInDirection"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "-(GetArgumentAsNumber(\"CenterY\") - Object.CenterY())",
+                        "GetArgumentAsNumber(\"CenterX\") - Object.CenterX()",
+                        "GetArgumentAsNumber(\"DecisionWeight\")",
+                        ""
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Comment",
+                  "color": {
+                    "b": 109,
+                    "g": 230,
+                    "r": 255,
+                    "textB": 0,
+                    "textG": 0,
+                    "textR": 0
+                  },
+                  "comment": "(-normalX ; -normalY)",
+                  "comment2": ""
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "BoidsMovement::BoidsMovement::PropertyTrajectoryDistance"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "<",
+                        "0"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "BoidsMovement::BoidsMovement::MoveInDirection"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "GetArgumentAsNumber(\"CenterY\") - Object.CenterY()",
+                        "-(GetArgumentAsNumber(\"CenterX\") - Object.CenterX())",
+                        "GetArgumentAsNumber(\"DecisionWeight\")",
+                        ""
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Center X",
+              "longDescription": "",
+              "name": "CenterX",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Center Y",
+              "longDescription": "",
+              "name": "CenterY",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Radius",
+              "longDescription": "",
+              "name": "Radius",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Decision weight",
+              "longDescription": "",
+              "name": "DecisionWeight",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Intend to avoid an area from an object center and a given radius.",
+          "fullName": "Avoid an object",
+          "functionType": "Action",
+          "group": "",
+          "name": "AvoidObject",
+          "private": false,
+          "sentence": "_PARAM0_ intend to avoid a radius of _PARAM3_ around _PARAM2_  (decision weight: _PARAM4_)",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::ForEach",
+              "object": "AvoidedObject",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::AvoidPosition"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "AvoidedObject.CenterX()",
+                    "AvoidedObject.CenterY()",
+                    "GetArgumentAsNumber(\"Radius\")",
+                    "GetArgumentAsNumber(\"DecisionWeight\")",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Avoided object",
+              "longDescription": "",
+              "name": "AvoidedObject",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "objectList"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Radius",
+              "longDescription": "",
+              "name": "Radius",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Decision weight",
+              "longDescription": "",
+              "name": "DecisionWeight",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return the current speed.",
+          "fullName": "Speed",
+          "functionType": "Expression",
+          "group": "",
+          "name": "Speed",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "\nconst object = objects[0];\nconst behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\nconst behavior = object.getBehavior(behaviorName);\nconst directionX = eventsFunctionContext.getArgument(\"DirectionX\");\nconst directionY = eventsFunctionContext.getArgument(\"DirectionY\");\nconst decisionWeight = eventsFunctionContext.getArgument(\"DecisionWeight\");\n\neventsFunctionContext.returnValue = behavior.__boidsExtension.boid.velocity.magnitude();",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return the current vertical speed.",
+          "fullName": "Velocity Y",
+          "functionType": "Expression",
+          "group": "",
+          "name": "VelocityX",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "\nconst object = objects[0];\nconst behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\nconst behavior = object.getBehavior(behaviorName);\nconst directionX = eventsFunctionContext.getArgument(\"DirectionX\");\nconst directionY = eventsFunctionContext.getArgument(\"DirectionY\");\nconst decisionWeight = eventsFunctionContext.getArgument(\"DecisionWeight\");\n\neventsFunctionContext.returnValue = behavior.__boidsExtension.boid.velocity.x;",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return the current horizontal speed.",
+          "fullName": "Velocity X",
+          "functionType": "Expression",
+          "group": "",
+          "name": "VelocityY",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "\nconst object = objects[0];\nconst behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\nconst behavior = object.getBehavior(behaviorName);\nconst directionX = eventsFunctionContext.getArgument(\"DirectionX\");\nconst directionY = eventsFunctionContext.getArgument(\"DirectionY\");\nconst decisionWeight = eventsFunctionContext.getArgument(\"DecisionWeight\");\n\neventsFunctionContext.returnValue = behavior.__boidsExtension.boid.velocity.y;",
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the maximum speed of the object.",
+          "fullName": "Maximum speed",
+          "functionType": "Action",
+          "group": "Boids movement configuration",
+          "name": "SetMaxSpeed",
+          "private": false,
+          "sentence": "Change the maximum speed of _PARAM0_ to _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::SetPropertyMaxSpeed"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"MaxSpeed\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Max Speed",
+              "longDescription": "",
+              "name": "MaxSpeed",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the maximum acceleration of the object.",
+          "fullName": "Maximum acceleration",
+          "functionType": "Action",
+          "group": "Boids movement configuration",
+          "name": "SetMaxAcceleration",
+          "private": false,
+          "sentence": "Change the maximum acceleration of _PARAM0_ to _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::SetPropertyMaxAcceleration"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"SteeringForce\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Steering Force",
+              "longDescription": "",
+              "name": "SteeringForce",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if the object is rotated while moving on its path.",
+          "fullName": "Object Rotated",
+          "functionType": "Condition",
+          "group": "Boids movement configuration",
+          "name": "ShouldRotate",
+          "private": false,
+          "sentence": "_PARAM0_ is rotated when moving",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::PropertyShouldRotate"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return the maximum speed.",
+          "fullName": "Maximum speed",
+          "functionType": "Expression",
+          "group": "Boids movement configuration",
+          "name": "MaxSpeed",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyMaxSpeed()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return the maximum acceleration.",
+          "fullName": "Maximum acceleration",
+          "functionType": "Expression",
+          "group": "Boids movement configuration",
+          "name": "MaxAcceleration",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyMaxAcceleration()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return the cohesion sight radius.",
+          "fullName": "Cohesion sight radius",
+          "functionType": "Expression",
+          "group": "Boids sight configuration",
+          "name": "CohesionRadius",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyCohesionRadius()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the cohesion sight radius.",
+          "fullName": "Cohesion sight radius",
+          "functionType": "Action",
+          "group": "Boids sight configuration",
+          "name": "SetCohesionRadius",
+          "private": false,
+          "sentence": "Change the cohesion sight radius of _PARAM0_ to _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::SetPropertyCohesionRadius"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Value",
+              "longDescription": "",
+              "name": "Value",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return the alignment sight radius.",
+          "fullName": "Alignment sight radius",
+          "functionType": "Expression",
+          "group": "Boids sight configuration",
+          "name": "AlignmentRadius",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyAlignmentRadius()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return the alignment sight radius.",
+          "fullName": "Alignment sight radius",
+          "functionType": "Action",
+          "group": "Boids sight configuration",
+          "name": "SetAlignmentRadius",
+          "private": false,
+          "sentence": "Change the alignment sight radius of _PARAM0_ to _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::SetPropertyAlignmentRadius"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Value",
+              "longDescription": "",
+              "name": "Value",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return the separation sight radius.",
+          "fullName": "Separation sight radius",
+          "functionType": "Expression",
+          "group": "Boids sight configuration",
+          "name": "SeparationRadius",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertySeparationRadius()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return the separation sight radius.",
+          "fullName": "Separation sight radius",
+          "functionType": "Action",
+          "group": "Boids sight configuration",
+          "name": "SetSeparationRadius",
+          "private": false,
+          "sentence": "Change the separation sight radius of _PARAM0_ to _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::SetPropertySeparationRadius"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Value",
+              "longDescription": "",
+              "name": "Value",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return which weight the cohesion takes in the chosen direction.",
+          "fullName": "Cohesion weight",
+          "functionType": "Expression",
+          "group": "Boids decision configuration",
+          "name": "CohesionWeight",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyCohesionWeight()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the weight the cohesion takes in the chosen direction.",
+          "fullName": "Cohesion weight",
+          "functionType": "Action",
+          "group": "Boids decision configuration",
+          "name": "SetCohesionWeight",
+          "private": false,
+          "sentence": "Change the cohesion weight of _PARAM0_ to _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::SetPropertyCohesionWeight"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Value",
+              "longDescription": "",
+              "name": "Value",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return which weight the alignment takes in the chosen direction.",
+          "fullName": "Alignment weight",
+          "functionType": "Expression",
+          "group": "Boids decision configuration",
+          "name": "AlignmentWeight",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyAlignmentWeight()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the weight the alignment takes in the chosen direction.",
+          "fullName": "Alignment weight",
+          "functionType": "Action",
+          "group": "Boids decision configuration",
+          "name": "SetAlignmentWeight",
+          "private": false,
+          "sentence": "Change the alignment weight of _PARAM0_ to _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::SetPropertyAlignmentWeight"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Value",
+              "longDescription": "",
+              "name": "Value",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return which weight the separation takes in the chosen direction.",
+          "fullName": "Separation weight",
+          "functionType": "Expression",
+          "group": "Boids decision configuration",
+          "name": "SeparationWeight",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertySeparationWeight()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the weight the separation takes in the chosen direction.",
+          "fullName": "Separation weight",
+          "functionType": "Action",
+          "group": "Boids decision configuration",
+          "name": "SetSeparationWeight",
+          "private": false,
+          "sentence": "Change the separation weight of _PARAM0_ to _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "BoidsMovement::BoidsMovement::SetPropertySeparationWeight"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Value",
+              "longDescription": "",
+              "name": "Value",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        }
+      ],
+      "propertyDescriptors": [
+        {
+          "value": "360",
+          "type": "Number",
+          "label": "Maximum speed (in pixels per second)",
+          "description": "",
+          "group": "Movement",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "MaxSpeed"
+        },
+        {
+          "value": "720",
+          "type": "Number",
+          "label": "Maximum acceleration (in pixels per second per second)",
+          "description": "",
+          "group": "Movement",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "MaxAcceleration"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "Rotate object",
+          "description": "",
+          "group": "Movement",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "ShouldRotate"
+        },
+        {
+          "value": "64",
+          "type": "Number",
+          "label": "Cohesion sight radius",
+          "description": "",
+          "group": "Sight",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "CohesionRadius"
+        },
+        {
+          "value": "48",
+          "type": "Number",
+          "label": "Alignement sight radius",
+          "description": "",
+          "group": "Sight",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "AlignmentRadius"
+        },
+        {
+          "value": "32",
+          "type": "Number",
+          "label": "Separation sight radius",
+          "description": "",
+          "group": "Sight",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "SeparationRadius"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "label": "Cohesion decision weight",
+          "description": "",
+          "group": "Decision",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "CohesionWeight"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "label": "Alignment decision weight",
+          "description": "",
+          "group": "Decision",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "AlignmentWeight"
+        },
+        {
+          "value": "2",
+          "type": "Number",
+          "label": "Separation decision weight",
+          "description": "",
+          "group": "Decision",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "SeparationWeight"
+        },
+        {
+          "value": "",
+          "type": "Number",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "TrajectoryDistance"
+        }
+      ]
+    }
+  ]
+}

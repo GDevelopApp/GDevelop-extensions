@@ -63,19 +63,57 @@ const extensionsAllowedProperties = {
     gdjsAllowedProperties: [
       'makeUuid',
       'rgbToHex',
+      'rgbOrHexToRGBColor',
+      'rgbToHexNumber',
+      'hexNumberToRGB',
+      'hexToRGBColor',
+      'copyArray',
+      'staticArray',
+      'staticArray2',
+      'staticObject',
+      'toDegrees',
+      'toRad',
+      'random',
+      'randomFloat',
+      'randomFloatInRange',
+      'randomInRange',
+      'randomWithStep',
       'evtTools',
       'Variable',
       'RuntimeObject',
       'Logger',
     ],
-    gdjsEvtToolsAllowedProperties: [
-      'network',
-      'common',
-      // 'object' is not allowed by default because it contains advanced object
-      // filtering functions that should be reviewed per extension.
+    // Events tools are wrappers of the JavaScript APIs allowing them to be called by events.
+    // They should not be used 99% of the time, the only base exception being
+    // `common` as it contains utility functions like `clamp` that are not available
+    // in JavaScript by default. Appart from this, the JavaScript functions should be used instead.
+    gdjsEvtToolsAllowedProperties: ['common'],
+    runtimeSceneAllowedProperties: [
+      'getVariables',
+      'getLayer',
+      'getGame',
+      'getBackgroundColor',
+      'getName',
+      'createObject',
+      'createObjectsFrom',
+      'setBackgroundColor',
+      'sceneJustResumed',
+      'requestChange',
+      'hasLayer',
+      'enableDebugDraw',
     ],
-    runtimeSceneAllowedProperties: ['getVariables', 'getLayer', 'getGame'],
-    javaScriptObjectAllowedProperties: ['keys'],
+    javaScriptObjectAllowedProperties: [
+      'keys',
+      'create',
+      'assign',
+      'is',
+      'values',
+      'entries',
+      'fromEntries',
+      'defineProperty',
+      'getOwnPropertyNames',
+      'defineProperties',
+    ],
   },
   /** @type {Record<string, ExtensionAllowedProperties>}} */
   extensionSpecificAllowance: {
@@ -91,28 +129,42 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    BoidsMovement: {
+      gdjsAllowedProperties: [
+        '__boidsExtension',
+        'RuntimeBehavior',
+        'BehaviorRBushAABB',
+        'randomFloatInRange',
+        'staticObject',
+        'staticArray',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['__boidsExtension'],
+      javaScriptObjectAllowedProperties: [],
+    },
+    DialogBox: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getObjects', 'getSoundManager'],
+      javaScriptObjectAllowedProperties: [],
+    },
     FlexBox: {
       gdjsAllowedProperties: ['layoutContainers'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: ['assign'],
+      javaScriptObjectAllowedProperties: [],
     },
     MQTT: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: ['mqtt'],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [
-        'create',
-        'defineProperty',
-        'assign',
         'prototype',
         'getPrototypeOf',
-        'getOwnPropertyNames',
         'setPrototypeOf',
         'getOwnPropertySymbols',
         'getOwnPropertyDescriptor',
         'getOwnPropertyDescriptors',
-        'defineProperties',
       ],
     },
     MarchingSquares: {
@@ -140,11 +192,32 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    PlatformerTrajectory: {
+      gdjsAllowedProperties: ['PlatformerObjectRuntimeBehavior'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     TextEntryVirtualKeyboard: {
       gdjsAllowedProperties: ['_extensionMobileKeyboard'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
+    },
+    Recolorizer: {
+      gdjsAllowedProperties: [
+        '__recolorizerExtension',
+        'SpriteRuntimeObject',
+        'TiledSpriteRuntimeObject',
+        'PanelSpriteRuntimeObject',
+        'rgbOrHexToRGBColor',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['__recolorizerExtension'],
+      javaScriptObjectAllowedProperties: [
+        // Extend a behavior with JavaScript:
+        'getPrototypeOf',
+      ],
     },
     RenderToSprite: {
       gdjsAllowedProperties: [
@@ -206,6 +279,12 @@ const extensionsAllowedProperties = {
     },
     TextEntryConsole: {
       gdjsAllowedProperties: ['TextEntryRuntimeObject'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    TextToSpeech: {
+      gdjsAllowedProperties: ['_ttsWait'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
