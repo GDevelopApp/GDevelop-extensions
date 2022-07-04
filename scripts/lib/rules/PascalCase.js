@@ -30,7 +30,6 @@ async function validate({
   onError,
 }) {
   if (legacyCamelCaseExtensions.has(name)) return;
-  checkPascalCase(name, onError);
   for (const { name } of publicEventsFunctions) checkPascalCase(name, onError);
   for (const { name } of eventsBasedBehaviors) checkPascalCase(name, onError);
 }
