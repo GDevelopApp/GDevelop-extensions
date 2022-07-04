@@ -1,9 +1,9 @@
-import { ExtensionWithFilename, EventsFunction } from '../../types';
+import { ExtensionWithProperFileInfo, EventsFunction } from '../../types';
 
 export type Rule = (context: RuleContext) => Promise<void>;
 export type ErrorLogger = (error: string, fix?: () => void) => void;
 
-export interface RuleContext extends ExtensionWithFilename {
+export interface RuleContext extends ExtensionWithProperFileInfo {
   onError: ErrorLogger;
   publicEventsFunctions: EventsFunction[];
   allEventsFunctions: EventsFunction[];
