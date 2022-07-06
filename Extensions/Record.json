@@ -31,10 +31,8 @@
       "sentence": "",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "const electron = runtimeScene.getGame().getRenderer().getElectron();\r\n\r\ngdjs._extensionRecord = {\r\n    fs: electron && electron.remote.require(\"fs\"),\r\n    mediaRecorder: null,\r\n    // Default settings for recording\r\n    options: {\r\n        videoBitsPerSecond: 2500000,\r\n        // audioBitsPerSecond: 128000,\r\n        format: 'mp4',\r\n    },\r\n    handler: {\r\n        error: {\r\n            event: false,\r\n            name: '',\r\n        },\r\n        resume: false,\r\n        pause: false,\r\n        start: false,\r\n        stop: false,\r\n        save: false,\r\n    },\r\n    blob: null,\r\n    fps: 30,\r\n    isFormatSupported:\r\n        (format) =>\r\n            MediaRecorder.isTypeSupported('video/' + format.toLowerCase()),\r\n    setError: (name) => {\r\n        gdjs._extensionRecord.handler.error.event = true;\r\n        gdjs._extensionRecord.handler.error.name = name;\r\n    },\r\n}\r\n",
+          "inlineCode": "const electron = runtimeScene.getGame().getRenderer().getElectron();\r\nconst fs = runtimeScene.getGame().getRenderer().getElectronRemote().require(\"fs\");\r\n\r\ngdjs._extensionRecord = {\r\n    fs: electron && fs,\r\n    mediaRecorder: null,\r\n    // Default settings for recording\r\n    options: {\r\n        videoBitsPerSecond: 2500000,\r\n        // audioBitsPerSecond: 128000,\r\n        format: 'mp4',\r\n    },\r\n    handler: {\r\n        error: {\r\n            event: false,\r\n            name: '',\r\n        },\r\n        resume: false,\r\n        pause: false,\r\n        start: false,\r\n        stop: false,\r\n        save: false,\r\n    },\r\n    blob: null,\r\n    fps: gdjs.projectData.properties.minFPS,\r\n    isFormatSupported:\r\n        (format) =>\r\n            MediaRecorder.isTypeSupported('video/' + format.toLowerCase()),\r\n    setError: (name) => {\r\n        gdjs._extensionRecord.handler.error.event = true;\r\n        gdjs._extensionRecord.handler.error.name = name;\r\n    },\r\n}\r\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": true
@@ -47,14 +45,12 @@
       "description": "Start the recording.",
       "fullName": "Start recording",
       "functionType": "Action",
-      "group": "",
+      "group": "Basic",
       "name": "Start",
       "private": false,
       "sentence": "Start recording",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "const recorder = gdjs._extensionRecord;\r\nconst canvas = runtimeScene.getGame().getRenderer().getCanvas();\r\nconst stream = canvas.captureStream(recorder.fps);\r\nconst recordedChunks = [];\r\n\r\nrecorder.mediaRecorder = new MediaRecorder(stream, recorder.options);\r\n\r\nrecorder.mediaRecorder.addEventListener('error', (event) => recorder.setError(event.error.name));\r\nrecorder.mediaRecorder.addEventListener('resume', () => recorder.handler.resume = true);\r\nrecorder.mediaRecorder.addEventListener('pause', () => recorder.handler.pause = true);\r\nrecorder.mediaRecorder.addEventListener('start', () => recorder.handler.start = true);\r\nrecorder.mediaRecorder.addEventListener('stop', () => {\r\n  recorder.blob = new Blob(recordedChunks, {\r\n    type: 'video/' + recorder.options.format\r\n  });\r\n  \r\n  recorder.handler.stop = true;\r\n});\r\nrecorder.mediaRecorder.addEventListener('dataavailable', () => {\r\n  if (event.data.size > 0) recordedChunks.push(event.data);\r\n});\r\n\r\nrecorder.mediaRecorder.start();\r\n",
           "parameterObjects": "",
@@ -69,14 +65,12 @@
       "description": "End the recording.",
       "fullName": "Stop recording",
       "functionType": "Action",
-      "group": "",
+      "group": "Basic",
       "name": "Stop",
       "private": false,
       "sentence": "Stop the recording",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "if (gdjs._extensionRecord.mediaRecorder) gdjs._extensionRecord.mediaRecorder.stop();\r\nelse gdjs._extensionRecord.setError('Stopping a recording that has not started');",
           "parameterObjects": "",
@@ -91,14 +85,12 @@
       "description": "Pause recording.",
       "fullName": "Pause recording",
       "functionType": "Action",
-      "group": "",
+      "group": "Advanced",
       "name": "Pause",
       "private": false,
       "sentence": "Pause recording",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "if (gdjs._extensionRecord.mediaRecorder) gdjs._extensionRecord.mediaRecorder.pause();\r\nelse gdjs._extensionRecord.setError('Pausing a recording that has not started');",
           "parameterObjects": "",
@@ -113,14 +105,12 @@
       "description": "Resume recording.",
       "fullName": "Resume recording",
       "functionType": "Action",
-      "group": "",
+      "group": "Advanced",
       "name": "Resume",
       "private": false,
       "sentence": "Resume recording",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "if (gdjs._extensionRecord.mediaRecorder) gdjs._extensionRecord.mediaRecorder.pause();\r\nelse gdjs._extensionRecord.setError('Resuming a recording that has not started');",
           "parameterObjects": "",
@@ -135,16 +125,14 @@
       "description": "Save recording to the file system on destop, or to the downloads folder for web. Always ask for permission to save a file.",
       "fullName": "Save recording",
       "functionType": "Action",
-      "group": "",
+      "group": "Basic",
       "name": "Save",
       "private": false,
       "sentence": "Save recording to _PARAM1_ as _PARAM2_",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "const recorder = gdjs._extensionRecord;\r\nconst path = eventsFunctionContext.getArgument('path');\r\nconst name = eventsFunctionContext.getArgument('name');\r\n\r\nconsole.log(recorder);\r\n\r\nif (!recorder.mediaRecorder) {\r\n    recorder.setError('Saving a recording that has not started'); \r\n} else if (!recorder.blob) {\r\n    recorder.setError('Saving a recording that has not stopped'); \r\n} else {\r\n    if (recorder.fs) desktopDownload();\r\n    else webDownload();\r\n}\r\n\r\nasync function desktopDownload() {\r\n    const buffer = Buffer.from(await recorder.blob.arrayBuffer());\r\n    recorder.fs.writeFile(path + '/' + name + '.' + recorder.options.format, buffer, () => recorder.handler.save = true);\r\n}\r\n\r\nfunction webDownload() {\r\n    const href = URL.createObjectURL(recorder.blob);\r\n    const ref = window.open(href, name);\r\n    ref.onbeforeunload = () => URL.revokeObjectURL(href);\r\n};\r\n",
+          "inlineCode": "const recorder = gdjs._extensionRecord;\r\nconst path = eventsFunctionContext.getArgument('path');\r\nconst name = eventsFunctionContext.getArgument('name');\r\n\r\nif (!recorder.mediaRecorder) {\r\n    recorder.setError('Saving a recording that has not started'); \r\n} else if (!recorder.blob) {\r\n    recorder.setError('Saving a recording that has not stopped'); \r\n} else {\r\n    if (recorder.fs) desktopDownload();\r\n    else webDownload();\r\n}\r\n\r\nasync function desktopDownload() {\r\n    const buffer = Buffer.from(await recorder.blob.arrayBuffer());\r\n    recorder.fs.writeFile(path + '/' + name + '.' + recorder.options.format, buffer, () => recorder.handler.save = true);\r\n}\r\n\r\nfunction webDownload() {\r\n    const href = URL.createObjectURL(recorder.blob);\r\n    const ref = window.open(href, name);\r\n    ref.onbeforeunload = () => URL.revokeObjectURL(href);\r\n};\r\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": true
@@ -154,7 +142,7 @@
         {
           "codeOnly": false,
           "defaultValue": "",
-          "description": "File location is only used for desktop saves",
+          "description": "File location (only used for desktop saves)",
           "longDescription": "",
           "name": "path",
           "optional": false,
@@ -175,17 +163,15 @@
       "objectGroups": []
     },
     {
-      "description": "Returns the current state of the reccorder: inactive (not recording), recording, or paused.",
+      "description": "Returns the current status of the reccorder: inactive (not recording), recording, or paused.",
       "fullName": "Get current state",
       "functionType": "StringExpression",
-      "group": "",
-      "name": "State",
+      "group": "Advanced",
+      "name": "Status",
       "private": false,
       "sentence": "",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "if (gdjs._extensionRecord.mediaRecorder) eventsFunctionContext.returnValue = gdjs._extensionRecord.mediaRecorder.state;\r\n",
           "parameterObjects": "",
@@ -206,8 +192,6 @@
       "sentence": "Set frame rate to _PARAM1_",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "eventsFunctionContext.returnValue = gdjs._extensionRecord.fps;\r\n",
           "parameterObjects": "",
@@ -219,7 +203,7 @@
       "objectGroups": []
     },
     {
-      "description": "Set the frame rate, must be set before starting a recording. Defaults to 30 fps if not set.",
+      "description": "Set the frame rate, must be set before starting a recording. Defaults to the minimum frame rate in the game properties.",
       "fullName": "Set frame rate",
       "functionType": "Action",
       "group": "Options",
@@ -228,8 +212,6 @@
       "sentence": "Set frame rate to _PARAM1_",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "gdjs._extensionRecord.fps = eventsFunctionContext.getArgument('fps');\r\n",
           "parameterObjects": "",
@@ -261,8 +243,6 @@
       "sentence": "",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "eventsFunctionContext.returnValue = gdjs._extensionRecord.mediaRecorder.videoBitsPerSecond;\r\n",
           "parameterObjects": "",
@@ -283,8 +263,6 @@
       "sentence": "Set the video bit rate to _PARAM1_",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "eventsFunctionContext.returnValue = gdjs._extensionRecord.mediaRecorder.videoBitsPerSecond;\r\n",
           "parameterObjects": "",
@@ -316,8 +294,6 @@
       "sentence": "Set the audio bit rate to _PARAM1_",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "// Audio recording doesn't work. This function exsits for when it does.\r\neventsFunctionContext.returnValue = gdjs._extensionRecord.mediaRecorder.audioBitsPerSecond;\r\n",
           "parameterObjects": "",
@@ -349,8 +325,6 @@
       "sentence": "",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "// Audio recording doesn't work. This function exsits for when it does.\r\neventsFunctionContext.returnValue = gdjs._extensionRecord.mediaRecorder.audioBitsPerSecond;\r\n",
           "parameterObjects": "",
@@ -371,8 +345,6 @@
       "sentence": "Set file format to _PARAM1_",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "const format = eventsFunctionContext.getArgument('format');\r\nconst supported = gdjs._extensionRecord.isFormatSupported(format);\r\n\r\nif (supported === true) gdjs._extensionRecord.options.format = format;\r\nelse gdjs._extensionRecord.format = 'mp4';\r\n",
           "parameterObjects": "",
@@ -404,8 +376,6 @@
       "sentence": "",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "eventsFunctionContext.returnValue = gdjs._extensionRecord.mediaRecorder.videoBitsPerSecond;\r\n",
           "parameterObjects": "",
@@ -420,14 +390,12 @@
       "description": "When an error occurs this method will return what type of error it is.",
       "fullName": "Error type",
       "functionType": "StringExpression",
-      "group": "",
+      "group": "Advanced",
       "name": "ErrorType",
       "private": false,
       "sentence": "",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "eventsFunctionContext.returnValue = gdjs._extensionRecord.handler.error.name;\r\ngdjs._extensionRecord.handler.error.name = '';",
           "parameterObjects": "",
@@ -448,8 +416,6 @@
       "sentence": "When an error has occurred",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "eventsFunctionContext.returnValue = gdjs._extensionRecord.handler.error.event;\ngdjs._extensionRecord.handler.error.event = false;",
           "parameterObjects": "",
@@ -470,8 +436,6 @@
       "sentence": "When recording has paused",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "eventsFunctionContext.returnValue = gdjs._extensionRecord.handler.pause;\r\ngdjs._extensionRecord.handler.pause = false;\r\n",
           "parameterObjects": "",
@@ -492,8 +456,6 @@
       "sentence": "When recording has resumed",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "eventsFunctionContext.returnValue = gdjs._extensionRecord.handler.resume;\r\ngdjs._extensionRecord.handler.resume = false;\r\n",
           "parameterObjects": "",
@@ -514,8 +476,6 @@
       "sentence": "When recording has started",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "eventsFunctionContext.returnValue = gdjs._extensionRecord.handler.start;\r\ngdjs._extensionRecord.handler.start = false;\r\n",
           "parameterObjects": "",
@@ -536,8 +496,6 @@
       "sentence": "When recording has stopped",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "eventsFunctionContext.returnValue = gdjs._extensionRecord.handler.stop;\r\ngdjs._extensionRecord.handler.stop = false;\r\n",
           "parameterObjects": "",
@@ -558,8 +516,6 @@
       "sentence": "When recording has been saved",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "eventsFunctionContext.returnValue = gdjs._extensionRecord.handler.save;\r\ngdjs._extensionRecord.handler.save = false;\r\n",
           "parameterObjects": "",
@@ -574,14 +530,12 @@
       "description": "Check if the specified format is available on the users device. To avoid unsupported formats pick commons ones like MP4 or WebM.",
       "fullName": "Is format supported on user device",
       "functionType": "Condition",
-      "group": "",
+      "group": "Basic",
       "name": "IsFormatSupported",
       "private": false,
       "sentence": "Check if _PARAM1_ is available on the users device",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": "eventsFunctionContext.returnValue =\r\n    gdjs._extensionRecord.isFormatSupported(eventsFunctionContext.getArgument('format'));\r\n",
           "parameterObjects": "",
