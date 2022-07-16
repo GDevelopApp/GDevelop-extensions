@@ -1,7 +1,7 @@
 {
   "author": "",
   "category": "",
-  "description": "This extension allows to:\n* Move, rotate and/or zoom the camera according to pinch gestures\n* Move, rotate and optionally scale objects according to pinch gestures\n* Handle more specific needs with various expressions",
+  "description": "This extension allows to:\n* Move, rotate and/or zoom the camera according to pinch gestures\n* Move, rotate and optionally scale objects according to pinch gestures\n* Handle more specific needs with various expressions\n\nLimitations:\n* Only one pinching gesture is detected at a time",
   "extensionNamespace": "",
   "fullName": "Pinching gesture",
   "helpPath": "",
@@ -2244,6 +2244,19 @@
               "actions": [],
               "events": [
                 {
+                  "type": "BuiltinCommonInstructions::Comment",
+                  "color": {
+                    "b": 109,
+                    "g": 230,
+                    "r": 255,
+                    "textB": 0,
+                    "textG": 0,
+                    "textR": 0
+                  },
+                  "comment": "Only the objects with the highest Z-Order will be actually pinched (see doStepPostEvents).",
+                  "comment2": ""
+                },
+                {
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [
                     {
@@ -2260,12 +2273,22 @@
                   "actions": [
                     {
                       "type": {
-                        "value": "PinchGesture::Pichable::SetPropertyIsPinched"
+                        "value": "PinchGesture::Pichable::SetPropertyIsCandidate"
                       },
                       "parameters": [
                         "Object",
                         "Behavior",
                         "yes"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "ModVarScene"
+                      },
+                      "parameters": [
+                        "PinchGesture.ZOrderMaximum",
+                        "=",
+                        "max(Variable(PinchGesture.ZOrderMaximum), Object.ZOrder())"
                       ]
                     },
                     {
@@ -2326,6 +2349,19 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Move the object according to the pinch gesture.",
+              "comment2": ""
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -2436,6 +2472,231 @@
                     "Behavior",
                     "no"
                   ]
+                },
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "PinchGesture.ZOrderMaximum",
+                    "=",
+                    "0"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "PinchGesture::Pichable",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "",
+          "fullName": "",
+          "functionType": "Action",
+          "group": "",
+          "name": "doStepPostEvents",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Only the objects with the highest Z-Order are actually pinched.\nIf all objects have the same Z-Order, they can all be picked at once.",
+              "comment2": ""
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "PinchGesture::Pichable::PropertyIsCandidate"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Plan"
+                  },
+                  "parameters": [
+                    "Object",
+                    ">=",
+                    "Variable(PinchGesture.ZOrderMaximum)"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "PinchGesture::Pichable::SetPropertyIsPinched"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "yes"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "PinchGesture::Pichable::SetPropertyIsCandidate"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "no"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "PinchGesture::Pichable",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if the object is being pinched.",
+          "fullName": "Is being pinched",
+          "functionType": "Condition",
+          "group": "",
+          "name": "IsPinched",
+          "private": false,
+          "sentence": "_PARAM0_ is being pinched",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "PinchGesture::Pichable::PropertyIsPinched"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "PinchGesture::Pichable",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Abort the pinching of this object.",
+          "fullName": "Abort pinching",
+          "functionType": "Action",
+          "group": "",
+          "name": "AbortPinching",
+          "private": false,
+          "sentence": "Abort the pinching of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "PinchGesture::Pichable::PropertyIsPinched"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
                 }
               ]
             }
@@ -2475,6 +2736,16 @@
           "extraInformation": [],
           "hidden": false,
           "name": "LockSize"
+        },
+        {
+          "value": "",
+          "type": "Boolean",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "IsCandidate"
         },
         {
           "value": "",
