@@ -169,7 +169,7 @@ const extensionsAllowedProperties = {
     },
     MarchingSquares: {
       gdjsAllowedProperties: [
-        '__marchingSquares',
+        '__marchingSquaresExtension',
         'Polygon',
         'ShapePainterRuntimeObject',
       ],
