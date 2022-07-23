@@ -110,6 +110,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: ['assign'],
     },
+    InternetConnectivity: {
+      gdjsAllowedProperties: ['_extensionInternetConnectivity'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     MQTT: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: ['mqtt'],
