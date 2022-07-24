@@ -117,6 +117,12 @@ const extensionsAllowedProperties = {
   },
   /** @type {Record<string, ExtensionAllowedProperties>}} */
   extensionSpecificAllowance: {
+    AdvancedJump: {
+      gdjsAllowedProperties: ['PlatformerObjectRuntimeBehavior'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     AdvancedP2PEventHandling: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: ['p2p'],
