@@ -225,6 +225,12 @@ const extensionsAllowedProperties = {
         'getPrototypeOf',
       ],
     },
+    Record: {
+      gdjsAllowedProperties: ['_extensionRecord'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     RenderToSprite: {
       gdjsAllowedProperties: [
         '_renderToSprite',
