@@ -171,12 +171,7 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
           eventsFunctionsCount: extension.eventsFunctions.length,
         };
 
-        // For now, limit the extensions to only reviewed extensions while
-        // we wait for a new version of GDevelop that supports filtering community
-        // vs reviewed extensions (so that reviewed extensions are shown first).
-        if (tier === 'reviewed') {
-          extensionShortHeaders.push(extensionShortHeader);
-        }
+        extensionShortHeaders.push(extensionShortHeader);
 
         /** @type {ExtensionHeader} */
         const extensionHeader = {
