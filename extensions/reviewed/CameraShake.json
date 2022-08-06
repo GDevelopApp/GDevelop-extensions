@@ -1,10 +1,10 @@
 {
   "author": "westboy31, Tristan Rhodes (https://victrisgames.itch.io/)",
   "category": "",
-  "description": "Shake layer cameras with translation, rotation and zoom.\n- Short shaking can be used to give impact (explosion, hit)\n- Shaking can go indefinitly to set an ambiance (engine vibration, earthquake, pulsing)\n- Low frequency shaking allows to simulate slow moving objects (ship rocking back and forth)\n- Setting amplitudes per layer make it possible to respect the parallax and give more depth",
+  "description": "Shake layer cameras with translation, rotation and zoom.\n- Short shaking can be used to give impact (explosion, hit)\n- Shaking can go indefinitely to set an ambiance (engine vibration, earthquake, pulsing)\n- Low frequency shaking allows to simulate slow moving objects (ship rocking back and forth)\n- Setting amplitudes per layer make it possible to respect the parallax and give more depth\n\nRelease notes:\n- Version 3.0.0\n  - No adaptation of the game events is needed.\n  - It fixes an issue when used with scrolling, the amplitude will feel bigger in this case.\n  - The shaking relies on noise which could feel a bit different.",
   "extensionNamespace": "",
   "fullName": "Camera shake",
-  "helpPath": "https://victrisgames.itch.io/gdevelop-camera-shake-example",
+  "helpPath": "",
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLXZlY3Rvci1kaWZmZXJlbmNlLWFiIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTMsMUMxLjg5LDEgMSwxLjg5IDEsM1Y1SDNWM0g1VjFIM003LDFWM0gxMFYxSDdNMTIsMVYzSDE0VjVIMTZWM0MxNiwxLjg5IDE1LjExLDEgMTQsMUgxMk0xLDdWMTBIM1Y3SDFNMTQsN0MxNCw3IDE0LDExLjY3IDE0LDE0QzExLjY3LDE0IDcsMTQgNywxNEM3LDE0IDcsMTggNywyMEM3LDIxLjExIDcuODksMjIgOSwyMkgyMEMyMS4xMSwyMiAyMiwyMS4xMSAyMiwyMFY5QzIyLDcuODkgMjEuMTEsNyAyMCw3QzE4LDcgMTQsNyAxNCw3TTE2LDlIMjBWMjBIOVYxNkgxNEMxNS4xMSwxNiAxNiwxNS4xMSAxNiwxNFY5TTEsMTJWMTRDMSwxNS4xMSAxLjg5LDE2IDMsMTZINVYxNEgzVjEySDFaIiAvPjwvc3ZnPg==",
   "name": "CameraShake",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/vector-difference-ab.svg",
@@ -117,7 +117,7 @@
             "textG": 0,
             "textR": 0
           },
-          "comment": "This variable is needed because the time will shift before next onScenePreEvents call.",
+          "comment": "Step time counters.",
           "comment2": ""
         },
         {
@@ -126,11 +126,12 @@
           "actions": [
             {
               "type": {
-                "value": "SetSceneVariableAsBoolean"
+                "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_NeedToRevertCameraChanges",
-                "False"
+                "__CameraShake.Time",
+                "+",
+                "TimeDelta()"
               ]
             }
           ]
@@ -151,19 +152,10 @@
           "actions": [
             {
               "type": {
-                "value": "SetSceneVariableAsBoolean"
-              },
-              "parameters": [
-                "__CameraShake_NeedToRevertCameraChanges",
-                "True"
-              ]
-            },
-            {
-              "type": {
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_EaseFactor",
+                "__CameraShake.EaseFactor",
                 "=",
                 "1"
               ]
@@ -175,25 +167,23 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "CompareTimer"
+                    "value": "VarScene"
                   },
                   "parameters": [
-                    "",
-                    "\"__CameraShake_DurationTimer\"",
+                    "__CameraShake.Time",
                     "<",
-                    "Variable(__CameraShake_StartEaseDuration)"
+                    "Variable(__CameraShake.StartEaseDuration)"
                   ]
                 },
                 {
                   "type": {
                     "inverted": true,
-                    "value": "CompareTimer"
+                    "value": "VarScene"
                   },
                   "parameters": [
-                    "",
-                    "\"__CameraShake_DurationTimer\"",
+                    "__CameraShake.Time",
                     ">",
-                    "Variable(__CameraShake_Duration) - Variable(__CameraShake_StopEaseDuration)"
+                    "Variable(__CameraShake.Duration) - Variable(__CameraShake.StopEaseDuration)"
                   ]
                 }
               ],
@@ -203,9 +193,9 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__CameraShake_EaseFactor",
+                    "__CameraShake.EaseFactor",
                     "=",
-                    "clamp(0, 1, TimerElapsedTime(\"__CameraShake_DurationTimer\") / Variable(__CameraShake_StartEaseDuration))"
+                    "clamp(0, 1, Variable(__CameraShake.Time) / Variable(__CameraShake.StartEaseDuration))"
                   ]
                 }
               ]
@@ -215,13 +205,12 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "CompareTimer"
+                    "value": "VarScene"
                   },
                   "parameters": [
-                    "",
-                    "\"__CameraShake_DurationTimer\"",
+                    "__CameraShake.Time",
                     ">",
-                    "Variable(__CameraShake_Duration) - Variable(__CameraShake_StopEaseDuration)"
+                    "Variable(__CameraShake.Duration) - Variable(__CameraShake.StopEaseDuration)"
                   ]
                 }
               ],
@@ -231,25 +220,25 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__CameraShake_EaseFactor",
+                    "__CameraShake.EaseFactor",
                     "=",
-                    "clamp(0, 1, (Variable(__CameraShake_Duration) - TimerElapsedTime(\"__CameraShake_DurationTimer\")) / Variable(__CameraShake_StopEaseDuration))"
+                    "clamp(0, 1, (Variable(__CameraShake.Duration) - Variable(__CameraShake.Time)) / Variable(__CameraShake.StopEaseDuration))"
                   ]
                 }
               ]
             },
             {
               "type": "BuiltinCommonInstructions::ForEachChildVariable",
-              "iterableVariableName": "__CameraShake_Layers",
-              "valueIteratorVariableName": "__CameraShake_Layer",
-              "keyIteratorVariableName": "__CameraShake_LayerName",
+              "iterableVariableName": "__CameraShake.Layers",
+              "valueIteratorVariableName": "__CameraShake.Layer",
+              "keyIteratorVariableName": "__CameraShake.LayerName",
               "conditions": [
                 {
                   "type": {
                     "value": "SceneVariableAsBoolean"
                   },
                   "parameters": [
-                    "__CameraShake_Layers[VariableString(__CameraShake_LayerName)].Shakable",
+                    "__CameraShake.Layers[VariableString(__CameraShake.LayerName)].Shakable",
                     "True"
                   ]
                 }
@@ -265,9 +254,9 @@
                         "value": "ModVarSceneTxt"
                       },
                       "parameters": [
-                        "__CameraShake_ActualLayerName",
+                        "__CameraShake.ActualLayerName",
                         "=",
-                        "VariableString(__CameraShake_LayerName)"
+                        "VariableString(__CameraShake.LayerName)"
                       ]
                     }
                   ]
@@ -280,7 +269,7 @@
                         "value": "VarSceneTxt"
                       },
                       "parameters": [
-                        "__CameraShake_LayerName",
+                        "__CameraShake.LayerName",
                         "=",
                         "\"__BaseLayer\""
                       ]
@@ -292,7 +281,7 @@
                         "value": "ModVarSceneTxt"
                       },
                       "parameters": [
-                        "__CameraShake_ActualLayerName",
+                        "__CameraShake.ActualLayerName",
                         "=",
                         "\"\""
                       ]
@@ -322,7 +311,7 @@
                       },
                       "parameters": [
                         "",
-                        "Variable(__CameraShake_DefaultFrequency)",
+                        "Variable(__CameraShake.DefaultFrequency)",
                         "\"\"",
                         ""
                       ]
@@ -332,9 +321,9 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeX",
+                        "__CameraShake.AmplitudeX",
                         "=",
-                        "Variable(__CameraShake_DefaultAmplitudeX)"
+                        "Variable(__CameraShake.DefaultAmplitudeX)"
                       ]
                     },
                     {
@@ -342,9 +331,9 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeY",
+                        "__CameraShake.AmplitudeY",
                         "=",
-                        "Variable(__CameraShake_DefaultAmplitudeY)"
+                        "Variable(__CameraShake.DefaultAmplitudeY)"
                       ]
                     },
                     {
@@ -352,9 +341,9 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeAngle",
+                        "__CameraShake.AmplitudeAngle",
                         "=",
-                        "Variable(__CameraShake_DefaultAmplitudeAngle)"
+                        "Variable(__CameraShake.DefaultAmplitudeAngle)"
                       ]
                     },
                     {
@@ -362,9 +351,9 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeZoom",
+                        "__CameraShake.AmplitudeZoom",
                         "=",
-                        "Variable(__CameraShake_DefaultAmplitudeZoom)"
+                        "Variable(__CameraShake.DefaultAmplitudeZoom)"
                       ]
                     }
                   ]
@@ -377,7 +366,7 @@
                         "value": "VariableChildExists"
                       },
                       "parameters": [
-                        "__CameraShake_Layer",
+                        "__CameraShake.Layer",
                         "\"Frequency\""
                       ]
                     }
@@ -389,7 +378,7 @@
                       },
                       "parameters": [
                         "",
-                        "Variable(__CameraShake_Layer.Frequency)",
+                        "Variable(__CameraShake.Layer.Frequency)",
                         "\"\"",
                         ""
                       ]
@@ -404,7 +393,7 @@
                         "value": "VariableChildExists"
                       },
                       "parameters": [
-                        "__CameraShake_Layer",
+                        "__CameraShake.Layer",
                         "\"AmplitudeX\""
                       ]
                     }
@@ -415,9 +404,9 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeX",
+                        "__CameraShake.AmplitudeX",
                         "=",
-                        "Variable(__CameraShake_Layer.AmplitudeX)"
+                        "Variable(__CameraShake.Layer.AmplitudeX)"
                       ]
                     }
                   ]
@@ -430,7 +419,7 @@
                         "value": "VariableChildExists"
                       },
                       "parameters": [
-                        "__CameraShake_Layer",
+                        "__CameraShake.Layer",
                         "\"AmplitudeY\""
                       ]
                     }
@@ -441,9 +430,9 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeY",
+                        "__CameraShake.AmplitudeY",
                         "=",
-                        "Variable(__CameraShake_Layer.AmplitudeY)"
+                        "Variable(__CameraShake.Layer.AmplitudeY)"
                       ]
                     }
                   ]
@@ -456,7 +445,7 @@
                         "value": "VariableChildExists"
                       },
                       "parameters": [
-                        "__CameraShake_Layer",
+                        "__CameraShake.Layer",
                         "\"AmplitudeAngle\""
                       ]
                     }
@@ -467,9 +456,9 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeAngle",
+                        "__CameraShake.AmplitudeAngle",
                         "=",
-                        "Variable(__CameraShake_Layer.AmplitudeAngle)"
+                        "Variable(__CameraShake.Layer.AmplitudeAngle)"
                       ]
                     }
                   ]
@@ -482,7 +471,7 @@
                         "value": "VariableChildExists"
                       },
                       "parameters": [
-                        "__CameraShake_Layer",
+                        "__CameraShake.Layer",
                         "\"AmplitudeZoom\""
                       ]
                     }
@@ -493,9 +482,9 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeZoom",
+                        "__CameraShake.AmplitudeZoom",
                         "=",
-                        "Variable(__CameraShake_Layer.AmplitudeZoom)"
+                        "Variable(__CameraShake.Layer.AmplitudeZoom)"
                       ]
                     }
                   ]
@@ -510,7 +499,7 @@
                     "textG": 0,
                     "textR": 0
                   },
-                  "comment": "Shake the layer camera.",
+                  "comment": "Shake the layer camera.\nSave the camera displacement to revert it in onScenePostEvents.",
                   "comment2": ""
                 },
                 {
@@ -521,7 +510,7 @@
                         "value": "VarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeX",
+                        "__CameraShake.AmplitudeX",
                         "!=",
                         "0"
                       ]
@@ -533,9 +522,9 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CameraShake_Layers[VariableString(__CameraShake_LayerName)].CameraDeltaX",
+                        "__CameraShake.Layers[VariableString(__CameraShake.LayerName)].CameraDeltaX",
                         "=",
-                        "CameraShake::Noise2d(\"\", TimeFromStart(), 1000) * Variable(__CameraShake_AmplitudeX) * Variable(__CameraShake_EaseFactor)"
+                        "CameraShake::Noise2d(\"\", TimeFromStart(), 1000) * Variable(__CameraShake.AmplitudeX) * Variable(__CameraShake.EaseFactor)"
                       ]
                     },
                     {
@@ -545,8 +534,8 @@
                       "parameters": [
                         "",
                         "+",
-                        "Variable(__CameraShake_Layers[VariableString(__CameraShake_LayerName)].CameraDeltaX)",
-                        "VariableString(__CameraShake_ActualLayerName)",
+                        "Variable(__CameraShake.Layers[VariableString(__CameraShake.LayerName)].CameraDeltaX)",
+                        "VariableString(__CameraShake.ActualLayerName)",
                         "0"
                       ]
                     }
@@ -560,7 +549,7 @@
                         "value": "VarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeY",
+                        "__CameraShake.AmplitudeY",
                         "!=",
                         "0"
                       ]
@@ -572,9 +561,9 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CameraShake_Layers[VariableString(__CameraShake_LayerName)].CameraDeltaY",
+                        "__CameraShake.Layers[VariableString(__CameraShake.LayerName)].CameraDeltaY",
                         "=",
-                        "CameraShake::Noise2d(\"\", TimeFromStart(), 2000) * Variable(__CameraShake_AmplitudeY) * Variable(__CameraShake_EaseFactor)"
+                        "CameraShake::Noise2d(\"\", TimeFromStart(), 2000) * Variable(__CameraShake.AmplitudeY) * Variable(__CameraShake.EaseFactor)"
                       ]
                     },
                     {
@@ -584,8 +573,8 @@
                       "parameters": [
                         "",
                         "+",
-                        "Variable(__CameraShake_Layers[VariableString(__CameraShake_LayerName)].CameraDeltaY)",
-                        "VariableString(__CameraShake_ActualLayerName)",
+                        "Variable(__CameraShake.Layers[VariableString(__CameraShake.LayerName)].CameraDeltaY)",
+                        "VariableString(__CameraShake.ActualLayerName)",
                         "0"
                       ]
                     }
@@ -599,7 +588,7 @@
                         "value": "VarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeAngle",
+                        "__CameraShake.AmplitudeAngle",
                         "!=",
                         "0"
                       ]
@@ -611,9 +600,9 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CameraShake_Layers[VariableString(__CameraShake_LayerName)].CameraDeltaAngle",
+                        "__CameraShake.Layers[VariableString(__CameraShake.LayerName)].CameraDeltaAngle",
                         "=",
-                        "CameraShake::Noise2d(\"\", TimeFromStart(), 3000) * Variable(__CameraShake_AmplitudeAngle) * Variable(__CameraShake_EaseFactor)"
+                        "CameraShake::Noise2d(\"\", TimeFromStart(), 3000) * Variable(__CameraShake.AmplitudeAngle) * Variable(__CameraShake.EaseFactor)"
                       ]
                     },
                     {
@@ -623,8 +612,8 @@
                       "parameters": [
                         "",
                         "+",
-                        "Variable(__CameraShake_Layers[VariableString(__CameraShake_LayerName)].CameraDeltaAngle)",
-                        "VariableString(__CameraShake_ActualLayerName)",
+                        "Variable(__CameraShake.Layers[VariableString(__CameraShake.LayerName)].CameraDeltaAngle)",
+                        "VariableString(__CameraShake.ActualLayerName)",
                         "0"
                       ]
                     }
@@ -638,7 +627,7 @@
                         "value": "VarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeZoom",
+                        "__CameraShake.AmplitudeZoom",
                         "!=",
                         "1"
                       ]
@@ -650,9 +639,9 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CameraShake_Layers[VariableString(__CameraShake_LayerName)].CameraDeltaZoom",
+                        "__CameraShake.Layers[VariableString(__CameraShake.LayerName)].CameraDeltaZoom",
                         "=",
-                        "pow(Variable(__CameraShake_AmplitudeZoom), CameraShake::Noise2d(\"\", TimeFromStart(), 4000) * Variable(__CameraShake_EaseFactor))"
+                        "pow(Variable(__CameraShake.AmplitudeZoom), CameraShake::Noise2d(\"\", TimeFromStart(), 4000) * Variable(__CameraShake.EaseFactor))"
                       ]
                     },
                     {
@@ -661,8 +650,8 @@
                       },
                       "parameters": [
                         "",
-                        "CameraZoom(VariableString(__CameraShake_ActualLayerName), 0) * Variable(__CameraShake_Layers[VariableString(__CameraShake_LayerName)].CameraDeltaZoom)",
-                        "VariableString(__CameraShake_ActualLayerName)",
+                        "CameraZoom(VariableString(__CameraShake.ActualLayerName), 0) * Variable(__CameraShake.Layers[VariableString(__CameraShake.LayerName)].CameraDeltaZoom)",
+                        "VariableString(__CameraShake.ActualLayerName)",
                         "0"
                       ]
                     }
@@ -703,11 +692,11 @@
           "conditions": [
             {
               "type": {
-                "value": "SceneVariableAsBoolean"
+                "value": "CameraShake::IsShaking"
               },
               "parameters": [
-                "__CameraShake_NeedToRevertCameraChanges",
-                "True"
+                "",
+                ""
               ]
             }
           ],
@@ -715,16 +704,16 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::ForEachChildVariable",
-              "iterableVariableName": "__CameraShake_Layers",
-              "valueIteratorVariableName": "__CameraShake_Layer",
-              "keyIteratorVariableName": "__CameraShake_LayerName",
+              "iterableVariableName": "__CameraShake.Layers",
+              "valueIteratorVariableName": "__CameraShake.Layer",
+              "keyIteratorVariableName": "__CameraShake.LayerName",
               "conditions": [
                 {
                   "type": {
                     "value": "SceneVariableAsBoolean"
                   },
                   "parameters": [
-                    "__CameraShake_Layers[VariableString(__CameraShake_LayerName)].Shakable",
+                    "__CameraShake.Layers[VariableString(__CameraShake.LayerName)].Shakable",
                     "True"
                   ]
                 }
@@ -740,9 +729,9 @@
                         "value": "ModVarSceneTxt"
                       },
                       "parameters": [
-                        "__CameraShake_ActualLayerName",
+                        "__CameraShake.ActualLayerName",
                         "=",
-                        "VariableString(__CameraShake_LayerName)"
+                        "VariableString(__CameraShake.LayerName)"
                       ]
                     }
                   ]
@@ -755,7 +744,7 @@
                         "value": "VarSceneTxt"
                       },
                       "parameters": [
-                        "__CameraShake_LayerName",
+                        "__CameraShake.LayerName",
                         "=",
                         "\"__BaseLayer\""
                       ]
@@ -767,7 +756,7 @@
                         "value": "ModVarSceneTxt"
                       },
                       "parameters": [
-                        "__CameraShake_ActualLayerName",
+                        "__CameraShake.ActualLayerName",
                         "=",
                         "\"\""
                       ]
@@ -782,7 +771,7 @@
                         "value": "VarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeX",
+                        "__CameraShake.AmplitudeX",
                         "!=",
                         "0"
                       ]
@@ -796,8 +785,8 @@
                       "parameters": [
                         "",
                         "-",
-                        "Variable(__CameraShake_Layers[VariableString(__CameraShake_LayerName)].CameraDeltaX)",
-                        "VariableString(__CameraShake_ActualLayerName)",
+                        "Variable(__CameraShake.Layers[VariableString(__CameraShake.LayerName)].CameraDeltaX)",
+                        "VariableString(__CameraShake.ActualLayerName)",
                         "0"
                       ]
                     }
@@ -811,7 +800,7 @@
                         "value": "VarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeY",
+                        "__CameraShake.AmplitudeY",
                         "!=",
                         "0"
                       ]
@@ -825,8 +814,8 @@
                       "parameters": [
                         "",
                         "-",
-                        "Variable(__CameraShake_Layers[VariableString(__CameraShake_LayerName)].CameraDeltaY)",
-                        "VariableString(__CameraShake_ActualLayerName)",
+                        "Variable(__CameraShake.Layers[VariableString(__CameraShake.LayerName)].CameraDeltaY)",
+                        "VariableString(__CameraShake.ActualLayerName)",
                         "0"
                       ]
                     }
@@ -840,7 +829,7 @@
                         "value": "VarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeAngle",
+                        "__CameraShake.AmplitudeAngle",
                         "!=",
                         "0"
                       ]
@@ -854,8 +843,8 @@
                       "parameters": [
                         "",
                         "-",
-                        "Variable(__CameraShake_Layers[VariableString(__CameraShake_LayerName)].CameraDeltaAngle)",
-                        "VariableString(__CameraShake_ActualLayerName)",
+                        "Variable(__CameraShake.Layers[VariableString(__CameraShake.LayerName)].CameraDeltaAngle)",
+                        "VariableString(__CameraShake.ActualLayerName)",
                         "0"
                       ]
                     }
@@ -869,7 +858,7 @@
                         "value": "VarScene"
                       },
                       "parameters": [
-                        "__CameraShake_AmplitudeZoom",
+                        "__CameraShake.AmplitudeZoom",
                         "!=",
                         "1"
                       ]
@@ -882,8 +871,8 @@
                       },
                       "parameters": [
                         "",
-                        "CameraZoom(VariableString(__CameraShake_ActualLayerName), 0) / Variable(__CameraShake_Layers[VariableString(__CameraShake_LayerName)].CameraDeltaZoom)",
-                        "VariableString(__CameraShake_ActualLayerName)",
+                        "CameraZoom(VariableString(__CameraShake.ActualLayerName), 0) / Variable(__CameraShake.Layers[VariableString(__CameraShake.LayerName)].CameraDeltaZoom)",
+                        "VariableString(__CameraShake.ActualLayerName)",
                         "0"
                       ]
                     }
@@ -1033,11 +1022,12 @@
           "actions": [
             {
               "type": {
-                "value": "ResetTimer"
+                "value": "ModVarScene"
               },
               "parameters": [
-                "",
-                "\"__CameraShake_DurationTimer\""
+                "__CameraShake.Time",
+                "=",
+                "0"
               ]
             },
             {
@@ -1045,7 +1035,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_Duration",
+                "__CameraShake.Duration",
                 "=",
                 "GetArgumentAsNumber(\"Duration\")"
               ]
@@ -1055,7 +1045,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_StartEaseDuration",
+                "__CameraShake.StartEaseDuration",
                 "=",
                 "GetArgumentAsNumber(\"StartEaseDuration\")"
               ]
@@ -1065,7 +1055,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_StopEaseDuration",
+                "__CameraShake.StopEaseDuration",
                 "=",
                 "GetArgumentAsNumber(\"StopEaseDuration\")"
               ]
@@ -1080,9 +1070,9 @@
                 "value": "VarScene"
               },
               "parameters": [
-                "__CameraShake_Duration",
+                "__CameraShake.Duration",
                 "<",
-                "Variable(__CameraShake_StartEaseDuration) + Variable(__CameraShake_StopEaseDuration)"
+                "Variable(__CameraShake.StartEaseDuration) + Variable(__CameraShake.StopEaseDuration)"
               ]
             }
           ],
@@ -1092,9 +1082,9 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_StartEaseDuration",
+                "__CameraShake.StartEaseDuration",
                 "=",
-                "GetArgumentAsNumber(\"StartEaseDuration\") * Variable(__CameraShake_Duration) / (GetArgumentAsNumber(\"StartEaseDuration\") + GetArgumentAsNumber(\"StopEaseDuration\"))"
+                "GetArgumentAsNumber(\"StartEaseDuration\") * Variable(__CameraShake.Duration) / (GetArgumentAsNumber(\"StartEaseDuration\") + GetArgumentAsNumber(\"StopEaseDuration\"))"
               ]
             },
             {
@@ -1102,9 +1092,9 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_StopEaseDuration",
+                "__CameraShake.StopEaseDuration",
                 "=",
-                "GetArgumentAsNumber(\"StopEaseDuration\") * Variable(__CameraShake_Duration) / (GetArgumentAsNumber(\"StartEaseDuration\") + GetArgumentAsNumber(\"StopEaseDuration\"))"
+                "GetArgumentAsNumber(\"StopEaseDuration\") * Variable(__CameraShake.Duration) / (GetArgumentAsNumber(\"StartEaseDuration\") + GetArgumentAsNumber(\"StopEaseDuration\"))"
               ]
             }
           ]
@@ -1292,7 +1282,7 @@
                     "value": "ModVarSceneTxt"
                   },
                   "parameters": [
-                    "__CameraShake_LayerName",
+                    "__CameraShake.LayerName",
                     "=",
                     "GetArgumentAsString(\"Layer\")"
                   ]
@@ -1329,7 +1319,7 @@
                     "value": "ModVarSceneTxt"
                   },
                   "parameters": [
-                    "__CameraShake_LayerName",
+                    "__CameraShake.LayerName",
                     "=",
                     "\"__BaseLayer\""
                   ]
@@ -1345,7 +1335,7 @@
                     "value": "VariableClearChildren"
                   },
                   "parameters": [
-                    "__CameraShake_Layers"
+                    "__CameraShake.Layers"
                   ]
                 },
                 {
@@ -1355,7 +1345,7 @@
                   "parameters": [
                     "",
                     "",
-                    "VariableString(__CameraShake_LayerName)",
+                    "VariableString(__CameraShake.LayerName)",
                     ""
                   ]
                 }
@@ -1371,7 +1361,7 @@
                   },
                   "parameters": [
                     "",
-                    "\"__CameraShake_DurationTimer\""
+                    "\"__CameraShake.DurationTimer\""
                   ]
                 },
                 {
@@ -1379,7 +1369,7 @@
                     "value": "ModVarSceneTxt"
                   },
                   "parameters": [
-                    "__CameraShake_Layer",
+                    "__CameraShake.Layer",
                     "=",
                     "GetArgumentAsString(\"Layer\")"
                   ]
@@ -1389,7 +1379,7 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__CameraShake_Duration",
+                    "__CameraShake.Duration",
                     "=",
                     "GetArgumentAsNumber(\"Duration\")"
                   ]
@@ -1399,7 +1389,7 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__CameraShake_StartEaseDuration",
+                    "__CameraShake.StartEaseDuration",
                     "=",
                     "0"
                   ]
@@ -1409,7 +1399,7 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__CameraShake_StopEaseDuration",
+                    "__CameraShake.StopEaseDuration",
                     "=",
                     "GetArgumentAsNumber(\"Duration\")"
                   ]
@@ -1419,7 +1409,7 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__CameraShake_DefaultAmplitudeX",
+                    "__CameraShake.DefaultAmplitudeX",
                     "=",
                     "abs(GetArgumentAsNumber(\"AmplitudeX\"))"
                   ]
@@ -1429,7 +1419,7 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__CameraShake_DefaultAmplitudeY",
+                    "__CameraShake.DefaultAmplitudeY",
                     "=",
                     "abs(GetArgumentAsNumber(\"AmplitudeY\"))"
                   ]
@@ -1439,7 +1429,7 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__CameraShake_DefaultAmplitudeAngle",
+                    "__CameraShake.DefaultAmplitudeAngle",
                     "=",
                     "GetArgumentAsNumber(\"AmplitudeAngle\")"
                   ]
@@ -1449,7 +1439,7 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__CameraShake_DefaultAmplitudeZoom",
+                    "__CameraShake.DefaultAmplitudeZoom",
                     "=",
                     "1 + GetArgumentAsNumber(\"AmplitudeZoom\") / 100"
                   ]
@@ -1476,7 +1466,7 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CameraShake_DefaultFrequency",
+                        "__CameraShake.DefaultFrequency",
                         "=",
                         "1 / GetArgumentAsNumber(\"ShakePeriod\")"
                       ]
@@ -1503,7 +1493,7 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CameraShake_DefaultFrequency",
+                        "__CameraShake.DefaultFrequency",
                         "=",
                         "1 / 0.08"
                       ]
@@ -1543,7 +1533,7 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__CameraShake_Duration",
+                    "__CameraShake.Duration",
                     "=",
                     "1234567890"
                   ]
@@ -1571,7 +1561,7 @@
                     "value": "VarScene"
                   },
                   "parameters": [
-                    "__CameraShake_Duration",
+                    "__CameraShake.Duration",
                     "=",
                     "0"
                   ]
@@ -1583,7 +1573,7 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__CameraShake_Duration",
+                    "__CameraShake.Duration",
                     "=",
                     "0.5"
                   ]
@@ -1668,7 +1658,7 @@
         {
           "codeOnly": false,
           "defaultValue": "",
-          "description": "Periode between shakes (in seconds) (Default: 0.08)",
+          "description": "Period between shakes (in seconds) (Default: 0.08)",
           "longDescription": "",
           "name": "ShakePeriod",
           "optional": false,
@@ -1689,7 +1679,7 @@
       "objectGroups": []
     },
     {
-      "description": "Start shaking the camera undefinitly.",
+      "description": "Start shaking the camera indefinitely.",
       "fullName": "Start camera shaking",
       "functionType": "Action",
       "group": "",
@@ -1703,11 +1693,12 @@
           "actions": [
             {
               "type": {
-                "value": "ResetTimer"
+                "value": "ModVarScene"
               },
               "parameters": [
-                "",
-                "\"__CameraShake_DurationTimer\""
+                "__CameraShake.Time",
+                "=",
+                "0"
               ]
             },
             {
@@ -1715,7 +1706,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_Duration",
+                "__CameraShake.Duration",
                 "=",
                 "1234567890"
               ]
@@ -1725,7 +1716,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_StartEaseDuration",
+                "__CameraShake.StartEaseDuration",
                 "=",
                 "GetArgumentAsNumber(\"EaseDuration\")"
               ]
@@ -1762,11 +1753,12 @@
           "actions": [
             {
               "type": {
-                "value": "ResetTimer"
+                "value": "ModVarScene"
               },
               "parameters": [
-                "",
-                "\"__CameraShake_DurationTimer\""
+                "__CameraShake.Time",
+                "=",
+                "0"
               ]
             },
             {
@@ -1774,7 +1766,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_Duration",
+                "__CameraShake.Duration",
                 "=",
                 "GetArgumentAsNumber(\"EaseDuration\")"
               ]
@@ -1784,7 +1776,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_StopEaseDuration",
+                "__CameraShake.StopEaseDuration",
                 "=",
                 "GetArgumentAsNumber(\"EaseDuration\")"
               ]
@@ -1824,7 +1816,7 @@
                 "value": "ModVarSceneTxt"
               },
               "parameters": [
-                "__CameraShake_LayerName",
+                "__CameraShake.LayerName",
                 "=",
                 "GetArgumentAsString(\"Layer\")"
               ]
@@ -1851,7 +1843,7 @@
                 "value": "ModVarSceneTxt"
               },
               "parameters": [
-                "__CameraShake_LayerName",
+                "__CameraShake.LayerName",
                 "=",
                 "\"__BaseLayer\""
               ]
@@ -1877,7 +1869,7 @@
                 "value": "SetSceneVariableAsBoolean"
               },
               "parameters": [
-                "__CameraShake_Layers[VariableString(__CameraShake_LayerName)].Shakable",
+                "__CameraShake.Layers[VariableString(__CameraShake.LayerName)].Shakable",
                 "="
               ]
             }
@@ -1901,7 +1893,7 @@
                 "value": "SetSceneVariableAsBoolean"
               },
               "parameters": [
-                "__CameraShake_Layers[VariableString(__CameraShake_LayerName)].Shakable",
+                "__CameraShake.Layers[VariableString(__CameraShake.LayerName)].Shakable",
                 "True"
               ]
             }
@@ -1946,13 +1938,12 @@
           "conditions": [
             {
               "type": {
-                "value": "CompareTimer"
+                "value": "VarScene"
               },
               "parameters": [
-                "",
-                "\"__CameraShake_DurationTimer\"",
+                "__CameraShake.Time",
                 "<",
-                "Variable(__CameraShake_Duration)"
+                "Variable(__CameraShake.Duration)"
               ]
             }
           ],
@@ -1989,7 +1980,7 @@
                 "value": "ModVarSceneTxt"
               },
               "parameters": [
-                "__CameraShake_LayerName",
+                "__CameraShake.LayerName",
                 "=",
                 "GetArgumentAsString(\"Layer\")"
               ]
@@ -2016,7 +2007,7 @@
                 "value": "ModVarSceneTxt"
               },
               "parameters": [
-                "__CameraShake_LayerName",
+                "__CameraShake.LayerName",
                 "=",
                 "\"__BaseLayer\""
               ]
@@ -2032,7 +2023,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_Layers[VariableString(__CameraShake_LayerName)].AmplitudeX",
+                "__CameraShake.Layers[VariableString(__CameraShake.LayerName)].AmplitudeX",
                 "=",
                 "GetArgumentAsNumber(\"AmplitudeX\")"
               ]
@@ -2042,7 +2033,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_Layers[VariableString(__CameraShake_LayerName)].AmplitudeY",
+                "__CameraShake.Layers[VariableString(__CameraShake.LayerName)].AmplitudeY",
                 "=",
                 "GetArgumentAsNumber(\"AmplitudeY\")"
               ]
@@ -2102,7 +2093,7 @@
                 "value": "ModVarSceneTxt"
               },
               "parameters": [
-                "__CameraShake_LayerName",
+                "__CameraShake.LayerName",
                 "=",
                 "GetArgumentAsString(\"Layer\")"
               ]
@@ -2129,7 +2120,7 @@
                 "value": "ModVarSceneTxt"
               },
               "parameters": [
-                "__CameraShake_LayerName",
+                "__CameraShake.LayerName",
                 "=",
                 "\"__BaseLayer\""
               ]
@@ -2145,7 +2136,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_Layers[VariableString(__CameraShake_LayerName)].AmplitudeAngle",
+                "__CameraShake.Layers[VariableString(__CameraShake.LayerName)].AmplitudeAngle",
                 "=",
                 "GetArgumentAsNumber(\"AmplitudeAngle\")"
               ]
@@ -2195,7 +2186,7 @@
                 "value": "ModVarSceneTxt"
               },
               "parameters": [
-                "__CameraShake_LayerName",
+                "__CameraShake.LayerName",
                 "=",
                 "GetArgumentAsString(\"Layer\")"
               ]
@@ -2222,7 +2213,7 @@
                 "value": "ModVarSceneTxt"
               },
               "parameters": [
-                "__CameraShake_LayerName",
+                "__CameraShake.LayerName",
                 "=",
                 "\"__BaseLayer\""
               ]
@@ -2238,7 +2229,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_Layers[VariableString(__CameraShake_LayerName)].AmplitudeZoom",
+                "__CameraShake.Layers[VariableString(__CameraShake.LayerName)].AmplitudeZoom",
                 "=",
                 "GetArgumentAsNumber(\"AmplitudeZoom\")"
               ]
@@ -2288,7 +2279,7 @@
                 "value": "ModVarSceneTxt"
               },
               "parameters": [
-                "__CameraShake_LayerName",
+                "__CameraShake.LayerName",
                 "=",
                 "GetArgumentAsString(\"Layer\")"
               ]
@@ -2315,7 +2306,7 @@
                 "value": "ModVarSceneTxt"
               },
               "parameters": [
-                "__CameraShake_LayerName",
+                "__CameraShake.LayerName",
                 "=",
                 "\"__BaseLayer\""
               ]
@@ -2331,7 +2322,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_Layers[VariableString(__CameraShake_LayerName)].Frequency",
+                "__CameraShake.Layers[VariableString(__CameraShake.LayerName)].Frequency",
                 "=",
                 "GetArgumentAsNumber(\"Frequency\")"
               ]
@@ -2381,7 +2372,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_DefaultAmplitudeX",
+                "__CameraShake.DefaultAmplitudeX",
                 "=",
                 "GetArgumentAsNumber(\"AmplitudeX\")"
               ]
@@ -2391,7 +2382,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_DefaultAmplitudeY",
+                "__CameraShake.DefaultAmplitudeY",
                 "=",
                 "GetArgumentAsNumber(\"AmplitudeY\")"
               ]
@@ -2441,7 +2432,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_DefaultAmplitudeAngle",
+                "__CameraShake.DefaultAmplitudeAngle",
                 "=",
                 "GetArgumentAsNumber(\"AmplitudeAngle\")"
               ]
@@ -2481,7 +2472,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_DefaultAmplitudeZoom",
+                "__CameraShake.DefaultAmplitudeZoom",
                 "=",
                 "GetArgumentAsNumber(\"AmplitudeZoom\")"
               ]
@@ -2521,7 +2512,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CameraShake_DefaultFrequency",
+                "__CameraShake.DefaultFrequency",
                 "=",
                 "GetArgumentAsNumber(\"Frequency\")"
               ]
@@ -2778,7 +2769,7 @@
       "objectGroups": []
     },
     {
-      "description": "Delete a noise generators and loose its settings.",
+      "description": "Delete a noise generator and loose its settings.",
       "fullName": "Delete a noise generator",
       "functionType": "Action",
       "group": "",
