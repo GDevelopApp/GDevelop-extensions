@@ -1,7 +1,7 @@
 {
   "author": "",
   "category": "General",
-  "description": "Edge scroll camera allows the player to move around the scene simply by moving the cursor near the edge they want the camera to move towards.  This is common in RTS games, but it can be useful for many things.\n\nHow to use:\n- Run the action \"Enable (or disable) edge camera scrolling\" at the beginning of scene\n- Run the action \"Configure edge camera scrolling\" at the beginning of scene\n\nTips:\n- Variable speed makes the camera scroll faster the closer the cursor gets to the edge of screen\n- Use the action \"Enable (or disable) edge camera scrolling\" to turn the scrolling ON or OFF\n- Use the action \"Enforce camera boundaries\" to restrict what the player can see\n- Use the extension \"Copy camera settings\" if you want multiple layers to move\n\nExpressions:\n- EdgeScrollSpeedX() - Current scroll speed (horizontal)\n- EdgeScrollSpeedY() - Current scroll speed (vertical)\n",
+  "description": "Edge scroll camera allows the player to move around the scene simply by moving the cursor near the edge they want the camera to move towards.  This is common in RTS games, but it can be useful for many things.\n\nHow to use:\n- Run the action \"Enable (or disable) edge camera scrolling\" at the beginning of scene\n- Run the action \"Configure edge camera scrolling\" at the beginning of scene\n\nTips:\n- \"Progressive speed\" makes the camera scroll faster the closer the cursor gets to the edge of screen\n- Use the action \"Enable (or disable) edge camera scrolling\" to turn the scrolling ON or OFF\n- Use the action \"Enforce camera boundaries\" to restrict what the player can see\n- Use the extension \"Copy camera settings\" if you want multiple layers to move\n\nExpressions:\n- EdgeScrollSpeedX() - Current scroll speed (horizontal)\n- EdgeScrollSpeedY() - Current scroll speed (vertical)\n",
   "extensionNamespace": "",
   "fullName": "Edge scroll camera",
   "helpPath": "",
@@ -59,7 +59,7 @@
                 "300",
                 "\"\"",
                 "0",
-                "yes",
+                "\"Progressive speed\"",
                 ""
               ]
             }
@@ -591,7 +591,7 @@
       "group": "",
       "name": "ConfigureEdgeScrollCamera",
       "private": false,
-      "sentence": "Configure camera edge scrolling (layer: _PARAM3_, screen margin: _PARAM1_, scroll speed: _PARAM2_, progressive: _PARAM5_)",
+      "sentence": "Configure camera edge scrolling (layer: _PARAM3_, screen margin: _PARAM1_, scroll speed: _PARAM2_, style: _PARAM5_)",
       "events": [
         {
           "colorB": 228,
@@ -607,22 +607,24 @@
               "conditions": [
                 {
                   "type": {
-                    "inverted": true,
-                    "value": "GetArgumentAsBoolean"
+                    "value": "BuiltinCommonInstructions::CompareStrings"
                   },
                   "parameters": [
-                    "\"ProgressiveSpeed\""
+                    "GetArgumentAsString(\"ScrollStyle\")",
+                    "=",
+                    "\"Constant speed\""
                   ]
                 }
               ],
               "actions": [
                 {
                   "type": {
-                    "value": "SetSceneVariableAsBoolean"
+                    "value": "ModVarSceneTxt"
                   },
                   "parameters": [
-                    "__EdgeScrollCamera.ProgressiveSpeedEnabled",
-                    "False"
+                    "__EdgeScrollCamera.Style",
+                    "=",
+                    "\"Constant speed\""
                   ]
                 }
               ]
@@ -632,21 +634,24 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "GetArgumentAsBoolean"
+                    "value": "BuiltinCommonInstructions::CompareStrings"
                   },
                   "parameters": [
-                    "\"ProgressiveSpeed\""
+                    "GetArgumentAsString(\"ScrollStyle\")",
+                    "=",
+                    "\"Progressive speed\""
                   ]
                 }
               ],
               "actions": [
                 {
                   "type": {
-                    "value": "SetSceneVariableAsBoolean"
+                    "value": "ModVarSceneTxt"
                   },
                   "parameters": [
-                    "__EdgeScrollCamera.ProgressiveSpeedEnabled",
-                    "True"
+                    "__EdgeScrollCamera.Style",
+                    "=",
+                    "\"Progressive speed\""
                   ]
                 }
               ]
@@ -744,13 +749,13 @@
         },
         {
           "codeOnly": false,
-          "defaultValue": "yes",
-          "description": "Use progressive speed (based on cursor distance from screen edge)",
+          "defaultValue": "",
+          "description": "Scroll style",
           "longDescription": "",
-          "name": "ProgressiveSpeed",
-          "optional": true,
-          "supplementaryInformation": "",
-          "type": "yesorno"
+          "name": "ScrollStyle",
+          "optional": false,
+          "supplementaryInformation": "[\"Progressive speed\",\"Constant speed\"]",
+          "type": "stringWithSelector"
         }
       ],
       "objectGroups": []
@@ -1258,15 +1263,29 @@
       "sentence": "",
       "events": [
         {
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "Progressive style increases speed the closer the cursor is to the edge of screen",
+          "comment2": ""
+        },
+        {
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [
             {
               "type": {
-                "value": "SceneVariableAsBoolean"
+                "value": "VarSceneTxt"
               },
               "parameters": [
-                "__EdgeScrollCamera.ProgressiveSpeedEnabled",
-                "True"
+                "__EdgeScrollCamera.Style",
+                "=",
+                "\"Progressive speed\""
               ]
             }
           ],
@@ -1305,11 +1324,12 @@
               "subInstructions": [
                 {
                   "type": {
-                    "value": "SceneVariableAsBoolean"
+                    "value": "VarSceneTxt"
                   },
                   "parameters": [
-                    "__EdgeScrollCamera.ProgressiveSpeedEnabled",
-                    "False"
+                    "__EdgeScrollCamera.Style",
+                    "=",
+                    "\"Constant speed\""
                   ]
                 },
                 {
