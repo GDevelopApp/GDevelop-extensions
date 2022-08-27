@@ -143,7 +143,7 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
         // Override the base extensions when fixing
         if (args['fix'])
           await writeJSONFile(
-            path.join(extensionsBasePath, `${name}.json`),
+            path.join(extensionsBasePath, tier, `${name}.json`),
             extension
           );
 

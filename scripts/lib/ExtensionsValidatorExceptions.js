@@ -160,6 +160,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Geolocation: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['geolocation'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     MQTT: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: ['mqtt'],
