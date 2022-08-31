@@ -148,6 +148,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: ['__boidsExtension'],
       javaScriptObjectAllowedProperties: [],
     },
+    CameraShake: {
+      gdjsAllowedProperties: ['_cameraShakeExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     DialogBox: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: [],
