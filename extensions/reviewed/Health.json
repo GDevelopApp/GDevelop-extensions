@@ -1,7 +1,7 @@
 {
   "author": "@4ian",
   "category": "General",
-  "description": "Manage health (life) and shield points of an object. Health can be assigned to players, enemies, NPCs, or even inanimate objects such as breaking doors and mining rocks.\n\nHow to use:\n\n- Set desired values in \"Health\" and \"Shield\" behavior properties\n- To apply damage use “Damage an object” or “Damage an object protected by a shield”\n- To heal health, use “Heal object” action \n- To activate the shield, use “Activate Shield” action\n- Health and shield regeneration will happen automatically based on properties\n \nTips:\n\n- While damage cooldown is active, no damage will be applied to health or shield\n- Try using the “Blink” extension while damage cooldown is active\n- Use the “Is just damaged” or \"Is just healed\" condition to trigger audio and visual effects\n\nHealth properties:\n\n- Health (life points) Used for starting health\n- Maximum health (0 for no maximum)\n- Damage cooldown (seconds) Use \"0\" for no cooldown\n- Rate of health regeneration (points per second) Will not exceed max health, even with overhealing enabled\n- Delay (seconds) before health regeneration starts after being hit\n- Allow heal to increase health above max health (will not exceed max health)\n\nShield properties:\n\n- Max shield points (Shield will start with this many points when activated)\n- Duration of shield (seconds) Use \"0\" to disable shield timer\n- Rate of shield regeneration (points per second)\n- Shield will block all excess damage when shield is destroyed\n- Delay (seconds) before shield regeneration starts after being hit\n- Regenerate shield when it has zero points\n",
+  "description": "Manage health (life) and shield points of an object. Health can be assigned to players, enemies, NPCs, or even inanimate objects such as breaking doors and mining rocks.\n\nHow to use:\n\n- Set desired values in \"Health\" and \"Shield\" behavior properties\n- To apply damage use “Apply damage to an object” or “Apply damage to a shielded object”\n- To heal health, use “Heal object” action\n- To activate the shield, use “Activate Shield” action\n- Health and shield regeneration will happen automatically based on properties\n \nTips:\n\n- While damage cooldown is active, no damage will be applied to health or shield\n- Try using the “Blink” extension while damage cooldown is active\n- Use the “Is just damaged” or \"Is just healed\" condition to trigger audio and visual effects\n\nHealth properties:\n\n- Starting health (life) points\n- Maximum health (points) Use \"0\" for no maximum\n- Damage cooldown (seconds) Use \"0\" for no cooldown\n- Rate of health regeneration (points per second)\n- Health regeneration delay after being hit (seconds)\n- Allow heals to increase health above max health (regen will never exceed max health)\n\nShield properties:\n\n- Starting points when shield is activated\n- Max shield points\n- Duration of shield (seconds) Use \"0\" to make shield permanent\n- Rate of shield regeneration (points per second)\n- Block excess damage when shield is broken\n- Delay before shield regeneration starts after being hit (seconds)\n- Regenerate shield when broken\n",
   "extensionNamespace": "",
   "fullName": "Health (life) points and shield",
   "helpPath": "",
@@ -412,7 +412,7 @@
             {
               "codeOnly": false,
               "defaultValue": "",
-              "description": "Value of the damage to do (will be removed from object health)",
+              "description": "Points of damage",
               "longDescription": "",
               "name": "DamageValue",
               "optional": false,
@@ -2058,7 +2058,7 @@
         {
           "value": "0",
           "type": "Number",
-          "label": "Health regeneration delay (seconds)",
+          "label": "Health regeneration delay after being hit (seconds)",
           "description": "",
           "group": "Health regeneration",
           "extraInformation": [],
@@ -2207,7 +2207,7 @@
                             },
                             {
                               "type": {
-                                "value": "Health::Shield::PropertyRegenShieldWhenZeroPoints"
+                                "value": "Health::Shield::PropertyRegenBrokenShield"
                               },
                               "parameters": [
                                 "Object",
@@ -2381,11 +2381,11 @@
           "objectGroups": []
         },
         {
-          "description": "Apply damage to a shielded object. If shield is active, it will be damaged first.",
+          "description": "Apply damage to a shielded object. If shield is active, the shield will be damaged first.",
           "fullName": "Apply damage to a shielded object",
           "functionType": "Action",
           "group": "Shield",
-          "name": "ShieldHit",
+          "name": "HitShield",
           "private": false,
           "sentence": "Apply _PARAM2_ points of damage to shielded object _PARAM0_",
           "events": [
@@ -2651,7 +2651,7 @@
                             {
                               "type": {
                                 "inverted": true,
-                                "value": "Health::Shield::PropertyShieldBlocksExcessDamage"
+                                "value": "Health::Shield::PropertyBlockExcessDamage"
                               },
                               "parameters": [
                                 "Object",
@@ -2741,7 +2741,7 @@
             {
               "codeOnly": false,
               "defaultValue": "",
-              "description": "Value of the damage to do (will be removed from object health)",
+              "description": "Points of damage",
               "longDescription": "",
               "name": "DamageValue",
               "optional": false,
@@ -2924,7 +2924,7 @@
             {
               "codeOnly": false,
               "defaultValue": "",
-              "description": "Rate of regen",
+              "description": "Regeneration rate (points per second)",
               "longDescription": "",
               "name": "Value",
               "optional": false,
@@ -2985,7 +2985,7 @@
             {
               "codeOnly": false,
               "defaultValue": "",
-              "description": "Delay (seconds)",
+              "description": "Regeneration delay (seconds)",
               "longDescription": "",
               "name": "Value",
               "optional": false,
@@ -3046,7 +3046,7 @@
             {
               "codeOnly": false,
               "defaultValue": "",
-              "description": "Duration of shield (seconds)",
+              "description": "Shield duration (seconds)",
               "longDescription": "",
               "name": "Value",
               "optional": false,
@@ -3063,7 +3063,7 @@
           "group": "Shield",
           "name": "ActivateShield",
           "private": false,
-          "sentence": "Activate (or renew) shield on _PARAM0_",
+          "sentence": "Activate (or renew) the shield on _PARAM0_",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -3117,7 +3117,7 @@
           "objectGroups": []
         },
         {
-          "description": "Change max shield points.",
+          "description": "Change maximum shield points.",
           "fullName": "Max shield points ",
           "functionType": "Action",
           "group": "Shield configuration",
@@ -3178,8 +3178,8 @@
           "objectGroups": []
         },
         {
-          "description": "Shield blocks excess damage when it breaks.",
-          "fullName": "Shield blocks excess damage when it breaks",
+          "description": "Enable (or disable) blocking excess damage when shield breaks.",
+          "fullName": "Block excess damage when shield breaks",
           "functionType": "Action",
           "group": "Shield configuration",
           "name": "ShieldBlockExcessDamage",
@@ -3192,7 +3192,7 @@
               "actions": [
                 {
                   "type": {
-                    "value": "Health::Shield::SetPropertyShieldBlocksExcessDamage"
+                    "value": "Health::Shield::SetPropertyBlockExcessDamage"
                   },
                   "parameters": [
                     "Object",
@@ -3217,7 +3217,7 @@
               "actions": [
                 {
                   "type": {
-                    "value": "Health::Shield::SetPropertyShieldBlocksExcessDamage"
+                    "value": "Health::Shield::SetPropertyBlockExcessDamage"
                   },
                   "parameters": [
                     "Object",
@@ -3252,7 +3252,7 @@
             {
               "codeOnly": false,
               "defaultValue": "",
-              "description": "Shield blocks excess damage",
+              "description": "Block excess damage",
               "longDescription": "",
               "name": "Value",
               "optional": false,
@@ -3263,13 +3263,13 @@
           "objectGroups": []
         },
         {
-          "description": "Regenerate shield when it has zero points.",
-          "fullName": "Regenerate shield when it has zero points",
+          "description": "Regenerate shield when it is broken.",
+          "fullName": "Regenerate shield when it is broken",
           "functionType": "Action",
           "group": "Shield configuration",
           "name": "RegenShieldWhenZero",
           "private": false,
-          "sentence": "Regenerate shield on _PARAM0_ when it has zero points: _PARAM2_",
+          "sentence": "Regenerate shield on _PARAM0_ when it is broken: _PARAM2_",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -3277,7 +3277,7 @@
               "actions": [
                 {
                   "type": {
-                    "value": "Health::Shield::SetPropertyRegenShieldWhenZeroPoints"
+                    "value": "Health::Shield::SetPropertyRegenBrokenShield"
                   },
                   "parameters": [
                     "Object",
@@ -3302,7 +3302,7 @@
               "actions": [
                 {
                   "type": {
-                    "value": "Health::Shield::SetPropertyRegenShieldWhenZeroPoints"
+                    "value": "Health::Shield::SetPropertyRegenBrokenShield"
                   },
                   "parameters": [
                     "Object",
@@ -3337,7 +3337,7 @@
             {
               "codeOnly": false,
               "defaultValue": "",
-              "description": "Regen shield when it has zero points",
+              "description": "Regenerate broken shield",
               "longDescription": "",
               "name": "Value",
               "optional": false,
@@ -3906,7 +3906,7 @@
         {
           "value": "100",
           "type": "Number",
-          "label": "Starting shield points when shield is activated",
+          "label": "Starting points when shield is activated",
           "description": "",
           "group": "Shield",
           "extraInformation": [],
@@ -3926,7 +3926,7 @@
         {
           "value": "100",
           "type": "Number",
-          "label": "Max shield points (Shield will start with this many points when activated)",
+          "label": "Max shield points",
           "description": "",
           "group": "Shield",
           "extraInformation": [],
@@ -3956,17 +3956,17 @@
         {
           "value": "",
           "type": "Boolean",
-          "label": "Shield will block all excess damage when shield is destroyed",
+          "label": "Block excess damage when shield is broken",
           "description": "",
           "group": "Shield",
           "extraInformation": [],
           "hidden": false,
-          "name": "ShieldBlocksExcessDamage"
+          "name": "BlockExcessDamage"
         },
         {
           "value": "",
           "type": "Number",
-          "label": "Delay (seconds) before shield regeneration starts after being hit",
+          "label": "Delay before shield regeneration starts after being hit (seconds)",
           "description": "",
           "group": "Shield regeneration",
           "extraInformation": [],
@@ -3976,12 +3976,12 @@
         {
           "value": "",
           "type": "Boolean",
-          "label": "Regenerate shield when it has zero points",
+          "label": "Regenerate shield when broken",
           "description": "",
           "group": "Shield regeneration",
           "extraInformation": [],
           "hidden": false,
-          "name": "RegenShieldWhenZeroPoints"
+          "name": "RegenBrokenShield"
         },
         {
           "value": "",
