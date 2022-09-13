@@ -1,7 +1,7 @@
 {
   "author": "@4ian",
   "category": "General",
-  "description": "Manage health (life) points including a protective shield and armor. Health can be assigned to players, enemies, NPCs, or even inanimate objects such as breaking doors and mining rocks.\n\nHow to use:\n\n- Set desired values in behavior properties\n- To apply damage use “Apply damage to an object”\n- To heal health, use “Heal object” action\n- To activate the shield, use “Activate Shield” action\n- Health and shield regeneration will happen automatically based on properties\n \nTips:\n\n- While damage cooldown is active, no damage will be applied to health or shield; the object is invincible\n- Try using the “Blink” extension while damage cooldown is active\n- Use the “Is just damaged” or \"Is just healed\" condition to trigger audio and visual effects\n\nHealth properties:\n\n- Starting health (life) points\n- Maximum health (points) Use \"0\" for no maximum\n- Damage cooldown (seconds) Use \"0\" for no cooldown\n- Rate of health regeneration (points per second)\n- Health regeneration delay after being hit (seconds)\n- Allow heals to increase health above max health (regen will never exceed max health)\n\nShield properties:\n\n- Starting points when shield is activated\n- Max shield points\n- Duration of shield (seconds) Use \"0\" to make shield permanent\n- Rate of shield regeneration (points per second)\n- Block excess damage when shield is broken\n- Delay before shield regeneration starts after being hit (seconds)\n- Regenerate shield when broken",
+  "description": "Manage health (life) points including a protective shield and armor. Health can be assigned to players, enemies, NPCs, or even inanimate objects such as breaking doors and mining rocks.\n\nDamage calculations are performed in this order order:\n\nIncoming Damage -> Chance to Dodge -> Flat Damage Reduction -> Percent Damage Reduction -> Damage to Shield -> Damage to Health\n\nHow to use:\n\n- Set desired values in behavior properties\n- To apply damage use “Apply damage to an object”\n- To heal health, use “Heal object” action\n- To activate the shield, use “Activate Shield” action\n- Health and shield regeneration will happen automatically based on properties\n \nTips:\n\n- While damage cooldown is active, no damage will be applied to health or shield (the object is invincible)\n- Try using the “Blink” extension while damage cooldown is active\n- Use the “Is just damaged” or \"Is just healed\" condition to trigger audio and visual effects\n\nHealth properties:\n\n- Starting health (life) points\n- Maximum health (points) Use \"0\" for no maximum\n- Damage cooldown (seconds) Use \"0\" for no cooldown\n- Rate of health regeneration (points per second)\n- Health regeneration delay after being hit (seconds)\n- Allow heals to increase health above max health (regen will never exceed max health)\n\nShield properties:\n\n- Starting points when shield is activated\n- Max shield points\n- Duration of shield (seconds) Use \"0\" to make shield permanent\n- Rate of shield regeneration (points per second)\n- Block excess damage when shield is broken\n- Delay before shield regeneration starts after being hit (seconds)\n- Regenerate shield when broken",
   "extensionNamespace": "",
   "fullName": "Health (life) points and shield",
   "helpPath": "",
@@ -51,15 +51,6 @@
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [],
               "actions": [
-                {
-                  "type": {
-                    "value": "ResetObjectTimer"
-                  },
-                  "parameters": [
-                    "Object",
-                    "\"__Health.DamageCooldown\""
-                  ]
-                },
                 {
                   "type": {
                     "value": "ResetObjectTimer"
@@ -117,31 +108,86 @@
           "sentence": "",
           "events": [
             {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
+              "colorB": 224,
+              "colorG": 16,
+              "colorR": 189,
               "creationTime": 0,
-              "name": "Combined",
+              "name": "Health",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
               "events": [
                 {
-                  "colorB": 224,
-                  "colorG": 16,
-                  "colorR": 189,
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
                   "creationTime": 0,
-                  "name": "Health",
+                  "name": "Regeneration",
                   "source": "",
                   "type": "BuiltinCommonInstructions::Group",
                   "events": [
                     {
-                      "colorB": 228,
-                      "colorG": 176,
-                      "colorR": 74,
-                      "creationTime": 0,
-                      "name": "Regeneration",
-                      "source": "",
-                      "type": "BuiltinCommonInstructions::Group",
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
+                      },
+                      "comment": "Health",
+                      "comment2": ""
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "Health::Health::PropertyHealthRegenRate"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "!=",
+                            "0"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "Health::Health::PropertyCurrentHealth"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "<",
+                            "Object.Behavior::MaxHealth()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "CompareObjectTimer"
+                          },
+                          "parameters": [
+                            "Object",
+                            "\"__Health.TimeSinceLastHit\"",
+                            ">",
+                            "Object.Behavior::PropertyHealthRegenDelay()"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "Health::Health::SetPropertyCurrentHealth"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "+",
+                            "Object.Behavior::PropertyHealthRegenRate() * TimeDelta()"
+                          ]
+                        }
+                      ],
                       "events": [
                         {
                           "type": "BuiltinCommonInstructions::Comment",
@@ -153,7 +199,7 @@
                             "textG": 0,
                             "textR": 0
                           },
-                          "comment": "Health",
+                          "comment": "Correct any values above maximum limits",
                           "comment2": ""
                         },
                         {
@@ -161,35 +207,13 @@
                           "conditions": [
                             {
                               "type": {
-                                "value": "Health::Health::PropertyHealthRegenRate"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                "!=",
-                                "0"
-                              ]
-                            },
-                            {
-                              "type": {
                                 "value": "Health::Health::PropertyCurrentHealth"
                               },
                               "parameters": [
                                 "Object",
                                 "Behavior",
-                                "<",
-                                "Object.Behavior::MaxHealth()"
-                              ]
-                            },
-                            {
-                              "type": {
-                                "value": "CompareObjectTimer"
-                              },
-                              "parameters": [
-                                "Object",
-                                "\"__Health.TimeSinceLastHit\"",
                                 ">",
-                                "Object.Behavior::PropertyHealthRegenDelay()"
+                                "Object.Behavior::MaxHealth()"
                               ]
                             }
                           ],
@@ -201,8 +225,192 @@
                               "parameters": [
                                 "Object",
                                 "Behavior",
+                                "=",
+                                "Object.Behavior::PropertyMaxHealth()"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Reset triggers",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "Health::Health::SetPropertyIsHealthJustDamaged"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "no"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "Health::Health::SetPropertyIsJustHealed"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "no"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "Health::Health::SetPropertyIsJustDodged"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "no"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "parameters": []
+                }
+              ],
+              "parameters": []
+            },
+            {
+              "colorB": 224,
+              "colorG": 16,
+              "colorR": 189,
+              "creationTime": 0,
+              "name": "Shield",
+              "source": "",
+              "type": "BuiltinCommonInstructions::Group",
+              "events": [
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Regeneration",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
+                      },
+                      "comment": "Shield",
+                      "comment2": ""
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "Health::Health::PropertyShieldRegenRate"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "!=",
+                            "0"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "Health::Health::PropertyCurrentShieldPoints"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "<",
+                            "Object.Behavior::PropertyMaxShieldPoints()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "CompareObjectTimer"
+                          },
+                          "parameters": [
+                            "Object",
+                            "\"__Health.TimeSinceLastHit\"",
+                            ">",
+                            "Object.Behavior::PropertyShieldRegenDelay()"
+                          ]
+                        }
+                      ],
+                      "actions": [],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Comment",
+                          "color": {
+                            "b": 109,
+                            "g": 230,
+                            "r": 255,
+                            "textB": 0,
+                            "textG": 0,
+                            "textR": 0
+                          },
+                          "comment": "Only regen when shield is active or when \"RegenShieldWhenZeroPoints\" is enabled",
+                          "comment2": ""
+                        },
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::Or"
+                              },
+                              "parameters": [],
+                              "subInstructions": [
+                                {
+                                  "type": {
+                                    "value": "Health::Health::IsShieldActive"
+                                  },
+                                  "parameters": [
+                                    "Object",
+                                    "Behavior",
+                                    ""
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "Health::Health::PropertyRegenBrokenShield"
+                                  },
+                                  "parameters": [
+                                    "Object",
+                                    "Behavior"
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "Health::Health::SetPropertyCurrentShieldPoints"
+                              },
+                              "parameters": [
+                                "Object",
+                                "Behavior",
                                 "+",
-                                "Object.Behavior::PropertyHealthRegenRate() * TimeDelta()"
+                                "Object.Behavior::PropertyShieldRegenRate() * TimeDelta()"
                               ]
                             }
                           ],
@@ -225,197 +433,13 @@
                               "conditions": [
                                 {
                                   "type": {
-                                    "value": "Health::Health::PropertyCurrentHealth"
+                                    "value": "Health::Health::PropertyCurrentShieldPoints"
                                   },
                                   "parameters": [
                                     "Object",
                                     "Behavior",
                                     ">",
-                                    "Object.Behavior::MaxHealth()"
-                                  ]
-                                }
-                              ],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "Health::Health::SetPropertyCurrentHealth"
-                                  },
-                                  "parameters": [
-                                    "Object",
-                                    "Behavior",
-                                    "=",
-                                    "Object.Behavior::PropertyMaxHealth()"
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ],
-                      "parameters": []
-                    },
-                    {
-                      "colorB": 228,
-                      "colorG": 176,
-                      "colorR": 74,
-                      "creationTime": 0,
-                      "name": "Reset triggers",
-                      "source": "",
-                      "type": "BuiltinCommonInstructions::Group",
-                      "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "Health::Health::SetPropertyIsJustDamaged"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                "no"
-                              ]
-                            },
-                            {
-                              "type": {
-                                "value": "Health::Health::SetPropertyIsJustHealed"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                "no"
-                              ]
-                            },
-                            {
-                              "type": {
-                                "value": "Health::Health::SetPropertyIsJustDodged"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                "no"
-                              ]
-                            }
-                          ]
-                        }
-                      ],
-                      "parameters": []
-                    }
-                  ],
-                  "parameters": []
-                },
-                {
-                  "colorB": 224,
-                  "colorG": 16,
-                  "colorR": 189,
-                  "creationTime": 0,
-                  "name": "Shield",
-                  "source": "",
-                  "type": "BuiltinCommonInstructions::Group",
-                  "events": [
-                    {
-                      "colorB": 228,
-                      "colorG": 176,
-                      "colorR": 74,
-                      "creationTime": 0,
-                      "name": "Regeneration",
-                      "source": "",
-                      "type": "BuiltinCommonInstructions::Group",
-                      "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Comment",
-                          "color": {
-                            "b": 109,
-                            "g": 230,
-                            "r": 255,
-                            "textB": 0,
-                            "textG": 0,
-                            "textR": 0
-                          },
-                          "comment": "Shield",
-                          "comment2": ""
-                        },
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [
-                            {
-                              "type": {
-                                "value": "Health::Health::PropertyShieldRegenRate"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                "!=",
-                                "0"
-                              ]
-                            },
-                            {
-                              "type": {
-                                "value": "Health::Health::PropertyCurrentShieldPoints"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                "<",
-                                "Object.Behavior::PropertyMaxShieldPoints()"
-                              ]
-                            },
-                            {
-                              "type": {
-                                "value": "CompareObjectTimer"
-                              },
-                              "parameters": [
-                                "Object",
-                                "\"__Health.TimeSinceLastHit\"",
-                                ">",
-                                "Object.Behavior::PropertyShieldRegenDelay()"
-                              ]
-                            }
-                          ],
-                          "actions": [],
-                          "events": [
-                            {
-                              "type": "BuiltinCommonInstructions::Comment",
-                              "color": {
-                                "b": 109,
-                                "g": 230,
-                                "r": 255,
-                                "textB": 0,
-                                "textG": 0,
-                                "textR": 0
-                              },
-                              "comment": "Only regen when shield is active or when \"RegenShieldWhenZeroPoints\" is enabled",
-                              "comment2": ""
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [
-                                {
-                                  "type": {
-                                    "value": "BuiltinCommonInstructions::Or"
-                                  },
-                                  "parameters": [],
-                                  "subInstructions": [
-                                    {
-                                      "type": {
-                                        "value": "Health::Health::IsShieldActive"
-                                      },
-                                      "parameters": [
-                                        "Object",
-                                        "Behavior",
-                                        ""
-                                      ]
-                                    },
-                                    {
-                                      "type": {
-                                        "value": "Health::Health::PropertyRegenBrokenShield"
-                                      },
-                                      "parameters": [
-                                        "Object",
-                                        "Behavior"
-                                      ]
-                                    }
+                                    "Object.Behavior::PropertyMaxShieldPoints()"
                                   ]
                                 }
                               ],
@@ -427,135 +451,90 @@
                                   "parameters": [
                                     "Object",
                                     "Behavior",
-                                    "+",
-                                    "Object.Behavior::PropertyShieldRegenRate() * TimeDelta()"
-                                  ]
-                                }
-                              ],
-                              "events": [
-                                {
-                                  "type": "BuiltinCommonInstructions::Comment",
-                                  "color": {
-                                    "b": 109,
-                                    "g": 230,
-                                    "r": 255,
-                                    "textB": 0,
-                                    "textG": 0,
-                                    "textR": 0
-                                  },
-                                  "comment": "Correct any values above maximum limits",
-                                  "comment2": ""
-                                },
-                                {
-                                  "type": "BuiltinCommonInstructions::Standard",
-                                  "conditions": [
-                                    {
-                                      "type": {
-                                        "value": "Health::Health::PropertyCurrentShieldPoints"
-                                      },
-                                      "parameters": [
-                                        "Object",
-                                        "Behavior",
-                                        ">",
-                                        "Object.Behavior::PropertyMaxShieldPoints()"
-                                      ]
-                                    }
-                                  ],
-                                  "actions": [
-                                    {
-                                      "type": {
-                                        "value": "Health::Health::SetPropertyCurrentShieldPoints"
-                                      },
-                                      "parameters": [
-                                        "Object",
-                                        "Behavior",
-                                        "=",
-                                        "Object.Behavior::PropertyMaxShieldPoints()"
-                                      ]
-                                    }
+                                    "=",
+                                    "Object.Behavior::PropertyMaxShieldPoints()"
                                   ]
                                 }
                               ]
                             }
                           ]
                         }
-                      ],
-                      "parameters": []
-                    },
+                      ]
+                    }
+                  ],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Remove shield points if shield expired",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
                     {
-                      "colorB": 228,
-                      "colorG": 176,
-                      "colorR": 74,
-                      "creationTime": 0,
-                      "name": "Remove shield points if shield expired",
-                      "source": "",
-                      "type": "BuiltinCommonInstructions::Group",
-                      "events": [
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
                         {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [
-                            {
-                              "type": {
-                                "inverted": true,
-                                "value": "Health::Health::IsShieldActive"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                ""
-                              ]
-                            },
-                            {
-                              "type": {
-                                "value": "BuiltinCommonInstructions::Once"
-                              },
-                              "parameters": []
-                            }
-                          ],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "Health::Health::SetPropertyCurrentShieldPoints"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                "=",
-                                "0"
-                              ]
-                            }
+                          "type": {
+                            "inverted": true,
+                            "value": "Health::Health::IsShieldActive"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            ""
                           ]
+                        },
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::Once"
+                          },
+                          "parameters": []
                         }
                       ],
-                      "parameters": []
-                    },
-                    {
-                      "colorB": 228,
-                      "colorG": 176,
-                      "colorR": 74,
-                      "creationTime": 0,
-                      "name": "Reset damage trigger",
-                      "source": "",
-                      "type": "BuiltinCommonInstructions::Group",
-                      "events": [
+                      "actions": [
                         {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "Health::Health::SetPropertyIsShieldJustDamaged"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                "no"
-                              ]
-                            }
+                          "type": {
+                            "value": "Health::Health::SetPropertyCurrentShieldPoints"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "=",
+                            "0"
                           ]
                         }
-                      ],
-                      "parameters": []
+                      ]
+                    }
+                  ],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Reset damage trigger",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "Health::Health::SetPropertyIsShieldJustDamaged"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "no"
+                          ]
+                        }
+                      ]
                     }
                   ],
                   "parameters": []
@@ -602,7 +581,7 @@
               "colorG": 176,
               "colorR": 74,
               "creationTime": 0,
-              "name": "Apply damage",
+              "name": "Incoming damage",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
               "events": [
@@ -616,7 +595,7 @@
                     "textG": 0,
                     "textR": 0
                   },
-                  "comment": "Only consider damage when damage cooldown is not active",
+                  "comment": "Only consider incoming damage when damage cooldown is not active",
                   "comment2": ""
                 },
                 {
@@ -730,6 +709,17 @@
                               "parameters": [
                                 "\"UseArmor\""
                               ]
+                            },
+                            {
+                              "type": {
+                                "value": "Health::Health::PropertyDamageToBeApplied"
+                              },
+                              "parameters": [
+                                "Object",
+                                "Behavior",
+                                ">",
+                                "0"
+                              ]
                             }
                           ],
                           "actions": [],
@@ -825,7 +815,7 @@
                       "colorG": 176,
                       "colorR": 74,
                       "creationTime": 0,
-                      "name": "Damage reduction from Shield",
+                      "name": "Apply damage to shield",
                       "source": "",
                       "type": "BuiltinCommonInstructions::Group",
                       "events": [
@@ -862,6 +852,17 @@
                                 "Behavior",
                                 ""
                               ]
+                            },
+                            {
+                              "type": {
+                                "value": "Health::Health::PropertyDamageToBeApplied"
+                              },
+                              "parameters": [
+                                "Object",
+                                "Behavior",
+                                ">",
+                                "0"
+                              ]
                             }
                           ],
                           "actions": [
@@ -877,6 +878,45 @@
                             }
                           ],
                           "events": [
+                            {
+                              "type": "BuiltinCommonInstructions::Comment",
+                              "color": {
+                                "b": 109,
+                                "g": 230,
+                                "r": 255,
+                                "textB": 0,
+                                "textG": 0,
+                                "textR": 0
+                              },
+                              "comment": "If enabled, trigger damage cooldown when shield is damaged",
+                              "comment2": ""
+                            },
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [
+                                {
+                                  "type": {
+                                    "value": "Health::Health::PropertyShieldDamageTriggersDamageCooldown"
+                                  },
+                                  "parameters": [
+                                    "Object",
+                                    "Behavior"
+                                  ]
+                                }
+                              ],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "Health::Health::TriggerDamageCooldown"
+                                  },
+                                  "parameters": [
+                                    "Object",
+                                    "Behavior",
+                                    ""
+                                  ]
+                                }
+                              ]
+                            },
                             {
                               "type": "BuiltinCommonInstructions::Comment",
                               "color": {
@@ -1085,7 +1125,7 @@
                       "colorG": 176,
                       "colorR": 74,
                       "creationTime": 0,
-                      "name": "Apply damage",
+                      "name": "Apply damage to health",
                       "source": "",
                       "type": "BuiltinCommonInstructions::Group",
                       "events": [
@@ -1107,37 +1147,12 @@
                           "actions": [],
                           "events": [
                             {
-                              "type": "BuiltinCommonInstructions::Comment",
-                              "color": {
-                                "b": 109,
-                                "g": 230,
-                                "r": 255,
-                                "textB": 0,
-                                "textG": 0,
-                                "textR": 0
-                              },
-                              "comment": "Mark that the object was hit at least once (used for initial state of damage cooldown)",
-                              "comment2": ""
-                            },
-                            {
                               "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [
-                                {
-                                  "type": {
-                                    "inverted": true,
-                                    "value": "Health::Health::HitAtLeastOnce"
-                                  },
-                                  "parameters": [
-                                    "Object",
-                                    "HealthBehavior",
-                                    ""
-                                  ]
-                                }
-                              ],
+                              "conditions": [],
                               "actions": [
                                 {
                                   "type": {
-                                    "value": "Health::Health::SetHitAtLeastOnce"
+                                    "value": "Health::Health::SetJustDamaged"
                                   },
                                   "parameters": [
                                     "Object",
@@ -1145,58 +1160,18 @@
                                     "yes",
                                     ""
                                   ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Comment",
-                              "color": {
-                                "b": 109,
-                                "g": 230,
-                                "r": 255,
-                                "textB": 0,
-                                "textG": 0,
-                                "textR": 0
-                              },
-                              "comment": "Restart time since last hit timer",
-                              "comment2": ""
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "ResetObjectTimer"
-                                  },
-                                  "parameters": [
-                                    "Object",
-                                    "\"__Health.TimeSinceLastHit\""
-                                  ]
                                 },
                                 {
                                   "type": {
-                                    "value": "ResetObjectTimer"
+                                    "value": "Health::Health::TriggerDamageCooldown"
                                   },
                                   "parameters": [
                                     "Object",
-                                    "\"__Health.DamageCooldown\""
+                                    "Behavior",
+                                    ""
                                   ]
                                 }
                               ]
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Comment",
-                              "color": {
-                                "b": 109,
-                                "g": 230,
-                                "r": 255,
-                                "textB": 0,
-                                "textG": 0,
-                                "textR": 0
-                              },
-                              "comment": "Apply damage",
-                              "comment2": ""
                             },
                             {
                               "type": "BuiltinCommonInstructions::Standard",
@@ -1209,18 +1184,7 @@
                                   "parameters": [
                                     "Object",
                                     "HealthBehavior",
-                                    "Object.HealthBehavior::Health() - Object.Behavior::PropertyDamageToBeApplied()",
-                                    ""
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "Health::Health::SetJustDamaged"
-                                  },
-                                  "parameters": [
-                                    "Object",
-                                    "HealthBehavior",
-                                    "yes",
+                                    "Object.HealthBehavior::Health() - min(0,Object.Behavior::PropertyDamageToBeApplied())",
                                     ""
                                   ]
                                 }
@@ -1292,7 +1256,7 @@
           "objectGroups": []
         },
         {
-          "description": "Change health points. This is not considered damage.",
+          "description": "Change health points. This is not considered damage or healing.",
           "fullName": "Change health points",
           "functionType": "Action",
           "group": "Health configuration",
@@ -2202,7 +2166,7 @@
               "actions": [
                 {
                   "type": {
-                    "value": "Health::Health::SetPropertyIsJustDamaged"
+                    "value": "Health::Health::SetPropertyIsHealthJustDamaged"
                   },
                   "parameters": [
                     "Object",
@@ -2227,7 +2191,7 @@
               "actions": [
                 {
                   "type": {
-                    "value": "Health::Health::SetPropertyIsJustDamaged"
+                    "value": "Health::Health::SetPropertyIsHealthJustDamaged"
                   },
                   "parameters": [
                     "Object",
@@ -2273,13 +2237,104 @@
           "objectGroups": []
         },
         {
+          "description": "Trigger damage cooldown.",
+          "fullName": "Trigger damage cooldown",
+          "functionType": "Action",
+          "group": "Health",
+          "name": "TriggerDamageCooldown",
+          "private": false,
+          "sentence": "Trigger damage cooldown on _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Mark that the object was hit at least once (used for initial state of damage cooldown)",
+              "comment2": ""
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Health::Health::HitAtLeastOnce"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Health::Health::SetHitAtLeastOnce"
+                  },
+                  "parameters": [
+                    "Object",
+                    "HealthBehavior",
+                    "yes",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ResetObjectTimer"
+                  },
+                  "parameters": [
+                    "Object",
+                    "\"__Health.TimeSinceLastHit\""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "Health::Health",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "Check if the object has been hit at least once.",
-          "fullName": "Object hit at least once",
+          "fullName": "Object has been hit at least once",
           "functionType": "Condition",
           "group": "Health",
           "name": "HitAtLeastOnce",
           "private": false,
-          "sentence": "_PARAM0_ has just been hit at least once",
+          "sentence": "_PARAM0_ has been hit at least once",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Comment",
@@ -2358,13 +2413,13 @@
           "objectGroups": []
         },
         {
-          "description": "Check if the object was just damaged previously in the events.",
-          "fullName": "Is just damaged",
+          "description": "Check if health was just damaged previously in the events.",
+          "fullName": "Is health just damaged",
           "functionType": "Condition",
           "group": "Health",
           "name": "IsJustDamaged",
           "private": false,
-          "sentence": "_PARAM0_ has just been damaged",
+          "sentence": "Health has just been damaged on _PARAM0_",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -2385,7 +2440,7 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "Health::Health::PropertyIsJustDamaged"
+                    "value": "Health::Health::PropertyIsHealthJustDamaged"
                   },
                   "parameters": [
                     "Object",
@@ -2502,7 +2557,7 @@
           "objectGroups": []
         },
         {
-          "description": "Check if damage cooldown is active. Object (and shield) cannot be damaged while this is active.",
+          "description": "Check if damage cooldown is active. Object and shield cannot be damaged while this is active.",
           "fullName": "Is damage cooldown active",
           "functionType": "Condition",
           "group": "Health",
@@ -2553,7 +2608,7 @@
                   },
                   "parameters": [
                     "Object",
-                    "\"__Health.DamageCooldown\"",
+                    "\"__Health.TimeSinceLastHit\"",
                     "<",
                     "Object.Behavior::PropertyDamageCooldown()"
                   ]
@@ -2952,7 +3007,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "max(0,Object.Behavior::PropertyDamageCooldown() - Object.ObjectTimerElapsedTime(\"__Health.DamageCooldown\"))"
+                    "max(0,Object.Behavior::PropertyDamageCooldown() - Object.ObjectTimerElapsedTime(\"__Health.TimeSinceLastHit\"))"
                   ]
                 }
               ]
@@ -3653,7 +3708,7 @@
           "fullName": "Block excess damage when shield breaks",
           "functionType": "Action",
           "group": "Shield configuration",
-          "name": "ShieldBlockExcessDamage",
+          "name": "SetShieldBlockExcessDamage",
           "private": false,
           "sentence": "Shield on _PARAM0_ blocks excess damage when it breaks: _PARAM2_",
           "events": [
@@ -3724,6 +3779,91 @@
               "codeOnly": false,
               "defaultValue": "",
               "description": "Block excess damage",
+              "longDescription": "",
+              "name": "Value",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "yesorno"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Enable (or disable) trigger of damage cooldown when shield is damaged.",
+          "fullName": "Shield damage triggers damage cooldown",
+          "functionType": "Action",
+          "group": "Shield configuration",
+          "name": "SetShieldDamageTriggersCooldown",
+          "private": false,
+          "sentence": "Shield damage triggers damage cooldown on _PARAM0_: _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Health::Health::SetPropertyShieldDamageTriggersDamageCooldown"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "no"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"Value\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Health::Health::SetPropertyShieldDamageTriggersDamageCooldown"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "yes"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "Health::Health",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Shield damage triggers damage cooldown",
               "longDescription": "",
               "name": "Value",
               "optional": false,
@@ -4481,11 +4621,11 @@
           "objectGroups": []
         },
         {
-          "description": "Health points gained from most recent heal.",
-          "fullName": "Health points gained from most recent heal",
+          "description": "Health points gained from previous heal.",
+          "fullName": "Health points gained from previous heal",
           "functionType": "Expression",
           "group": "Health",
-          "name": "LastHealAmount",
+          "name": "PreviousHealAmount",
           "private": false,
           "sentence": "",
           "events": [
@@ -4578,7 +4718,7 @@
           "group": "Health",
           "extraInformation": [],
           "hidden": true,
-          "name": "IsJustDamaged"
+          "name": "IsHealthJustDamaged"
         },
         {
           "value": "0",
@@ -4745,7 +4885,7 @@
         {
           "value": "0",
           "type": "Number",
-          "label": "Damage to be applied",
+          "label": "Damage to health from the previous incoming damage",
           "description": "",
           "group": "Health",
           "extraInformation": [],
@@ -4785,7 +4925,7 @@
         {
           "value": "",
           "type": "Number",
-          "label": "Damage to shield from most recent damage",
+          "label": "Damage to shield from the previous incoming damage",
           "description": "",
           "group": "",
           "extraInformation": [],
@@ -4795,12 +4935,22 @@
         {
           "value": "0",
           "type": "Number",
-          "label": "Health points gained from the last heal",
+          "label": "Health points gained from the previous heal",
           "description": "",
           "group": "",
           "extraInformation": [],
           "hidden": true,
           "name": "HealToBeApplied"
+        },
+        {
+          "value": "",
+          "type": "Boolean",
+          "label": "Shield damage triggers damage cooldown",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "ShieldDamageTriggersDamageCooldown"
         }
       ]
     }
