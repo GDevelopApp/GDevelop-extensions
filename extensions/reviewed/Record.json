@@ -10,11 +10,15 @@
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/video-vintage.svg",
   "shortDescription": "Adds events to record the game and players download the clips. Works on desktop, and in the browser.",
   "version": "1.0.0",
+  "origin": {
+    "identifier": "Record",
+    "name": "gdevelop-extension-store"
+  },
   "tags": [
-    "DOM apis",
-    "Record",
-    "Capture",
-    "Video"
+    "dom apis",
+    "record",
+    "capture",
+    "video"
   ],
   "authorIds": [
     "AlZ3D1xkH0QDao7T37VZZUeYNpn1"
@@ -32,7 +36,7 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "const fs = runtimeScene.getGame().getRenderer().getElectronRemote().require(\"fs\");\r\n\r\ngdjs._extensionRecord = {\r\n    fs: fs,\r\n    mediaRecorder: null,\r\n    // Default settings for recording\r\n    options: {\r\n        videoBitsPerSecond: 2500000,\r\n        // audioBitsPerSecond: 128000,\r\n        format: 'mp4',\r\n    },\r\n    handler: {\r\n        error: {\r\n            event: false,\r\n            name: '',\r\n        },\r\n        resume: false,\r\n        pause: false,\r\n        start: false,\r\n        stop: false,\r\n        save: false,\r\n    },\r\n    blob: null,\r\n    fps: runtimeScene.getGame().getGameData().properties.minFPS,\r\n    isFormatSupported:\r\n        (format) =>\r\n            MediaRecorder.isTypeSupported('video/' + format.toLowerCase()),\r\n    setError: (name) => {\r\n        gdjs._extensionRecord.handler.error.event = true;\r\n        gdjs._extensionRecord.handler.error.name = name;\r\n    },\r\n}\r\n",
+          "inlineCode": "const electronRemote = runtimeScene.getGame().getRenderer().getElectronRemote();\r\nconst fs = electronRemote ? electronRemote.require(\"fs\") : null;\r\n\r\ngdjs._extensionRecord = {\r\n    fs: fs,\r\n    mediaRecorder: null,\r\n    // Default settings for recording\r\n    options: {\r\n        videoBitsPerSecond: 2500000,\r\n        // audioBitsPerSecond: 128000,\r\n        format: 'mp4',\r\n    },\r\n    handler: {\r\n        error: {\r\n            event: false,\r\n            name: '',\r\n        },\r\n        resume: false,\r\n        pause: false,\r\n        start: false,\r\n        stop: false,\r\n        save: false,\r\n    },\r\n    _recordedChunks: null,\r\n    blob: null,\r\n    fps: runtimeScene.getGame().getGameData().properties.minFPS,\r\n    isFormatSupported:\r\n        (format) =>\r\n            MediaRecorder.isTypeSupported('video/' + format.toLowerCase()),\r\n    setError: (name) => {\r\n        gdjs._extensionRecord.handler.error.event = true;\r\n        gdjs._extensionRecord.handler.error.name = name;\r\n    },\r\n}\r\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": true
@@ -52,7 +56,7 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "const recorder = gdjs._extensionRecord;\r\nconst canvas = runtimeScene.getGame().getRenderer().getCanvas();\r\nconst stream = canvas.captureStream(recorder.fps);\r\nconst recordedChunks = [];\r\n\r\nrecorder.mediaRecorder = new MediaRecorder(stream, recorder.options);\r\n\r\nrecorder.mediaRecorder.addEventListener('error', (event) => recorder.setError(event.error.name));\r\nrecorder.mediaRecorder.addEventListener('resume', () => recorder.handler.resume = true);\r\nrecorder.mediaRecorder.addEventListener('pause', () => recorder.handler.pause = true);\r\nrecorder.mediaRecorder.addEventListener('start', () => recorder.handler.start = true);\r\nrecorder.mediaRecorder.addEventListener('stop', () => {\r\n  recorder.blob = new Blob(recordedChunks, {\r\n    type: 'video/' + recorder.options.format\r\n  });\r\n  \r\n  recorder.handler.stop = true;\r\n});\r\nrecorder.mediaRecorder.addEventListener('dataavailable', () => {\r\n  if (event.data.size > 0) recordedChunks.push(event.data);\r\n});\r\n\r\nrecorder.mediaRecorder.start();\r\n",
+          "inlineCode": "const recorder = gdjs._extensionRecord;\r\nconst canvas = runtimeScene.getGame().getRenderer().getCanvas();\r\nconst stream = canvas.captureStream(recorder.fps);\r\n\r\n// Start a new recording.\r\nrecorder._recordedChunks = [];\r\nrecorder.blob = null;\r\nrecorder.mediaRecorder = new MediaRecorder(stream, recorder.options);\r\n\r\nrecorder.mediaRecorder.addEventListener('error', (event) => recorder.setError(event.error.name));\r\nrecorder.mediaRecorder.addEventListener('resume', () => recorder.handler.resume = true);\r\nrecorder.mediaRecorder.addEventListener('pause', () => recorder.handler.pause = true);\r\nrecorder.mediaRecorder.addEventListener('start', () => recorder.handler.start = true);\r\nrecorder.mediaRecorder.addEventListener('stop', () => {\r\n  recorder.blob = new Blob(recorder._recordedChunks, {\r\n    type: 'video/' + recorder.options.format\r\n  });\r\n  \r\n  recorder.handler.stop = true;\r\n});\r\nrecorder.mediaRecorder.addEventListener('dataavailable', (event) => {\r\n  if (event.data.size > 0) recorder._recordedChunks.push(event.data);\r\n});\r\n\r\nrecorder.mediaRecorder.start();\r\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": true
@@ -62,13 +66,13 @@
       "objectGroups": []
     },
     {
-      "description": "End the recording.",
+      "description": "End the recording. Saving it will work on the next frame (use a \"Wait X seconds\" action if you need to save a recording just after stopping it).",
       "fullName": "Stop recording",
       "functionType": "Action",
       "group": "Basic",
       "name": "Stop",
       "private": false,
-      "sentence": "Stop the recording",
+      "sentence": "Stop the recording (so it is ready to save on the next frame)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -173,7 +177,7 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "if (gdjs._extensionRecord.mediaRecorder) eventsFunctionContext.returnValue = gdjs._extensionRecord.mediaRecorder.state;\r\n",
+          "inlineCode": "if (gdjs._extensionRecord.mediaRecorder) \r\n    eventsFunctionContext.returnValue = gdjs._extensionRecord.mediaRecorder.state;\r\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -558,5 +562,6 @@
       "objectGroups": []
     }
   ],
-  "eventsBasedBehaviors": []
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
 }
