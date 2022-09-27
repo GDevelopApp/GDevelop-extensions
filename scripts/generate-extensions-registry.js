@@ -1,19 +1,25 @@
 const path = require('path');
 const fs = require('fs').promises;
 const shell = require('shelljs');
-const { validateExtension } = require('./lib/ExtensionValidator');
+const {
+  validateExtension,
+  validateNoDuplicates,
+} = require('./lib/ExtensionValidator');
 const args = require('minimist')(process.argv.slice(2));
-
-const extensionsBasePath = path.join(__dirname, '..', 'Extensions');
-const distBasePath = path.join(__dirname, '..', 'dist');
-const distDatabasesPath = path.join(distBasePath, 'extensions-database');
-const distExtensionsPath = path.join(distBasePath, 'extensions');
-const extensionsBaseUrl = 'https://resources.gdevelop-app.com/extensions';
 
 /** @typedef {import('./types').ExtensionShortHeader} ExtensionShortHeader */
 /** @typedef {import('./types').ExtensionsDatabase} ExtensionsDatabase */
 /** @typedef {import('./types').ExtensionHeader} ExtensionHeader */
-/** @typedef {import('./types').ExtensionWithFilename} ExtensionWithFilename */
+/** @typedef {import('./types').ExtensionWithFileInfo} ExtensionWithFileInfo */
+/** @typedef {import('./types').ExtensionTier} ExtensionTier */
+
+const extensionsBasePath = path.join(__dirname, '..', 'extensions');
+const reviewedExtensionsTier = 'reviewed';
+const communityExtensionsTier = 'community';
+const distBasePath = path.join(__dirname, '..', 'dist');
+const distDatabasesPath = path.join(distBasePath, 'extensions-database');
+const distExtensionsPath = path.join(distBasePath, 'extensions');
+const extensionsBaseUrl = 'https://resources.gdevelop-app.com/extensions';
 
 /**
  * @param {string} path
@@ -24,24 +30,46 @@ const writeJSONFile = (path, object) =>
   fs.writeFile(path, JSON.stringify(object, null, 2));
 
 /**
- * Reads all the extension files and parses their JSON.
- * @returns {Promise<ExtensionWithFilename[]>}
+ * Reads the extension files and parses their JSON.
+ * @param {string} folderPath
+ * @param {ExtensionTier} tier
+ * @returns {Promise<ExtensionWithFileInfo[]>}
  */
-const readAllExtensions = async () => {
-  const filenames = await fs.readdir(extensionsBasePath);
+const readExtensionsFromFolder = async (folderPath, tier) => {
+  const filenames = await fs.readdir(folderPath);
   const filteredFilenames = filenames.filter((name) => name.endsWith('.json'));
 
   return await Promise.all(
+    /** @returns {Promise<ExtensionWithFileInfo>} */
     filteredFilenames.map(async (filename) => {
       const content = await fs.readFile(
-        path.join(extensionsBasePath, filename),
+        path.join(folderPath, filename),
         'utf8'
       );
 
-      return {
-        filename,
-        extension: JSON.parse(content),
-      };
+      try {
+        const extension = JSON.parse(content);
+        /** @type {ExtensionWithFileInfo} */
+        const extensionWithFileInfo = {
+          state: 'success',
+          filename,
+          tier,
+          extension,
+        };
+
+        return extensionWithFileInfo;
+      } catch (error) {
+        /** @type {ExtensionWithFileInfo} */
+        const extensionWithErroredFileInfo = {
+          state: 'error',
+          filename,
+          tier,
+          // @ts-ignore
+          error,
+        };
+
+        return extensionWithErroredFileInfo;
+      }
     })
   );
 };
@@ -52,7 +80,18 @@ const readAllExtensions = async () => {
     shell.mkdir('-p', distExtensionsPath);
     shell.mkdir('-p', distDatabasesPath);
 
-    const extensionWithFilenames = await readAllExtensions();
+    const reviewedExtensionWithFileInfos = await readExtensionsFromFolder(
+      path.join(extensionsBasePath, reviewedExtensionsTier),
+      reviewedExtensionsTier
+    );
+    const communityExtensionWithFileInfos = await readExtensionsFromFolder(
+      path.join(extensionsBasePath, communityExtensionsTier),
+      communityExtensionsTier
+    );
+    const allExtensionWithFileInfos = [
+      ...reviewedExtensionWithFileInfos,
+      ...communityExtensionWithFileInfos,
+    ];
 
     const allTagsSet = new Set();
 
@@ -62,13 +101,28 @@ const readAllExtensions = async () => {
     let totalErrors = 0;
     let fixableErrors = 0;
 
+    const errors = validateNoDuplicates(allExtensionWithFileInfos);
+    errors.forEach((error) => {
+      totalErrors++;
+      shell.echo(`❌ ${error.message}`);
+    });
+
     await Promise.all(
-      extensionWithFilenames.map(async (extensionWithFilename) => {
-        const { extension } = extensionWithFilename;
+      allExtensionWithFileInfos.map(async (extensionWithFileInfo) => {
+        if (extensionWithFileInfo.state === 'error') {
+          const error = extensionWithFileInfo.error;
+          shell.echo(
+            `\n❌ Unable to open extension in file ${extensionWithFileInfo.filename}: ${error.message}\n`
+          );
+          totalErrors++;
+          return;
+        }
+
+        const { extension, tier } = extensionWithFileInfo;
         const { name } = extension;
 
         // Check for errors:
-        const errors = await validateExtension(extensionWithFilename);
+        const errors = await validateExtension(extensionWithFileInfo);
         if (errors.length !== 0) {
           shell.echo(
             `\n❌ ${errors.length} Error${
@@ -89,7 +143,7 @@ const readAllExtensions = async () => {
         // Override the base extensions when fixing
         if (args['fix'])
           await writeJSONFile(
-            path.join(extensionsBasePath, `${name}.json`),
+            path.join(extensionsBasePath, tier, `${name}.json`),
             extension
           );
 
@@ -101,6 +155,7 @@ const readAllExtensions = async () => {
         // Generate the headers of the extension
         /** @type {ExtensionShortHeader} */
         const extensionShortHeader = {
+          tier,
           authorIds: extension.authorIds,
           shortDescription: extension.shortDescription,
           extensionNamespace: extension.extensionNamespace,
@@ -115,6 +170,7 @@ const readAllExtensions = async () => {
           eventsBasedBehaviorsCount: extension.eventsBasedBehaviors.length,
           eventsFunctionsCount: extension.eventsFunctions.length,
         };
+
         extensionShortHeaders.push(extensionShortHeader);
 
         /** @type {ExtensionHeader} */
@@ -161,12 +217,17 @@ const readAllExtensions = async () => {
       shell.exit(args['disable-exit-code'] ? 0 : 1);
     }
 
+    const views = JSON.parse(
+      await fs.readFile(path.join(extensionsBasePath, 'views.json'), 'utf8')
+    );
+
     // Write the registry
     /** @type {ExtensionsDatabase} */
     const registry = {
       version: '0.0.1',
       allTags: Array.from(allTagsSet),
       extensionShortHeaders,
+      views,
     };
 
     await writeJSONFile(
