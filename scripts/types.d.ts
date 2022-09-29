@@ -33,6 +33,7 @@ export interface ExtensionHeader
 export interface ExtensionsDatabase {
   version: string;
   allTags: Array<string>;
+  allCategoriesSet: Array<string>;
   extensionShortHeaders: Array<ExtensionShortHeader>;
   views: {
     default: {
@@ -93,6 +94,7 @@ export interface Extension
   extends ExtensionAndShortHeaderFields,
     ExtensionAndHeaderFields {
   tags: string | string[];
+  category: string;
   eventsFunctions: EventsFunction[];
   eventsBasedBehaviors: EventsBasedBehaviors[];
 }

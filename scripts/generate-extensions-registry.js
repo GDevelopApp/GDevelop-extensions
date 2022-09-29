@@ -94,6 +94,7 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
     ];
 
     const allTagsSet = new Set();
+    const allCategoriesSet = new Set();
 
     /** @type {ExtensionShortHeader[]} */
     const extensionShortHeaders = [];
@@ -187,6 +188,9 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
             allTagsSet.add(tag.trim().toLowerCase());
           }
         );
+        if (extension.category) {
+          allCategoriesSet.add(extension.category);
+        }
 
         await writeJSONFile(
           path.join(distExtensionsPath, `${name}.json`),
@@ -226,6 +230,7 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
     const registry = {
       version: '0.0.1',
       allTags: Array.from(allTagsSet),
+      allCategoriesSet: Array.from(allCategoriesSet),
       extensionShortHeaders,
       views,
     };
