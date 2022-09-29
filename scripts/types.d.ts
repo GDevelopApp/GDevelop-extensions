@@ -33,7 +33,7 @@ export interface ExtensionHeader
 export interface ExtensionsDatabase {
   version: string;
   allTags: Array<string>;
-  allCategoriesSet: Array<string>;
+  allCategories: Array<string>;
   extensionShortHeaders: Array<ExtensionShortHeader>;
   views: {
     default: {

@@ -230,7 +230,7 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
     const registry = {
       version: '0.0.1',
       allTags: Array.from(allTagsSet),
-      allCategoriesSet: Array.from(allCategoriesSet),
+      allCategories: Array.from(allCategoriesSet),
       extensionShortHeaders,
       views,
     };
