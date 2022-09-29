@@ -7,6 +7,7 @@ interface ExtensionAndShortHeaderFields {
   version: string;
   gdevelopVersion?: string;
   tags: Array<string>;
+  category: string;
   previewIconUrl: string;
 }
 
@@ -94,7 +95,6 @@ export interface Extension
   extends ExtensionAndShortHeaderFields,
     ExtensionAndHeaderFields {
   tags: string | string[];
-  category: string;
   eventsFunctions: EventsFunction[];
   eventsBasedBehaviors: EventsBasedBehaviors[];
 }
