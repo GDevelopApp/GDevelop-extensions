@@ -167,7 +167,7 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
           headerUrl: `${extensionsBaseUrl}/${name}-header.json`,
           //@ts-ignore Conversion to string done above
           tags: extension.tags,
-          category: extension.category || '',
+          category: extension.category || 'General',
           previewIconUrl: extension.previewIconUrl,
           eventsBasedBehaviorsCount: extension.eventsBasedBehaviors.length,
           eventsFunctionsCount: extension.eventsFunctions.length,
