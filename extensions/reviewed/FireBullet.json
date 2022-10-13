@@ -1,14 +1,14 @@
 {
   "author": "@4ian",
   "category": "",
-  "description": "Allow the object to fire bullets with customizable speed, angle and fire rate.\n\nCooldown: Time between shots (seconds)\nBullet Quantity: Number of bullets shot at once\nAngle Variance: Each bullet trajectory will be adjusted by a random value within this range (degrees)\nFiring Arc: Range of angles (in degrees) that bullets will shoot. Bullets are evenly spread within this range.\nRotate bullet: Change angle of bullet to match the direction it is travelling (enabled by default)\n",
+  "description": "Fire bullets, manage ammo, reloading, and overheating mechanics.\n\n- Cooldown: Time between shots (seconds)\n- Bullet Quantity: Number of bullets created for each shot\n- Angle Variance: Each bullet trajectory will be adjusted by a random value within this range (degrees)\n- Firing Arc: Range of angles (in degrees) that bullets will shoot. Bullets are evenly spread within this range.\n- Rotate bullet: Change angle of bullet to match the direction it is travelling (enabled by default)\n",
   "extensionNamespace": "",
   "fullName": "Fire bullets",
   "helpPath": "",
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWJ1bGxldCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xNCwyMkgxMFYyMUgxNFYyMk0xMywxMFY3SDExVjEwTDEwLDExLjVWMjBIMTRWMTEuNUwxMywxME0xMiwyQzEyLDIgMTEsMyAxMSw1VjZIMTNWNUMxMyw1IDEzLDMgMTIsMloiIC8+PC9zdmc+",
   "name": "FireBullet",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/bullet.svg",
-  "shortDescription": "Allow the object to fire bullets with customizable speed, angle and fire rate.",
+  "shortDescription": "Fire bullets, manage ammo, reloading, and overheating mechanics.",
   "version": "0.3.0",
   "origin": {
     "identifier": "FireBullet",
@@ -150,7 +150,7 @@
                     "textG": 0,
                     "textR": 0
                   },
-                  "comment": "Only perform reloading if ShotsPerReload has been set",
+                  "comment": "Detect when reload is completed",
                   "comment2": ""
                 },
                 {
@@ -158,121 +158,63 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "FireBullet::FireBullet::PropertyShotsPerReload"
+                        "value": "FireBullet::FireBullet::IsReloadInProgress"
                       },
                       "parameters": [
                         "Object",
                         "Behavior",
-                        ">",
-                        "0"
+                        ""
                       ]
+                    },
+                    {
+                      "type": {
+                        "value": "CompareObjectTimer"
+                      },
+                      "parameters": [
+                        "Object",
+                        "\"__FireBullet.ReloadingTimer\"",
+                        ">=",
+                        "Object.Behavior::PropertyReloadDuration()"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "BuiltinCommonInstructions::Once"
+                      },
+                      "parameters": []
                     }
                   ],
-                  "actions": [],
-                  "events": [
+                  "actions": [
                     {
-                      "type": "BuiltinCommonInstructions::Comment",
-                      "color": {
-                        "b": 109,
-                        "g": 230,
-                        "r": 255,
-                        "textB": 0,
-                        "textG": 0,
-                        "textR": 0
+                      "type": {
+                        "value": "FireBullet::FireBullet::SetPropertyShotsBeforeNextReload"
                       },
-                      "comment": "Detect when a reload needs to be started",
-                      "comment2": ""
-                    },
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "FireBullet::FireBullet::PropertyShotsBeforeNextReload"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Behavior",
-                            "=",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::Once"
-                          },
-                          "parameters": []
-                        }
-                      ],
-                      "actions": [
-                        {
-                          "type": {
-                            "value": "ResetObjectTimer"
-                          },
-                          "parameters": [
-                            "Object",
-                            "\"__FireBullet.ReloadingTimer\""
-                          ]
-                        }
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "=",
+                        "Object.Behavior::PropertyShotsPerReload()"
                       ]
                     },
                     {
-                      "type": "BuiltinCommonInstructions::Comment",
-                      "color": {
-                        "b": 109,
-                        "g": 230,
-                        "r": 255,
-                        "textB": 0,
-                        "textG": 0,
-                        "textR": 0
+                      "type": {
+                        "value": "FireBullet::FireBullet::SetPropertyReloadsCompleted"
                       },
-                      "comment": "Detect when reload is completed",
-                      "comment2": ""
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "+",
+                        "1"
+                      ]
                     },
                     {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "CompareObjectTimer"
-                          },
-                          "parameters": [
-                            "Object",
-                            "\"__FireBullet.ReloadingTimer\"",
-                            ">=",
-                            "Object.Behavior::PropertyReloadDuration()"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::Once"
-                          },
-                          "parameters": []
-                        }
-                      ],
-                      "actions": [
-                        {
-                          "type": {
-                            "value": "FireBullet::FireBullet::SetPropertyShotsBeforeNextReload"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Behavior",
-                            "=",
-                            "Object.Behavior::PropertyShotsPerReload()"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "FireBullet::FireBullet::SetPropertyReloadsCompleted"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Behavior",
-                            "+",
-                            "1"
-                          ]
-                        }
+                      "type": {
+                        "value": "FireBullet::FireBullet::SetPropertyReloadInProgress"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "no"
                       ]
                     }
                   ]
@@ -334,10 +276,73 @@
                   },
                   "parameters": [
                     "Object",
-                    "\"FireCooldown\""
+                    "\"__FireBullet.FiringCooldown\""
                   ]
                 }
               ]
+            },
+            {
+              "colorB": 228,
+              "colorG": 176,
+              "colorR": 74,
+              "creationTime": 0,
+              "name": "Automatically reload gun when needed",
+              "source": "",
+              "type": "BuiltinCommonInstructions::Group",
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "FireBullet::FireBullet::PropertyAutomaticReloading"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "FireBullet::FireBullet::IsReloadNeeded"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "BuiltinCommonInstructions::Once"
+                      },
+                      "parameters": []
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "ResetObjectTimer"
+                      },
+                      "parameters": [
+                        "Object",
+                        "\"__FireBullet.ReloadingTimer\""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "FireBullet::FireBullet::SetPropertyReloadInProgress"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "yes"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "parameters": []
             }
           ],
           "parameters": [
@@ -368,7 +373,7 @@
           "description": "Fire bullets toward a position.",
           "fullName": "Fire bullets toward a position",
           "functionType": "Action",
-          "group": "",
+          "group": "Firing",
           "name": "FireTowardPosition",
           "private": false,
           "sentence": "Fire _PARAM4_ from _PARAM0_, at position _PARAM2_; _PARAM3_, toward position _PARAM5_;_PARAM6_ with speed _PARAM7_ px/s",
@@ -495,7 +500,7 @@
           "description": "Fire bullets in the direction of a given angle.",
           "fullName": "Fire bullets",
           "functionType": "Action",
-          "group": "",
+          "group": "Firing",
           "name": "Fire",
           "private": false,
           "sentence": "Fire _PARAM4_ from _PARAM0_, at position _PARAM2_; _PARAM3_, with angle _PARAM5_ and speed _PARAM6_ px/s",
@@ -627,7 +632,7 @@
                               },
                               "parameters": [
                                 "Object",
-                                "\"FireCooldown\"",
+                                "\"__FireBullet.FiringCooldown\"",
                                 "Object.Behavior::PropertyFireCooldown()"
                               ]
                             }
@@ -1002,7 +1007,7 @@
           "description": "Check if the object has just fired something.",
           "fullName": "Has just fired",
           "functionType": "Condition",
-          "group": "",
+          "group": "Firing",
           "name": "HasJustFired",
           "private": false,
           "sentence": "_PARAM0_ has just fired",
@@ -1074,7 +1079,7 @@
           "description": "Check if bullet rotates to match trajectory.",
           "fullName": "Is bullet rotation enabled",
           "functionType": "Condition",
-          "group": "",
+          "group": "Firing",
           "name": "BulletRotationEnabled",
           "private": false,
           "sentence": "Bullet rotation enabled on _PARAM0_",
@@ -1129,68 +1134,10 @@
           "objectGroups": []
         },
         {
-          "description": "Check if ammo is unlimited.",
-          "fullName": "Is ammo unlimited?",
-          "functionType": "Condition",
-          "group": "",
-          "name": "UnlimitedAmmo",
-          "private": false,
-          "sentence": "Ammo is unlimited on _PARAM0_",
-          "events": [
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "FireBullet::FireBullet::PropertyUnlimitedAmmo"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior"
-                  ]
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "value": "SetReturnBoolean"
-                  },
-                  "parameters": [
-                    "True"
-                  ]
-                }
-              ]
-            }
-          ],
-          "parameters": [
-            {
-              "codeOnly": false,
-              "defaultValue": "",
-              "description": "Object",
-              "longDescription": "",
-              "name": "Object",
-              "optional": false,
-              "supplementaryInformation": "",
-              "type": "object"
-            },
-            {
-              "codeOnly": false,
-              "defaultValue": "",
-              "description": "Behavior",
-              "longDescription": "",
-              "name": "Behavior",
-              "optional": false,
-              "supplementaryInformation": "FireBullet::FireBullet",
-              "type": "behavior"
-            }
-          ],
-          "objectGroups": []
-        },
-        {
           "description": "Change the firing arc (in degrees) where bullets will be shot. Bullets will be evenly spaced out inside the firing arc.",
           "fullName": "Set firing arc",
           "functionType": "Action",
-          "group": "",
+          "group": "Firing",
           "name": "SetFiringArc",
           "private": false,
           "sentence": "Set firing arc of _PARAM0_ to _PARAM2_ degrees",
@@ -1251,7 +1198,7 @@
           "description": "Change the angle variance (in degrees) applied to each bullet.",
           "fullName": "Set angle variance",
           "functionType": "Action",
-          "group": "",
+          "group": "Firing",
           "name": "SetAngleVariance",
           "private": false,
           "sentence": "Set angle variance of _PARAM0_ to _PARAM2_ degrees",
@@ -1312,7 +1259,7 @@
           "description": "Change the number of bullets shot every time the \"fire bullet\" action is used.",
           "fullName": "Set number of bullets per shot",
           "functionType": "Action",
-          "group": "",
+          "group": "Firing",
           "name": "SetBulletQuantity",
           "private": false,
           "sentence": "Set number of bullets per shot of _PARAM0_ to _PARAM2_",
@@ -1373,7 +1320,7 @@
           "description": "Enable bullet rotation.",
           "fullName": "Enable (or disable) bullet rotation",
           "functionType": "Action",
-          "group": "",
+          "group": "Firing",
           "name": "SetRotateBullet",
           "private": false,
           "sentence": "Enable bullet rotation on _PARAM0_:  _PARAM2_",
@@ -1468,7 +1415,7 @@
           "description": "Enable unlimited ammo.",
           "fullName": "Enable (or disable) unlimited ammo",
           "functionType": "Action",
-          "group": "",
+          "group": "Ammo",
           "name": "SetUnlimitedAmmo",
           "private": false,
           "sentence": "Enable unlimited ammo on _PARAM0_:  _PARAM2_",
@@ -1563,7 +1510,7 @@
           "description": "Change the cooldown of the fire rate.",
           "fullName": "Set cooldown",
           "functionType": "Action",
-          "group": "",
+          "group": "Firing",
           "name": "SetCooldown",
           "private": false,
           "sentence": "Set the fire rate of _PARAM0_ to _PARAM2_ seconds",
@@ -1621,10 +1568,71 @@
           "objectGroups": []
         },
         {
+          "description": "Change the duration to reload ammo.",
+          "fullName": "Set reload duration",
+          "functionType": "Action",
+          "group": "Ammo",
+          "name": "SetReloadDuration",
+          "private": false,
+          "sentence": "Set reload duration of _PARAM0_ to _PARAM2_ seconds",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::SetPropertyReloadDuration"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Reload duration (seconds)",
+              "longDescription": "",
+              "name": "Value",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "Change the quantity of ammo.",
           "fullName": "Set ammo quantity",
           "functionType": "Action",
-          "group": "",
+          "group": "Ammo",
           "name": "SetAmmoQuantity",
           "private": false,
           "sentence": "Set ammo quantity of _PARAM0_ to _PARAM2_",
@@ -1682,10 +1690,190 @@
           "objectGroups": []
         },
         {
+          "description": "Change the max ammo.",
+          "fullName": "Set max ammo",
+          "functionType": "Action",
+          "group": "Ammo",
+          "name": "SetMaxAmmo",
+          "private": false,
+          "sentence": "Set max ammo of _PARAM0_ to _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::SetPropertyMaxAmmo"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::PropertyMaxAmmo"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ">",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::SetPropertyAmmoQuantity"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "min(Object.Behavior::MaxAmmo(),Object.Behavior::AmmoQuantity())"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Max ammo",
+              "longDescription": "",
+              "name": "Value",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the number of shots per reload.",
+          "fullName": "Set shots per reload",
+          "functionType": "Action",
+          "group": "Ammo",
+          "name": "SetShotsPerReload",
+          "private": false,
+          "sentence": "Set shots per reload of _PARAM0_ to _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::SetPropertyShotsPerReload"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::PropertyShotsBeforeNextReload"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ">",
+                    "Object.Behavior::PropertyShotsPerReload()"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::SetPropertyShotsBeforeNextReload"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Object.Behavior::PropertyShotsPerReload()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Shots per reload",
+              "longDescription": "",
+              "name": "Value",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "Increase ammo quantity.",
           "fullName": "Increase ammo",
           "functionType": "Action",
-          "group": "",
+          "group": "Ammo",
           "name": "IncreaseAmmo",
           "private": false,
           "sentence": "Increase ammo of _PARAM0_ by _PARAM2_ shots",
@@ -1788,7 +1976,7 @@
           "description": "Number of bullets to shoot at once (evenly spaced inside the Firing Arc).",
           "fullName": "Bullet quantity",
           "functionType": "Expression",
-          "group": "",
+          "group": "Firing",
           "name": "BulletQuantity",
           "private": false,
           "sentence": "",
@@ -1836,7 +2024,7 @@
           "description": "Angle variance in degrees.",
           "fullName": "Angle variance",
           "functionType": "Expression",
-          "group": "",
+          "group": "Firing",
           "name": "AngleVariance",
           "private": false,
           "sentence": "",
@@ -1884,7 +2072,7 @@
           "description": "Firing arc in degrees.",
           "fullName": "Firing arc",
           "functionType": "Expression",
-          "group": "",
+          "group": "Firing",
           "name": "FiringArc",
           "private": false,
           "sentence": "",
@@ -1932,7 +2120,7 @@
           "description": "Firing cooldown in seconds.",
           "fullName": "Firing cooldown",
           "functionType": "Expression",
-          "group": "",
+          "group": "Firing",
           "name": "Cooldown",
           "private": false,
           "sentence": "",
@@ -1947,6 +2135,54 @@
                   },
                   "parameters": [
                     "Object.Behavior::PropertyFireCooldown()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Reload duration in seconds.",
+          "fullName": "Reload duration",
+          "functionType": "Expression",
+          "group": "Ammo",
+          "name": "ReloadDuration",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyReloadDuration()"
                   ]
                 }
               ]
@@ -2265,10 +2501,58 @@
           "objectGroups": []
         },
         {
+          "description": "Shots per reload.",
+          "fullName": "Shots per reload",
+          "functionType": "Expression",
+          "group": "Ammo",
+          "name": "ShotsPerReload",
+          "private": false,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyShotsPerReload()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "Seconds remaining before the cooldown will permit a bullet to be fired.",
           "fullName": "Time remaining before a bullet may be fired",
           "functionType": "Expression",
-          "group": "",
+          "group": "Firing",
           "name": "CooldownTimeLeft",
           "private": false,
           "sentence": "",
@@ -2283,6 +2567,505 @@
                   },
                   "parameters": [
                     "max(0,Object.Behavior::Cooldown() - Object.ObjectTimerElapsedTime(\"FireCooldown\"))"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if object is currently performing an ammo reload.",
+          "fullName": "Is ammo reloading in progress",
+          "functionType": "Condition",
+          "group": "Ammo",
+          "name": "IsReloadInProgress",
+          "private": false,
+          "sentence": "_PARAM0_ is reloading ammo",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "False"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::PropertyReloadInProgress"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if object is ready to shoot.",
+          "fullName": "Is ready to shoot",
+          "functionType": "Condition",
+          "group": "Firing",
+          "name": "IsReadyToShoot",
+          "private": false,
+          "sentence": "_PARAM0_ is ready to shoot",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "False"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Not reloading, not waiting for firing cooldown, not overheated, and has ammo available",
+              "comment2": ""
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "FireBullet::FireBullet::PropertyReloadInProgress"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                },
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "FireBullet::FireBullet::IsFiringCooldownActive"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::Or"
+                  },
+                  "parameters": [],
+                  "subInstructions": [
+                    {
+                      "type": {
+                        "value": "FireBullet::FireBullet::IsUnlimitedAmmo"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "FireBullet::FireBullet::PropertyAmmoQuantity"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ">",
+                        "0"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if ammo is unlimited.",
+          "fullName": "Is ammo unlimited?",
+          "functionType": "Condition",
+          "group": "Ammo",
+          "name": "IsUnlimitedAmmo",
+          "private": false,
+          "sentence": "Ammo is unlimited on _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::PropertyUnlimitedAmmo"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if object has no ammo available.",
+          "fullName": "Is out of ammo",
+          "functionType": "Condition",
+          "group": "Ammo",
+          "name": "IsOutOfAmmo",
+          "private": false,
+          "sentence": "_PARAM0_ is out of ammo",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "False"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "FireBullet::FireBullet::IsUnlimitedAmmo"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::PropertyAmmoQuantity"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if object needs to reload ammo.",
+          "fullName": "Is a reload needed",
+          "functionType": "Condition",
+          "group": "Ammo",
+          "name": "IsReloadNeeded",
+          "private": false,
+          "sentence": "_PARAM0_ needs to reload ammo",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "False"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::PropertyShotsPerReload"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ">",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::PropertyShotsBeforeNextReload"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Object",
+              "longDescription": "",
+              "name": "Object",
+              "optional": false,
+              "supplementaryInformation": "",
+              "type": "object"
+            },
+            {
+              "codeOnly": false,
+              "defaultValue": "",
+              "description": "Behavior",
+              "longDescription": "",
+              "name": "Behavior",
+              "optional": false,
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if firing cooldown is active.",
+          "fullName": "Is firing cooldown active",
+          "functionType": "Condition",
+          "group": "",
+          "name": "IsFiringCooldownActive",
+          "private": false,
+          "sentence": "Firing cooldown is active on _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "False"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::CompareNumbers"
+                  },
+                  "parameters": [
+                    "Object.Behavior::CooldownTimeLeft()",
+                    ">",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
                   ]
                 }
               ]
@@ -2385,7 +3168,7 @@
           "name": "CurrentBulletAngle"
         },
         {
-          "value": "",
+          "value": "0",
           "type": "Number",
           "label": "Ammo quantity (current)",
           "description": "",
@@ -2435,7 +3218,7 @@
           "name": "ShotsBeforeNextReload"
         },
         {
-          "value": "",
+          "value": "0",
           "type": "Number",
           "label": "Shots fired (multi-bullet shots are considered one shot)",
           "description": "",
@@ -2445,7 +3228,7 @@
           "name": "ShotsFired"
         },
         {
-          "value": "",
+          "value": "0",
           "type": "Number",
           "label": "Bullets created",
           "description": "",
@@ -2465,7 +3248,7 @@
           "name": "StartingAmmo"
         },
         {
-          "value": "",
+          "value": "0",
           "type": "Number",
           "label": "",
           "description": "",
@@ -2483,6 +3266,56 @@
           "extraInformation": [],
           "hidden": false,
           "name": "UnlimitedAmmo"
+        },
+        {
+          "value": "",
+          "type": "Boolean",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "ReloadInProgress"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Number of consecutive shots to cause overheating (when starting from 0 heat)",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "ShotsToOverheat"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Heat level (range: 0 to 1)",
+          "description": "",
+          "group": "Overheating",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "HeatLevel"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Rate of cooling, in percent per second (range: 0 to 1)",
+          "description": "",
+          "group": "Overheating",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "OverheatCoolingRate"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "Reload automatically",
+          "description": "",
+          "group": "Ammo",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "AutomaticReloading"
         }
       ]
     }
