@@ -1,14 +1,14 @@
 {
   "author": "@4ian",
   "category": "",
-  "description": "Fire bullets, manage ammo, reloading, and overheating mechanics.\n\n- Cooldown: Time between shots (seconds)\n- Bullet Quantity: Number of bullets created for each shot\n- Angle Variance: Each bullet trajectory will be adjusted by a random value within this range (degrees)\n- Firing Arc: Range of angles (in degrees) that bullets will shoot. Bullets are evenly spread within this range.\n- Rotate bullet: Change angle of bullet to match the direction it is travelling (enabled by default)\n",
+  "description": "Fire bullets, manage ammo, reloading, and overheat mechanics.\n\nFiring bullets:\n- Cooldown: Time between shots (seconds)\n- Bullet Quantity: Number of bullets created each time Fire Bullet action is used. \n- Angle Variance: Each bullet trajectory will be adjusted by a random value within this range (degrees)\n- Firing Arc: Range of angles (in degrees) that bullets will shoot. Bullets are evenly spread within this range.\n- Rotate bullet: Change the angle of each bullet to match the direction it is travelling (enabled by default)\n\n Ammo:\n- Starting ammo\n- Max ammo\n- Shots per reload.  Use 0 to disable reloading\n- Reload duration\n- Automatic reloading is enabled by default, but it can also be done manually.\n\nOverheat:\n- Heat increase per shot.  Overheat is reached when another shot would cause heat to go above 1.\n- Cooling rate per second.  By default, this rate changes exponentially based on current heat value.\n- When overheated, the object cannot fire any bullets\n\nBullets:\n- Each bullet is assigned several variables that can be used for advanced object picking\n- __FireBullet.BulletID = Unique number for every bullet created\n- __FireBullet.BatchID = Unique number for all bullets created in the same frame\n- __FireBullet.BatchOrderID = Unique number for each bullet in the same batch. Can be used to identify the position in the firing arc.",
   "extensionNamespace": "",
   "fullName": "Fire bullets",
   "helpPath": "",
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWJ1bGxldCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xNCwyMkgxMFYyMUgxNFYyMk0xMywxMFY3SDExVjEwTDEwLDExLjVWMjBIMTRWMTEuNUwxMywxME0xMiwyQzEyLDIgMTEsMyAxMSw1VjZIMTNWNUMxMyw1IDEzLDMgMTIsMloiIC8+PC9zdmc+",
   "name": "FireBullet",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/bullet.svg",
-  "shortDescription": "Fire bullets, manage ammo, reloading, and overheating mechanics.",
+  "shortDescription": "Fire bullets, manage ammo, reloading, and overheat mechanics.",
   "version": "0.3.0",
   "origin": {
     "identifier": "FireBullet",
@@ -990,6 +990,58 @@
                                 "textG": 0,
                                 "textR": 0
                               },
+                              "comment": "Add identifier variables (to enable advanced picking by users)",
+                              "comment2": ""
+                            },
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "ModVarObjet"
+                                  },
+                                  "parameters": [
+                                    "Bullet",
+                                    "__FireBullet.BulletID",
+                                    "=",
+                                    "Object.Behavior::PropertyTotalBulletsCreated()"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "ModVarObjet"
+                                  },
+                                  "parameters": [
+                                    "Bullet",
+                                    "__FireBullet.BatchID",
+                                    "=",
+                                    "Object.Behavior::PropertyTotalShotsFired()"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "ModVarObjet"
+                                  },
+                                  "parameters": [
+                                    "Bullet",
+                                    "__FireBullet.BatchOrderID",
+                                    "=",
+                                    "0"
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "BuiltinCommonInstructions::Comment",
+                              "color": {
+                                "b": 109,
+                                "g": 230,
+                                "r": 255,
+                                "textB": 0,
+                                "textG": 0,
+                                "textR": 0
+                              },
                               "comment": "Update statistics",
                               "comment2": ""
                             },
@@ -1080,13 +1132,24 @@
                           "actions": [
                             {
                               "type": {
-                                "value": "FireBullet::FireBullet::SetPropertyCurrentBulletAngle"
+                                "value": "ModVarObjet"
                               },
                               "parameters": [
                                 "Object",
-                                "Behavior",
+                                "__FireBullet.CurrentBulletAngle",
                                 "=",
                                 "GetArgumentAsNumber(\"Angle\") - Object.Behavior::PropertyFiringArc()/2"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "ModVarObjet"
+                              },
+                              "parameters": [
+                                "Object",
+                                "__FireBullet.BatchOrderID",
+                                "=",
+                                "0"
                               ]
                             }
                           ],
@@ -1114,13 +1177,65 @@
                                   },
                                   "parameters": [
                                     "Bullet",
-                                    "Object.Behavior::PropertyCurrentBulletAngle() + RandomInRange(-Object.Behavior::PropertyAngleVariance(),Object.Behavior::PropertyAngleVariance())",
+                                    "Object.Variable(__FireBullet.CurrentBulletAngle) + RandomInRange(-Object.Behavior::PropertyAngleVariance(),Object.Behavior::PropertyAngleVariance())",
                                     "GetArgumentAsNumber(\"Speed\")",
                                     "1"
                                   ]
                                 }
                               ],
                               "events": [
+                                {
+                                  "type": "BuiltinCommonInstructions::Comment",
+                                  "color": {
+                                    "b": 109,
+                                    "g": 230,
+                                    "r": 255,
+                                    "textB": 0,
+                                    "textG": 0,
+                                    "textR": 0
+                                  },
+                                  "comment": "Add identifier variables (to enable advanced picking by users)",
+                                  "comment2": ""
+                                },
+                                {
+                                  "type": "BuiltinCommonInstructions::Standard",
+                                  "conditions": [],
+                                  "actions": [
+                                    {
+                                      "type": {
+                                        "value": "ModVarObjet"
+                                      },
+                                      "parameters": [
+                                        "Bullet",
+                                        "__FireBullet.BulletID",
+                                        "=",
+                                        "Object.Behavior::PropertyTotalBulletsCreated()"
+                                      ]
+                                    },
+                                    {
+                                      "type": {
+                                        "value": "ModVarObjet"
+                                      },
+                                      "parameters": [
+                                        "Bullet",
+                                        "__FireBullet.BatchID",
+                                        "=",
+                                        "Object.Behavior::PropertyTotalShotsFired()"
+                                      ]
+                                    },
+                                    {
+                                      "type": {
+                                        "value": "ModVarObjet"
+                                      },
+                                      "parameters": [
+                                        "Bullet",
+                                        "__FireBullet.BatchOrderID",
+                                        "=",
+                                        "Object.Variable(__FireBullet.BatchOrderID)"
+                                      ]
+                                    }
+                                  ]
+                                },
                                 {
                                   "type": "BuiltinCommonInstructions::Comment",
                                   "color": {
@@ -1185,7 +1300,7 @@
                                       "parameters": [
                                         "Bullet",
                                         "=",
-                                        "Object.Behavior::PropertyCurrentBulletAngle()"
+                                        "Object.Variable(__FireBullet.CurrentBulletAngle)"
                                       ]
                                     }
                                   ]
@@ -1209,13 +1324,24 @@
                                   "actions": [
                                     {
                                       "type": {
-                                        "value": "FireBullet::FireBullet::SetPropertyCurrentBulletAngle"
+                                        "value": "ModVarObjet"
                                       },
                                       "parameters": [
                                         "Object",
-                                        "Behavior",
+                                        "__FireBullet.CurrentBulletAngle",
                                         "+",
                                         "Object.Behavior::PropertyFiringArc() / (Object.Behavior::PropertyBulletQuantity() - 1)"
+                                      ]
+                                    },
+                                    {
+                                      "type": {
+                                        "value": "ModVarObjet"
+                                      },
+                                      "parameters": [
+                                        "Object",
+                                        "__FireBullet.BatchOrderID",
+                                        "+",
+                                        "1"
                                       ]
                                     }
                                   ]
@@ -4462,16 +4588,6 @@
           "extraInformation": [],
           "hidden": false,
           "name": "RotateBullet"
-        },
-        {
-          "value": "0",
-          "type": "Number",
-          "label": "Current bullet angle (Used for multishot)",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
-          "hidden": true,
-          "name": "CurrentBulletAngle"
         },
         {
           "value": "0",
