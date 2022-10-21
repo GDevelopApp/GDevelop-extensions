@@ -204,17 +204,6 @@
                   "actions": [
                     {
                       "type": {
-                        "value": "FireBullet::FireBullet::SetPropertyShotsBeforeNextReload"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "=",
-                        "Object.Behavior::PropertyShotsPerReload()"
-                      ]
-                    },
-                    {
-                      "type": {
                         "value": "FireBullet::FireBullet::SetPropertyTotalReloadsCompleted"
                       },
                       "parameters": [
@@ -232,6 +221,78 @@
                         "Object",
                         "Behavior",
                         "no"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "FireBullet::FireBullet::IsUnlimitedAmmo"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            ""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "FireBullet::FireBullet::SetPropertyShotsBeforeNextReload"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "=",
+                            "Object.Behavior::PropertyShotsPerReload()"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
+                      },
+                      "comment": "Only reload the amount of ammo available",
+                      "comment2": ""
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "inverted": true,
+                            "value": "FireBullet::FireBullet::IsUnlimitedAmmo"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            ""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "FireBullet::FireBullet::SetPropertyShotsBeforeNextReload"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "=",
+                            "min(Object.Behavior::PropertyShotsPerReload(), Object.Behavior::PropertyAmmoQuantity())"
+                          ]
+                        }
                       ]
                     }
                   ]
@@ -1447,17 +1508,20 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
+              "conditions": [
                 {
                   "type": {
-                    "value": "ResetObjectTimer"
+                    "inverted": true,
+                    "value": "FireBullet::FireBullet::IsOutOfAmmo"
                   },
                   "parameters": [
                     "Object",
-                    "\"__FireBullet.ReloadingTimer\""
+                    "Behavior",
+                    ""
                   ]
-                },
+                }
+              ],
+              "actions": [
                 {
                   "type": {
                     "value": "FireBullet::FireBullet::SetPropertyReloadInProgress"
@@ -1466,6 +1530,15 @@
                     "Object",
                     "Behavior",
                     "yes"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ResetObjectTimer"
+                  },
+                  "parameters": [
+                    "Object",
+                    "\"__FireBullet.ReloadingTimer\""
                   ]
                 }
               ]
@@ -2754,6 +2827,42 @@
                     "Behavior",
                     "=",
                     "min(Object.Behavior::MaxAmmo(),Object.Behavior::AmmoQuantity())"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::IsReloadNeeded"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::PropertyAutomaticReloading"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::ReloadAmmo"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
                   ]
                 }
               ]
