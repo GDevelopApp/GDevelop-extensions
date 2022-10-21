@@ -346,6 +346,26 @@
       "objectGroups": []
     },
     {
+      "description": "Return the index of the last last gamepad activated.",
+      "fullName": "Last activated controller (id)",
+      "functionType": "Expression",
+      "group": "",
+      "name": "LastControllerID",
+      "private": false,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r\n\r\n//Get last activate controller\r\nconst controllerId = gdjs._extensionController.lastActiveController;\r\n\r\n// Check if controller is active\r\nconst gamepad = gamepads[controllerId];\r\nif (gamepad == null) {\r\n    eventsFunctionContext.returnValue = -1;\r\n} else {\r\n    // Return active controller id\r\n    eventsFunctionContext.returnValue = controllerId + 1;\r\n}\r\n",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
       "description": "Check if a button is pressed on a gamepad. \nButtons can be:\n* Xbox: \"A\", \"B\", \"X\", \"Y\", \"LB\", \"RB\", \"LT\", \"RT\", \"BACK\", \"START\",\n* PS4: \"CROSS\", \"SQUARE\", \"CIRCLE\", \"TRIANGLE\", \"L1\", \"L2\", \"R1\", \"R2\", \"SHARE\", \"OPTIONS\", \"PS_BUTTON\", \"CLICK_TOUCHPAD\",\n* Other: \"UP\", \"DOWN\", \"LEFT\", \"RIGHT\", \"CLICK_STICK_LEFT\", \"CLICK_STICK_RIGHT\".",
       "fullName": "Gamepad button pressed",
       "functionType": "Condition",
@@ -398,8 +418,7 @@
         {
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [],
-          "actions": [],
-          "events": []
+          "actions": []
         },
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -527,8 +546,7 @@
         {
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [],
-          "actions": [],
-          "events": []
+          "actions": []
         },
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -656,8 +674,7 @@
         {
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [],
-          "actions": [],
-          "events": []
+          "actions": []
         },
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -703,12 +720,11 @@
         {
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [],
-          "actions": [],
-          "events": []
+          "actions": []
         },
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "//Define an new private object javascript for the gamepad extension\r\ngdjs._extensionController = {\r\n    players: {\r\n        0: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n        1: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n        2: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n        3: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n    },\r\n    controllerButtonNames: { //Map associating controller button ids to button names\r\n        \"XBOX\": {\r\n            0: \"A\",\r\n            1: \"B\",\r\n            2: \"X\",\r\n            3: \"Y\",\r\n            4: \"LB\",\r\n            5: \"RB\",\r\n            6: \"LT\",\r\n            7: \"RT\",\r\n            8: \"BACK\",\r\n            9: \"START\",\r\n            10: \"CLICK_STICK_LEFT\",\r\n            11: \"CLICK_STICK_RIGHT\",\r\n            12: \"UP\",\r\n            13: \"DOWN\",\r\n            14: \"LEFT\",\r\n            15: \"RIGHT\",\r\n            16: \"NONE\",\r\n            17: \"NONE\"\r\n        },\r\n        \"PS4\": {\r\n            0: \"CROSS\",\r\n            1: \"CIRCLE\",\r\n            2: \"SQUARE\",\r\n            3: \"TRIANGLE\",\r\n            4: \"L1\",\r\n            5: \"R1\",\r\n            6: \"L2\",\r\n            7: \"R2\",\r\n            8: \"SHARE\",\r\n            9: \"OPTIONS\",\r\n            10: \"CLICK_STICK_LEFT\",\r\n            11: \"CLICK_STICK_RIGHT\",\r\n            12: \"UP\",\r\n            13: \"DOWN\",\r\n            14: \"LEFT\",\r\n            15: \"RIGHT\",\r\n            16: \"PS_BUTTON\",\r\n            17: \"CLICK_TOUCHPAD\"\r\n        }\r\n    }\r\n};\r\n\r\ngdjs._extensionController.getInputString = function (type, buttonId) {\r\n    const controllerButtonNames = gdjs._extensionController.controllerButtonNames;\r\n    if (controllerButtonNames[type] !== undefined) {\r\n        return controllerButtonNames[type][buttonId];\r\n    }\r\n\r\n    return \"UNKNOWN_BUTTON\";\r\n}\r\n\r\ngdjs._extensionController.axisToAngle = function (deltaX, deltaY) {\r\n    const rad = Math.atan2(deltaY, deltaX);\r\n    const deg = rad * (180 / Math.PI);\r\n    return deg;\r\n}\r\n\r\ngdjs._extensionController.isXbox = function (gamepad) {\r\n    return (gamepad ? (\r\n        gamepad.id.toUpperCase().indexOf(\"XBOX\") !== -1\r\n        // \"XINPUT\" cannot be used to check if it is a xbox controller is just a generic\r\n        // name reported in Firefox corresponding to the driver being used by the controller\r\n        // https://gamefaqs.gamespot.com/boards/916373-pc/73341312?page=1\r\n    ) : false);\r\n}\r\n\r\n//Returns the new value taking into account the dead zone for the player_ID given\r\ngdjs._extensionController.getNormalizedAxisValue = function (v, player_ID) {\r\n    //    gdjs._extensionController = gdjs._extensionController || { deadzone: 0.2 };\r\n\r\n    // Anything smaller than this is assumed to be 0,0\r\n    const DEADZONE = gdjs._extensionController.players[player_ID].deadzone;\r\n\r\n    if (Math.abs(v) < DEADZONE) {\r\n        // In the dead zone, set to 0\r\n        v = 0;\r\n\r\n        if (v == null) {\r\n            return 0;\r\n        } else {\r\n            return v;\r\n        }\r\n\r\n    } else {\r\n        // We're outside the dead zone, but we'd like to smooth\r\n        // this value out so it still runs nicely between 0..1.\r\n        // That is, we don't want it to jump suddenly from 0 to\r\n        // DEADZONE.\r\n\r\n        // Remap v from\r\n        //    DEADZONE..1 to 0..(1-DEADZONE)\r\n        // or from\r\n        //    -1..-DEADZONE to -(1-DEADZONE)..0\r\n\r\n        v = v - Math.sign(v) * DEADZONE;\r\n\r\n        // Remap v from\r\n        //    0..(1-DEADZONE) to 0..1\r\n        // or from\r\n        //    -(1-DEADZONE)..0 to -1..0\r\n\r\n        return v / (1 - DEADZONE);\r\n    }\r\n};",
+          "inlineCode": "//Define an new private object javascript for the gamepad extension\r\ngdjs._extensionController = {\r\n    players: {\r\n        0: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n        1: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n        2: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n        3: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r\n    },\r\n    lastActiveController: -1, // Last active controller\r\n    controllerButtonNames: { //Map associating controller button ids to button names\r\n        \"XBOX\": {\r\n            0: \"A\",\r\n            1: \"B\",\r\n            2: \"X\",\r\n            3: \"Y\",\r\n            4: \"LB\",\r\n            5: \"RB\",\r\n            6: \"LT\",\r\n            7: \"RT\",\r\n            8: \"BACK\",\r\n            9: \"START\",\r\n            10: \"CLICK_STICK_LEFT\",\r\n            11: \"CLICK_STICK_RIGHT\",\r\n            12: \"UP\",\r\n            13: \"DOWN\",\r\n            14: \"LEFT\",\r\n            15: \"RIGHT\",\r\n            16: \"NONE\",\r\n            17: \"NONE\"\r\n        },\r\n        \"PS4\": {\r\n            0: \"CROSS\",\r\n            1: \"CIRCLE\",\r\n            2: \"SQUARE\",\r\n            3: \"TRIANGLE\",\r\n            4: \"L1\",\r\n            5: \"R1\",\r\n            6: \"L2\",\r\n            7: \"R2\",\r\n            8: \"SHARE\",\r\n            9: \"OPTIONS\",\r\n            10: \"CLICK_STICK_LEFT\",\r\n            11: \"CLICK_STICK_RIGHT\",\r\n            12: \"UP\",\r\n            13: \"DOWN\",\r\n            14: \"LEFT\",\r\n            15: \"RIGHT\",\r\n            16: \"PS_BUTTON\",\r\n            17: \"CLICK_TOUCHPAD\"\r\n        }\r\n    }\r\n};\r\n\r\ngdjs._extensionController.getInputString = function (type, buttonId) {\r\n    const controllerButtonNames = gdjs._extensionController.controllerButtonNames;\r\n    if (controllerButtonNames[type] !== undefined) {\r\n        return controllerButtonNames[type][buttonId];\r\n    }\r\n\r\n    return \"UNKNOWN_BUTTON\";\r\n}\r\n\r\ngdjs._extensionController.axisToAngle = function (deltaX, deltaY) {\r\n    const rad = Math.atan2(deltaY, deltaX);\r\n    const deg = rad * (180 / Math.PI);\r\n    return deg;\r\n}\r\n\r\ngdjs._extensionController.isXbox = function (gamepad) {\r\n    return (gamepad ? (\r\n        gamepad.id.toUpperCase().indexOf(\"XBOX\") !== -1\r\n        // \"XINPUT\" cannot be used to check if it is a xbox controller is just a generic\r\n        // name reported in Firefox corresponding to the driver being used by the controller\r\n        // https://gamefaqs.gamespot.com/boards/916373-pc/73341312?page=1\r\n    ) : false);\r\n}\r\n\r\n//Returns the new value taking into account the dead zone for the player_ID given\r\ngdjs._extensionController.getNormalizedAxisValue = function (v, player_ID) {\r\n    //    gdjs._extensionController = gdjs._extensionController || { deadzone: 0.2 };\r\n\r\n    // Anything smaller than this is assumed to be 0,0\r\n    const DEADZONE = gdjs._extensionController.players[player_ID].deadzone;\r\n\r\n    if (Math.abs(v) < DEADZONE) {\r\n        // In the dead zone, set to 0\r\n        v = 0;\r\n\r\n        if (v == null) {\r\n            return 0;\r\n        } else {\r\n            return v;\r\n        }\r\n\r\n    } else {\r\n        // We're outside the dead zone, but we'd like to smooth\r\n        // this value out so it still runs nicely between 0..1.\r\n        // That is, we don't want it to jump suddenly from 0 to\r\n        // DEADZONE.\r\n\r\n        // Remap v from\r\n        //    DEADZONE..1 to 0..(1-DEADZONE)\r\n        // or from\r\n        //    -1..-DEADZONE to -(1-DEADZONE)..0\r\n\r\n        v = v - Math.sign(v) * DEADZONE;\r\n\r\n        // Remap v from\r\n        //    0..(1-DEADZONE) to 0..1\r\n        // or from\r\n        //    -(1-DEADZONE)..0 to -1..0\r\n\r\n        return v / (1 - DEADZONE);\r\n    }\r\n};",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": true
@@ -729,12 +745,11 @@
         {
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [],
-          "actions": [],
-          "events": []
+          "actions": []
         },
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "//Each time a player press a button i save the last button pressed for the next frame\n/** @type {Gamepad[]} */\nconst gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\n\n//Get function parameter\nlet countPlayers = Object.keys(gdjs._extensionController.players).length;\n\n//Repeat for each players\nfor (let i = 0; i < countPlayers; i++) {\n    let gamepad = gamepads[i]; // Get the gamepad of the player\n\n    //we need keep this condition because when use have not yet plug her controller we can't get the controller in the gamepad variable.\n    if (gamepad == null) {\n        return;\n    }\n\n    for (let b = 0; b < Object.keys(gamepad.buttons).length; b++) { //For each buttons\n        if (gamepad.buttons[b].pressed) { //One of them is pressed\n            gdjs._extensionController.players[i].lastButtonUsed = b; //Save the button pressed\n\n            //Save the state of the button for the next frame.\n            gdjs._extensionController.players[i].previousFrameStateButtons[b] = { pressed: true };\n        }\n    }\n}\n\n\n",
+          "inlineCode": "//Each time a player press a button i save the last button pressed for the next frame\n/** @type {Gamepad[]} */\nconst gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\n\n//Get function parameter\nlet countPlayers = Object.keys(gdjs._extensionController.players).length;\n\n//Repeat for each players\nfor (let i = 0; i < countPlayers; i++) {\n    let gamepad = gamepads[i]; // Get the gamepad of the player\n\n    //we need keep this condition because when use have not yet plug her controller we can't get the controller in the gamepad variable.\n    if (gamepad == null) {\n        continue;\n    }\n\n    for (let b = 0; b < Object.keys(gamepad.buttons).length; b++) { //For each buttons\n        if (gamepad.buttons[b].pressed) { //One of them is pressed\n            gdjs._extensionController.players[i].lastButtonUsed = b; //Save the button pressed\n\n            //Save the state of the button for the next frame.\n            gdjs._extensionController.players[i].previousFrameStateButtons[b] = { pressed: true };\n\n            // Update Last Active Controller\n            gdjs._extensionController.lastActiveController = i;\n        } else {\n            gdjs._extensionController.players[i].previousFrameStateButtons[b] = { pressed: false };\n        }\n    }\n}\n\n\n",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": true
@@ -755,8 +770,7 @@
         {
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [],
-          "actions": [],
-          "events": []
+          "actions": []
         },
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -781,5 +795,6 @@
       "objectGroups": []
     }
   ],
-  "eventsBasedBehaviors": []
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
 }
