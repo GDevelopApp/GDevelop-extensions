@@ -9,7 +9,7 @@
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/gesture-swipe-right.svg",
   "shortDescription": "Detect swipe gestures based on their distance and duration.",
   "version": "1.0.0",
-  "description": "Use the \"Enable swipe detection\" action once at the beginning of your scene.\n\nNote: This extension does not support multitouch.\n\nExpressions:\n\n- `StartPointX`, `StartPointY`: Coordinates of the point where the swipe starts\n- `EndPointX`, `EndPointY`: Coordinates of the swipe end point\n- `Distance`: Length of the swipe, in pixels\n- `DistanceX`, `DistanceY`: Distance the swipe moved in each axis\n- `Angle`: Direction the swipe moved towards. Range (-180, 180)\n- `Layer`: Layer used to detect swipe gestures\n\nConditions:\n\n- `Is swipe detection enabled`\n- `Is swipe in progress?` - A swipe starts when the mouse click or touch begins\n- `Is swipe valid?` - A swipe is valid if it passes the distance and duration restrictions\n- `Has swipe just ended?` - When the mouse or touch is released, this condition is true for one frame \n- `Swipe moved in a direction (4-way movement)` - the direction value for 4 sides (UP, DOWN, LEFT, RIGHT). In this case, the “circle” is divided into 4 segments of 90 degrees\n- `Swipe moved in a direction (8-way movement)` - the direction value for 8 sides (UP, DOWN, LEFT, RIGHT, UP-LEFT, UP-RIGHT, DOWN-LEFT, DOWN-RIGHT). In this case, the “circle” is divided into 8 segments of 45 degrees.",
+  "description": "Use the \"Enable swipe detection\" action at the beginning of your scene.\n\nNote: This extension does NOT support multitouch.\n\nExpressions:\n\n- `StartPointX`, `StartPointY`: Position where the swipe started\n- `EndPointX`, `EndPointY`: Position where the swipe ended\n- `Distance`: Length of the swipe, in pixels\n- `DistanceX`, `DistanceY`: Distance the swipe moved in each axis\n- `Angle`: Direction the swipe moved towards. Range (-180, 180)\n- `Layer`: Layer used to detect swipe gestures\n\nConditions:\n\n- `Is swipe detection enabled`\n- `Is swipe in progress?` - A swipe starts when the mouse click or touch begins\n- `Is swipe valid?` - A swipe is valid if it passes the distance and duration restrictions\n- `Has swipe just ended?` - When the mouse or touch is released, this condition is true for one frame \n- `Swipe moved in a direction (4-way movement)` - the direction value for 4 sides (UP, DOWN, LEFT, RIGHT). In this case, the “circle” is divided into 4 segments of 90 degrees\n- `Swipe moved in a direction (8-way movement)` - the direction value for 8 sides (UP, DOWN, LEFT, RIGHT, UP-LEFT, UP-RIGHT, DOWN-LEFT, DOWN-RIGHT). In this case, the “circle” is divided into 8 segments of 45 degrees.",
   "origin": {
     "identifier": "SwipeGesture",
     "name": "gdevelop-extension-store"
@@ -101,7 +101,7 @@
             "textG": 0,
             "textR": 0
           },
-          "comment": "Reset swipe ended detection",
+          "comment": "Reset \"swipe just ended\" detection",
           "comment2": ""
         },
         {
@@ -150,17 +150,7 @@
                   ]
                 }
               ],
-              "actions": [
-                {
-                  "type": {
-                    "value": "SetSceneVariableAsBoolean"
-                  },
-                  "parameters": [
-                    "__SwipeGesture.SwipeJustEnded",
-                    "True"
-                  ]
-                }
-              ],
+              "actions": [],
               "events": [
                 {
                   "colorB": 228,
@@ -205,7 +195,7 @@
                   "colorG": 176,
                   "colorR": 74,
                   "creationTime": 0,
-                  "name": "Reset variables",
+                  "name": "Update variables and timer",
                   "source": "",
                   "type": "BuiltinCommonInstructions::Group",
                   "events": [
@@ -229,6 +219,15 @@
                           "parameters": [
                             "__SwipeGesture.SwipeInProgress",
                             "False"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetSceneVariableAsBoolean"
+                          },
+                          "parameters": [
+                            "__SwipeGesture.SwipeJustEnded",
+                            "True"
                           ]
                         }
                       ]
@@ -285,6 +284,44 @@
                   "colorG": 176,
                   "colorR": 74,
                   "creationTime": 0,
+                  "name": "Clear previous final position",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "ModVarScene"
+                          },
+                          "parameters": [
+                            "__SwipeGesture.EndPointX",
+                            "=",
+                            "0"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "ModVarScene"
+                          },
+                          "parameters": [
+                            "__SwipeGesture.EndPointY",
+                            "=",
+                            "0"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
                   "name": "Save start position",
                   "source": "",
                   "type": "BuiltinCommonInstructions::Group",
@@ -319,34 +356,49 @@
                   "parameters": []
                 },
                 {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [],
-                  "actions": [
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Update variables and timer",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
                     {
-                      "type": {
-                        "value": "ResetTimer"
-                      },
-                      "parameters": [
-                        "",
-                        "\"__SwipeGesture.TouchDuration\""
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "ResetTimer"
+                          },
+                          "parameters": [
+                            "",
+                            "\"__SwipeGesture.TouchDuration\""
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "UnPauseTimer"
+                          },
+                          "parameters": [
+                            "",
+                            "\"__SwipeGesture.TouchDuration\""
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetSceneVariableAsBoolean"
+                          },
+                          "parameters": [
+                            "__SwipeGesture.SwipeInProgress",
+                            "True"
+                          ]
+                        }
                       ]
                     }
-                  ]
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "SetSceneVariableAsBoolean"
-                      },
-                      "parameters": [
-                        "__SwipeGesture.SwipeInProgress",
-                        "True"
-                      ]
-                    }
-                  ]
+                  ],
+                  "parameters": []
                 }
               ]
             }
@@ -358,7 +410,7 @@
           "colorG": 16,
           "colorR": 189,
           "creationTime": 0,
-          "name": "Track the active swipe",
+          "name": "Update swipe",
           "source": "",
           "type": "BuiltinCommonInstructions::Group",
           "events": [
@@ -395,9 +447,41 @@
                             "value": "ModVarScene"
                           },
                           "parameters": [
-                            "__SwipeGesture.CurrentDistance",
+                            "__SwipeGesture.Distance",
                             "=",
-                            "DistanceBetweenPositions(Variable(__SwipeGesture.StartPointX),Variable(__SwipeGesture.StartPointY),MouseX(VariableString(__SwipeGesture.Layer),0),MouseY(VariableString(__SwipeGesture.Layer),0))"
+                            "DistanceBetweenPositions(Variable(__SwipeGesture.StartPointX), Variable(__SwipeGesture.StartPointY), MouseX(VariableString(__SwipeGesture.Layer),0), MouseY(VariableString(__SwipeGesture.Layer),0))"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "ModVarScene"
+                          },
+                          "parameters": [
+                            "__SwipeGesture.DistanceX",
+                            "=",
+                            "abs(Variable(__SwipeGesture.StartPointX) - MouseX(VariableString(__SwipeGesture.Layer),0))"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "ModVarScene"
+                          },
+                          "parameters": [
+                            "__SwipeGesture.DistanceY",
+                            "=",
+                            "abs(Variable(__SwipeGesture.StartPointY) - MouseY(VariableString(__SwipeGesture.Layer),0))"
                           ]
                         }
                       ]
@@ -423,9 +507,9 @@
                             "value": "ModVarScene"
                           },
                           "parameters": [
-                            "__SwipeGesture.CurrentAngle",
+                            "__SwipeGesture.Angle",
                             "=",
-                            "AngleBetweenPositions(Variable(__SwipeGesture.StartPointX),Variable(__SwipeGesture.StartPointY),MouseX(VariableString(__SwipeGesture.Layer),0),MouseY(VariableString(__SwipeGesture.Layer),0))"
+                            "AngleBetweenPositions(Variable(__SwipeGesture.StartPointX), Variable(__SwipeGesture.StartPointY), MouseX(VariableString(__SwipeGesture.Layer),0), MouseY(VariableString(__SwipeGesture.Layer),0))"
                           ]
                         }
                       ]
@@ -731,7 +815,7 @@
     {
       "description": "Change the layer used to detect swipe gestures.",
       "fullName": "Layer used to detect swipe gestures",
-      "functionType": "Action",
+      "functionType": "ActionWithOperator",
       "getterName": "Layer",
       "name": "SetLayer",
       "sentence": "Use layer _PARAM1_ to detect swipe gestures",
@@ -763,43 +847,9 @@
       "objectGroups": []
     },
     {
-      "description": "Change the layer used to detect swipe gestures.",
-      "fullName": "Layer used to detect swipe gestures",
-      "functionType": "ActionWithOperator",
-      "getterName": "Layer",
-      "name": "SetLayerOp",
-      "sentence": "Use layer _PARAM1_ to detect swipe gestures",
-      "events": [
-        {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": [
-            {
-              "type": {
-                "value": "ModVarSceneTxt"
-              },
-              "parameters": [
-                "__SwipeGesture.Layer",
-                "=",
-                "GetArgumentAsString(\"Value\")"
-              ]
-            }
-          ]
-        }
-      ],
-      "parameters": [
-        {
-          "description": "Layer",
-          "name": "Layer",
-          "type": "layer"
-        }
-      ],
-      "objectGroups": []
-    },
-    {
       "description": "Change the minimum distance a swipe must travel to be considered valid.  Use \"0\" to disable distance restriction.",
       "fullName": "Swipe minimum distance (pixels)",
-      "functionType": "Action",
+      "functionType": "ActionWithOperator",
       "getterName": "MinDistance",
       "name": "SetMinDistance",
       "sentence": "Change the swipe minimum distance to _PARAM1_ pixels",
@@ -831,43 +881,9 @@
       "objectGroups": []
     },
     {
-      "description": "Change the minimum distance a swipe must travel to be considered valid.  Use \"0\" to disable distance restriction.",
-      "fullName": "Swipe minimum distance (pixels)",
-      "functionType": "ActionWithOperator",
-      "getterName": "MinDistance",
-      "name": "SetMinDistanceOp",
-      "sentence": "Change the swipe minimum distance to _PARAM1_ pixels",
-      "events": [
-        {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": [
-            {
-              "type": {
-                "value": "ModVarScene"
-              },
-              "parameters": [
-                "__SwipeGesture.MinimumDistance",
-                "=",
-                "GetArgumentAsNumber(\"Value\")"
-              ]
-            }
-          ]
-        }
-      ],
-      "parameters": [
-        {
-          "description": "Minimum distance (pixels)",
-          "name": "Value",
-          "type": "expression"
-        }
-      ],
-      "objectGroups": []
-    },
-    {
       "description": "Change the maximum duration a swipe can exist and still be considered valid.  Use \"0\" to disable time restriction.",
       "fullName": "Swipe maximum duration (seconds)",
-      "functionType": "Action",
+      "functionType": "ActionWithOperator",
       "getterName": "MaxDuration",
       "name": "SetMaxDuration",
       "sentence": "Change the swipe maximum duration to _PARAM1_ seconds",
@@ -899,69 +915,7 @@
       "objectGroups": []
     },
     {
-      "description": "Change the maximum duration a swipe can exist and still be considered valid.  Use \"0\" to disable time restriction.",
-      "fullName": "Swipe maximum duration (seconds)",
-      "functionType": "ActionWithOperator",
-      "getterName": "MaxDuration",
-      "name": "SetMaxDurationOp",
-      "sentence": "Change the swipe maximum duration to _PARAM1_ seconds",
-      "events": [
-        {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": [
-            {
-              "type": {
-                "value": "ModVarScene"
-              },
-              "parameters": [
-                "__SwipeGesture.MaximumDuration",
-                "=",
-                "GetArgumentAsNumber(\"Value\")"
-              ]
-            }
-          ]
-        }
-      ],
-      "parameters": [
-        {
-          "description": "Maximum duration (seconds)",
-          "name": "Value",
-          "type": "expression"
-        }
-      ],
-      "objectGroups": []
-    },
-    {
-      "description": "Swipe angle (degrees)",
-      "fullName": "Swipe angle (degrees)",
-      "functionType": "ExpressionAndCondition",
-      "name": "Angle",
-      "sentence": "Swipe angle (degrees)",
-      "events": [
-        {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": [
-            {
-              "type": {
-                "value": "SetReturnNumber"
-              },
-              "parameters": [
-                "Variable(__SwipeGesture.CurrentAngle)"
-              ]
-            }
-          ]
-        }
-      ],
-      "expressionType": {
-        "type": "expression"
-      },
-      "parameters": [],
-      "objectGroups": []
-    },
-    {
-      "description": "the Layer used to detect swipe gestures",
+      "description": "the Layer used to detect swipe gestures.",
       "fullName": "Layer used to detect swipe gestures",
       "functionType": "ExpressionAndCondition",
       "name": "Layer",
@@ -973,10 +927,10 @@
           "actions": [
             {
               "type": {
-                "value": "SetReturnNumber"
+                "value": "SetReturnString"
               },
               "parameters": [
-                "Variable(__SwipeGesture.Layer)"
+                "VariableString(__SwipeGesture.Layer)"
               ]
             }
           ]
@@ -989,11 +943,11 @@
       "objectGroups": []
     },
     {
-      "description": "Swipe distance (pixels).",
-      "fullName": "Swipe distance (pixels)",
+      "description": "Swipe angle (degrees).",
+      "fullName": "Swipe angle (degrees)",
       "functionType": "ExpressionAndCondition",
-      "name": "Distance",
-      "sentence": "Swipe distance (pixels).",
+      "name": "Angle",
+      "sentence": "the swipe angle (degrees)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
@@ -1004,7 +958,35 @@
                 "value": "SetReturnNumber"
               },
               "parameters": [
-                "Variable(__SwipeGesture.CurrentDistance)"
+                "Variable(__SwipeGesture.Angle)"
+              ]
+            }
+          ]
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Swipe distance (pixels).",
+      "fullName": "Swipe distance (pixels)",
+      "functionType": "ExpressionAndCondition",
+      "name": "Distance",
+      "sentence": "the swipe distance (pixels)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "Variable(__SwipeGesture.Distance)"
               ]
             }
           ]
@@ -1021,28 +1003,18 @@
       "fullName": "Swipe distance in horizontal direction (pixels)",
       "functionType": "ExpressionAndCondition",
       "name": "DistanceX",
-      "sentence": "Swipe distance in horizontal direction (pixels).",
+      "sentence": "the swipe distance in horizontal direction (pixels)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [
-            {
-              "type": {
-                "value": "SceneVariableAsBoolean"
-              },
-              "parameters": [
-                "__SwipeGesture.SwipeInProgress",
-                "True"
-              ]
-            }
-          ],
+          "conditions": [],
           "actions": [
             {
               "type": {
                 "value": "SetReturnNumber"
               },
               "parameters": [
-                "abs(Variable(__SwipeGesture.StartPointX) - MouseX(VariableString(__SwipeGesture.Layer),0))"
+                "Variable(__SwipeGesture.DistanceX)"
               ]
             }
           ]
@@ -1059,28 +1031,18 @@
       "fullName": "Swipe distance in vertical direction (pixels)",
       "functionType": "ExpressionAndCondition",
       "name": "DistanceY",
-      "sentence": "Swipe distance in vertical direction (pixels).",
+      "sentence": "the swipe distance in vertical direction (pixels)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [
-            {
-              "type": {
-                "value": "SceneVariableAsBoolean"
-              },
-              "parameters": [
-                "__SwipeGesture.SwipeInProgress",
-                "True"
-              ]
-            }
-          ],
+          "conditions": [],
           "actions": [
             {
               "type": {
                 "value": "SetReturnNumber"
               },
               "parameters": [
-                "abs(Variable(__SwipeGesture.StartPointY) - MouseY(VariableString(__SwipeGesture.Layer),0))"
+                "Variable(__SwipeGesture.DistanceY)"
               ]
             }
           ]
@@ -1097,7 +1059,7 @@
       "fullName": "Start point of the swipe X position",
       "functionType": "ExpressionAndCondition",
       "name": "StartPointX",
-      "sentence": "Start point of the swipe X position.",
+      "sentence": "the start point of the swipe X position",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
@@ -1125,7 +1087,7 @@
       "fullName": "Start point of the swipe Y position",
       "functionType": "ExpressionAndCondition",
       "name": "StartPointY",
-      "sentence": "Start point of the swipe Y position.",
+      "sentence": "the start point of the swipe Y position",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
@@ -1153,7 +1115,7 @@
       "fullName": "End point of the swipe X position",
       "functionType": "ExpressionAndCondition",
       "name": "EndPointX",
-      "sentence": "End point of the swipe X position.",
+      "sentence": "the end point of the swipe X position",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
@@ -1181,7 +1143,7 @@
       "fullName": "End point of the swipe Y position",
       "functionType": "ExpressionAndCondition",
       "name": "EndPointY",
-      "sentence": "End point of the swipe Y position.",
+      "sentence": "the end point of the swipe Y position",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
@@ -1209,7 +1171,7 @@
       "fullName": "Swipe duration (seconds)",
       "functionType": "ExpressionAndCondition",
       "name": "Duration",
-      "sentence": "Swipe duration (seconds).",
+      "sentence": "swipe duration (seconds)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
@@ -1237,7 +1199,7 @@
       "fullName": "Maximum duration of swipe (seconds)",
       "functionType": "ExpressionAndCondition",
       "name": "MaxDuration",
-      "sentence": "the maximum duration a swipe can exist and still be considered valid.",
+      "sentence": "the maximum duration a swipe can exist and still be considered valid",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
@@ -1265,7 +1227,7 @@
       "fullName": "Minimum distance of swipe (pixels)",
       "functionType": "ExpressionAndCondition",
       "name": "MinDistance",
-      "sentence": "the minimum distance a swipe must travel to be considered valid.",
+      "sentence": "the minimum distance a swipe must travel to be considered valid",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
@@ -1305,7 +1267,7 @@
             "textG": 0,
             "textR": 0
           },
-          "comment": "Check distance and time restrictions (when they are not set to 0)",
+          "comment": "Check distance and time restrictions (when the restrictions are not set to 0)",
           "comment2": ""
         },
         {
@@ -1497,320 +1459,339 @@
       "sentence": "Swipe moved in direction _PARAM1_",
       "events": [
         {
-          "colorB": 224,
-          "colorG": 16,
-          "colorR": 189,
-          "creationTime": 0,
-          "name": "Range (-180 to 180)",
-          "source": "",
-          "type": "BuiltinCommonInstructions::Group",
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "SwipeGesture::Distance"
+              },
+              "parameters": [
+                "",
+                ">",
+                "0",
+                ""
+              ]
+            }
+          ],
+          "actions": [],
           "events": [
             {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
+              "colorB": 224,
+              "colorG": 16,
+              "colorR": 189,
               "creationTime": 0,
-              "name": "Up",
+              "name": "Range (-180 to 180)",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
               "events": [
                 {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BuiltinCommonInstructions::CompareStrings"
-                      },
-                      "parameters": [
-                        "GetArgumentAsString(\"Direction\")",
-                        "=",
-                        "\"Up\""
-                      ]
-                    }
-                  ],
-                  "actions": [],
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Up",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
                   "events": [
                     {
                       "type": "BuiltinCommonInstructions::Standard",
                       "conditions": [
                         {
                           "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                            "value": "BuiltinCommonInstructions::CompareStrings"
                           },
                           "parameters": [
-                            "SwipeGesture::Angle()",
-                            ">=",
-                            "-135"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
-                          },
-                          "parameters": [
-                            "SwipeGesture::Angle()",
-                            "<",
-                            "-45"
+                            "GetArgumentAsString(\"Direction\")",
+                            "=",
+                            "\"Up\""
                           ]
                         }
                       ],
-                      "actions": [
+                      "actions": [],
+                      "events": [
                         {
-                          "type": {
-                            "value": "SetReturnBoolean"
-                          },
-                          "parameters": [
-                            "True"
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ],
-              "parameters": []
-            },
-            {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
-              "creationTime": 0,
-              "name": "Down",
-              "source": "",
-              "type": "BuiltinCommonInstructions::Group",
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BuiltinCommonInstructions::CompareStrings"
-                      },
-                      "parameters": [
-                        "GetArgumentAsString(\"Direction\")",
-                        "=",
-                        "\"Down\""
-                      ]
-                    }
-                  ],
-                  "actions": [],
-                  "events": [
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
-                          },
-                          "parameters": [
-                            "SwipeGesture::Angle()",
-                            ">=",
-                            "45"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
-                          },
-                          "parameters": [
-                            "SwipeGesture::Angle()",
-                            "<",
-                            "135"
-                          ]
-                        }
-                      ],
-                      "actions": [
-                        {
-                          "type": {
-                            "value": "SetReturnBoolean"
-                          },
-                          "parameters": [
-                            "True"
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ],
-              "parameters": []
-            },
-            {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
-              "creationTime": 0,
-              "name": "Left",
-              "source": "",
-              "type": "BuiltinCommonInstructions::Group",
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BuiltinCommonInstructions::CompareStrings"
-                      },
-                      "parameters": [
-                        "GetArgumentAsString(\"Direction\")",
-                        "=",
-                        "\"Left\""
-                      ]
-                    }
-                  ],
-                  "actions": [],
-                  "events": [
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::Or"
-                          },
-                          "parameters": [],
-                          "subInstructions": [
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
                             {
                               "type": {
-                                "value": "BuiltinCommonInstructions::And"
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
                               },
-                              "parameters": [],
-                              "subInstructions": [
-                                {
-                                  "type": {
-                                    "value": "BuiltinCommonInstructions::CompareNumbers"
-                                  },
-                                  "parameters": [
-                                    "SwipeGesture::Angle()",
-                                    ">=",
-                                    "-180"
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "BuiltinCommonInstructions::CompareNumbers"
-                                  },
-                                  "parameters": [
-                                    "SwipeGesture::Angle()",
-                                    "<",
-                                    "-135"
-                                  ]
-                                }
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                ">=",
+                                "-135"
                               ]
                             },
                             {
                               "type": {
-                                "value": "BuiltinCommonInstructions::And"
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
                               },
-                              "parameters": [],
-                              "subInstructions": [
-                                {
-                                  "type": {
-                                    "value": "BuiltinCommonInstructions::CompareNumbers"
-                                  },
-                                  "parameters": [
-                                    "SwipeGesture::Angle()",
-                                    ">=",
-                                    "135"
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "BuiltinCommonInstructions::CompareNumbers"
-                                  },
-                                  "parameters": [
-                                    "SwipeGesture::Angle()",
-                                    "<",
-                                    "180"
-                                  ]
-                                }
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                "<",
+                                "-45"
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetReturnBoolean"
+                              },
+                              "parameters": [
+                                "True"
                               ]
                             }
                           ]
                         }
-                      ],
-                      "actions": [
-                        {
-                          "type": {
-                            "value": "SetReturnBoolean"
-                          },
-                          "parameters": [
-                            "True"
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ],
-              "parameters": []
-            },
-            {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
-              "creationTime": 0,
-              "name": "Right",
-              "source": "",
-              "type": "BuiltinCommonInstructions::Group",
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BuiltinCommonInstructions::CompareStrings"
-                      },
-                      "parameters": [
-                        "GetArgumentAsString(\"Direction\")",
-                        "=",
-                        "\"Right\""
                       ]
                     }
                   ],
-                  "actions": [],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Down",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
                   "events": [
                     {
                       "type": "BuiltinCommonInstructions::Standard",
                       "conditions": [
                         {
                           "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                            "value": "BuiltinCommonInstructions::CompareStrings"
                           },
                           "parameters": [
-                            "SwipeGesture::Angle()",
-                            ">=",
-                            "-45"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
-                          },
-                          "parameters": [
-                            "SwipeGesture::Angle()",
-                            "<",
-                            "45"
+                            "GetArgumentAsString(\"Direction\")",
+                            "=",
+                            "\"Down\""
                           ]
                         }
                       ],
-                      "actions": [
+                      "actions": [],
+                      "events": [
                         {
-                          "type": {
-                            "value": "SetReturnBoolean"
-                          },
-                          "parameters": [
-                            "True"
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                ">=",
+                                "45"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                "<",
+                                "135"
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetReturnBoolean"
+                              },
+                              "parameters": [
+                                "True"
+                              ]
+                            }
                           ]
                         }
                       ]
                     }
-                  ]
+                  ],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Left",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareStrings"
+                          },
+                          "parameters": [
+                            "GetArgumentAsString(\"Direction\")",
+                            "=",
+                            "\"Left\""
+                          ]
+                        }
+                      ],
+                      "actions": [],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::Or"
+                              },
+                              "parameters": [],
+                              "subInstructions": [
+                                {
+                                  "type": {
+                                    "value": "BuiltinCommonInstructions::And"
+                                  },
+                                  "parameters": [],
+                                  "subInstructions": [
+                                    {
+                                      "type": {
+                                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                                      },
+                                      "parameters": [
+                                        "SwipeGesture::Angle()",
+                                        ">=",
+                                        "-180"
+                                      ]
+                                    },
+                                    {
+                                      "type": {
+                                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                                      },
+                                      "parameters": [
+                                        "SwipeGesture::Angle()",
+                                        "<",
+                                        "-135"
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "BuiltinCommonInstructions::And"
+                                  },
+                                  "parameters": [],
+                                  "subInstructions": [
+                                    {
+                                      "type": {
+                                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                                      },
+                                      "parameters": [
+                                        "SwipeGesture::Angle()",
+                                        ">=",
+                                        "135"
+                                      ]
+                                    },
+                                    {
+                                      "type": {
+                                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                                      },
+                                      "parameters": [
+                                        "SwipeGesture::Angle()",
+                                        "<",
+                                        "180"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetReturnBoolean"
+                              },
+                              "parameters": [
+                                "True"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Right",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareStrings"
+                          },
+                          "parameters": [
+                            "GetArgumentAsString(\"Direction\")",
+                            "=",
+                            "\"Right\""
+                          ]
+                        }
+                      ],
+                      "actions": [],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                ">=",
+                                "-45"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                "<",
+                                "45"
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetReturnBoolean"
+                              },
+                              "parameters": [
+                                "True"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "parameters": []
                 }
               ],
               "parameters": []
             }
-          ],
-          "parameters": []
+          ]
         }
       ],
       "parameters": [
@@ -1831,580 +1812,599 @@
       "sentence": "Swipe moved in direction _PARAM1_",
       "events": [
         {
-          "colorB": 224,
-          "colorG": 16,
-          "colorR": 189,
-          "creationTime": 0,
-          "name": "Range (-180 to 180)",
-          "source": "",
-          "type": "BuiltinCommonInstructions::Group",
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "SwipeGesture::Distance"
+              },
+              "parameters": [
+                "",
+                ">",
+                "0",
+                ""
+              ]
+            }
+          ],
+          "actions": [],
           "events": [
             {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
+              "colorB": 224,
+              "colorG": 16,
+              "colorR": 189,
               "creationTime": 0,
-              "name": "Up",
+              "name": "Range (-180 to 180)",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
               "events": [
                 {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BuiltinCommonInstructions::CompareStrings"
-                      },
-                      "parameters": [
-                        "GetArgumentAsString(\"Direction\")",
-                        "=",
-                        "\"Up\""
-                      ]
-                    }
-                  ],
-                  "actions": [],
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Up",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
                   "events": [
                     {
                       "type": "BuiltinCommonInstructions::Standard",
                       "conditions": [
                         {
                           "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                            "value": "BuiltinCommonInstructions::CompareStrings"
                           },
                           "parameters": [
-                            "SwipeGesture::Angle()",
-                            ">=",
-                            "-112.5"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
-                          },
-                          "parameters": [
-                            "SwipeGesture::Angle()",
-                            "<",
-                            "-67.5"
+                            "GetArgumentAsString(\"Direction\")",
+                            "=",
+                            "\"Up\""
                           ]
                         }
                       ],
-                      "actions": [
+                      "actions": [],
+                      "events": [
                         {
-                          "type": {
-                            "value": "SetReturnBoolean"
-                          },
-                          "parameters": [
-                            "True"
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ],
-              "parameters": []
-            },
-            {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
-              "creationTime": 0,
-              "name": "Down",
-              "source": "",
-              "type": "BuiltinCommonInstructions::Group",
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BuiltinCommonInstructions::CompareStrings"
-                      },
-                      "parameters": [
-                        "GetArgumentAsString(\"Direction\")",
-                        "=",
-                        "\"Down\""
-                      ]
-                    }
-                  ],
-                  "actions": [],
-                  "events": [
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
-                          },
-                          "parameters": [
-                            "SwipeGesture::Angle()",
-                            ">=",
-                            "67.5"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
-                          },
-                          "parameters": [
-                            "SwipeGesture::Angle()",
-                            "<",
-                            "112.5"
-                          ]
-                        }
-                      ],
-                      "actions": [
-                        {
-                          "type": {
-                            "value": "SetReturnBoolean"
-                          },
-                          "parameters": [
-                            "True"
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ],
-              "parameters": []
-            },
-            {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
-              "creationTime": 0,
-              "name": "Left",
-              "source": "",
-              "type": "BuiltinCommonInstructions::Group",
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BuiltinCommonInstructions::CompareStrings"
-                      },
-                      "parameters": [
-                        "GetArgumentAsString(\"Direction\")",
-                        "=",
-                        "\"Left\""
-                      ]
-                    }
-                  ],
-                  "actions": [],
-                  "events": [
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::Or"
-                          },
-                          "parameters": [],
-                          "subInstructions": [
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
                             {
                               "type": {
-                                "value": "BuiltinCommonInstructions::And"
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
                               },
-                              "parameters": [],
-                              "subInstructions": [
-                                {
-                                  "type": {
-                                    "value": "BuiltinCommonInstructions::CompareNumbers"
-                                  },
-                                  "parameters": [
-                                    "SwipeGesture::Angle()",
-                                    ">=",
-                                    "-180"
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "BuiltinCommonInstructions::CompareNumbers"
-                                  },
-                                  "parameters": [
-                                    "SwipeGesture::Angle()",
-                                    "<",
-                                    "-157.5"
-                                  ]
-                                }
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                ">=",
+                                "-112.5"
                               ]
                             },
                             {
                               "type": {
-                                "value": "BuiltinCommonInstructions::And"
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                "<",
+                                "-67.5"
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetReturnBoolean"
+                              },
+                              "parameters": [
+                                "True"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Down",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareStrings"
+                          },
+                          "parameters": [
+                            "GetArgumentAsString(\"Direction\")",
+                            "=",
+                            "\"Down\""
+                          ]
+                        }
+                      ],
+                      "actions": [],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                ">=",
+                                "67.5"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                "<",
+                                "112.5"
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetReturnBoolean"
+                              },
+                              "parameters": [
+                                "True"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Left",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareStrings"
+                          },
+                          "parameters": [
+                            "GetArgumentAsString(\"Direction\")",
+                            "=",
+                            "\"Left\""
+                          ]
+                        }
+                      ],
+                      "actions": [],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::Or"
                               },
                               "parameters": [],
                               "subInstructions": [
                                 {
                                   "type": {
-                                    "value": "BuiltinCommonInstructions::CompareNumbers"
+                                    "value": "BuiltinCommonInstructions::And"
                                   },
-                                  "parameters": [
-                                    "SwipeGesture::Angle()",
-                                    ">=",
-                                    "157.5"
+                                  "parameters": [],
+                                  "subInstructions": [
+                                    {
+                                      "type": {
+                                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                                      },
+                                      "parameters": [
+                                        "SwipeGesture::Angle()",
+                                        ">=",
+                                        "-180"
+                                      ]
+                                    },
+                                    {
+                                      "type": {
+                                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                                      },
+                                      "parameters": [
+                                        "SwipeGesture::Angle()",
+                                        "<",
+                                        "-157.5"
+                                      ]
+                                    }
                                   ]
                                 },
                                 {
                                   "type": {
-                                    "value": "BuiltinCommonInstructions::CompareNumbers"
+                                    "value": "BuiltinCommonInstructions::And"
                                   },
-                                  "parameters": [
-                                    "SwipeGesture::Angle()",
-                                    "<",
-                                    "180"
+                                  "parameters": [],
+                                  "subInstructions": [
+                                    {
+                                      "type": {
+                                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                                      },
+                                      "parameters": [
+                                        "SwipeGesture::Angle()",
+                                        ">=",
+                                        "157.5"
+                                      ]
+                                    },
+                                    {
+                                      "type": {
+                                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                                      },
+                                      "parameters": [
+                                        "SwipeGesture::Angle()",
+                                        "<",
+                                        "180"
+                                      ]
+                                    }
                                   ]
                                 }
                               ]
                             }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetReturnBoolean"
+                              },
+                              "parameters": [
+                                "True"
+                              ]
+                            }
                           ]
                         }
-                      ],
-                      "actions": [
-                        {
-                          "type": {
-                            "value": "SetReturnBoolean"
-                          },
-                          "parameters": [
-                            "True"
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                }
-              ],
-              "parameters": []
-            },
-            {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
-              "creationTime": 0,
-              "name": "Right",
-              "source": "",
-              "type": "BuiltinCommonInstructions::Group",
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BuiltinCommonInstructions::CompareStrings"
-                      },
-                      "parameters": [
-                        "GetArgumentAsString(\"Direction\")",
-                        "=",
-                        "\"Right\""
                       ]
                     }
                   ],
-                  "actions": [],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Right",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
                   "events": [
                     {
                       "type": "BuiltinCommonInstructions::Standard",
                       "conditions": [
                         {
                           "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                            "value": "BuiltinCommonInstructions::CompareStrings"
                           },
                           "parameters": [
-                            "SwipeGesture::Angle()",
-                            ">=",
-                            "-22.5"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
-                          },
-                          "parameters": [
-                            "SwipeGesture::Angle()",
-                            "<",
-                            "22.5"
+                            "GetArgumentAsString(\"Direction\")",
+                            "=",
+                            "\"Right\""
                           ]
                         }
                       ],
-                      "actions": [
+                      "actions": [],
+                      "events": [
                         {
-                          "type": {
-                            "value": "SetReturnBoolean"
-                          },
-                          "parameters": [
-                            "True"
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                ">=",
+                                "-22.5"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                "<",
+                                "22.5"
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetReturnBoolean"
+                              },
+                              "parameters": [
+                                "True"
+                              ]
+                            }
                           ]
                         }
                       ]
                     }
-                  ]
-                }
-              ],
-              "parameters": []
-            },
-            {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
-              "creationTime": 0,
-              "name": "UpRight",
-              "source": "",
-              "type": "BuiltinCommonInstructions::Group",
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BuiltinCommonInstructions::CompareStrings"
-                      },
-                      "parameters": [
-                        "GetArgumentAsString(\"Direction\")",
-                        "=",
-                        "\"UpRight\""
-                      ]
-                    }
                   ],
-                  "actions": [],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "UpRight",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
                   "events": [
                     {
                       "type": "BuiltinCommonInstructions::Standard",
                       "conditions": [
                         {
                           "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                            "value": "BuiltinCommonInstructions::CompareStrings"
                           },
                           "parameters": [
-                            "SwipeGesture::Angle()",
-                            ">=",
-                            "-67.5"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
-                          },
-                          "parameters": [
-                            "SwipeGesture::Angle()",
-                            "<",
-                            "-22.5"
+                            "GetArgumentAsString(\"Direction\")",
+                            "=",
+                            "\"UpRight\""
                           ]
                         }
                       ],
-                      "actions": [
+                      "actions": [],
+                      "events": [
                         {
-                          "type": {
-                            "value": "SetReturnBoolean"
-                          },
-                          "parameters": [
-                            "True"
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                ">=",
+                                "-67.5"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                "<",
+                                "-22.5"
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetReturnBoolean"
+                              },
+                              "parameters": [
+                                "True"
+                              ]
+                            }
                           ]
                         }
                       ]
                     }
-                  ]
-                }
-              ],
-              "parameters": []
-            },
-            {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
-              "creationTime": 0,
-              "name": "UpLeft",
-              "source": "",
-              "type": "BuiltinCommonInstructions::Group",
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BuiltinCommonInstructions::CompareStrings"
-                      },
-                      "parameters": [
-                        "GetArgumentAsString(\"Direction\")",
-                        "=",
-                        "\"UpLeft\""
-                      ]
-                    }
                   ],
-                  "actions": [],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "UpLeft",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
                   "events": [
                     {
                       "type": "BuiltinCommonInstructions::Standard",
                       "conditions": [
                         {
                           "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                            "value": "BuiltinCommonInstructions::CompareStrings"
                           },
                           "parameters": [
-                            "SwipeGesture::Angle()",
-                            ">=",
-                            "-157.5"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
-                          },
-                          "parameters": [
-                            "SwipeGesture::Angle()",
-                            "<",
-                            "-112.5"
+                            "GetArgumentAsString(\"Direction\")",
+                            "=",
+                            "\"UpLeft\""
                           ]
                         }
                       ],
-                      "actions": [
+                      "actions": [],
+                      "events": [
                         {
-                          "type": {
-                            "value": "SetReturnBoolean"
-                          },
-                          "parameters": [
-                            "True"
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                ">=",
+                                "-157.5"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                "<",
+                                "-112.5"
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetReturnBoolean"
+                              },
+                              "parameters": [
+                                "True"
+                              ]
+                            }
                           ]
                         }
                       ]
                     }
-                  ]
-                }
-              ],
-              "parameters": []
-            },
-            {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
-              "creationTime": 0,
-              "name": "DownLeft",
-              "source": "",
-              "type": "BuiltinCommonInstructions::Group",
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BuiltinCommonInstructions::CompareStrings"
-                      },
-                      "parameters": [
-                        "GetArgumentAsString(\"Direction\")",
-                        "=",
-                        "\"DownLeft\""
-                      ]
-                    }
                   ],
-                  "actions": [],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "DownLeft",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
                   "events": [
                     {
                       "type": "BuiltinCommonInstructions::Standard",
                       "conditions": [
                         {
                           "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                            "value": "BuiltinCommonInstructions::CompareStrings"
                           },
                           "parameters": [
-                            "SwipeGesture::Angle()",
-                            ">=",
-                            "112.5"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
-                          },
-                          "parameters": [
-                            "SwipeGesture::Angle()",
-                            "<",
-                            "157.5"
+                            "GetArgumentAsString(\"Direction\")",
+                            "=",
+                            "\"DownLeft\""
                           ]
                         }
                       ],
-                      "actions": [
+                      "actions": [],
+                      "events": [
                         {
-                          "type": {
-                            "value": "SetReturnBoolean"
-                          },
-                          "parameters": [
-                            "True"
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                ">=",
+                                "112.5"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                "<",
+                                "157.5"
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetReturnBoolean"
+                              },
+                              "parameters": [
+                                "True"
+                              ]
+                            }
                           ]
                         }
                       ]
                     }
-                  ]
-                }
-              ],
-              "parameters": []
-            },
-            {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
-              "creationTime": 0,
-              "name": "DownRight",
-              "source": "",
-              "type": "BuiltinCommonInstructions::Group",
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BuiltinCommonInstructions::CompareStrings"
-                      },
-                      "parameters": [
-                        "GetArgumentAsString(\"Direction\")",
-                        "=",
-                        "\"DownRight\""
-                      ]
-                    }
                   ],
-                  "actions": [],
+                  "parameters": []
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "DownRight",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
                   "events": [
                     {
                       "type": "BuiltinCommonInstructions::Standard",
                       "conditions": [
                         {
                           "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                            "value": "BuiltinCommonInstructions::CompareStrings"
                           },
                           "parameters": [
-                            "SwipeGesture::Angle()",
-                            ">=",
-                            "22.5"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::CompareNumbers"
-                          },
-                          "parameters": [
-                            "SwipeGesture::Angle()",
-                            "<",
-                            "67.5"
+                            "GetArgumentAsString(\"Direction\")",
+                            "=",
+                            "\"DownRight\""
                           ]
                         }
                       ],
-                      "actions": [
+                      "actions": [],
+                      "events": [
                         {
-                          "type": {
-                            "value": "SetReturnBoolean"
-                          },
-                          "parameters": [
-                            "True"
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                ">=",
+                                "22.5"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "SwipeGesture::Angle()",
+                                "<",
+                                "67.5"
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetReturnBoolean"
+                              },
+                              "parameters": [
+                                "True"
+                              ]
+                            }
                           ]
                         }
                       ]
                     }
-                  ]
+                  ],
+                  "parameters": []
                 }
               ],
               "parameters": []
             }
-          ],
-          "parameters": []
+          ]
         }
       ],
       "parameters": [
