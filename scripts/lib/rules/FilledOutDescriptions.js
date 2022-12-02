@@ -29,7 +29,11 @@ const NECESSARY_FIELDS = {
  */
 function checkForFilledOutString(object, fields, sourceName, onError) {
   for (let key of fields) {
-    if (object[key].trim().length === 0)
+    if (
+      (object[key].trim && object[key].trim().length === 0) ||
+      // Descriptions are arrays when they have several lines.
+      (object[key].join && object[key].join('').trim().length === 0)
+    )
       onError(`Required field '${key}' of ${sourceName} is not filled out!`);
   }
 }
