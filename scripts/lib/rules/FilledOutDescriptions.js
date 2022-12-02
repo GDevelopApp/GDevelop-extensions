@@ -20,20 +20,31 @@ const NECESSARY_FIELDS = {
 };
 
 /**
+ * @param {?(string | string[])} attribute The attribute to trim.
+ * @returns {string} a trimmed representation of the attribute value.
+ */
+const trim = function (attribute) {
+  return attribute
+    ? // @ts-ignore
+      (attribute.trim && attribute.trim()) ||
+        // Descriptions are arrays when they have several lines.
+        // @ts-ignore
+        (attribute.join && attribute.join('').trim())
+    : // Some attributes are optionals
+      '';
+};
+
+/**
  * Checks if an object string fields are filled out.
  * @template {Record<string, any>} T
  * @param {T} object The object to check for fields.
- * @param {Array<keyof T>} fields The fields to check against emptyness.
+ * @param {Array<keyof T>} fields The fields to check against emptiness.
  * @param {string} sourceName The name of the object to print in the error.
  * @param {(message: string) => void} onError The errors list to log any error to.
  */
 function checkForFilledOutString(object, fields, sourceName, onError) {
   for (let key of fields) {
-    if (
-      (object[key].trim && object[key].trim().length === 0) ||
-      // Descriptions are arrays when they have several lines.
-      (object[key].join && object[key].join('').trim().length === 0)
-    )
+    if (trim(object[key]).length === 0)
       onError(`Required field '${key}' of ${sourceName} is not filled out!`);
   }
 }
