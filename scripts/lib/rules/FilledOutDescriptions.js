@@ -29,8 +29,8 @@ const trim = function (attribute) {
   return attribute
     ? // Descriptions are arrays when they have several lines.
       Array.isArray(attribute)
-      ? attribute.join('\n')
-      : attribute
+      ? attribute.join('\n').trim()
+      : attribute.trim()
     : // Some attributes are optionals
       '';
 };
