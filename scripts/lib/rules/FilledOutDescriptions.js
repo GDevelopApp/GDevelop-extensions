@@ -27,11 +27,10 @@ const NECESSARY_FIELDS = {
  */
 const trim = function (attribute) {
   return attribute
-    ? // @ts-ignore
-      (attribute.trim && attribute.trim()) ||
-        // Descriptions are arrays when they have several lines.
-        // @ts-ignore
-        (attribute.join && attribute.join('').trim())
+    ? // Descriptions are arrays when they have several lines.
+      Array.isArray(attribute)
+      ? attribute.join('\n').trim()
+      : attribute.trim()
     : // Some attributes are optionals
       '';
 };

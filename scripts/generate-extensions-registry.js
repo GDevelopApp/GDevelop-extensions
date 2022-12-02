@@ -179,7 +179,9 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
         const extensionHeader = {
           ...extensionShortHeader,
           helpPath: extension.helpPath,
-          description: extension.description,
+          description: Array.isArray(extension.description)
+            ? extension.description.join('\n')
+            : extension.description,
           iconUrl: extension.iconUrl,
         };
 
