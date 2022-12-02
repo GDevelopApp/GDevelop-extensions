@@ -13,6 +13,8 @@ const NECESSARY_FIELDS = {
   EXPRESSION: ['name', 'fullName', 'description', 'functionType'],
   /** @type {Partial<keyof EventsFunction>[]} */
   INSTRUCTION: ['name', 'fullName', 'description', 'functionType', 'sentence'],
+  /** @type {Partial<keyof EventsFunction>[]} */
+  ACTION_WITH_OPERATOR: ['name', 'getterName'],
   /** @type {Partial<keyof EventsBasedBehaviors>[]} */
   BEHAVIOR: ['name', 'fullName', 'description'],
   /** @type {Partial<keyof Parameter>[]} */
@@ -61,8 +63,12 @@ async function validate({ extension, publicEventsFunctions, onError }) {
   for (const func of publicEventsFunctions) {
     checkForFilledOutString(
       func,
-      func.functionType === 'Action' || func.functionType === 'Condition'
+      func.functionType === 'Action' ||
+        func.functionType === 'Condition' ||
+        func.functionType === 'ExpressionAndCondition'
         ? NECESSARY_FIELDS.INSTRUCTION
+        : func.functionType === 'ActionWithOperator'
+        ? NECESSARY_FIELDS.ACTION_WITH_OPERATOR
         : NECESSARY_FIELDS.EXPRESSION,
       `the function '${func.name}'`,
       onError
