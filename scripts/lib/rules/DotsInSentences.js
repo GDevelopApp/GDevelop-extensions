@@ -14,6 +14,8 @@ const NO_DOT = {
   EXPRESSION: ['name', 'fullName'],
   /** @type {Partial<keyof EventsFunction>[]} */
   INSTRUCTION: ['name', 'fullName', 'sentence'],
+  /** @type {Partial<keyof EventsFunction>[]} */
+  ACTION_WITH_OPERATOR: ['name', 'getterName'],
   /** @type {Partial<keyof EventsBasedBehaviors>[]} */
   BEHAVIOR: ['name', 'fullName'],
   /** @type {Partial<keyof Parameter>[]} */
@@ -33,6 +35,8 @@ const DOT_REQUIRED = {
   EXPRESSION: ['description'],
   /** @type {Partial<keyof EventsFunction>[]} */
   INSTRUCTION: ['description'],
+  /** @type {Partial<keyof EventsFunction>[]} */
+  ACTION_WITH_OPERATOR: [],
   /** @type {Partial<keyof EventsBasedBehaviors>[]} */
   BEHAVIOR: ['description'],
 };
@@ -116,8 +120,12 @@ async function validate({ extension, publicEventsFunctions, onError }) {
   for (const func of publicEventsFunctions) {
     checkForDots(
       func,
-      func.functionType === 'Action' || func.functionType === 'Condition'
+      func.functionType === 'Action' ||
+        func.functionType === 'Condition' ||
+        func.functionType === 'ExpressionAndCondition'
         ? 'INSTRUCTION'
+        : func.functionType === 'ActionWithOperator'
+        ? 'ACTION_WITH_OPERATOR'
         : 'EXPRESSION',
       `the function '${func.name}'`,
       onError
