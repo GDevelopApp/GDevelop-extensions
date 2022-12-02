@@ -247,5 +247,6 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
       `⚠️ Error while generating headers and registry files:`,
       error
     );
+    shell.exit(1);
   }
 })();
