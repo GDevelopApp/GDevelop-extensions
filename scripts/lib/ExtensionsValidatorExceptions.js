@@ -204,6 +204,13 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    NavMeshPathfinding: {
+      gdjsAllowedProperties: ['__NavMeshPathfinding'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      // This is for UMD extends emulation.
+      javaScriptObjectAllowedProperties: ['setPrototypeOf'],
+    },
     Noise: {
       gdjsAllowedProperties: ['_extensionNoise', 'randomInRange'],
       gdjsEvtToolsAllowedProperties: [],
