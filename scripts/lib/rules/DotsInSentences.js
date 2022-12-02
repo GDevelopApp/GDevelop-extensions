@@ -38,6 +38,21 @@ const DOT_REQUIRED = {
 };
 
 /**
+ * @param {?(string | string[])} attribute The attribute to trim.
+ * @returns {string} a trimmed representation of the attribute value.
+ */
+const trim = function (attribute) {
+  return attribute
+    ? // @ts-ignore
+      (attribute.trim && attribute.trim()) ||
+        // Descriptions are arrays when they have several lines.
+        // @ts-ignore
+        (attribute.join && attribute.join('').trim())
+    : // Some attributes are optionals
+      '';
+};
+
+/**
  * Checks if an object has forbidden dots.
  * @template {Record<string, any>} T
  * @param {T} object The object whose fields need a check.
@@ -47,12 +62,13 @@ const DOT_REQUIRED = {
  */
 function checkForForbiddenDot(object, fields, sourceName, onError) {
   for (let key of fields) {
-    const trimmed = object[key].trim();
+    const trimmed = trim(object[key]);
     // Triple dots is the exception in case two parameters have complementary descriptions
     if (trimmed.endsWith('.') && !trimmed.endsWith('...'))
       onError(
-        `Field '${key}' of ${sourceName} has a dot, but it is fobidden there!`,
+        `Field '${key}' of ${sourceName} has a dot, but it is forbidden there!`,
         () => {
+          // @ts-ignore
           object[key] = trimmed.slice(0, -1);
         }
       );
@@ -69,7 +85,7 @@ function checkForForbiddenDot(object, fields, sourceName, onError) {
  */
 function checkForMissingDot(object, fields, sourceName, onError) {
   for (let key of fields) {
-    const trimmed = object[key].trim();
+    const trimmed = trim(object[key]);
     if (trimmed.length !== 0 && !trimmed.endsWith('.'))
       onError(
         `Field '${key}' of ${sourceName} misses a dot at the end of the sentence!`,
