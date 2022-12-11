@@ -8,7 +8,7 @@
   "name": "Gamepads",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/gamepad-variant-outline.svg",
   "shortDescription": "Add support for gamepads (or other controllers) to your game, giving access to information such as button presses, axis positions, trigger pressure, etc...",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": [
     "Add support for gamepads (or other controllers) to your game, giving access to information such as button presses, axis positions, axis force, trigger pressure, deadzone for each gamepad, etc...",
     "",
@@ -719,6 +719,42 @@
       "objectGroups": []
     },
     {
+      "description": "Return the number of gamepads.",
+      "fullName": "Gamepad count",
+      "functionType": "Expression",
+      "name": "GamepadCount",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r",
+            "\r",
+            "//Get the last activated controller\r",
+            "const controllerId = gdjs._extensionController.lastActiveController;\r",
+            "\r",
+            "// Check if controller is active\r",
+            "const gamepad = gamepads[controllerId];\r",
+            "if (gamepad == null) {\r",
+            "    eventsFunctionContext.returnValue = 0;\r",
+            "} else {\r",
+            "    // Return active controller id\r",
+            "    eventsFunctionContext.returnValue = controllerId + 1;\r",
+            "}\r",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
       "description": "Check if a button is pressed on a gamepad. \nButtons can be:\n* Xbox: \"A\", \"B\", \"X\", \"Y\", \"LB\", \"RB\", \"LT\", \"RT\", \"BACK\", \"START\",\n* PS4: \"CROSS\", \"SQUARE\", \"CIRCLE\", \"TRIANGLE\", \"L1\", \"L2\", \"R1\", \"R2\", \"SHARE\", \"OPTIONS\", \"PS_BUTTON\", \"CLICK_TOUCHPAD\",\n* Other: \"UP\", \"DOWN\", \"LEFT\", \"RIGHT\", \"CLICK_STICK_LEFT\", \"CLICK_STICK_RIGHT\".",
       "fullName": "Gamepad button pressed",
       "functionType": "Condition",
@@ -1387,6 +1423,7 @@
             "        2: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r",
             "        3: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r",
             "    },\r",
+            "    lastActiveController: -1, // Last active controller\r",
             "    controllerButtonNames: { //Map associating controller button ids to button names\r",
             "        \"XBOX\": {\r",
             "            0: \"A\",\r",
@@ -1527,9 +1564,9 @@
             "for (let i = 0; i < countPlayers; i++) {",
             "    let gamepad = gamepads[i]; // Get the gamepad of the player",
             "",
-            "    //we need keep this condition because when use have not yet plug her controller we can't get the controller in the gamepad variable.",
+            "    //We have to keep this condition because if the user hasn't plugged in his controller yet, we can't get the controller in the gamepad variable.",
             "    if (gamepad == null) {",
-            "        return;",
+            "        continue;",
             "    }",
             "",
             "    for (let b = 0; b < Object.keys(gamepad.buttons).length; b++) { //For each buttons",
@@ -1538,6 +1575,11 @@
             "",
             "            //Save the state of the button for the next frame.",
             "            gdjs._extensionController.players[i].previousFrameStateButtons[b] = { pressed: true };",
+            "",
+            "            // Update Last Active Controller",
+            "            gdjs._extensionController.lastActiveController = i;",
+            "        } else {",
+            "            gdjs._extensionController.players[i].previousFrameStateButtons[b] = { pressed: false };",
             "        }",
             "    }",
             "}",
@@ -1603,11 +1645,13 @@
             "\t//When previousStateButtonIsPressed is true and actual button state is not pressed\r",
             "\t//Player have release the button\r",
             "\tif (previousStateButtonIsPressed === true && currentFrameStateButtonIsPressed === false) {\r",
-            "\t\tgdjs._extensionController.players[playerId].previousFrameStateButtons[buttonId].pressed = false;\r",
+            "\t\tgdjs._extensionController.players[playerId].previousFrameStateButtons[buttonId].pressed = true;\r",
             "\t\teventsFunctionContext.returnValue = true;\r",
             "\t\t//break;\r",
             "\t\treturn;\r",
             "\t} else {\r",
+            "\t\t//The player didn't released the button yet, the previous frame state is still true\r",
+            "\t\tgdjs._extensionController.players[playerId].previousFrameStateButtons[buttonId].pressed = false;\r",
             "\t\teventsFunctionContext.returnValue = false;\r",
             "\t}\r",
             "\r",
