@@ -1,7 +1,6 @@
 {
   "author": "",
   "category": "",
-  "description": "Platforms ledges are grabbed automatically when they are within reach.\n\nAdditional constraints can be added to:\n- make the grabbing range smaller\n- only grab ledges the character is facing",
   "extensionNamespace": "",
   "fullName": "Platform ledge grabber",
   "helpPath": "",
@@ -9,7 +8,18 @@
   "name": "PlatformLedgeGrabber",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/human-handsup.svg",
   "shortDescription": "Grab platforms ledges within reach automatically.",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "description": [
+    "Platforms ledges are grabbed automatically when they are within reach.",
+    "",
+    "Additional constraints can be added to:",
+    "- make the grabbing range smaller",
+    "- only grab ledges the character is facing"
+  ],
+  "origin": {
+    "identifier": "PlatformLedgeGrabber",
+    "name": "gdevelop-extension-store"
+  },
   "tags": [
     "platform",
     "ledge",
@@ -28,17 +38,137 @@
       "objectType": "",
       "eventsFunctions": [
         {
-          "description": "",
           "fullName": "",
           "functionType": "Action",
-          "group": "",
           "name": "doStepPreEvents",
-          "private": false,
           "sentence": "",
           "events": [
             {
               "type": "BuiltinCommonInstructions::JsCode",
-              "inlineCode": "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\nconst object = objects[0];\nconst behavior = object.getBehavior(behaviorName);\n\n/** @type {gdjs.PlatformerObjectRuntimeBehavior} */\nconst character = object.getBehavior(behavior._getPlatformerCharacter());\n\nconst isUsingLeft = character.isUsingControl(\"Left\");\nconst isUsingRight = character.isUsingControl(\"Right\");\n\nbehavior.usedLeftLast = (behavior.usedLeftLast || isUsingLeft) && !isUsingRight;\n\nif (!character.isFalling()\n    || (isUsingLeft && !behavior._getIsMovingLeftAutomatically())\n    || (isUsingRight && !behavior._getIsMovingRightAutomatically())) {\n    return;\n}\nconst wasMovingRightAutomatically = behavior._getIsMovingRightAutomatically();\nconst wasMovingLeftAutomatically = behavior._getIsMovingLeftAutomatically();\nbehavior._setIsMovingRightAutomatically(false);\nbehavior._setIsMovingLeftAutomatically(false);\n\n/** @type {gdjs.PlatformObjectsManager} */\nconst manager = gdjs.PlatformObjectsManager.getManager(runtimeScene);\n/** @type {float} */\nconst margin = behavior._getLedgeMarginX();\n/** @type {boolean} */\nconst isOnlyGabbingFacingLedges = behavior._getIsOnlyGabbingFacingLedges();\n\nif (!behavior.potentialGabbablePlatforms) {\n    behavior.potentialGabbablePlatforms = [];\n}\n/** @type {gdjs.PlatformRuntimeBehavior[]} */\nconst platforms = behavior.potentialGabbablePlatforms;\nmanager.getAllPlatformsAround(object, margin, platforms);\n\n// Find the nearest platform that can be grabbed.\nlet platformDistanceMin = margin;\nlet shouldMoveLeft = false;\nlet shouldMoveRight = false;\nconst canGrabLeft = !isOnlyGabbingFacingLedges || !behavior.usedLeftLast;\nconst canGrabRight = !isOnlyGabbingFacingLedges || behavior.usedLeftLast;\nconst aabb = object.getAABB();\nfor (const platform of platforms) {\n    /** @type {gdjs.AABB} */\n    const platformAABB = platform.owner.getAABB();\n    const characterIsAtTheLedgeLevel = aabb.max[1] > platformAABB.min[1] && aabb.min[1] <= platformAABB.min[1];\n    if (characterIsAtTheLedgeLevel) {\n        const leftDistance = platformAABB.min[0] - aabb.max[0];\n        if (canGrabLeft && 0 <= leftDistance && leftDistance <= platformDistanceMin) {\n            shouldMoveRight = true;\n            shouldMoveLeft = false;\n            platformDistanceMin = leftDistance;\n        }\n        const rightDistance = aabb.min[0] - platformAABB.max[0];\n        if (canGrabRight && 0 <= rightDistance && rightDistance <= platformDistanceMin) {\n            shouldMoveLeft = true;\n            shouldMoveRight = false;\n            platformDistanceMin = rightDistance;\n        }\n    }\n}\n\n// Don't try to move to a ledge that is too far to be actually grabbed.\nlet canReachLedge = false;\nif (shouldMoveLeft || shouldMoveRight) {\n    const alreadyDecided = wasMovingLeftAutomatically || wasMovingRightAutomatically;\n    if (alreadyDecided) {\n        canReachLedge = true;\n    }\n    else {\n        // Check if the ledge is actually reachable\n        const currentSpeedY = Math.abs(character.getCurrentFallSpeed() - character.getCurrentJumpSpeed());\n        const timeDelta = object.getElapsedTime(runtimeScene) / 1000;\n        // Rough approximation of the time frame\n        const t = (aabb.max[0] - aabb.min[0]) / ((currentSpeedY + character.getMaxFallingSpeed()) / 2) - 2 * timeDelta;\n        //console.log(\"time frame: \" + t);\n\n        const accelerationX = character.getAcceleration();\n        const maxSpeedX = character.getMaxSpeed();\n        const currentSpeedX = Math.abs(character.getCurrentSpeed());\n\n        let displacementMaxX = 0;\n        if (currentSpeedX === maxSpeedX) {\n            displacementMaxX = maxSpeedX * t;\n        }\n        else {\n            const maxSpeedXTime = Math.min(0, (maxSpeedX - currentSpeedX) / accelerationX);\n            if (t < maxSpeedXTime) {\n                displacementMaxX = currentSpeedX * t + accelerationX * t * t / 2\n            }\n            else {\n                displacementMaxX = currentSpeedX * maxSpeedXTime\n                    + accelerationX * maxSpeedXTime * maxSpeedXTime / 2\n                    + maxSpeedX * (t - maxSpeedXTime);\n            }\n        }\n        //console.log((platformDistanceMin - character._xGrabTolerance) + \" < \" + displacementMaxX);\n        canReachLedge = platformDistanceMin - character._xGrabTolerance < displacementMaxX;\n    }\n}\n// Move toward the ledge.\nif (canReachLedge) {\n    if (shouldMoveLeft) {\n        //console.log(\"Move left\");\n        behavior._setIsMovingLeftAutomatically(true);\n        character.simulateLeftKey();\n    }\n    else if (shouldMoveRight) {\n        //console.log(\"Move right\");\n        behavior._setIsMovingRightAutomatically(true);\n        character.simulateRightKey();\n    }\n}\n// Need to hold the key one frame after reaching the ledge to grab it.\nif (wasMovingLeftAutomatically && !shouldMoveRight) {\n    character.simulateLeftKey();\n}\nelse if (wasMovingRightAutomatically && !shouldMoveLeft) {\n    character.simulateRightKey();\n}\n",
+              "inlineCode": [
+                "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(behaviorName);",
+                "",
+                "/** @type {gdjs.PlatformerObjectRuntimeBehavior} */",
+                "const character = object.getBehavior(behavior._getPlatformerCharacter());",
+                "",
+                "const isUsingLeft = character.isUsingControl(\"Left\");",
+                "const isUsingRight = character.isUsingControl(\"Right\");",
+                "",
+                "behavior.usedLeftLast = (behavior.usedLeftLast || isUsingLeft) && !isUsingRight;",
+                "",
+                "if (!character.isFalling()",
+                "    || (isUsingLeft && !behavior._getIsMovingLeftAutomatically())",
+                "    || (isUsingRight && !behavior._getIsMovingRightAutomatically())) {",
+                "    return;",
+                "}",
+                "const wasMovingRightAutomatically = behavior._getIsMovingRightAutomatically();",
+                "const wasMovingLeftAutomatically = behavior._getIsMovingLeftAutomatically();",
+                "behavior._setIsMovingRightAutomatically(false);",
+                "behavior._setIsMovingLeftAutomatically(false);",
+                "",
+                "/** @type {gdjs.PlatformObjectsManager} */",
+                "const manager = gdjs.PlatformObjectsManager.getManager(runtimeScene);",
+                "/** @type {float} */",
+                "const margin = behavior._getLedgeMarginX();",
+                "/** @type {boolean} */",
+                "const isOnlyGabbingFacingLedges = behavior._getIsOnlyGabbingFacingLedges();",
+                "",
+                "if (!behavior.potentialGabbablePlatforms) {",
+                "    behavior.potentialGabbablePlatforms = [];",
+                "}",
+                "/** @type {gdjs.PlatformRuntimeBehavior[]} */",
+                "const platforms = behavior.potentialGabbablePlatforms;",
+                "manager.getAllPlatformsAround(object, margin, platforms);",
+                "",
+                "// Find the nearest platform that can be grabbed.",
+                "let platformDistanceMin = margin;",
+                "let shouldMoveLeft = false;",
+                "let shouldMoveRight = false;",
+                "const canGrabLeft = !isOnlyGabbingFacingLedges || !behavior.usedLeftLast;",
+                "const canGrabRight = !isOnlyGabbingFacingLedges || behavior.usedLeftLast;",
+                "const aabb = object.getAABB();",
+                "for (const platform of platforms) {",
+                "    /** @type {gdjs.AABB} */",
+                "    const platformAABB = platform.owner.getAABB();",
+                "    const characterIsAtTheLedgeLevel = aabb.max[1] > platformAABB.min[1] && aabb.min[1] <= platformAABB.min[1];",
+                "    if (characterIsAtTheLedgeLevel) {",
+                "        const leftDistance = platformAABB.min[0] - aabb.max[0];",
+                "        if (canGrabLeft && 0 <= leftDistance && leftDistance <= platformDistanceMin) {",
+                "            shouldMoveRight = true;",
+                "            shouldMoveLeft = false;",
+                "            platformDistanceMin = leftDistance;",
+                "        }",
+                "        const rightDistance = aabb.min[0] - platformAABB.max[0];",
+                "        if (canGrabRight && 0 <= rightDistance && rightDistance <= platformDistanceMin) {",
+                "            shouldMoveLeft = true;",
+                "            shouldMoveRight = false;",
+                "            platformDistanceMin = rightDistance;",
+                "        }",
+                "    }",
+                "}",
+                "",
+                "// Don't try to move to a ledge that is too far to be actually grabbed.",
+                "let canReachLedge = false;",
+                "if (shouldMoveLeft || shouldMoveRight) {",
+                "    const alreadyDecided = wasMovingLeftAutomatically || wasMovingRightAutomatically;",
+                "    if (alreadyDecided) {",
+                "        canReachLedge = true;",
+                "    }",
+                "    else {",
+                "        // Check if the ledge is actually reachable",
+                "        const currentSpeedY = Math.abs(character.getCurrentFallSpeed() - character.getCurrentJumpSpeed());",
+                "        const timeDelta = object.getElapsedTime(runtimeScene) / 1000;",
+                "        // Rough approximation of the time frame",
+                "        const t = (aabb.max[0] - aabb.min[0]) / ((currentSpeedY + character.getMaxFallingSpeed()) / 2) - 2 * timeDelta;",
+                "        //console.log(\"time frame: \" + t);",
+                "",
+                "        const accelerationX = character.getAcceleration();",
+                "        const maxSpeedX = character.getMaxSpeed();",
+                "        const currentSpeedX = Math.abs(character.getCurrentSpeed());",
+                "",
+                "        let displacementMaxX = 0;",
+                "        if (currentSpeedX === maxSpeedX) {",
+                "            displacementMaxX = maxSpeedX * t;",
+                "        }",
+                "        else {",
+                "            const maxSpeedXTime = Math.min(0, (maxSpeedX - currentSpeedX) / accelerationX);",
+                "            if (t < maxSpeedXTime) {",
+                "                displacementMaxX = currentSpeedX * t + accelerationX * t * t / 2",
+                "            }",
+                "            else {",
+                "                displacementMaxX = currentSpeedX * maxSpeedXTime",
+                "                    + accelerationX * maxSpeedXTime * maxSpeedXTime / 2",
+                "                    + maxSpeedX * (t - maxSpeedXTime);",
+                "            }",
+                "        }",
+                "        //console.log((platformDistanceMin - character._xGrabTolerance) + \" < \" + displacementMaxX);",
+                "        canReachLedge = platformDistanceMin - character._xGrabTolerance < displacementMaxX;",
+                "    }",
+                "}",
+                "// Move toward the ledge.",
+                "if (canReachLedge) {",
+                "    if (shouldMoveLeft) {",
+                "        //console.log(\"Move left\");",
+                "        behavior._setIsMovingLeftAutomatically(true);",
+                "        character.simulateLeftKey();",
+                "    }",
+                "    else if (shouldMoveRight) {",
+                "        //console.log(\"Move right\");",
+                "        behavior._setIsMovingRightAutomatically(true);",
+                "        character.simulateRightKey();",
+                "    }",
+                "}",
+                "// Need to hold the key one frame after reaching the ledge to grab it.",
+                "if (wasMovingLeftAutomatically && !shouldMoveRight) {",
+                "    character.simulateLeftKey();",
+                "}",
+                "else if (wasMovingRightAutomatically && !shouldMoveLeft) {",
+                "    character.simulateRightKey();",
+                "}",
+                ""
+              ],
               "parameterObjects": "Object",
               "useStrict": true,
               "eventsSheetExpanded": true
@@ -46,22 +176,13 @@
           ],
           "parameters": [
             {
-              "codeOnly": false,
-              "defaultValue": "",
               "description": "Object",
-              "longDescription": "",
               "name": "Object",
-              "optional": false,
-              "supplementaryInformation": "",
               "type": "object"
             },
             {
-              "codeOnly": false,
-              "defaultValue": "",
               "description": "Behavior",
-              "longDescription": "",
               "name": "Behavior",
-              "optional": false,
               "supplementaryInformation": "PlatformLedgeGrabber::PlatformLedgeGrabber",
               "type": "behavior"
             }
@@ -72,9 +193,7 @@
           "description": "Change whether the character only grabs facing ledges or any ledges at reach.",
           "fullName": "Only grab facing ledges",
           "functionType": "Action",
-          "group": "",
           "name": "SetIsOnlyGabbingFacingLedges",
-          "private": false,
           "sentence": "_PARAM0_ only grabs facing ledges: _PARAM2_",
           "events": [
             {
@@ -121,33 +240,19 @@
           ],
           "parameters": [
             {
-              "codeOnly": false,
-              "defaultValue": "",
               "description": "Object",
-              "longDescription": "",
               "name": "Object",
-              "optional": false,
-              "supplementaryInformation": "",
               "type": "object"
             },
             {
-              "codeOnly": false,
-              "defaultValue": "",
               "description": "Behavior",
-              "longDescription": "",
               "name": "Behavior",
-              "optional": false,
               "supplementaryInformation": "PlatformLedgeGrabber::PlatformLedgeGrabber",
               "type": "behavior"
             },
             {
-              "codeOnly": false,
-              "defaultValue": "",
               "description": "Only grab facing ledges",
-              "longDescription": "",
               "name": "IsOnlyGabbingFacingLedges",
-              "optional": false,
-              "supplementaryInformation": "",
               "type": "yesorno"
             }
           ],
@@ -157,9 +262,7 @@
           "description": "Change the maximum ledge distance on X axis where the character moves toward the ledge. Note that the character won't move unless it can actually grab the platform.",
           "fullName": "Maximum ledge distance",
           "functionType": "Action",
-          "group": "",
           "name": "SetLedgeMarginX",
-          "private": false,
           "sentence": "Change the maximum ledge distance: _PARAM2_ where _PARAM0_ moves toward the ledge",
           "events": [
             {
@@ -182,33 +285,19 @@
           ],
           "parameters": [
             {
-              "codeOnly": false,
-              "defaultValue": "",
               "description": "Object",
-              "longDescription": "",
               "name": "Object",
-              "optional": false,
-              "supplementaryInformation": "",
               "type": "object"
             },
             {
-              "codeOnly": false,
-              "defaultValue": "",
               "description": "Behavior",
-              "longDescription": "",
               "name": "Behavior",
-              "optional": false,
               "supplementaryInformation": "PlatformLedgeGrabber::PlatformLedgeGrabber",
               "type": "behavior"
             },
             {
-              "codeOnly": false,
-              "defaultValue": "",
               "description": "Maximum ledge distance on X axis",
-              "longDescription": "",
               "name": "LedgeMarginX",
-              "optional": false,
-              "supplementaryInformation": "",
               "type": "expression"
             }
           ],
@@ -218,9 +307,7 @@
           "description": "Check if the character is moving toward a ledge.",
           "fullName": "Is moving toward a ledge",
           "functionType": "Condition",
-          "group": "",
           "name": "IsMovingToLedge",
-          "private": false,
           "sentence": "_PARAM0_ moves toward a ledge",
           "events": [
             {
@@ -267,22 +354,13 @@
           ],
           "parameters": [
             {
-              "codeOnly": false,
-              "defaultValue": "",
               "description": "Object",
-              "longDescription": "",
               "name": "Object",
-              "optional": false,
-              "supplementaryInformation": "",
               "type": "object"
             },
             {
-              "codeOnly": false,
-              "defaultValue": "",
               "description": "Behavior",
-              "longDescription": "",
               "name": "Behavior",
-              "optional": false,
               "supplementaryInformation": "PlatformLedgeGrabber::PlatformLedgeGrabber",
               "type": "behavior"
             }
@@ -343,7 +421,8 @@
           "hidden": true,
           "name": "IsMovingRightAutomatically"
         }
-      ]
+      ],
+      "sharedPropertyDescriptors": []
     }
   ],
   "eventsBasedObjects": []
