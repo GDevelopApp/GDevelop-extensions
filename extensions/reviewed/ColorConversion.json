@@ -7,9 +7,9 @@
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWludmVydC1jb2xvcnMiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIsMTkuNThWMTkuNThDMTAuNCwxOS41OCA4Ljg5LDE4Ljk2IDcuNzYsMTcuODNDNi42MiwxNi42OSA2LDE1LjE5IDYsMTMuNThDNiwxMiA2LjYyLDEwLjQ3IDcuNzYsOS4zNEwxMiw1LjFNMTcuNjYsNy45M0wxMiwyLjI3VjIuMjdMNi4zNCw3LjkzQzMuMjIsMTEuMDUgMy4yMiwxNi4xMiA2LjM0LDE5LjI0QzcuOSwyMC44IDkuOTUsMjEuNTggMTIsMjEuNThDMTQuMDUsMjEuNTggMTYuMSwyMC44IDE3LjY2LDE5LjI0QzIwLjc4LDE2LjEyIDIwLjc4LDExLjA1IDE3LjY2LDcuOTNaIiAvPjwvc3ZnPg==",
   "name": "ColorConversion",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/invert-colors.svg",
-  "shortDescription": "Expressions to convert color values between various formats (RGB, HSV, HSL, named colors) and get colors between 2 others.",
+  "shortDescription": "Expressions to convert color values between various formats (RGB, HSV, HSL, named colors), calculate luminance, and get colors between 2 others.",
   "version": "1.2.1",
-  "description": "Expressions to convert color values between various formats (RGB, HSV, HSL, named colors) and get colors between 2 others.",
+  "description": "Expressions to convert color values between various formats (RGB, HSV, HSL, named colors), calculate luminance of colors according to WCAG 2.0 standards, and get colors between 2 others.",
   "origin": {
     "identifier": "ColorConversion",
     "name": "gdevelop-extension-store"
@@ -21,12 +21,15 @@
     "rgb",
     "hsl",
     "hsv",
-    "hsb"
+    "hsb",
+    "luminance",
+    "wcag"
   ],
   "authorIds": [
     "gqDaZjCfevOOxBYkK6zlhtZnXCg1",
     "AlZ3D1xkH0QDao7T37VZZUeYNpn1",
-    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
+    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2",
+    "onPsboRtDkUHNOsx7OPr8R8G1oj2"
   ],
   "dependencies": [],
   "eventsFunctions": [
@@ -76,6 +79,80 @@
           "description": "Hex value",
           "name": "n",
           "type": "color"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Calculate luminace of a RGB color.  Example input: \"0;128;255\".",
+      "fullName": "Luminnace from RGB",
+      "functionType": "Expression",
+      "name": "RgbToLuminance",
+      "sentence": "Calculate luminace of the color _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "function toLuminance(color) {",
+            "    // Convert the color string to an array of RGB values",
+            "    let [r, g, b] = color.split(\";\");",
+            "    let luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;",
+            "    return luminance;",
+            "}",
+            "",
+            "const color = eventsFunctionContext.getArgument(\"color\");",
+            "eventsFunctionContext.returnValue = toLuminance(color);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "RGB color",
+          "name": "color",
+          "type": "color"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Calculate luminace of a hexadecimal color.  Example input: \"0459AF\".",
+      "fullName": "Luminnace from hexadecimal",
+      "functionType": "Expression",
+      "name": "HexToLuminance",
+      "sentence": "Calculate luminace of the color _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "function hexToLuminance(color) {",
+            "    // Convert the color string to an array of RGB values",
+            "    let [r, g, b] = color.slice(1).match(/.{2}/g).map(x => parseInt(x, 16));",
+            "    let luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;",
+            "    return luminance;",
+            "}",
+            "",
+            "const color = eventsFunctionContext.getArgument(\"color\");",
+            "eventsFunctionContext.returnValue = hexToLuminance(color);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Hex value",
+          "name": "color",
+          "type": "string"
         }
       ],
       "objectGroups": []
