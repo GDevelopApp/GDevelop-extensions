@@ -154,6 +154,16 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    CurvedMovement: {
+      gdjsAllowedProperties: [
+        '__curvedMovementExtension',
+        'AffineTransformation',
+        'ShapePainterRuntimeObject',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['__curvedMovementExtension'],
+      javaScriptObjectAllowedProperties: [],
+    },
     DialogBox: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: [],
