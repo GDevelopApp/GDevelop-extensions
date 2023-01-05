@@ -8,14 +8,18 @@
   "name": "FollowObjectsWithCamera",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/camera-switch-outline.svg",
   "shortDescription": "Change the zoom and position of the camera to keep all instances of an object (or object group) on the screen.",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": [
     "Use the \"Follow multiple objects with camera\" action on every frame that you want the camera to move.  ",
     "If you want to select which object instances are tracked by the camera, add conditions to that event.",
     "",
     "- Use an object group to track multiple objects.",
     "- Only run on one layer at a time.  If multiple layers need to move the same way, create events that copy CameraX, CameraY, and CameraZoom values (or use the \"Copy camera settings\" extension)",
-    "- This action can also be used on a single object instance to move the camera smoothly."
+    "- This action can also be used on a single object instance to move the camera smoothly.",
+    "",
+    "Release Notes: ",
+    "- Version 1.0.0 removed the \"MinZoom\", \"Layer\", and \"Camera\" parameters. Events that were created with previous versions of this extension will require adjusting. Layer is now selected automatically from one of the objects being followed. ",
+    ""
   ],
   "origin": {
     "identifier": "FollowObjectsWithCamera",
@@ -42,7 +46,7 @@
       "fullName": "Follow multiple objects with camera",
       "functionType": "Action",
       "name": "FollowObjectsWithCamera",
-      "sentence": "Move camera on layer _PARAM6_ to keep instances of _PARAM1_ on the screen. Use a margin of _PARAM2_px horizontally and _PARAM3_px vertically. Use a zoom between _PARAM4_ and _PARAM5_.  Move the camera at a speed of _PARAM8_",
+      "sentence": "Move camera to keep instances of _PARAM1_ on the screen. Use a margin of _PARAM2_px horizontally and _PARAM3_px vertically. Max zoom: _PARAM4_.  Move the camera at a speed of _PARAM5_",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Comment",
@@ -234,18 +238,7 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "BoundingBoxLeft"
-                  },
-                  "parameters": [
-                    "Object",
-                    "<=",
-                    "Variable(__FollowObjects.MinX)"
-                  ]
-                }
-              ],
+              "conditions": [],
               "actions": [
                 {
                   "type": {
@@ -254,35 +247,14 @@
                   "parameters": [
                     "__FollowObjects.MinX",
                     "=",
-                    "Object.BoundingBoxLeft()"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "ModVarScene"
-                  },
-                  "parameters": [
-                    "__FollowObjects.LeftMostObjectWidth",
-                    "=",
-                    "max(Variable(__FollowObjects.LeftMostObjectWidth),Object.Width())"
+                    "min(Variable(__FollowObjects.MinX), Object.BoundingBoxLeft())"
                   ]
                 }
               ]
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "BoundingBoxRight"
-                  },
-                  "parameters": [
-                    "Object",
-                    ">=",
-                    "Variable(__FollowObjects.MaxX)"
-                  ]
-                }
-              ],
+              "conditions": [],
               "actions": [
                 {
                   "type": {
@@ -291,35 +263,14 @@
                   "parameters": [
                     "__FollowObjects.MaxX",
                     "=",
-                    "Object.BoundingBoxRight()"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "ModVarScene"
-                  },
-                  "parameters": [
-                    "__FollowObjects.RightMostObjectWidth",
-                    "=",
-                    "max(Variable(__FollowObjects.RightMostObjectWidth),Object.Width())"
+                    "max(Variable(__FollowObjects.MaxX), Object.BoundingBoxRight())"
                   ]
                 }
               ]
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "BoundingBoxTop"
-                  },
-                  "parameters": [
-                    "Object",
-                    "<=",
-                    "Variable(__FollowObjects.MinY)"
-                  ]
-                }
-              ],
+              "conditions": [],
               "actions": [
                 {
                   "type": {
@@ -328,35 +279,14 @@
                   "parameters": [
                     "__FollowObjects.MinY",
                     "=",
-                    "Object.BoundingBoxTop()"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "ModVarScene"
-                  },
-                  "parameters": [
-                    "__FollowObjects.TopMostObjectHeight",
-                    "=",
-                    "max(Variable(__FollowObjects.TopMostObjectHeight),Object.Height())"
+                    "min(Variable(__FollowObjects.MinY), Object.BoundingBoxTop())"
                   ]
                 }
               ]
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "BoundingBoxBottom"
-                  },
-                  "parameters": [
-                    "Object",
-                    ">=",
-                    "Variable(__FollowObjects.MaxY)"
-                  ]
-                }
-              ],
+              "conditions": [],
               "actions": [
                 {
                   "type": {
@@ -365,17 +295,7 @@
                   "parameters": [
                     "__FollowObjects.MaxY",
                     "=",
-                    "Object.BoundingBoxBottom()"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "ModVarScene"
-                  },
-                  "parameters": [
-                    "__FollowObjects.BottomMostObjectHeight",
-                    "=",
-                    "max(Variable(__FollowObjects.BottomMostObjectHeight),Object.Height())"
+                    "max(Variable(__FollowObjects.MaxY), Object.BoundingBoxBottom())"
                   ]
                 }
               ]
@@ -406,9 +326,9 @@
               "parameters": [
                 "",
                 "=",
-                "lerp(CameraX(GetArgumentAsString(\"Layer\"), GetArgumentAsNumber(\"Camera\")), (Variable(__FollowObjects.MinX) + Variable(__FollowObjects.MaxX)) / 2, Variable(__FollowObjects.LerpSpeed))",
-                "GetArgumentAsString(\"Layer\")",
-                "GetArgumentAsNumber(\"Camera\")"
+                "lerp(CameraX(Object.Layer(), 0), (Variable(__FollowObjects.MinX) + Variable(__FollowObjects.MaxX)) / 2, Variable(__FollowObjects.LerpSpeed))",
+                "Object.Layer()",
+                "0"
               ]
             }
           ]
@@ -424,9 +344,9 @@
               "parameters": [
                 "",
                 "=",
-                "lerp(CameraY(GetArgumentAsString(\"Layer\"), GetArgumentAsNumber(\"Camera\")), (Variable(__FollowObjects.MinY) + Variable(__FollowObjects.MaxY)) / 2, Variable(__FollowObjects.LerpSpeed))",
-                "GetArgumentAsString(\"Layer\")",
-                "GetArgumentAsNumber(\"Camera\")"
+                "lerp(CameraY(Object.Layer(), 0), (Variable(__FollowObjects.MinY) + Variable(__FollowObjects.MaxY)) / 2, Variable(__FollowObjects.LerpSpeed))",
+                "Object.Layer()",
+                "0"
               ]
             }
           ]
@@ -504,7 +424,7 @@
               "parameters": [
                 "__FollowObjects.CameraZoom",
                 "=",
-                "clamp(Variable(__FollowObjects.CameraZoom), GetArgumentAsNumber(\"MinZoom\"), Variable(__FollowObjects.MaxZoom))"
+                "min(Variable(__FollowObjects.CameraZoom), Variable(__FollowObjects.MaxZoom))"
               ]
             }
           ]
@@ -532,9 +452,9 @@
               },
               "parameters": [
                 "",
-                "lerp(CameraZoom(GetArgumentAsString(\"Layer\"), GetArgumentAsNumber(\"Camera\")), Variable(__FollowObjects.CameraZoom), Variable(__FollowObjects.LerpSpeed))",
-                "GetArgumentAsString(\"Layer\")",
-                "GetArgumentAsNumber(\"Camera\")"
+                "lerp(CameraZoom(Object.Layer(), 0), Variable(__FollowObjects.CameraZoom), Variable(__FollowObjects.LerpSpeed))",
+                "Object.Layer()",
+                "0"
               ]
             }
           ]
@@ -559,26 +479,9 @@
           "type": "expression"
         },
         {
-          "description": "Minimum zoom level ",
-          "longDescription": "Limit how far the camera will zoom OUT",
-          "name": "MinZoom",
-          "type": "expression"
-        },
-        {
           "description": "Maximum zoom level (Default: 1)",
-          "longDescription": "Limit how far the camera will zoom IN",
+          "longDescription": "Limit how far the camera will zoom in",
           "name": "MaxZoom",
-          "type": "expression"
-        },
-        {
-          "description": "Layer ",
-          "longDescription": "Use \"\" for base layer",
-          "name": "Layer",
-          "type": "layer"
-        },
-        {
-          "description": "Camera",
-          "name": "Camera",
           "type": "expression"
         },
         {
