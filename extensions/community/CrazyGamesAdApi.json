@@ -45,6 +45,85 @@
       "objectGroups": []
     },
     {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onScenePostEvents",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "CrazyGamesAdApi::IsSDKLoaded"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "CrazyGamesAdApi::InitializeSDK"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Intialize SDK.",
+      "fullName": "Intialize SDK",
+      "functionType": "Action",
+      "name": "InitializeSDK",
+      "private": true,
+      "sentence": "Intialize SDK",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "SceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__CrazyGamesExtension.sdkInitialized",
+                "False"
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "try {",
+                "    const crazysdk = window.CrazyGames.CrazySDK.getInstance();",
+                "    crazysdk.init();",
+                "    runtimeScene.getVariables().get(\"__CrazyGamesExtension\").getChild('sdkInitialized').setBoolean(true);",
+                "} catch(error) {",
+                "    console.log(\"Unable to initialize SDK. Full error is:\", error);",
+                "}"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
       "description": "Load SDK.",
       "fullName": "Load SDK",
       "functionType": "Action",
@@ -73,17 +152,10 @@
       "sentence": "Display Crazy Game Ad Type _PARAM1_",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": []
-        },
-        {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
             "try {",
             "    const crazysdk = window.CrazyGames.CrazySDK.getInstance();",
-            "    crazysdk.init();",
-            "",
             "    const AdType = eventsFunctionContext.getArgument(\"AdType\").toString();",
             "",
             "    crazysdk.requestAd(AdType);",
@@ -99,9 +171,9 @@
             "        console.log({error});",
             "    });",
             "",
-            "} catch(e) {",
+            "} catch(error) {",
             "    runtimeScene.getVariables().get(\"__CrazyGamesExtension\").getChild('adError').setBoolean(true);",
-            "    console.log({e});",
+            "    console.log(\"Unable to display ad. Full error is:\", error);",
             "}"
           ],
           "parameterObjects": "",
@@ -231,14 +303,12 @@
           "inlineCode": [
             "try {",
             "    const crazysdk = window.CrazyGames.CrazySDK.getInstance();",
-            "    crazysdk.init();",
-            "",
             "    const roomId = eventsFunctionContext.getArgument(\"RoomId\");",
             "    const linkToShare = crazysdk.inviteLink({ roomId: roomId });",
             "",
             "    eventsFunctionContext.returnValue = linkToShare;",
-            "} catch(e) {",
-            "    console.log({e});",
+            "} catch(error) {",
+            "    console.log(\"Unable to create an invite link. Full error is:\", error);",
             "}"
           ],
           "parameterObjects": "",
@@ -288,12 +358,10 @@
           "inlineCode": [
             "try {",
             "    const crazysdk = window.CrazyGames.CrazySDK.getInstance();",
-            "    crazysdk.init();",
-            "",
             "    // Player beats a boss, reaches a high score, etc.",
             "    crazysdk.happytime();",
-            "} catch(e) {",
-            "    console.log({e});",
+            "} catch(error) {",
+            "    console.log(\"Unable to display happytime. Full error is:\", error);",
             "}"
           ],
           "parameterObjects": "",
@@ -305,34 +373,29 @@
       "objectGroups": []
     },
     {
-      "description": "Check if user is using adblock.",
-      "fullName": "Check if user is using adblock",
+      "description": "Scan for adblockers.",
+      "fullName": "Scan for adblockers",
       "functionType": "Action",
       "name": "ScanForAdBlockers",
-      "sentence": "Check if user is using adblock",
+      "sentence": "Scan for adblockers",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
             "try {",
             "    function adblockDetection(event) {",
-            "        if (event.hasAdblock) {",
-            "            runtimeScene.getVariables().get(\"__CrazyGamesExtension\").getChild(\"adBlocker\").setBoolean(true);",
-            "        } else {",
-            "            runtimeScene.getVariables().get(\"__CrazyGamesExtension\").getChild(\"adBlocker\").setBoolean(false);",
-            "        }",
+            "        runtimeScene.getVariables().get(\"__CrazyGamesExtension\").getChild(\"adBlocker\").setBoolean(!!event.hasAdblock);",
             "    }",
             "",
             "    const crazysdk = window.CrazyGames.CrazySDK.getInstance();",
             "    crazysdk.addEventListener(\"adblockDetectionExecuted\", adblockDetection);",
-            "    crazysdk.init();",
-            "} catch(e) {",
-            "    console.log({e});",
+            "} catch(error) {",
+            "    console.log(\"Unable to scan adblockers. Full error is:\", error);",
             "}"
           ],
           "parameterObjects": "",
           "useStrict": true,
-          "eventsSheetExpanded": false
+          "eventsSheetExpanded": true
         }
       ],
       "parameters": [],
