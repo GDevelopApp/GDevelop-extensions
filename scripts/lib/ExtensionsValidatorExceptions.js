@@ -148,6 +148,22 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: ['__boidsExtension'],
       javaScriptObjectAllowedProperties: [],
     },
+    CameraShake: {
+      gdjsAllowedProperties: ['_cameraShakeExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    CurvedMovement: {
+      gdjsAllowedProperties: [
+        '__curvedMovementExtension',
+        'AffineTransformation',
+        'ShapePainterRuntimeObject',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['__curvedMovementExtension'],
+      javaScriptObjectAllowedProperties: [],
+    },
     DialogBox: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: [],
@@ -157,6 +173,12 @@ const extensionsAllowedProperties = {
     FlexBox: {
       gdjsAllowedProperties: ['layoutContainers'],
       gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    Geolocation: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['geolocation'],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
@@ -192,8 +214,26 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    NavMeshPathfinding: {
+      gdjsAllowedProperties: ['__NavMeshPathfinding'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      // This is for UMD extends emulation.
+      javaScriptObjectAllowedProperties: ['setPrototypeOf'],
+    },
     Noise: {
       gdjsAllowedProperties: ['_extensionNoise', 'randomInRange'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    PlatformLedgeGrabber: {
+      gdjsAllowedProperties: [
+        'PlatformerObjectRuntimeBehavior',
+        'PlatformRuntimeBehavior',
+        'PlatformObjectsManager',
+        'AABB',
+      ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],

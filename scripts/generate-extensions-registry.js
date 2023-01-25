@@ -94,6 +94,7 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
     ];
 
     const allTagsSet = new Set();
+    const allCategoriesSet = new Set();
 
     /** @type {ExtensionShortHeader[]} */
     const extensionShortHeaders = [];
@@ -143,7 +144,7 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
         // Override the base extensions when fixing
         if (args['fix'])
           await writeJSONFile(
-            path.join(extensionsBasePath, `${name}.json`),
+            path.join(extensionsBasePath, tier, `${name}.json`),
             extension
           );
 
@@ -166,23 +167,21 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
           headerUrl: `${extensionsBaseUrl}/${name}-header.json`,
           //@ts-ignore Conversion to string done above
           tags: extension.tags,
+          category: extension.category || 'General',
           previewIconUrl: extension.previewIconUrl,
           eventsBasedBehaviorsCount: extension.eventsBasedBehaviors.length,
           eventsFunctionsCount: extension.eventsFunctions.length,
         };
 
-        // For now, limit the extensions to only reviewed extensions while
-        // we wait for a new version of GDevelop that supports filtering community
-        // vs reviewed extensions (so that reviewed extensions are shown first).
-        if (tier === 'reviewed') {
-          extensionShortHeaders.push(extensionShortHeader);
-        }
+        extensionShortHeaders.push(extensionShortHeader);
 
         /** @type {ExtensionHeader} */
         const extensionHeader = {
           ...extensionShortHeader,
           helpPath: extension.helpPath,
-          description: extension.description,
+          description: Array.isArray(extension.description)
+            ? extension.description.join('\n')
+            : extension.description,
           iconUrl: extension.iconUrl,
         };
 
@@ -192,6 +191,9 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
             allTagsSet.add(tag.trim().toLowerCase());
           }
         );
+        if (extension.category) {
+          allCategoriesSet.add(extension.category);
+        }
 
         await writeJSONFile(
           path.join(distExtensionsPath, `${name}.json`),
@@ -231,6 +233,7 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
     const registry = {
       version: '0.0.1',
       allTags: Array.from(allTagsSet),
+      allCategories: Array.from(allCategoriesSet),
       extensionShortHeaders,
       views,
     };
@@ -246,5 +249,6 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
       `⚠️ Error while generating headers and registry files:`,
       error
     );
+    shell.exit(1);
   }
 })();

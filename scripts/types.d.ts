@@ -7,6 +7,7 @@ interface ExtensionAndShortHeaderFields {
   version: string;
   gdevelopVersion?: string;
   tags: Array<string>;
+  category: string;
   previewIconUrl: string;
 }
 
@@ -33,6 +34,7 @@ export interface ExtensionHeader
 export interface ExtensionsDatabase {
   version: string;
   allTags: Array<string>;
+  allCategories: Array<string>;
   extensionShortHeaders: Array<ExtensionShortHeader>;
   views: {
     default: {
@@ -72,8 +74,15 @@ export interface Parameter {
 export interface EventsFunction {
   description: string;
   fullName: string;
-  functionType: 'StringExpression' | 'Expression' | 'Action' | 'Condition';
+  functionType:
+    | 'StringExpression'
+    | 'Expression'
+    | 'Action'
+    | 'Condition'
+    | 'ExpressionAndCondition'
+    | 'ActionWithOperator';
   name: string;
+  getterName: string;
   private: boolean;
   sentence: string;
   events: any[];

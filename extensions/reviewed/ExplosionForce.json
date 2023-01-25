@@ -1,6 +1,6 @@
 {
   "author": "Tristan Rhodes (https://victrisgames.itch.io/)",
-  "description": "Apply explosion-like physics forces to target objects that are inside the explosion radius.  Forces push the target objects away from the explosion center.  The force applied is stronger the closer the target object is to the explosion center.  Target objects will be changed to \"Dynamic\" physics objects. \n\nRequirements:\n- Target Objects must have physics behavior\n- The action \"Pick all instances\" of Target Objects MUST be used directly above this action.\n\nObject Variables (Target Objects):\n- \"__ExplosionForce.Exploded\" (boolean)\n- \"__ExplosionForce.Magnitude\" (number)\n\nTips:\n- Start objects as \"Static\" physics objects so they won't move or fall over until the explosion automatically converts them to \"Dynamic\".\n- Use the \"__ExplosionForce.Exploded\" object variable to manage objects that were affected by an explosion.  (For instance, start an opacity tween that fades away and deletes the objects.)\n- If your game freezes during an explosion, try using smaller radius or max force values.\n",
+  "category": "Movement",
   "extensionNamespace": "",
   "fullName": "Explosion force",
   "helpPath": "https://victrisgames.itch.io/extension-explosion-force",
@@ -8,7 +8,29 @@
   "name": "ExplosionForce",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/bomb.svg",
   "shortDescription": "Simulate an explosion with physics forces on target objects.",
-  "version": "1.3.0",
+  "version": "1.3.1",
+  "description": [
+    "Apply explosion-like physics forces to target objects that are inside the explosion radius. Forces will push the target objects away from the explosion center.  The force applied is stronger the closer the target object is to the explosion center.  Target objects will be changed to \"Dynamic\" physics objects. ",
+    "",
+    "Requirements:",
+    "",
+    "- Target Objects must have physics behavior",
+    "",
+    "Tips:",
+    "",
+    "- Use the \"__ExplosionForce.Exploded\" object variable to detect when target objects are affected by an explosion.  For instance, start an opacity tween that fades away and deletes the objects.",
+    "",
+    "Variables given to Target Objects:",
+    "",
+    "- \"__ExplosionForce.Exploded\" (boolean)",
+    "- \"__ExplosionForce.Magnitude\" (number)",
+    "- \"__ExplosionForce.Angle\" (number)",
+    ""
+  ],
+  "origin": {
+    "identifier": "ExplosionForce",
+    "name": "gdevelop-extension-store"
+  },
   "tags": [
     "explosion",
     "explode",
@@ -28,40 +50,31 @@
       "fullName": "Simulate explosion with physics forces",
       "functionType": "Action",
       "name": "ApplyExplosionForce",
-      "private": false,
       "sentence": "Simulate an explosion that affects _PARAM1_ within explosion radius: _PARAM6_ (pixels), Explosion center: _PARAM3_, _PARAM4_.  Max force: _PARAM5_",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::ForEach",
           "object": "TargetObject",
           "conditions": [],
           "actions": [],
           "events": [
             {
-              "disabled": false,
-              "folded": false,
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
                   "type": {
-                    "inverted": false,
                     "value": "Egal"
                   },
                   "parameters": [
-                    "DistanceBetweenPositions(TargetObject.CenterX(),TargetObject.CenterY(),GetArgumentAsNumber(\"ExplosionCenterX\"),GetArgumentAsNumber(\"ExplosionCenterY\"))",
+                    "DistanceBetweenPositions(TargetObject.BoundingBoxCenterX(),TargetObject.BoundingBoxCenterY(),GetArgumentAsNumber(\"ExplosionCenterX\"),GetArgumentAsNumber(\"ExplosionCenterY\"))",
                     "<",
                     "GetArgumentAsNumber(\"ExplosionRadius\")"
-                  ],
-                  "subInstructions": []
+                  ]
                 }
               ],
               "actions": [],
               "events": [
                 {
-                  "disabled": false,
-                  "folded": false,
                   "type": "BuiltinCommonInstructions::Comment",
                   "color": {
                     "b": 109,
@@ -75,8 +88,6 @@
                   "comment2": ""
                 },
                 {
-                  "disabled": false,
-                  "folded": false,
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [
                     {
@@ -87,28 +98,22 @@
                       "parameters": [
                         "TargetObject",
                         "Behavior"
-                      ],
-                      "subInstructions": []
+                      ]
                     }
                   ],
                   "actions": [
                     {
                       "type": {
-                        "inverted": false,
                         "value": "Physics2::SetDynamic"
                       },
                       "parameters": [
                         "TargetObject",
                         "Behavior"
-                      ],
-                      "subInstructions": []
+                      ]
                     }
-                  ],
-                  "events": []
+                  ]
                 },
                 {
-                  "disabled": false,
-                  "folded": false,
                   "type": "BuiltinCommonInstructions::Comment",
                   "color": {
                     "b": 109,
@@ -118,46 +123,37 @@
                     "textG": 0,
                     "textR": 0
                   },
-                  "comment": "Set an object variable that can be used to manage objects affected by the explosion (such as opacity tween and delete)",
+                  "comment": "Save object variables that can be used to manage objects affected by the explosion",
                   "comment2": ""
                 },
                 {
-                  "disabled": false,
-                  "folded": false,
                   "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "ObjectVariableAsBoolean"
-                      },
-                      "parameters": [
-                        "TargetObject",
-                        "__ExplosionForce.Exploded",
-                        "False"
-                      ],
-                      "subInstructions": []
-                    }
-                  ],
+                  "conditions": [],
                   "actions": [
                     {
                       "type": {
-                        "inverted": false,
                         "value": "SetObjectVariableAsBoolean"
                       },
                       "parameters": [
                         "TargetObject",
                         "__ExplosionForce.Exploded",
                         "True"
-                      ],
-                      "subInstructions": []
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "ModVarObjet"
+                      },
+                      "parameters": [
+                        "TargetObject",
+                        "__ExplosionForce.Angle",
+                        "=",
+                        "180 + TargetObject.AngleToPosition(GetArgumentAsNumber(\"ExplosionCenterX\"),GetArgumentAsNumber(\"ExplosionCenterY\"))"
+                      ]
                     }
-                  ],
-                  "events": []
+                  ]
                 },
                 {
-                  "disabled": false,
-                  "folded": false,
                   "type": "BuiltinCommonInstructions::Comment",
                   "color": {
                     "b": 109,
@@ -171,14 +167,11 @@
                   "comment2": ""
                 },
                 {
-                  "disabled": false,
-                  "folded": false,
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [],
                   "actions": [
                     {
                       "type": {
-                        "inverted": false,
                         "value": "ModVarObjet"
                       },
                       "parameters": [
@@ -186,15 +179,11 @@
                         "__ExplosionForce.Magnitude",
                         "=",
                         "(GetArgumentAsNumber(\"MaxForce\") * (GetArgumentAsNumber(\"ExplosionRadius\") - DistanceBetweenPositions(TargetObject.CenterX(),TargetObject.CenterY(),GetArgumentAsNumber(\"ExplosionCenterX\"),GetArgumentAsNumber(\"ExplosionCenterY\"))) / GetArgumentAsNumber(\"ExplosionRadius\"))"
-                      ],
-                      "subInstructions": []
+                      ]
                     }
-                  ],
-                  "events": []
+                  ]
                 },
                 {
-                  "disabled": false,
-                  "folded": false,
                   "type": "BuiltinCommonInstructions::Comment",
                   "color": {
                     "b": 109,
@@ -208,28 +197,23 @@
                   "comment2": ""
                 },
                 {
-                  "disabled": false,
-                  "folded": false,
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [],
                   "actions": [
                     {
                       "type": {
-                        "inverted": false,
                         "value": "Physics2::ApplyPolarForce"
                       },
                       "parameters": [
                         "TargetObject",
                         "Behavior",
-                        "TargetObject.AngleToPosition(GetArgumentAsNumber(\"ExplosionCenterX\"),GetArgumentAsNumber(\"ExplosionCenterY\"))+180",
+                        "TargetObject.Variable(__ExplosionForce.Angle)",
                         "TargetObject.Variable(__ExplosionForce.Magnitude)",
                         "TargetObject.Behavior::MassCenterX()",
                         "TargetObject.Behavior::MassCenterY()"
-                      ],
-                      "subInstructions": []
+                      ]
                     }
-                  ],
-                  "events": []
+                  ]
                 }
               ]
             }
@@ -238,68 +222,42 @@
       ],
       "parameters": [
         {
-          "codeOnly": false,
-          "defaultValue": "",
           "description": "Target Object",
-          "longDescription": "",
           "name": "TargetObject",
-          "optional": false,
-          "supplementaryInformation": "",
           "type": "objectList"
         },
         {
-          "codeOnly": false,
-          "defaultValue": "",
           "description": "Physics Behavior (required)",
-          "longDescription": "",
           "name": "Behavior",
-          "optional": false,
           "supplementaryInformation": "Physics2::Physics2Behavior",
           "type": "behavior"
         },
         {
-          "codeOnly": false,
-          "defaultValue": "",
           "description": "Explosion center (X)",
-          "longDescription": "",
           "name": "ExplosionCenterX",
-          "optional": false,
-          "supplementaryInformation": "",
           "type": "expression"
         },
         {
-          "codeOnly": false,
-          "defaultValue": "",
           "description": "Explosion center (Y)",
-          "longDescription": "",
           "name": "ExplosionCenterY",
-          "optional": false,
-          "supplementaryInformation": "",
           "type": "expression"
         },
         {
-          "codeOnly": false,
-          "defaultValue": "",
           "description": "Max force (of explosion)",
           "longDescription": "Force decreases the farther an object is from the explosion center.",
           "name": "MaxForce",
-          "optional": false,
-          "supplementaryInformation": "",
           "type": "expression"
         },
         {
-          "codeOnly": false,
-          "defaultValue": "",
           "description": "Max distance (from center of explosion) (pixels)",
           "longDescription": "Objects less than this distance will be affected by the explosion.",
           "name": "ExplosionRadius",
-          "optional": false,
-          "supplementaryInformation": "",
           "type": "expression"
         }
       ],
       "objectGroups": []
     }
   ],
-  "eventsBasedBehaviors": []
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
 }

@@ -13,6 +13,8 @@ const NECESSARY_FIELDS = {
   EXPRESSION: ['name', 'fullName', 'description', 'functionType'],
   /** @type {Partial<keyof EventsFunction>[]} */
   INSTRUCTION: ['name', 'fullName', 'description', 'functionType', 'sentence'],
+  /** @type {Partial<keyof EventsFunction>[]} */
+  ACTION_WITH_OPERATOR: ['name', 'getterName'],
   /** @type {Partial<keyof EventsBasedBehaviors>[]} */
   BEHAVIOR: ['name', 'fullName', 'description'],
   /** @type {Partial<keyof Parameter>[]} */
@@ -20,16 +22,30 @@ const NECESSARY_FIELDS = {
 };
 
 /**
+ * @param {?(string | string[])} attribute The attribute to trim.
+ * @returns {string} a trimmed representation of the attribute value.
+ */
+const trim = function (attribute) {
+  return attribute
+    ? // Descriptions are arrays when they have several lines.
+      Array.isArray(attribute)
+      ? attribute.join('\n').trim()
+      : attribute.trim()
+    : // Some attributes are optionals
+      '';
+};
+
+/**
  * Checks if an object string fields are filled out.
  * @template {Record<string, any>} T
  * @param {T} object The object to check for fields.
- * @param {Array<keyof T>} fields The fields to check against emptyness.
+ * @param {Array<keyof T>} fields The fields to check against emptiness.
  * @param {string} sourceName The name of the object to print in the error.
  * @param {(message: string) => void} onError The errors list to log any error to.
  */
 function checkForFilledOutString(object, fields, sourceName, onError) {
   for (let key of fields) {
-    if (object[key].trim().length === 0)
+    if (trim(object[key]).length === 0)
       onError(`Required field '${key}' of ${sourceName} is not filled out!`);
   }
 }
@@ -46,8 +62,12 @@ async function validate({ extension, publicEventsFunctions, onError }) {
   for (const func of publicEventsFunctions) {
     checkForFilledOutString(
       func,
-      func.functionType === 'Action' || func.functionType === 'Condition'
+      func.functionType === 'Action' ||
+        func.functionType === 'Condition' ||
+        func.functionType === 'ExpressionAndCondition'
         ? NECESSARY_FIELDS.INSTRUCTION
+        : func.functionType === 'ActionWithOperator'
+        ? NECESSARY_FIELDS.ACTION_WITH_OPERATOR
         : NECESSARY_FIELDS.EXPRESSION,
       `the function '${func.name}'`,
       onError
