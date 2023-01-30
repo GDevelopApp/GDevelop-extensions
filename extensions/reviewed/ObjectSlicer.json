@@ -248,7 +248,7 @@
                         "textG": 0,
                         "textR": 0
                       },
-                      "comment": "Create object when current position divided by fragment size has no remainder",
+                      "comment": "Only create objects when their center would be inside the collison mask of the object",
                       "comment2": ""
                     },
                     {
@@ -256,27 +256,56 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "Egal"
+                            "value": "CollisionPoint"
                           },
                           "parameters": [
-                            "mod(Variable(__ObjectSlicer.CurrentX),Variable(__ObjectSlicer.FragmentWidth))",
-                            "=",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "Egal"
-                          },
-                          "parameters": [
-                            "mod(Variable(__ObjectSlicer.CurrentY),Variable(__ObjectSlicer.FragmentHeight))",
-                            "=",
-                            "0"
+                            "Object",
+                            "Variable(__ObjectSlicer.FragmentCenterX)",
+                            "Variable(__ObjectSlicer.FragmentCenterY)"
                           ]
                         }
                       ],
-                      "actions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "Create"
+                          },
+                          "parameters": [
+                            "",
+                            "WhitePiece",
+                            "Variable(__ObjectSlicer.CurrentX)",
+                            "Variable(__ObjectSlicer.CurrentY)",
+                            "\"\""
+                          ]
+                        }
+                      ],
                       "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "inverted": true,
+                                "value": "GetArgumentAsBoolean"
+                              },
+                              "parameters": [
+                                "\"DeleteObject\""
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "LinkedObjects::LinkObjects"
+                              },
+                              "parameters": [
+                                "",
+                                "Object",
+                                "WhitePiece"
+                              ]
+                            }
+                          ]
+                        },
                         {
                           "type": "BuiltinCommonInstructions::Comment",
                           "color": {
@@ -287,215 +316,145 @@
                             "textG": 0,
                             "textR": 0
                           },
-                          "comment": "Only create objects when their center would be inside the collison mask of the object",
+                          "comment": "Adjust the size of the new object",
                           "comment2": ""
                         },
                         {
                           "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [
-                            {
-                              "type": {
-                                "value": "CollisionPoint"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Variable(__ObjectSlicer.FragmentCenterX)",
-                                "Variable(__ObjectSlicer.FragmentCenterY)"
-                              ]
-                            }
-                          ],
+                          "conditions": [],
                           "actions": [
                             {
                               "type": {
-                                "value": "Create"
+                                "value": "ChangeWidth"
                               },
                               "parameters": [
-                                "",
                                 "WhitePiece",
-                                "Variable(__ObjectSlicer.CurrentX)",
-                                "Variable(__ObjectSlicer.CurrentY)",
-                                "\"\""
+                                "=",
+                                "Variable(__ObjectSlicer.FragmentWidth)"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "ChangeHeight"
+                              },
+                              "parameters": [
+                                "WhitePiece",
+                                "=",
+                                "Variable(__ObjectSlicer.FragmentHeight)"
                               ]
                             }
-                          ],
-                          "events": [
+                          ]
+                        },
+                        {
+                          "type": "BuiltinCommonInstructions::Comment",
+                          "color": {
+                            "b": 109,
+                            "g": 230,
+                            "r": 255,
+                            "textB": 0,
+                            "textG": 0,
+                            "textR": 0
+                          },
+                          "comment": "Set position based on center of piece (in case the origin has been moved)",
+                          "comment2": ""
+                        },
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [],
+                          "actions": [
                             {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [
-                                {
-                                  "type": {
-                                    "inverted": true,
-                                    "value": "GetArgumentAsBoolean"
-                                  },
-                                  "parameters": [
-                                    "\"DeleteObject\""
-                                  ]
-                                }
-                              ],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "LinkedObjects::LinkObjects"
-                                  },
-                                  "parameters": [
-                                    "",
-                                    "Object",
-                                    "WhitePiece"
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Comment",
-                              "color": {
-                                "b": 109,
-                                "g": 230,
-                                "r": 255,
-                                "textB": 0,
-                                "textG": 0,
-                                "textR": 0
+                              "type": {
+                                "value": "SetCenter"
                               },
-                              "comment": "Adjust the size of the new object",
-                              "comment2": ""
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "ChangeWidth"
-                                  },
-                                  "parameters": [
-                                    "WhitePiece",
-                                    "=",
-                                    "Variable(__ObjectSlicer.FragmentWidth)"
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "ChangeHeight"
-                                  },
-                                  "parameters": [
-                                    "WhitePiece",
-                                    "=",
-                                    "Variable(__ObjectSlicer.FragmentHeight)"
-                                  ]
-                                }
+                              "parameters": [
+                                "WhitePiece",
+                                "=",
+                                "Variable(__ObjectSlicer.FragmentCenterX)",
+                                "=",
+                                "Variable(__ObjectSlicer.FragmentCenterY)"
                               ]
-                            },
+                            }
+                          ]
+                        },
+                        {
+                          "type": "BuiltinCommonInstructions::Comment",
+                          "color": {
+                            "b": 109,
+                            "g": 230,
+                            "r": 255,
+                            "textB": 0,
+                            "textG": 0,
+                            "textR": 0
+                          },
+                          "comment": "Match the color of the pixel that is in the center of the new Fragment",
+                          "comment2": ""
+                        },
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [],
+                          "actions": [
                             {
-                              "type": "BuiltinCommonInstructions::Comment",
-                              "color": {
-                                "b": 109,
-                                "g": 230,
-                                "r": 255,
-                                "textB": 0,
-                                "textG": 0,
-                                "textR": 0
+                              "type": {
+                                "value": "ChangeColor"
                               },
-                              "comment": "Set position based on center of piece (in case the origin has been moved)",
-                              "comment2": ""
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "SetCenter"
-                                  },
-                                  "parameters": [
-                                    "WhitePiece",
-                                    "=",
-                                    "Variable(__ObjectSlicer.FragmentCenterX)",
-                                    "=",
-                                    "Variable(__ObjectSlicer.FragmentCenterY)"
-                                  ]
-                                }
+                              "parameters": [
+                                "WhitePiece",
+                                "ToString(ObjectSlicer::ReadPixelRed(Variable(__ObjectSlicer.FragmentCenterX), Variable(__ObjectSlicer.FragmentCenterY))) + \";\" + ToString(ObjectSlicer::ReadPixelGreen(Variable(__ObjectSlicer.FragmentCenterX), Variable(__ObjectSlicer.FragmentCenterY))) + \";\" + ToString(ObjectSlicer::ReadPixelBlue(Variable(__ObjectSlicer.FragmentCenterX), Variable(__ObjectSlicer.FragmentCenterY)))"
                               ]
-                            },
+                            }
+                          ]
+                        },
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [],
+                          "actions": [
                             {
-                              "type": "BuiltinCommonInstructions::Comment",
-                              "color": {
-                                "b": 109,
-                                "g": 230,
-                                "r": 255,
-                                "textB": 0,
-                                "textG": 0,
-                                "textR": 0
+                              "type": {
+                                "value": "ModVarObjet"
                               },
-                              "comment": "Match the color of the pixel that is in the center of the new Fragment",
-                              "comment2": ""
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "ChangeColor"
-                                  },
-                                  "parameters": [
-                                    "WhitePiece",
-                                    "ToString(ObjectSlicer::ReadPixelRed(Variable(__ObjectSlicer.FragmentCenterX), Variable(__ObjectSlicer.FragmentCenterY))) + \";\" + ToString(ObjectSlicer::ReadPixelGreen(Variable(__ObjectSlicer.FragmentCenterX), Variable(__ObjectSlicer.FragmentCenterY))) + \";\" + ToString(ObjectSlicer::ReadPixelBlue(Variable(__ObjectSlicer.FragmentCenterX), Variable(__ObjectSlicer.FragmentCenterY)))"
-                                  ]
-                                }
+                              "parameters": [
+                                "WhitePiece",
+                                "CreationID",
+                                "=",
+                                "Variable(__ObjectSlicer.CreationID)"
                               ]
                             },
                             {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "ModVarObjet"
-                                  },
-                                  "parameters": [
-                                    "WhitePiece",
-                                    "CreationID",
-                                    "=",
-                                    "Variable(__ObjectSlicer.CreationID)"
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "ModVarObjet"
-                                  },
-                                  "parameters": [
-                                    "WhitePiece",
-                                    "RowID",
-                                    "=",
-                                    "Variable(RowID)"
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "ModVarObjet"
-                                  },
-                                  "parameters": [
-                                    "WhitePiece",
-                                    "ColumnID",
-                                    "=",
-                                    "Variable(ColumnID)"
-                                  ]
-                                }
+                              "type": {
+                                "value": "ModVarObjet"
+                              },
+                              "parameters": [
+                                "WhitePiece",
+                                "RowID",
+                                "=",
+                                "Variable(RowID)"
                               ]
                             },
                             {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "ModVarScene"
-                                  },
-                                  "parameters": [
-                                    "__ObjectSlicer.CreationID",
-                                    "+",
-                                    "1"
-                                  ]
-                                }
+                              "type": {
+                                "value": "ModVarObjet"
+                              },
+                              "parameters": [
+                                "WhitePiece",
+                                "ColumnID",
+                                "=",
+                                "Variable(ColumnID)"
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "ModVarScene"
+                              },
+                              "parameters": [
+                                "__ObjectSlicer.CreationID",
+                                "+",
+                                "1"
                               ]
                             }
                           ]
@@ -512,7 +471,7 @@
                         "textG": 0,
                         "textR": 0
                       },
-                      "comment": "Search one pixel to the right",
+                      "comment": "Search to the right",
                       "comment2": ""
                     },
                     {
@@ -526,7 +485,7 @@
                           "parameters": [
                             "__ObjectSlicer.CurrentX",
                             "+",
-                            "1"
+                            "Variable(__ObjectSlicer.FragmentWidth)"
                           ]
                         }
                       ]
@@ -543,7 +502,7 @@
                     "textG": 0,
                     "textR": 0
                   },
-                  "comment": "Search one pixel down and start over on the left side",
+                  "comment": "Search down and start over on the left side",
                   "comment2": ""
                 },
                 {
@@ -567,7 +526,7 @@
                       "parameters": [
                         "__ObjectSlicer.CurrentY",
                         "+",
-                        "1"
+                        "Variable(__ObjectSlicer.FragmentHeight)"
                       ]
                     }
                   ]
