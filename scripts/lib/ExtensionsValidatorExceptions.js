@@ -372,7 +372,7 @@ const extensionsAllowedProperties = {
       javaScriptObjectAllowedProperties: [],
     },
     ObjectSlicer: {
-      gdjsAllowedProperties: ['_readPixels'],
+      gdjsAllowedProperties: ['_objectSlicer'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
