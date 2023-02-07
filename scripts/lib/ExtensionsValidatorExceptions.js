@@ -112,7 +112,9 @@ const extensionsAllowedProperties = {
       'fromEntries',
       'defineProperty',
       'getOwnPropertyNames',
+      'getOwnPropertyDescriptor',
       'defineProperties',
+      'prototype',
     ],
   },
   /** @type {Record<string, ExtensionAllowedProperties>}} */
