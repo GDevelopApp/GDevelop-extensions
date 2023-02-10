@@ -8,17 +8,40 @@
   "name": "FireBullet",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/bullet.svg",
   "shortDescription": "Fire bullets, manage ammo, reloading, and overheating.",
-  "version": "0.3.3",
+  "version": "0.4.1",
   "description": [
-    "This extension allows objects to fire bullets.",
+    "Fire bullets, manage ammo, reloading, and overheating.",
     "",
-    "It handles:",
-    "- cooldown between shots",
-    "- firing multiple bullets at a time",
-    "- ammo management",
-    "- overheat",
+    "Firing bullets:",
+    "- Cooldown: Time between shots (seconds)",
+    "- Bullet Quantity: Number of bullets created each time Fire Bullet action is used. ",
+    "- Firing Arc: Range of angles (in degrees) that bullets will shoot. Bullets are evenly spread within this range.",
+    "- Rotate bullet: Change the angle of each bullet to match the direction it is travelling (enabled by default)",
+    "- Angle Variance: Each bullet trajectory will be adjusted by a random value within this range (degrees)",
+    "- Bullet speed variance: Each bullet speed will be adjusted by a random value within this range (pixels/second)",
     "",
-    "[A simplified version](https://editor.gdevelop.io/?project=example://fire-bullet) of the top-down twin-stick shooter example allows to check it out."
+    " Ammo:",
+    "- Starting ammo",
+    "- Max ammo",
+    "- Shots per reload. Use 0 to disable reloading",
+    "- Reload duration",
+    "- Automatic reloading is enabled by default, but it can also be done manually.",
+    "",
+    "Overheat:",
+    "- Heat increase per shot. Object is Overheated when Heat reaches  1.",
+    "- Cooling rate per second",
+    "- When overheated, the object cannot fire any bullets",
+    "",
+    "Statistics:",
+    "- Total bullets created",
+    "- Total shots taken",
+    "- Total reloads completed",
+    "",
+    "Bullets:",
+    "- Each bullet is assigned several variables that can be used for advanced object picking",
+    "- __FireBullet.BulletID = Unique number for every bullet created",
+    "- __FireBullet.BatchID = Unique number for all bullets created in the same frame",
+    "- __FireBullet.BatchOrderID = Unique number for each bullet in the same batch. Can be used to identify the position in the firing arc."
   ],
   "origin": {
     "identifier": "FireBullet",
@@ -751,7 +774,7 @@
           "objectGroups": []
         },
         {
-          "description": "Fire bullets toward a position.\n\nEach bullet is assigned variables for advanced object picking\n- __FireBullet.BulletID, Unique number for every bullet created\n- __FireBullet.BatchID, Unique number for all bullets created in the same frame\n- __FireBullet.BatchOrderID, Unique number for each bullet in the same batch. Can be used to identify the position in the firing arc.",
+          "description": "Fire bullets toward a position.",
           "fullName": "Fire bullets toward a position",
           "functionType": "Action",
           "name": "FireTowardPosition",
@@ -837,7 +860,7 @@
           "objectGroups": []
         },
         {
-          "description": "Fire bullets in the direction of a given angle.\n\nEach bullet is assigned variables for advanced object picking\n- __FireBullet.BulletID, Unique number for every bullet created\n- __FireBullet.BatchID, Unique number for all bullets created in the same frame\n- __FireBullet.BatchOrderID, Unique number for each bullet in the same batch. Can be used to identify the position in the firing arc.",
+          "description": "Fire bullets in the direction of a given angle.",
           "fullName": "Fire bullets toward an angle",
           "functionType": "Action",
           "name": "Fire",
@@ -1146,7 +1169,7 @@
                         "textG": 0,
                         "textR": 0
                       },
-                      "comment": "Move bullet",
+                      "comment": "Move bullet (apply angle and bullet speed variances)",
                       "comment2": ""
                     },
                     {
@@ -1155,23 +1178,12 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "FireBullet::FireBullet::SetPropertyRandomizedAngle"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Behavior",
-                            "=",
-                            "GetArgumentAsNumber(\"Angle\") + RandomInRange(-Object.Behavior::PropertyAngleVariance(), Object.Behavior::PropertyAngleVariance())"
-                          ]
-                        },
-                        {
-                          "type": {
                             "value": "AddForceAL"
                           },
                           "parameters": [
                             "Bullet",
-                            "Object.Behavior::PropertyRandomizedAngle()",
-                            "GetArgumentAsNumber(\"Speed\")",
+                            "GetArgumentAsNumber(\"Angle\") + RandomInRange(-Object.Behavior::PropertyAngleVariance(), Object.Behavior::PropertyAngleVariance())",
+                            "GetArgumentAsNumber(\"Speed\") + RandomInRange(-Object.Behavior::PropertyBulletSpeedVariance(), Object.Behavior::PropertyBulletSpeedVariance())",
                             "1"
                           ]
                         }
@@ -1263,7 +1275,7 @@
                           "parameters": [
                             "Bullet",
                             "=",
-                            "Object.Behavior::PropertyRandomizedAngle()"
+                            "GetArgumentAsNumber(\"Angle\")"
                           ]
                         }
                       ]
@@ -1575,6 +1587,52 @@
                 {
                   "type": {
                     "value": "FireBullet::FireBullet::SetPropertyAngleVariance"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            },
+            {
+              "description": "Angle variance (degrees) Range: 0 to 180",
+              "name": "Value",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the speed variance (pixels per second) applied to each bullet.",
+          "fullName": "Set bullet speed variance",
+          "functionType": "Action",
+          "group": "Multi-Fire",
+          "name": "SetBulletSpeedVariance",
+          "sentence": "Set bullet speed variance of _PARAM0_ to _PARAM2_ pixels per second",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::SetPropertyBulletSpeedVariance"
                   },
                   "parameters": [
                     "Object",
@@ -2753,6 +2811,47 @@
                   },
                   "parameters": [
                     "Object.Behavior::PropertyAngleVariance()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Bullet speed variance, in pixels per second.",
+          "fullName": "Bullet speed variance",
+          "functionType": "Expression",
+          "group": "Multi-Fire",
+          "name": "BulletSpeedVariance",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyBulletSpeedVariance()"
                   ]
                 }
               ]
@@ -4421,14 +4520,14 @@
           "name": "BulletLayer"
         },
         {
-          "value": "",
+          "value": "0",
           "type": "Number",
-          "label": "",
-          "description": "",
-          "group": "",
+          "label": "Bullet speed variance (pixels/second)",
+          "description": "Bullet speed will be adjusted by a random value within this range (pixels/second)",
+          "group": "Multi-Fire",
           "extraInformation": [],
-          "hidden": true,
-          "name": "RandomizedAngle"
+          "hidden": false,
+          "name": "BulletSpeedVariance"
         }
       ],
       "sharedPropertyDescriptors": []
