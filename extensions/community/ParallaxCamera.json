@@ -1,0 +1,2181 @@
+{
+  "author": "",
+  "category": "Camera",
+  "extensionNamespace": "",
+  "fullName": "Parallax camera",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWNhbWVyYS1idXJzdCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xLDVIM1YxOUgxVjVNNSw1SDdWMTlINVY1TTIyLDVIMTBBMSwxIDAgMCwwIDksNlYxOEExLDEgMCAwLDAgMTAsMTlIMjJBMSwxIDAgMCwwIDIzLDE4VjZBMSwxIDAgMCwwIDIyLDVNMTEsMTdMMTMuNSwxMy44NUwxNS4yOSwxNkwxNy43OSwxMi43OEwyMSwxN0gxMVoiIC8+PC9zdmc+",
+  "name": "ParallaxCamera",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/ed97d674c1a34c5e7fed27e354698272148805444a3dadbd4f92b4a9c5bf618d_camera-burst.svg",
+  "shortDescription": "Unified camera control across multiple layers with parallax and offset camera transformations.",
+  "version": "1.0.0",
+  "description": [
+    "Allows unified control and management of client cameras relative to one or more host cameras.",
+    "",
+    "When the scene starts:",
+    "",
+    "- Attach client camera(s) to a host camera (defaults to 1:1 camera tracking)",
+    "- Set custom parallax tracking scale multipliers and offsets for client camera attributes",
+    "- Set up multipe client-host camera relations",
+    "- Set up host hierarchies as layer groups for advanced view management",
+    "",
+    "On every frame refresh:",
+    "",
+    "- Adjust host camera(s) using any camera controls",
+    "- Align every client camera attached to every host camera",
+    "- Align client cameras attached to a specific host camera",
+    "",
+    "Functions:",
+    "",
+    "- Add client camera",
+    "- Remove client camera",
+    "- Remove host camera",
+    "- Align every client camera",
+    "- Align clients of host camera",
+    "- Set camera [ center X | center Y | zoom | angle ] [ scale | offset ]"
+  ],
+  "tags": [
+    "layers",
+    "cameras",
+    "parallax",
+    "scrolling",
+    "panning",
+    "movement",
+    "offset",
+    "positioning",
+    "zooming",
+    "scale",
+    "scaling",
+    "rotate",
+    "rotating",
+    "rotation",
+    "angle",
+    "multiple",
+    "together",
+    "simultaneously",
+    "concurrently",
+    "at the same time"
+  ],
+  "authorIds": [
+    "uFVrDqfv7WTA0O4HAtzwvwYjg6C3"
+  ],
+  "dependencies": [],
+  "eventsFunctions": [
+    {
+      "description": "Adds camera on client layer to follow camera on host layer, and applies 1:1 scaling to all properties.",
+      "fullName": "Add client camera",
+      "functionType": "Action",
+      "group": "Client camera",
+      "name": "AddClientCamera",
+      "sentence": "Attach client camera on _PARAM2_ to host camera on _PARAM1_ (Detach existing: _PARAM3_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetSceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__ParallaxCamera.HasError",
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::ForEachChildVariable",
+          "iterableVariableName": "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")]",
+          "valueIteratorVariableName": "__ParallaxCamera.CurrentHost",
+          "keyIteratorVariableName": "__ParallaxCamera.CurrentHostLayer",
+          "conditions": [],
+          "actions": [],
+          "events": [
+            {
+              "folded": true,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "VariableChildExists"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.CurrentHost.Clients",
+                    "GetArgumentAsString(\"ClientLayer\")"
+                  ]
+                }
+              ],
+              "actions": [],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "inverted": true,
+                        "value": "GetArgumentAsBoolean"
+                      },
+                      "parameters": [
+                        "\"DetachExisting\""
+                      ]
+                    }
+                  ],
+                  "actions": [],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "DebuggerTools::ConsoleLog"
+                          },
+                          "parameters": [
+                            "\"Client camera on layer \" + GetArgumentAsString(\"ClientLayer\") + \" is already assigned to \" + VariableString(__ParallaxCamera.CurrentHostLayer) + \".\"",
+                            "\"error\"",
+                            ""
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetSceneVariableAsBoolean"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.HasError",
+                            "True"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "GetArgumentAsBoolean"
+                      },
+                      "parameters": [
+                        "\"DetachExisting\""
+                      ]
+                    }
+                  ],
+                  "actions": [],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "VariableRemoveChild"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentHost.Clients",
+                            "GetArgumentAsString(\"ClientLayer\")"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "folded": true,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "SceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__ParallaxCamera.HasError",
+                ""
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetSceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.IsCreating",
+                    "True"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ParallaxCamera::SetCameraCenterXScale"
+                  },
+                  "parameters": [
+                    "",
+                    "GetArgumentAsString(\"HostLayer\")",
+                    "GetArgumentAsString(\"ClientLayer\")",
+                    "1",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParallaxCamera::SetCameraCenterYScale"
+                  },
+                  "parameters": [
+                    "",
+                    "GetArgumentAsString(\"HostLayer\")",
+                    "GetArgumentAsString(\"ClientLayer\")",
+                    "1",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParallaxCamera::SetCameraZoomScale"
+                  },
+                  "parameters": [
+                    "",
+                    "GetArgumentAsString(\"HostLayer\")",
+                    "GetArgumentAsString(\"ClientLayer\")",
+                    "1",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParallaxCamera::SetCameraAngleScale"
+                  },
+                  "parameters": [
+                    "",
+                    "GetArgumentAsString(\"HostLayer\")",
+                    "GetArgumentAsString(\"ClientLayer\")",
+                    "1",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ParallaxCamera::SetCameraCenterXOffset"
+                  },
+                  "parameters": [
+                    "",
+                    "GetArgumentAsString(\"HostLayer\")",
+                    "GetArgumentAsString(\"ClientLayer\")",
+                    "0",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParallaxCamera::SetCameraCenterYOffset"
+                  },
+                  "parameters": [
+                    "",
+                    "GetArgumentAsString(\"HostLayer\")",
+                    "GetArgumentAsString(\"ClientLayer\")",
+                    "0",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParallaxCamera::SetCameraZoomOffset"
+                  },
+                  "parameters": [
+                    "",
+                    "GetArgumentAsString(\"HostLayer\")",
+                    "GetArgumentAsString(\"ClientLayer\")",
+                    "0",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParallaxCamera::SetCameraAngleOffset"
+                  },
+                  "parameters": [
+                    "",
+                    "GetArgumentAsString(\"HostLayer\")",
+                    "GetArgumentAsString(\"ClientLayer\")",
+                    "0",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetSceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.ForceNextAlignment",
+                    "True"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetSceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.IsCreating",
+                    "False"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Host camera layer to add to (base layer if empty)",
+          "name": "HostLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Client camera layer to add (base layer if empty)",
+          "name": "ClientLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Detach existing client camera",
+          "name": "DetachExisting",
+          "type": "yesorno"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Removes camera on client layer from the assignment list of camera on host layer.",
+      "fullName": "Remove client camera",
+      "functionType": "Action",
+      "group": "Client camera",
+      "name": "RemoveClientCamera",
+      "sentence": "Detach client camera on _PARAM2_ from host camera on _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "VariableRemoveChild"
+              },
+              "parameters": [
+                "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                "GetArgumentAsString(\"ClientLayer\")"
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Host camera layer to remove from (base layer if empty)",
+          "name": "HostLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Client camera layer to remove (base layer if empty)",
+          "name": "ClientLayer",
+          "type": "layer"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Removes camera on host layer with all of its client cameras from the Parallax Camera list.",
+      "fullName": "Remove host camera",
+      "functionType": "Action",
+      "group": "Host camera",
+      "name": "RemoveHostCamera",
+      "sentence": "Remove host camera on _PARAM1_ from Parallax Camera list",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "VariableRemoveChild"
+              },
+              "parameters": [
+                "__ParallaxCamera.Hosts",
+                "GetArgumentAsString(\"HostLayer\")"
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Host camera layer to remove (base layer if empty)",
+          "name": "HostLayer",
+          "type": "layer"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Aligns every client camera to their respective host.",
+      "fullName": "Align every client camera",
+      "functionType": "Action",
+      "group": "Client camera",
+      "name": "AlignEveryClientCamera",
+      "sentence": "Align every client camera to their host",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::ForEachChildVariable",
+          "iterableVariableName": "__ParallaxCamera.Hosts",
+          "valueIteratorVariableName": "__ParallaxCamera.CurrentHost",
+          "keyIteratorVariableName": "__ParallaxCamera.CurrentHostLayer",
+          "conditions": [],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::ForEachChildVariable",
+              "iterableVariableName": "__ParallaxCamera.CurrentHost.Clients",
+              "valueIteratorVariableName": "__ParallaxCamera.CurrentClient",
+              "keyIteratorVariableName": "__ParallaxCamera.CurrentClientLayer",
+              "conditions": [],
+              "actions": [],
+              "events": [
+                {
+                  "folded": true,
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "SceneVariableAsBoolean"
+                      },
+                      "parameters": [
+                        "__ParallaxCamera.ForceNextAlignment",
+                        "False"
+                      ]
+                    }
+                  ],
+                  "actions": [],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentClient.CameraCenterXScale",
+                            "!=",
+                            "0"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentHost.LastCameraCenterX",
+                            "!=",
+                            "CameraCenterX(VariableString(__ParallaxCamera.CurrentHostLayer), 0)"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCameraCenterX"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "CameraCenterX(VariableString(__ParallaxCamera.CurrentHostLayer), 0) * Variable(__ParallaxCamera.CurrentClient.CameraCenterXScale) + Variable(__ParallaxCamera.CurrentClient.CameraCenterXOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentClient.CameraCenterYScale",
+                            "!=",
+                            "0"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentHost.LastCameraCenterY",
+                            "!=",
+                            "CameraCenterY(VariableString(__ParallaxCamera.CurrentHostLayer), 0)"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCameraCenterY"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "CameraCenterY(VariableString(__ParallaxCamera.CurrentHostLayer), 0) * Variable(__ParallaxCamera.CurrentClient.CameraCenterYScale) + Variable(__ParallaxCamera.CurrentClient.CameraCenterYOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentClient.CameraZoomScale",
+                            "!=",
+                            "0"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentHost.LastCameraZoom",
+                            "!=",
+                            "CameraZoom(VariableString(__ParallaxCamera.CurrentHostLayer), 0)"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "ZoomCamera"
+                          },
+                          "parameters": [
+                            "",
+                            "CameraZoom(VariableString(__ParallaxCamera.CurrentHostLayer), 0) * Variable(__ParallaxCamera.CurrentClient.CameraZoomScale) + Variable(__ParallaxCamera.CurrentClient.CameraZoomOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentClient.CameraAngleScale",
+                            "!=",
+                            "0"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentHost.LastCameraAngle",
+                            "!=",
+                            "CameraAngle(VariableString(__ParallaxCamera.CurrentHostLayer), 0)"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCameraAngle"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "CameraAngle(VariableString(__ParallaxCamera.CurrentHostLayer), 0) * Variable(__ParallaxCamera.CurrentClient.CameraAngleScale) + Variable(__ParallaxCamera.CurrentClient.CameraAngleOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "folded": true,
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "SceneVariableAsBoolean"
+                      },
+                      "parameters": [
+                        "__ParallaxCamera.ForceNextAlignment",
+                        "True"
+                      ]
+                    }
+                  ],
+                  "actions": [],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCameraCenterX"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "CameraCenterX(VariableString(__ParallaxCamera.CurrentHostLayer), 0) * Variable(__ParallaxCamera.CurrentClient.CameraCenterXScale) + Variable(__ParallaxCamera.CurrentClient.CameraCenterXOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCameraCenterY"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "CameraCenterY(VariableString(__ParallaxCamera.CurrentHostLayer), 0) * Variable(__ParallaxCamera.CurrentClient.CameraCenterYScale) + Variable(__ParallaxCamera.CurrentClient.CameraCenterYOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "ZoomCamera"
+                          },
+                          "parameters": [
+                            "",
+                            "CameraZoom(VariableString(__ParallaxCamera.CurrentHostLayer), 0) * Variable(__ParallaxCamera.CurrentClient.CameraZoomScale) + Variable(__ParallaxCamera.CurrentClient.CameraZoomOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCameraAngle"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "CameraAngle(VariableString(__ParallaxCamera.CurrentHostLayer), 0) * Variable(__ParallaxCamera.CurrentClient.CameraAngleScale) + Variable(__ParallaxCamera.CurrentClient.CameraAngleOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetSceneVariableAsBoolean"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.ForceNextAlignment",
+                            ""
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__ParallaxCamera.CurrentHost.LastCameraCenterX",
+                "=",
+                "CameraCenterX(VariableString(__ParallaxCamera.CurrentHostLayer), 0)"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__ParallaxCamera.CurrentHost.LastCameraCenterY",
+                "=",
+                "CameraCenterY(VariableString(__ParallaxCamera.CurrentHostLayer), 0)"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__ParallaxCamera.CurrentHost.LastCameraZoom",
+                "=",
+                "CameraZoom(VariableString(__ParallaxCamera.CurrentHostLayer), 0)"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__ParallaxCamera.CurrentHost.LastCameraAngle",
+                "=",
+                "CameraAngle(VariableString(__ParallaxCamera.CurrentHostLayer), 0)"
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Aligns client cameras of host.",
+      "fullName": "Align clients to host camera",
+      "functionType": "Action",
+      "group": "Client camera",
+      "name": "AlignClientsToHostCamera",
+      "sentence": "Align client cameras of host camera on _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::ForEachChildVariable",
+          "iterableVariableName": "__ParallaxCamera.Hosts",
+          "valueIteratorVariableName": "__ParallaxCamera.CurrentHost",
+          "keyIteratorVariableName": "__ParallaxCamera.CurrentHostLayer",
+          "conditions": [],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::ForEachChildVariable",
+              "iterableVariableName": "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+              "valueIteratorVariableName": "__ParallaxCamera.CurrentClient",
+              "keyIteratorVariableName": "__ParallaxCamera.CurrentClientLayer",
+              "conditions": [],
+              "actions": [],
+              "events": [
+                {
+                  "folded": true,
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "SceneVariableAsBoolean"
+                      },
+                      "parameters": [
+                        "__ParallaxCamera.ForceNextAlignment",
+                        "False"
+                      ]
+                    }
+                  ],
+                  "actions": [],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentClient.CameraCenterXScale",
+                            "!=",
+                            "0"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentHost.LastCameraCenterX",
+                            "!=",
+                            "CameraCenterX(VariableString(__ParallaxCamera.CurrentHostLayer), 0)"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCameraCenterX"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "CameraCenterX(GetArgumentAsString(\"HostLayer\"), 0) * Variable(__ParallaxCamera.CurrentClient.CameraCenterXScale) + Variable(__ParallaxCamera.CurrentClient.CameraCenterXOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentClient.CameraCenterYScale",
+                            "!=",
+                            "0"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentHost.LastCameraCenterY",
+                            "!=",
+                            "CameraCenterY(GetArgumentAsString(\"HostLayer\"), 0)"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCameraCenterY"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "CameraCenterY(GetArgumentAsString(\"HostLayer\"), 0) * Variable(__ParallaxCamera.CurrentClient.CameraCenterYScale) + Variable(__ParallaxCamera.CurrentClient.CameraCenterYOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentClient.CameraZoomScale",
+                            "!=",
+                            "0"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentHost.LastCameraZoom",
+                            "!=",
+                            "CameraZoom(GetArgumentAsString(\"HostLayer\"), 0)"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "ZoomCamera"
+                          },
+                          "parameters": [
+                            "",
+                            "CameraZoom(GetArgumentAsString(\"HostLayer\"), 0) * Variable(__ParallaxCamera.CurrentClient.CameraZoomScale) + Variable(__ParallaxCamera.CurrentClient.CameraZoomOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentClient.CameraAngleScale",
+                            "!=",
+                            "0"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "VarScene"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.CurrentHost.LastCameraAngle",
+                            "!=",
+                            "CameraAngle(GetArgumentAsString(\"HostLayer\"), 0)"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCameraAngle"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "CameraAngle(GetArgumentAsString(\"HostLayer\"), 0) * Variable(__ParallaxCamera.CurrentClient.CameraAngleScale) + Variable(__ParallaxCamera.CurrentClient.CameraAngleOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "folded": true,
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "SceneVariableAsBoolean"
+                      },
+                      "parameters": [
+                        "__ParallaxCamera.ForceNextAlignment",
+                        "True"
+                      ]
+                    }
+                  ],
+                  "actions": [],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCameraCenterX"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "CameraCenterX(GetArgumentAsString(\"HostLayer\"), 0) * Variable(__ParallaxCamera.CurrentClient.CameraCenterXScale) + Variable(__ParallaxCamera.CurrentClient.CameraCenterXOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCameraCenterY"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "CameraCenterY(GetArgumentAsString(\"HostLayer\"), 0) * Variable(__ParallaxCamera.CurrentClient.CameraCenterYScale) + Variable(__ParallaxCamera.CurrentClient.CameraCenterYOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "ZoomCamera"
+                          },
+                          "parameters": [
+                            "",
+                            "CameraZoom(GetArgumentAsString(\"HostLayer\"), 0) * Variable(__ParallaxCamera.CurrentClient.CameraZoomScale) + Variable(__ParallaxCamera.CurrentClient.CameraZoomOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCameraAngle"
+                          },
+                          "parameters": [
+                            "",
+                            "=",
+                            "CameraAngle(GetArgumentAsString(\"HostLayer\"), 0) * Variable(__ParallaxCamera.CurrentClient.CameraAngleScale) + Variable(__ParallaxCamera.CurrentClient.CameraAngleOffset)",
+                            "VariableString(__ParallaxCamera.CurrentClientLayer)",
+                            "0"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetSceneVariableAsBoolean"
+                          },
+                          "parameters": [
+                            "__ParallaxCamera.ForceNextAlignment",
+                            ""
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__ParallaxCamera.CurrentHost.LastCameraCenterX",
+                "=",
+                "CameraCenterX(GetArgumentAsString(\"HostLayer\"), 0)"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__ParallaxCamera.CurrentHost.LastCameraCenterY",
+                "=",
+                "CameraCenterY(GetArgumentAsString(\"HostLayer\"), 0)"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__ParallaxCamera.CurrentHost.LastCameraZoom",
+                "=",
+                "CameraZoom(GetArgumentAsString(\"HostLayer\"), 0)"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__ParallaxCamera.CurrentHost.LastCameraAngle",
+                "=",
+                "CameraAngle(GetArgumentAsString(\"HostLayer\"), 0)"
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Host camera layer to remove (base layer if empty)",
+          "name": "HostLayer",
+          "type": "layer"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Sets parallax scale ratio for camera center X of client camera.",
+      "fullName": "Set camera center X scale",
+      "functionType": "Action",
+      "group": "Client camera",
+      "name": "SetCameraCenterXScale",
+      "sentence": "Set camera center X scale ratio to _PARAM3_ for client camera on _PARAM2_ assigned to host camera on _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "inverted": true,
+                "value": "SceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__ParallaxCamera.IsCreating",
+                "True"
+              ]
+            },
+            {
+              "type": {
+                "inverted": true,
+                "value": "VariableChildExists"
+              },
+              "parameters": [
+                "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                "GetArgumentAsString(\"ClientLayer\")"
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "DebuggerTools::ConsoleLog"
+                  },
+                  "parameters": [
+                    "\"Client camera on layer \" + GetArgumentAsString(\"ClientLayer\") + \" is not assigned to host camera on layer \" + GetArgumentAsString(\"HostLayer\") + \".\"",
+                    "\"error\"",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Or"
+              },
+              "parameters": [],
+              "subInstructions": [
+                {
+                  "type": {
+                    "value": "SceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.IsCreating",
+                    "True"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "VariableChildExists"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                    "GetArgumentAsString(\"ClientLayer\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients[GetArgumentAsString(\"ClientLayer\")].CameraCenterXScale",
+                    "=",
+                    "GetArgumentAsNumber(\"CameraCenterXScale\")"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Host camera layer (base layer if empty)",
+          "name": "HostLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Client camera layer (base layer if empty)",
+          "name": "ClientLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Camera center X scale",
+          "name": "CameraCenterXScale",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Sets parallax scale ratio for camera center Y of client camera.",
+      "fullName": "Set camera center Y scale",
+      "functionType": "Action",
+      "group": "Client camera",
+      "name": "SetCameraCenterYScale",
+      "sentence": "Set camera center Y scale ratio to _PARAM3_ for client camera on _PARAM2_ assigned to host camera on _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "inverted": true,
+                "value": "SceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__ParallaxCamera.IsCreating",
+                "True"
+              ]
+            },
+            {
+              "type": {
+                "inverted": true,
+                "value": "VariableChildExists"
+              },
+              "parameters": [
+                "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                "GetArgumentAsString(\"ClientLayer\")"
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "DebuggerTools::ConsoleLog"
+                  },
+                  "parameters": [
+                    "\"Client camera on layer \" + GetArgumentAsString(\"ClientLayer\") + \" is not assigned to host camera on layer \" + GetArgumentAsString(\"HostLayer\") + \".\"",
+                    "\"error\"",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Or"
+              },
+              "parameters": [],
+              "subInstructions": [
+                {
+                  "type": {
+                    "value": "SceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.IsCreating",
+                    "True"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "VariableChildExists"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                    "GetArgumentAsString(\"ClientLayer\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients[GetArgumentAsString(\"ClientLayer\")].CameraCenterYScale",
+                    "=",
+                    "GetArgumentAsNumber(\"CameraCenterYScale\")"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Host camera layer (base layer if empty)",
+          "name": "HostLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Client camera layer (base layer if empty)",
+          "name": "ClientLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Camera center Y scale",
+          "name": "CameraCenterYScale",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Sets parallax scale ratio for camera zoom of client camera.",
+      "fullName": "Set camera zoom scale",
+      "functionType": "Action",
+      "group": "Client camera",
+      "name": "SetCameraZoomScale",
+      "sentence": "Set camera zoom scale ratio to _PARAM3_ for client camera on _PARAM2_ assigned to host camera on _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "inverted": true,
+                "value": "SceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__ParallaxCamera.IsCreating",
+                "True"
+              ]
+            },
+            {
+              "type": {
+                "inverted": true,
+                "value": "VariableChildExists"
+              },
+              "parameters": [
+                "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                "GetArgumentAsString(\"ClientLayer\")"
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "DebuggerTools::ConsoleLog"
+                  },
+                  "parameters": [
+                    "\"Client camera on layer \" + GetArgumentAsString(\"ClientLayer\") + \" is not assigned to host camera on layer \" + GetArgumentAsString(\"HostLayer\") + \".\"",
+                    "\"error\"",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Or"
+              },
+              "parameters": [],
+              "subInstructions": [
+                {
+                  "type": {
+                    "value": "SceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.IsCreating",
+                    "True"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "VariableChildExists"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                    "GetArgumentAsString(\"ClientLayer\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients[GetArgumentAsString(\"ClientLayer\")].CameraZoomScale",
+                    "=",
+                    "GetArgumentAsNumber(\"CameraZoomScale\")"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Host camera layer (base layer if empty)",
+          "name": "HostLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Client camera layer (base layer if empty)",
+          "name": "ClientLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Camera zoom scale",
+          "name": "CameraZoomScale",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Sets parallax scale ratio for camera angle of client camera.",
+      "fullName": "Set camera angle scale",
+      "functionType": "Action",
+      "group": "Client camera",
+      "name": "SetCameraAngleScale",
+      "sentence": "Set camera angle scale ratio to _PARAM3_ for client camera on _PARAM2_ assigned to host camera on _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "inverted": true,
+                "value": "SceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__ParallaxCamera.IsCreating",
+                "True"
+              ]
+            },
+            {
+              "type": {
+                "inverted": true,
+                "value": "VariableChildExists"
+              },
+              "parameters": [
+                "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                "GetArgumentAsString(\"ClientLayer\")"
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "DebuggerTools::ConsoleLog"
+                  },
+                  "parameters": [
+                    "\"Client camera on layer \" + GetArgumentAsString(\"ClientLayer\") + \" is not assigned to host camera on layer \" + GetArgumentAsString(\"HostLayer\") + \".\"",
+                    "\"error\"",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Or"
+              },
+              "parameters": [],
+              "subInstructions": [
+                {
+                  "type": {
+                    "value": "SceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.IsCreating",
+                    "True"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "VariableChildExists"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                    "GetArgumentAsString(\"ClientLayer\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients[GetArgumentAsString(\"ClientLayer\")].CameraAngleScale",
+                    "=",
+                    "GetArgumentAsNumber(\"CameraAngleScale\")"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Host camera layer (base layer if empty)",
+          "name": "HostLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Client camera layer (base layer if empty)",
+          "name": "ClientLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Camera angle scale",
+          "name": "CameraAngleScale",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Sets parallax offset for camera center X of client camera.",
+      "fullName": "Set camera center X offset",
+      "functionType": "Action",
+      "group": "Client camera",
+      "name": "SetCameraCenterXOffset",
+      "sentence": "Set camera center X offset to _PARAM3_ for client camera on _PARAM2_ assigned to host camera on _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "inverted": true,
+                "value": "SceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__ParallaxCamera.IsCreating",
+                "True"
+              ]
+            },
+            {
+              "type": {
+                "inverted": true,
+                "value": "VariableChildExists"
+              },
+              "parameters": [
+                "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                "GetArgumentAsString(\"ClientLayer\")"
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "DebuggerTools::ConsoleLog"
+                  },
+                  "parameters": [
+                    "\"Client camera on layer \" + GetArgumentAsString(\"ClientLayer\") + \" is not assigned to host camera on layer \" + GetArgumentAsString(\"HostLayer\") + \".\"",
+                    "\"error\"",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Or"
+              },
+              "parameters": [],
+              "subInstructions": [
+                {
+                  "type": {
+                    "value": "SceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.IsCreating",
+                    "True"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "VariableChildExists"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                    "GetArgumentAsString(\"ClientLayer\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients[GetArgumentAsString(\"ClientLayer\")].CameraCenterXOffset",
+                    "=",
+                    "GetArgumentAsNumber(\"CameraCenterXOffset\")"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetSceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.ForceNextAlignment",
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Host camera layer (base layer if empty)",
+          "name": "HostLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Client camera layer (base layer if empty)",
+          "name": "ClientLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Camera center X offset",
+          "name": "CameraCenterXOffset",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Sets parallax offset for camera center Y of client camera.",
+      "fullName": "Set camera center Y offset",
+      "functionType": "Action",
+      "group": "Client camera",
+      "name": "SetCameraCenterYOffset",
+      "sentence": "Set camera center Y offset to _PARAM3_ for client camera on _PARAM2_ assigned to host camera on _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "inverted": true,
+                "value": "SceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__ParallaxCamera.IsCreating",
+                "True"
+              ]
+            },
+            {
+              "type": {
+                "inverted": true,
+                "value": "VariableChildExists"
+              },
+              "parameters": [
+                "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                "GetArgumentAsString(\"ClientLayer\")"
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "DebuggerTools::ConsoleLog"
+                  },
+                  "parameters": [
+                    "\"Client camera on layer \" + GetArgumentAsString(\"ClientLayer\") + \" is not assigned to host camera on layer \" + GetArgumentAsString(\"HostLayer\") + \".\"",
+                    "\"error\"",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Or"
+              },
+              "parameters": [],
+              "subInstructions": [
+                {
+                  "type": {
+                    "value": "SceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.IsCreating",
+                    "True"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "VariableChildExists"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                    "GetArgumentAsString(\"ClientLayer\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients[GetArgumentAsString(\"ClientLayer\")].CameraCenterYOffset",
+                    "=",
+                    "GetArgumentAsNumber(\"CameraCenterYOffset\")"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetSceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.ForceNextAlignment",
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Host camera layer (base layer if empty)",
+          "name": "HostLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Client camera layer (base layer if empty)",
+          "name": "ClientLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Camera center Y offset",
+          "name": "CameraCenterYOffset",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Sets parallax offset for camera zoom of client camera.",
+      "fullName": "Set camera zoom offset",
+      "functionType": "Action",
+      "group": "Client camera",
+      "name": "SetCameraZoomOffset",
+      "sentence": "Set camera zoom offset to _PARAM3_ for client camera on _PARAM2_ assigned to host camera on _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "inverted": true,
+                "value": "SceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__ParallaxCamera.IsCreating",
+                "True"
+              ]
+            },
+            {
+              "type": {
+                "inverted": true,
+                "value": "VariableChildExists"
+              },
+              "parameters": [
+                "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                "GetArgumentAsString(\"ClientLayer\")"
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "DebuggerTools::ConsoleLog"
+                  },
+                  "parameters": [
+                    "\"Client camera on layer \" + GetArgumentAsString(\"ClientLayer\") + \" is not assigned to host camera on layer \" + GetArgumentAsString(\"HostLayer\") + \".\"",
+                    "\"error\"",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Or"
+              },
+              "parameters": [],
+              "subInstructions": [
+                {
+                  "type": {
+                    "value": "SceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.IsCreating",
+                    "True"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "VariableChildExists"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                    "GetArgumentAsString(\"ClientLayer\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients[GetArgumentAsString(\"ClientLayer\")].CameraZoomOffset",
+                    "=",
+                    "GetArgumentAsNumber(\"CameraZoomOffset\")"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetSceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.ForceNextAlignment",
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Host camera layer (base layer if empty)",
+          "name": "HostLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Client camera layer (base layer if empty)",
+          "name": "ClientLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Camera zoom offset",
+          "name": "CameraZoomOffset",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Sets parallax offset for camera angle of client camera.",
+      "fullName": "Set camera angle offset",
+      "functionType": "Action",
+      "group": "Client camera",
+      "name": "SetCameraAngleOffset",
+      "sentence": "Set camera angle offset to _PARAM3_ for client camera on _PARAM2_ assigned to host camera on _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "inverted": true,
+                "value": "SceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__ParallaxCamera.IsCreating",
+                "True"
+              ]
+            },
+            {
+              "type": {
+                "inverted": true,
+                "value": "VariableChildExists"
+              },
+              "parameters": [
+                "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                "GetArgumentAsString(\"ClientLayer\")"
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "DebuggerTools::ConsoleLog"
+                  },
+                  "parameters": [
+                    "\"Client camera on layer \" + GetArgumentAsString(\"ClientLayer\") + \" is not assigned to host camera on layer \" + GetArgumentAsString(\"HostLayer\") + \".\"",
+                    "\"error\"",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Or"
+              },
+              "parameters": [],
+              "subInstructions": [
+                {
+                  "type": {
+                    "value": "SceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.IsCreating",
+                    "True"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "VariableChildExists"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients",
+                    "GetArgumentAsString(\"ClientLayer\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.Hosts[GetArgumentAsString(\"HostLayer\")].Clients[GetArgumentAsString(\"ClientLayer\")].CameraAngleOffset",
+                    "=",
+                    "GetArgumentAsNumber(\"CameraAngleOffset\")"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetSceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__ParallaxCamera.ForceNextAlignment",
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Host camera layer (base layer if empty)",
+          "name": "HostLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Client camera layer (base layer if empty)",
+          "name": "ClientLayer",
+          "type": "layer"
+        },
+        {
+          "description": "Camera angle offset",
+          "name": "CameraAngleOffset",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
+}
