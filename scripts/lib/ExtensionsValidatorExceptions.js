@@ -229,6 +229,17 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    PixelPerfectMovement: {
+      gdjsAllowedProperties: [
+        '__pixelPerfectExtension',
+        'RuntimeBehavior',
+        'TopDownMovementRuntimeBehavior',
+        'RuntimeInstanceContainer',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     PlatformLedgeGrabber: {
       gdjsAllowedProperties: [
         'PlatformerObjectRuntimeBehavior',
