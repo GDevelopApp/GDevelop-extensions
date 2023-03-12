@@ -182,12 +182,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "ChangeAnimationSpeedScale"
+                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::SetAnimationSpeedScale"
                   },
                   "parameters": [
                     "Object",
-                    "=",
-                    "Object.TopDownMovement::Speed() / Object.TopDownMovement::MaxSpeed()"
+                    "Behavior",
+                    ""
                   ]
                 }
               ]
@@ -198,13 +198,13 @@
               "actions": [
                 {
                   "type": {
-                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::SetPropertyAnimationDirectionName"
+                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::SetSharedPropertyNewAnimationDirection"
                   },
                   "parameters": [
                     "Object",
                     "Behavior",
                     "=",
-                    "Object. Behavior::PropertyAnimationName() + ToString(mod(round((Object.TopDownMovement::Angle() + Object.Behavior::PropertyAngleOffset()) * Object.Behavior::PropertyDirectionCount() / 360), Object.Behavior::PropertyDirectionCount()))"
+                    "mod((Object.TopDownMovement::Angle() + Object.Behavior::PropertyAngleOffset()) * Object.Behavior::PropertyDirectionCount() / 360, Object.Behavior::PropertyDirectionCount())"
                   ]
                 }
               ],
@@ -219,7 +219,7 @@
                     "textG": 0,
                     "textR": 0
                   },
-                  "comment": "Change the animation but keep the current frame number.",
+                  "comment": "Change the animation but keep the current frame number.\nA small margin is used to avoid to flicker between 2 directions.",
                   "comment2": ""
                 },
                 {
@@ -228,18 +228,30 @@
                     {
                       "type": {
                         "inverted": true,
-                        "value": "AnimationName"
+                        "value": "BuiltinCommonInstructions::CompareNumbers"
                       },
                       "parameters": [
-                        "Object",
-                        "Object.Behavior::PropertyAnimationDirectionName()"
+                        "abs(mod(Object.Behavior::SharedPropertyNewAnimationDirection() - Object.Behavior::PropertyAnimationDirection(), Object.Behavior::PropertyDirectionCount()))",
+                        ">",
+                        "0.5 + 0.0625"
                       ]
                     }
                   ],
                   "actions": [
                     {
                       "type": {
-                        "value": "TopDownMovementAnimator::TopDownMovementAnimator::SetPropertyAnimationFrame"
+                        "value": "TopDownMovementAnimator::TopDownMovementAnimator::SetPropertyAnimationDirection"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "=",
+                        "round(Object.Behavior::SharedPropertyNewAnimationDirection())"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "TopDownMovementAnimator::TopDownMovementAnimator::SetSharedPropertyAnimationFrame"
                       },
                       "parameters": [
                         "Object",
@@ -254,7 +266,7 @@
                       },
                       "parameters": [
                         "Object",
-                        "Object.Behavior::PropertyAnimationDirectionName()"
+                        "Object. Behavior::PropertyAnimationName() + ToString(Object.Behavior::PropertyAnimationDirection())"
                       ]
                     },
                     {
@@ -264,7 +276,7 @@
                       "parameters": [
                         "Object",
                         "=",
-                        "Object.Behavior::PropertyAnimationFrame()"
+                        "Object.Behavior::SharedPropertyAnimationFrame()"
                       ]
                     }
                   ]
@@ -338,7 +350,19 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
+              "conditions": [
+                {
+                  "type": {
+                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::PropertyAnimationName"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "!=",
+                    "GetArgumentAsString(\"Value\")"
+                  ]
+                }
+              ],
               "actions": [
                 {
                   "type": {
@@ -349,6 +373,15 @@
                     "Behavior",
                     "=",
                     "GetArgumentAsString(\"Value\")"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetAnimationName"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Object. Behavior::PropertyAnimationName() + ToString(Object.Behavior::PropertyAnimationDirection())"
                   ]
                 }
               ]
@@ -448,6 +481,16 @@
                     "Behavior",
                     "no"
                   ]
+                },
+                {
+                  "type": {
+                    "value": "ChangeAnimationSpeedScale"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "1"
+                  ]
                 }
               ]
             },
@@ -472,6 +515,16 @@
                     "Object",
                     "Behavior",
                     "yes"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::SetAnimationSpeedScale"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
                   ]
                 }
               ]
@@ -499,6 +552,46 @@
             }
           ],
           "objectGroups": []
+        },
+        {
+          "description": "Change the animation speed scale according to the object speed.",
+          "fullName": "Animation speed scale",
+          "functionType": "Action",
+          "name": "SetAnimationSpeedScale",
+          "sentence": "Change the animation speed scale according to _PARAM0_ speed",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ChangeAnimationSpeedScale"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Object.TopDownMovement::Speed() / Object.TopDownMovement::MaxSpeed()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "TopDownMovementAnimator::TopDownMovementAnimator",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
         }
       ],
       "propertyDescriptors": [
@@ -513,26 +606,6 @@
           ],
           "hidden": false,
           "name": "TopDownMovement"
-        },
-        {
-          "value": "0",
-          "type": "Number",
-          "label": "",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
-          "hidden": true,
-          "name": "PreviousVelocityX"
-        },
-        {
-          "value": "0",
-          "type": "Number",
-          "label": "",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
-          "hidden": true,
-          "name": "PreviousVelocityY"
         },
         {
           "value": "true",
@@ -566,26 +639,6 @@
           "name": "DirectionCount"
         },
         {
-          "value": "",
-          "type": "Number",
-          "label": "",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
-          "hidden": true,
-          "name": "AnimationFrame"
-        },
-        {
-          "value": "",
-          "type": "String",
-          "label": "",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
-          "hidden": true,
-          "name": "AnimationDirectionName"
-        },
-        {
           "value": "0",
           "type": "Number",
           "unit": "DegreeAngle",
@@ -595,9 +648,40 @@
           "extraInformation": [],
           "hidden": false,
           "name": "AngleOffset"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "AnimationDirection"
         }
       ],
-      "sharedPropertyDescriptors": []
+      "sharedPropertyDescriptors": [
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "NewAnimationDirection"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "AnimationFrame"
+        }
+      ]
     }
   ],
   "eventsBasedObjects": []
