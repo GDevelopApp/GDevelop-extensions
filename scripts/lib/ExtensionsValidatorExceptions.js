@@ -354,6 +354,18 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    TopDownCornerSliding: {
+      gdjsAllowedProperties: [
+        '__topDownCornerSlidingExtension',
+        'TopDownMovementRuntimeBehavior',
+        'RuntimeInstanceContainer',
+        'RuntimeBehavior',
+        'AABB',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     YandexGamesSDK: {
       gdjsAllowedProperties: ['_YandexGamesSDK'],
       gdjsEvtToolsAllowedProperties: [],
