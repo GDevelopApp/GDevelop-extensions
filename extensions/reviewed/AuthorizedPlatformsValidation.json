@@ -8,7 +8,7 @@
   "name": "AuthorizedPlatformsValidation",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/0d42bc9711bc135b0dfb0084a37469540468e243a560339b99e399bd77f48010_check-decagram.svg",
   "shortDescription": "Checks if the game is currently executed on an allowed platform (for web)",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": [
     "**check if your web game is being played on a platform your intended to publish on**",
     "Some web game platforms may steal your game to publish it on their own without your knowledge or consent!",
@@ -34,35 +34,86 @@
   "dependencies": [],
   "eventsFunctions": [
     {
-      "description": "Checks if the game is executed on an authorized platform",
+      "description": "Checks if the game is executed on an authorized platform (preferably, run this only once at beginning of the game).",
       "fullName": "Is the game running on an authorized platform",
       "functionType": "Condition",
       "name": "CheckExecution",
       "sentence": "The game is running on a authorized platform",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": [
-            "let currentReferrer = \"\";\r",
-            "try {\r",
-            "    currentReferrer = new URL(document.referrer).hostname;\r",
-            "\r",
-            "} catch(err) {\r",
-            "    //We generally do not care about an error while parsing the URL\r",
-            "    console.log(\"Game is not running on a web platform\")\r",
-            "}\r",
-            "eventsFunctionContext.returnValue = gdjs._authorizedPlatforms.validPlatforms.includes(currentReferrer.hostname);"
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "Default return value is false",
+          "comment2": ""
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Or"
+              },
+              "parameters": [],
+              "subInstructions": [
+                {
+                  "type": {
+                    "value": "AuthorizedPlatformsValidation::Includes"
+                  },
+                  "parameters": [
+                    "",
+                    "AuthorizedPlatformsValidation::CurrentRefferer()",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SystemInfo::IsPreview"
+                  },
+                  "parameters": [
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SystemInfo::IsNativeMobileApp"
+                  },
+                  "parameters": []
+                },
+                {
+                  "type": {
+                    "value": "SystemInfo::IsNativeDesktopApp"
+                  },
+                  "parameters": [
+                    ""
+                  ]
+                }
+              ]
+            }
           ],
-          "parameterObjects": "",
-          "useStrict": true,
-          "eventsSheetExpanded": false
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
         }
       ],
       "parameters": [],
       "objectGroups": []
     },
     {
-      "description": "Get the referrer's location aka the domain of the page (at the root)",
+      "description": "Get the referrer's location (the domain of the root page where your game is embedded).",
       "fullName": "Get referrer location",
       "functionType": "StringExpression",
       "name": "CurrentRefferer",
@@ -71,13 +122,8 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "let location = \"\";\r",
-            "try {\r",
-            "    location = new URL(document.referrer).hostname\r",
-            "} catch(err) {\r",
-            "    //If we could not parse the referrer into an URL, it means we are running locally\r",
-            "}\r",
-            "eventsFunctionContext.returnValue = location;"
+            "//If the document referrer is not empty, return the hostname (the domain name) else, return an empty string.\r",
+            "eventsFunctionContext.returnValue = document.referrer ? new URL(document.referrer).hostname : \"\" ;"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -91,18 +137,26 @@
       "objectGroups": []
     },
     {
-      "description": "Adds a new valid platform aka a domain name where the game is expected to be played (e.g : gd.games)",
+      "description": "Adds a new valid platform aka a domain name where the game is expected to be played (e.g : gd.games).",
       "fullName": "Add a valid platform",
       "functionType": "Action",
       "name": "AddExecution",
       "sentence": "Add _PARAM1_ as valid platform",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "gdjs._authorizedPlatforms.validPlatforms.push(eventsFunctionContext.getArgument(\"domain\"));",
-          "parameterObjects": "",
-          "useStrict": true,
-          "eventsSheetExpanded": false
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "GlobalVariablePushString"
+              },
+              "parameters": [
+                "__AuthorizedPlatformsValidation.AuthorizedPlatforms",
+                "GetArgumentAsString(\"domain\")"
+              ]
+            }
+          ]
         }
       ],
       "parameters": [
@@ -115,25 +169,42 @@
       "objectGroups": []
     },
     {
-      "fullName": "",
-      "functionType": "Action",
-      "name": "onFirstSceneLoaded",
-      "sentence": "",
+      "description": "Check if a domain is contained in the authorized list array.",
+      "fullName": "Check if a domain is contained in the authorized list",
+      "functionType": "Condition",
+      "name": "Includes",
+      "private": true,
+      "sentence": "Check if _PARAM1_ is in the list of authorized platforms",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": []
-        },
-        {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "gdjs._authorizedPlatforms = {validPlatforms: [\"\"]}",
+          "inlineCode": [
+            "const authorizedPlatformsVariableReference = runtimeScene.getGame()\r",
+            "    .getVariables()\r",
+            "    .get(\"__AuthorizedPlatformsValidation\")\r",
+            "    .getChild(\"AuthorizedPlatforms\");\r",
+            "    \r",
+            "authorizedPlatformsVariableReference.castTo(\"array\");\r",
+            "\r",
+            "eventsFunctionContext.returnValue = \r",
+            "    authorizedPlatformsVariableReference.toJSObject()\r",
+            "    .includes(\r",
+            "        eventsFunctionContext.getArgument(\"DomainToCheck\")\r",
+            "        );\r",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
         }
       ],
-      "parameters": [],
+      "parameters": [
+        {
+          "description": "Domain to check",
+          "name": "DomainToCheck",
+          "type": "string"
+        }
+      ],
       "objectGroups": []
     }
   ],
