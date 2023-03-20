@@ -8,7 +8,7 @@
   "name": "AuthorizedPlatformsValidation",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/0d42bc9711bc135b0dfb0084a37469540468e243a560339b99e399bd77f48010_check-decagram.svg",
   "shortDescription": "Checks if the game is currently executed on an allowed platform (for web)",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": [
     "**check if your web game is being played on a platform your intended to publish on**",
     "Some web game platforms may steal your game to publish it on their own without your knowledge or consent!",
@@ -43,8 +43,15 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "let currentReferrer = new URL(document.referrer);\r",
-            "eventsFunctionContext.returnValue = (gdjs._ValidateExecutionContext.validContexts.includes(currentReferrer.hostname));"
+            "let currentReferrer = \"\";\r",
+            "try {\r",
+            "    currentReferrer = new URL(document.referrer).hostname;\r",
+            "\r",
+            "} catch(err) {\r",
+            "    //We generally do not care about an error while parsing the URL\r",
+            "    console.log(\"Game is not running on a web platform\")\r",
+            "}\r",
+            "eventsFunctionContext.returnValue = gdjs._authorizedPlatforms.validPlatforms.includes(currentReferrer.hostname);"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -63,7 +70,15 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = new URL(document.referrer).hostname;",
+          "inlineCode": [
+            "let location = \"\";\r",
+            "try {\r",
+            "    location = new URL(document.referrer).hostname\r",
+            "} catch(err) {\r",
+            "    //If we could not parse the referrer into an URL, it means we are running locally\r",
+            "}\r",
+            "eventsFunctionContext.returnValue = location;"
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -84,7 +99,7 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "gdjs._ValidateExecutionContext.validContexts.push(eventsFunctionContext.getArgument(\"domain\"));",
+          "inlineCode": "gdjs._authorizedPlatforms.validPlatforms.push(eventsFunctionContext.getArgument(\"domain\"));",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -112,7 +127,7 @@
         },
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "gdjs._ValidateExecutionContext = {validContexts: [\"\"]}",
+          "inlineCode": "gdjs._authorizedPlatforms = {validPlatforms: [\"\"]}",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
