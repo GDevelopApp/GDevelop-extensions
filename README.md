@@ -10,7 +10,7 @@ This repository hosts community made extensions for GDevelop. Extensions can pro
 
 | ❔ I want to...                 | 🚀 What to do                                                         |
 | ------------------------------- | --------------------------------------------------------------------- |
-| Download GDevelop to make games | Go on [GDevelop website](https://gdevelop-app.com) to download GD!    |
+| Download GDevelop to make games | Go on [GDevelop website](https://gdevelop.io) to download GD!    |
 | Use an extension                | Extensions can be **searched and downloaded** directly from GDevelop. |
 | Contribute to GDevelop itself   | Visit [GDevelop GitHub repository](https://github.com/4ian/GDevelop). |
 | Create/improve an extension     | Read below.                                                           |
@@ -19,7 +19,7 @@ This repository hosts community made extensions for GDevelop. Extensions can pro
 
 If you've created an extension with GDevelop, you can submit it to be shared with the rest of the community. This [Trello board has the extensions that are being worked on](https://trello.com/b/AftjL2v1/gdevelop-extensions) by the community.
 
-1. **Create your extension** in your game with GDevelop: see the documentation about [functions](http://wiki.compilgames.net/doku.php/gdevelop5/events/functions) and [custom behaviors](http://wiki.compilgames.net/doku.php/gdevelop5/behaviors/events-based-behaviors).
+1. **Create your extension** in your game with GDevelop: see the documentation about [functions](https://wiki.gdevelop.io/gdevelop5/events/functions) and [custom behaviors](https://wiki.gdevelop.io/gdevelop5/behaviors/events-based-behaviors).
 2. Make sure the **descriptions**, **tags**, **names** are properly filled in the options of the extension.
 3. **Export** your extension to a _.json file_ from GDevelop.
 4. Submit it! You can either:
@@ -31,7 +31,7 @@ If you've created an extension with GDevelop, you can submit it to be shared wit
 
 ## Get your extension (reviewed extensions)
 
-Reviewed extensions are community extensions that got reviewed and adapted to meet all **[the best practices that are listed here](http://wiki.compilgames.net/doku.php/gdevelop5/extensions/best-practices)**.
+Reviewed extensions are community extensions that got reviewed and adapted to meet all **[the best practices that are listed here](https://wiki.gdevelop.io/gdevelop5/extensions/best-practices)**.
 
 If your community extension is very useful and you think its quality is good enough: 
 
