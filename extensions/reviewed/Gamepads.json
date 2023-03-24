@@ -8,7 +8,7 @@
   "name": "Gamepads",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/gamepad-variant-outline.svg",
   "shortDescription": "Add support for gamepads (or other controllers) to your game, giving access to information such as button presses, axis positions, trigger pressure, etc...",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": [
     "Add support for gamepads (or other controllers) to your game, giving access to information such as button presses, axis positions, axis force, trigger pressure, deadzone for each gamepad, etc...",
     "",
@@ -27,7 +27,9 @@
     "ps4"
   ],
   "authorIds": [
-    "2OwwM8ToR9dx9RJ2sAKTcrLmCB92"
+    "2OwwM8ToR9dx9RJ2sAKTcrLmCB92",
+    "taRwmWxwAFYFL9yyBwB3cwBw0BO2",
+    "mnImQKdn8nQxwzkS5D6a1JB27V23"
   ],
   "dependencies": [],
   "eventsFunctions": [
@@ -1402,6 +1404,179 @@
       "objectGroups": []
     },
     {
+      "description": "Generate an advanced vibration on the specified controller. Incompatible with Firefox.",
+      "fullName": "Advanced gamepad vibration",
+      "functionType": "Action",
+      "name": "A_Advanced_Vibration_Controller",
+      "sentence": "Make gamepad _PARAM1_ vibrate for _PARAM2_ seconds with the vibration magnitude of _PARAM3_ & _PARAM4_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": []
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "/** @type {Gamepad[]} */",
+            "//Vibration work only on game in browser.",
+            "const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);",
+            "",
+            "//Get function parameters",
+            "const playerId = eventsFunctionContext.getArgument(\"player_ID\") - 1;",
+            "const duration = eventsFunctionContext.getArgument(\"duration\") || 1;",
+            "const strongRumbleMagnitude = eventsFunctionContext.getArgument(\"StrongMagnitude\");",
+            "const weakRumbleMagnitude = eventsFunctionContext.getArgument(\"WeakMagnitude\");",
+            "",
+            "console.log(strongRumbleMagnitude);",
+            "if (playerId < 0 || playerId > 4) {",
+            "  console.error('Parameter gamepad identifier in action: \"Gamepad vibration\", is not valid number, must be between 0 and 4.');",
+            "  return;",
+            "}",
+            "if (weakRumbleMagnitude < 0 || weakRumbleMagnitude > 1) {",
+            "  console.error('Parameter weakRumble identifier in action: \"Gamepad vibration\", is not valid number, must be between 0 and 1.');",
+            "  return;",
+            "}",
+            "if (strongRumbleMagnitude < 0 || strongRumbleMagnitude > 1) {",
+            "  console.error('Parameter strongRumble identifier in action: \"Gamepad vibration\", is not valid number, must be between 0 and 1.');",
+            "  return;",
+            "}",
+            "",
+            "",
+            "const gamepad = gamepads[playerId];",
+            "",
+            "//we need keep this condition because when use have not yet plug the controller we can't get the controller in the gamepad variable.",
+            "if (gamepad == null) return;",
+            "",
+            "var remainingVibrationTime = 0; // global variable to store remaining time",
+            "",
+            "if (gamepad && gamepad.vibrationActuator) {",
+            "  const effect = gamepad.vibrationActuator.playEffect(\"dual-rumble\", {",
+            "    startDelay: 0,",
+            "    duration: duration * 1000,",
+            "    weakMagnitude: weakRumbleMagnitude,",
+            "    strongMagnitude: strongRumbleMagnitude",
+            "  });",
+            "}",
+            "",
+            "gdjs._extensionController.rumble.duration = duration;",
+            "gdjs._extensionController.rumble.elapsedTime = 0;",
+            "gdjs._extensionController.rumble.weakMagnitude = weakRumbleMagnitude;",
+            "gdjs._extensionController.rumble.strongMagnitude = strongRumbleMagnitude;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "type": "expression"
+        },
+        {
+          "description": "Time of the vibration, in seconds (optional, default value is 1)",
+          "name": "duration",
+          "type": "expression"
+        },
+        {
+          "description": "Strong rumble magnitude (the value must be between 0 and 1)",
+          "name": "StrongMagnitude",
+          "type": "expression"
+        },
+        {
+          "description": "Weak rumble magnitude (the value must be between 0 and 1)",
+          "name": "WeakMagnitude",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Change a vibration on the specified controller. Incompatible with Firefox.",
+      "fullName": "Change gamepad active vibration",
+      "functionType": "Action",
+      "name": "A_Change_Vibration_Magnitude",
+      "sentence": "Change the vibration magnitude of _PARAM2_ & _PARAM3_ on gamepad _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": []
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "/** @type {Gamepad[]} */",
+            "//Vibration work only on game in browser.",
+            "const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);",
+            "",
+            "//Get function parameters",
+            "const playerId = eventsFunctionContext.getArgument(\"player_ID\") - 1;",
+            "const elapsedTime = gdjs._extensionController.rumble.elapsedTime;",
+            "const originalDuration = gdjs._extensionController.rumble.duration;",
+            "const strongRumbleMagnitude = eventsFunctionContext.getArgument(\"StrongMagnitude\");",
+            "const weakRumbleMagnitude = eventsFunctionContext.getArgument(\"WeakMagnitude\");",
+            "",
+            "",
+            "if (playerId < 0 || playerId > 4) {",
+            "  console.error('Parameter gamepad identifier in action: \"Change gamepad active vibration\", is not valid number, must be between 0 and 4.');",
+            "  return;",
+            "}",
+            "if (weakRumbleMagnitude < 0 || weakRumbleMagnitude > 1) {",
+            "  console.error('Parameter weakRumble identifier in action: \"Change gamepad active vibration\", is not valid number, must be between 0 and 1.');",
+            "  return;",
+            "}",
+            "if (strongRumbleMagnitude < 0 || strongRumbleMagnitude > 1) {",
+            "  console.error('Parameter strongRumble identifier in action: \"Change gamepad active vibration\", is not valid number, must be between 0 and 1.');",
+            "  return;",
+            "}",
+            "",
+            "const gamepad = gamepads[playerId];",
+            "",
+            "//we need keep this condition because when use have not yet plug the controller we can't get the controller in the gamepad variable.",
+            "if (gamepad == null) return;",
+            "",
+            "if (originalDuration - elapsedTime <= 0) return;",
+            "",
+            "if (gamepad && gamepad.vibrationActuator) {",
+            "  gamepad.vibrationActuator.playEffect(\"dual-rumble\", {",
+            "    startDelay: 0,",
+            "    duration: 1000 * (originalDuration - elapsedTime),",
+            "    weakMagnitude: weakRumbleMagnitude,",
+            "    strongMagnitude: strongRumbleMagnitude",
+            "  });",
+            "}",
+            "",
+            "gdjs._extensionController.rumble.weakMagnitude = weakRumbleMagnitude;",
+            "gdjs._extensionController.rumble.strongMagnitude = strongRumbleMagnitude;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "type": "expression"
+        },
+        {
+          "description": "Strong rumble magnitude (the value must be between 0 and 1)",
+          "name": "StrongMagnitude",
+          "type": "expression"
+        },
+        {
+          "description": "Weak rumble magnitude (the value must be between 0 and 1)",
+          "name": "WeakMagnitude",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
       "fullName": "",
       "functionType": "Action",
       "name": "onFirstSceneLoaded",
@@ -1465,6 +1640,12 @@
             "            16: \"PS_BUTTON\",\r",
             "            17: \"CLICK_TOUCHPAD\"\r",
             "        }\r",
+            "    },\r",
+            "    rumble: {\r",
+            "        duration: 0,\r",
+            "        elapsedTime: 0,\r",
+            "        weakMagnitude: 0,\r",
+            "        strongMagnitude: 0\r",
             "    }\r",
             "};\r",
             "\r",
@@ -1584,7 +1765,14 @@
             "    }",
             "}",
             "",
-            "",
+            "gdjs._extensionController.rumble.elapsedTime += runtimeScene.getElapsedTime(runtimeScene) / 1000;",
+            "if (",
+            "    gdjs._extensionController.rumble.duration - gdjs._extensionController.rumble.elapsedTime <= 0 &&          ",
+            "    (gdjs._extensionController.rumble.weakMagnitude || gdjs._extensionController.rumble.strongMagnitude)",
+            ") {",
+            "    gdjs._extensionController.rumble.weakMagnitude = 0;",
+            "    gdjs._extensionController.rumble.strongMagnitude = 0;",
+            "}",
             ""
           ],
           "parameterObjects": "",
@@ -1664,6 +1852,82 @@
           "eventsSheetExpanded": true
         }
       ],
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the strength of the weak vibration motor on the gamepad.",
+      "fullName": "Value of weak vibration motor",
+      "functionType": "Expression",
+      "name": "ReadWeakVibrationMagnitude",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "//Get function parameter",
+            "const playerId = eventsFunctionContext.getArgument(\"player_ID\") - 1;",
+            "",
+            "//Player id is not valid",
+            "if (playerId < 0 || playerId > 4) {",
+            "    console.error('Parameter gamepad identifier in expression: \"Value of weak vibration motor\", is not valid number, must be between 0 and 4.');",
+            "    return;",
+            "}",
+            "",
+            "eventsFunctionContext.returnValue = gdjs._extensionController.rumble.weakMagnitude;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the strength of the strong vibration motor on the gamepad.",
+      "fullName": "Value of strong vibration motor",
+      "functionType": "Expression",
+      "name": "ReadStrongVibrationMagnitude",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "//Get function parameter",
+            "const playerId = eventsFunctionContext.getArgument(\"player_ID\") - 1;",
+            "",
+            "//Player id is not valid",
+            "if (playerId < 0 || playerId > 4) {",
+            "    console.error('Parameter gamepad identifier in expression: \"Value of strong vibration motor\", is not valid number, must be between 0 and 4.');",
+            "    return;",
+            "}",
+            "",
+            "eventsFunctionContext.returnValue = gdjs._extensionController.rumble.strongMagnitude;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
       "parameters": [
         {
           "description": "The gamepad identifier: 1, 2, 3 or 4",
