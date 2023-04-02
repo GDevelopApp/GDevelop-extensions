@@ -303,7 +303,7 @@ const extensionsAllowedProperties = {
     Gamepads: {
       gdjsAllowedProperties: ['_extensionController'],
       gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getElapsedTime'],
       javaScriptObjectAllowedProperties: [],
     },
     Sticker: {
