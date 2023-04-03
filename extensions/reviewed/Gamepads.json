@@ -1445,10 +1445,10 @@
             "  });",
             "}",
             "",
-            "gdjs._extensionController.rumble.duration = duration;",
-            "gdjs._extensionController.rumble.elapsedTime = 0;",
-            "gdjs._extensionController.rumble.weakMagnitude = weakRumbleMagnitude;",
-            "gdjs._extensionController.rumble.strongMagnitude = strongRumbleMagnitude;"
+            "gdjs._extensionController.players[playerId].rumble.duration = duration;",
+            "gdjs._extensionController.players[playerId].rumble.elapsedTime = 0;",
+            "gdjs._extensionController.players[playerId].rumble.weakMagnitude = weakRumbleMagnitude;",
+            "gdjs._extensionController.players[playerId].rumble.strongMagnitude = strongRumbleMagnitude;"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -1530,8 +1530,8 @@
             "  });",
             "}",
             "",
-            "gdjs._extensionController.rumble.weakMagnitude = weakRumbleMagnitude;",
-            "gdjs._extensionController.rumble.strongMagnitude = strongRumbleMagnitude;"
+            "gdjs._extensionController.players[playerId].rumble.weakMagnitude = weakRumbleMagnitude;",
+            "gdjs._extensionController.players[playerId].rumble.strongMagnitude = strongRumbleMagnitude;"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -1574,10 +1574,10 @@
             "//Define an new private object javascript for the gamepad extension\r",
             "gdjs._extensionController = {\r",
             "    players: {\r",
-            "        0: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r",
-            "        1: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r",
-            "        2: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r",
-            "        3: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r",
+            "        0: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, rumble: {} },\r",
+            "        1: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, rumble: {} },\r",
+            "        2: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, rumble: {} },\r",
+            "        3: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, rumble: {} },\r",
             "    },\r",
             "    lastActiveController: -1, // Last active controller\r",
             "    controllerButtonNames: { //Map associating controller button ids to button names\r",
@@ -1744,15 +1744,18 @@
             "            gdjs._extensionController.players[i].previousFrameStateButtons[b] = { pressed: false };",
             "        }",
             "    }",
-            "}",
             "",
-            "gdjs._extensionController.rumble.elapsedTime += runtimeScene.getElapsedTime(runtimeScene) / 1000;",
-            "if (",
-            "    gdjs._extensionController.rumble.duration - gdjs._extensionController.rumble.elapsedTime <= 0 &&          ",
-            "    (gdjs._extensionController.rumble.weakMagnitude || gdjs._extensionController.rumble.strongMagnitude)",
-            ") {",
-            "    gdjs._extensionController.rumble.weakMagnitude = 0;",
-            "    gdjs._extensionController.rumble.strongMagnitude = 0;",
+            "",
+            "    gdjs._extensionController.players[i].rumble.elapsedTime += runtimeScene.getElapsedTime(runtimeScene) / 1000;",
+            "    if (",
+            "        gdjs._extensionController.players[i].rumble.duration - gdjs._extensionController.players[i].rumble.elapsedTime <= 0 &&",
+            "        (gdjs._extensionController.players[i].rumble.weakMagnitude || gdjs._extensionController.players[i].rumble.strongMagnitude)",
+            "    ) {",
+            "        gdjs._extensionController.players[i].rumble.weakMagnitude = 0;",
+            "        gdjs._extensionController.players[i].rumble.strongMagnitude = 0;",
+            "    }",
+            "",
+            "",
             "}",
             ""
           ],
@@ -1843,7 +1846,7 @@
       "objectGroups": []
     },
     {
-      "description": "Return the strength of the weak vibration motor on the gamepad.",
+      "description": "Return the strength of the weak vibration motor on the gamepad of a player.",
       "fullName": "Weak rumble magnitude",
       "functionType": "Expression",
       "name": "WeakVibrationMagnitude",
@@ -1851,7 +1854,10 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = gdjs._extensionController.rumble.weakMagnitude;",
+          "inlineCode": [
+            "const playerId = eventsFunctionContext.getArgument(\"Player_ID\") - 1;\r",
+            "eventsFunctionContext.returnValue = gdjs._extensionController.players[playerId].rumble.weakMagnitude;"
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -1860,11 +1866,17 @@
       "expressionType": {
         "type": "expression"
       },
-      "parameters": [],
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "Player_ID",
+          "type": "expression"
+        }
+      ],
       "objectGroups": []
     },
     {
-      "description": "Return the strength of the strong vibration motor on the gamepad.",
+      "description": "Return the strength of the strong vibration motor on the gamepad of a player.",
       "fullName": "Strong rumble magnitude",
       "functionType": "Expression",
       "name": "StrongVibrationMagnitude",
@@ -1872,7 +1884,10 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = gdjs._extensionController.rumble.strongMagnitude;",
+          "inlineCode": [
+            "const playerId = eventsFunctionContext.getArgument(\"Player_ID\") - 1;\r",
+            "eventsFunctionContext.returnValue = gdjs._extensionController.players[playerId].rumble.strongMagnitude;"
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -1881,7 +1896,13 @@
       "expressionType": {
         "type": "expression"
       },
-      "parameters": [],
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "Player_ID",
+          "type": "expression"
+        }
+      ],
       "objectGroups": []
     }
   ],
