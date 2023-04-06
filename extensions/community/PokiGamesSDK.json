@@ -17,7 +17,8 @@
   "tags": [
     "poki",
     "ads",
-    "sdk"
+    "sdk",
+    "api"
   ],
   "authorIds": [
     "tgIIofwSWVNtHsFW7AR2imu8gCj1"
@@ -32,27 +33,53 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "gdjs._pokiGamesSdkExtension = {};",
+          "inlineCode": [
+            "gdjs._pokiGamesSdkExtension = {",
+            "    isSdkReady: false,",
+            "    isPlayingCommercialBreak: false,",
+            "    commercialBreakJustFinishedPlaying: false,",
+            "    isPlayingRewardedBreak: false,",
+            "    rewardedBreakJustFinishedPlaying: false,",
+            "    shouldRewardPlayer: false,",
+            "};",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "PokiGamesSDK::LoadSDK"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            }
+          ]
         }
       ],
       "parameters": [],
       "objectGroups": []
     },
     {
-      "async": true,
       "description": "Load Poki SDK.",
       "fullName": "Load SDK",
       "functionType": "Action",
       "group": "Poki Games",
       "name": "LoadSDK",
+      "private": true,
       "sentence": "Load Poki SDK",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
+            "const logger = new gdjs.Logger(\"Clipboard extension\");",
             "function addScript(src) {",
             "    return new Promise((resolve, reject) => {",
             "        const scriptElement = document.createElement('script');",
@@ -66,16 +93,35 @@
             "}",
             "addScript('https://game-cdn.poki.com/scripts/v2/poki-sdk.js').then(() => {",
             "    PokiSDK.init().then(() => {",
-            "        console.log(\"Poki SDK successfully initialized\");",
-            "        gdjs.evtTools.common.resolveAsyncEventsFunction(eventsFunctionContext);",
+            "        gdjs._pokiGamesSdkExtension.isSdkReady = true;",
+            "        logger.log(\"Poki SDK successfully initialized.\");",
             "    }).catch(() => {",
-            "        console.log(\"Initialized, but the user likely has adblock\");",
+            "        logger.log(\"Initialized, but the user likely has adblock.\");",
             "    });",
             "})"
           ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Check if the Poki SDK is ready to be used",
+      "fullName": "Is Poki SDK ready",
+      "functionType": "Condition",
+      "group": "Poki Games",
+      "name": "isSdkReady",
+      "sentence": "Poki SDK is ready",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "eventsFunctionContext.returnValue = gdjs._pokiGamesSdkExtension.isSdkReady;",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
         }
       ],
       "parameters": [],
@@ -92,6 +138,7 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
+            "if (typeof PokiSDK === \"undefined\") return;",
             "PokiSDK.gameLoadingFinished();",
             ""
           ],
@@ -114,6 +161,7 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
+            "if (typeof PokiSDK === \"undefined\") return;",
             "PokiSDK.gameplayStart();",
             ""
           ],
@@ -136,6 +184,7 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
+            "if (typeof PokiSDK === \"undefined\") return;",
             "PokiSDK.gameplayStop();",
             ""
           ],
@@ -158,6 +207,7 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
+            "if (typeof PokiSDK === \"undefined\") return;",
             "gdjs._pokiGamesSdkExtension.isPlayingCommercialBreak = true;",
             "PokiSDK.commercialBreak().then(() => {",
             "    gdjs._pokiGamesSdkExtension.commercialBreakJustFinishedPlaying = true;",
@@ -184,6 +234,7 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
+            "if (typeof PokiSDK === \"undefined\") return;",
             "gdjs._pokiGamesSdkExtension.isPlayingRewardedBreak = true;",
             "PokiSDK.rewardedBreak().then((shouldRewardPlayer) => {",
             "    gdjs._pokiGamesSdkExtension.rewardedBreakJustFinishedPlaying = true;",
@@ -210,7 +261,7 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = gdjs._pokiGamesSdkExtension.isPlayingCommercialBreak || false;",
+          "inlineCode": "eventsFunctionContext.returnValue = gdjs._pokiGamesSdkExtension.isPlayingCommercialBreak;",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -229,7 +280,7 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = gdjs._pokiGamesSdkExtension.isPlayingRewardedBreak || false;",
+          "inlineCode": "eventsFunctionContext.returnValue = gdjs._pokiGamesSdkExtension.isPlayingRewardedBreak;",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
