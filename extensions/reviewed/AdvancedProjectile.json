@@ -22,7 +22,7 @@
   "tags": [
     "projectile",
     "movement",
-    "accelleration",
+    "acceleration",
     "speed",
     "distance"
   ],
@@ -99,24 +99,12 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "ModVarObjet"
+                            "value": "AdvancedProjectile::AdvancedProjectile::SetStartingPositionToCurrentPosition"
                           },
                           "parameters": [
                             "Object",
-                            "__AdvancedProjectile.StartingX",
-                            "=",
-                            "Object.X()"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "ModVarObjet"
-                          },
-                          "parameters": [
-                            "Object",
-                            "__AdvancedProjectile.StartingY",
-                            "=",
-                            "Object.Y()"
+                            "Behavior",
+                            ""
                           ]
                         }
                       ]
@@ -333,30 +321,58 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "BuiltinCommonInstructions::Or"
+                        "value": "AdvancedProjectile::AdvancedProjectile::DeleteWhenLifetimeExceeded"
                       },
-                      "parameters": [],
-                      "subInstructions": [
-                        {
-                          "type": {
-                            "value": "AdvancedProjectile::AdvancedProjectile::IsLifetimeExceeded"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Behavior",
-                            ""
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "AdvancedProjectile::AdvancedProjectile::IsMaxDistanceExceeded"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Behavior",
-                            ""
-                          ]
-                        }
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "AdvancedProjectile::AdvancedProjectile::IsLifetimeExceeded"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "Delete"
+                      },
+                      "parameters": [
+                        "Object",
+                        ""
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "AdvancedProjectile::AdvancedProjectile::DeleteWhenDistanceExceeded"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "AdvancedProjectile::AdvancedProjectile::IsMaxDistanceExceeded"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ""
                       ]
                     }
                   ],
@@ -724,7 +740,7 @@
                 },
                 {
                   "type": {
-                    "value": "AdvancedProjectile::AdvancedProjectile::PropertyMaxDistanceFromStart"
+                    "value": "AdvancedProjectile::AdvancedProjectile::PropertyMaxDistanceFromStartingPosition"
                   },
                   "parameters": [
                     "Object",
@@ -740,7 +756,7 @@
                   "parameters": [
                     "DistanceBetweenPositions(Object.Variable(__AdvancedProjectile.StartingX), Object.Variable(__AdvancedProjectile.StartingY), Object.X(), Object.Y())",
                     ">",
-                    "Object.Behavior::PropertyMaxDistanceFromStart()"
+                    "Object.Behavior::PropertyMaxDistanceFromStartingPosition()"
                   ]
                 }
               ],
@@ -923,6 +939,45 @@
           "objectGroups": []
         },
         {
+          "description": "Restart lifetime timer of object.",
+          "fullName": "Restart lifetime timer",
+          "functionType": "Action",
+          "getterName": "MaxLifetime",
+          "name": "RestartLifetimeTimer",
+          "sentence": "Restart lifetime timer of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ResetObjectTimer"
+                  },
+                  "parameters": [
+                    "Object",
+                    "\"__AdvancedProjectile.Lifetime\""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "AdvancedProjectile::AdvancedProjectile",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "the max distance from starting position of the object. Object is deleted after property has been exceeded. Use \"0\" to ignore this property.",
           "fullName": "Max distance from starting position",
           "functionType": "ExpressionAndCondition",
@@ -939,7 +994,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyMaxDistanceFromStart()"
+                    "Object.Behavior::PropertyMaxDistanceFromStartingPosition()"
                   ]
                 }
               ]
@@ -976,13 +1031,65 @@
               "actions": [
                 {
                   "type": {
-                    "value": "AdvancedProjectile::AdvancedProjectile::SetPropertyMaxDistanceFromStart"
+                    "value": "AdvancedProjectile::AdvancedProjectile::SetPropertyMaxDistanceFromStartingPosition"
                   },
                   "parameters": [
                     "Object",
                     "Behavior",
                     "=",
                     "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "AdvancedProjectile::AdvancedProjectile",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the starting position of object to it's current position.",
+          "fullName": "Change starting position to the current position",
+          "functionType": "Action",
+          "getterName": "MaxLifetime",
+          "name": "SetStartingPositionToCurrentPosition",
+          "sentence": "Change the starting position of _PARAM0_ to it's current position",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarObjet"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__AdvancedProjectile.StartingX",
+                    "=",
+                    "Object.X()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ModVarObjet"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__AdvancedProjectile.StartingY",
+                    "=",
+                    "Object.Y()"
                   ]
                 }
               ]
@@ -1326,6 +1433,266 @@
             }
           ],
           "objectGroups": []
+        },
+        {
+          "description": "Check if delete object when lifetime is exceeded.",
+          "fullName": "Delete object when lifetime is exceeded",
+          "functionType": "Condition",
+          "group": "Advanced projectile configuration",
+          "name": "DeleteWhenLifetimeExceeded",
+          "sentence": "_PARAM0_ delete object when lifetime is exceeded",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "AdvancedProjectile::AdvancedProjectile::PropertyDeleteWhenLifetimeExceeded"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "AdvancedProjectile::AdvancedProjectile",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change if delete object when lifetime is exceeded.",
+          "fullName": "Delete object when lifetime is exceeded",
+          "functionType": "Action",
+          "group": "Advanced projectile configuration",
+          "name": "SetDeleteWhenLifetimeExceeded",
+          "sentence": "_PARAM0_ delete object when lifetime is exceeded: _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"Value\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "AdvancedProjectile::AdvancedProjectile::SetPropertyDeleteWhenLifetimeExceeded"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "no"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"Value\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "AdvancedProjectile::AdvancedProjectile::SetPropertyDeleteWhenLifetimeExceeded"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "yes"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "AdvancedProjectile::AdvancedProjectile",
+              "type": "behavior"
+            },
+            {
+              "defaultValue": "yes",
+              "description": "DeleteWhenLifetimeExceeded",
+              "name": "Value",
+              "optional": true,
+              "type": "yesorno"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if delete object when distance (from starting position) is exceeded.",
+          "fullName": "Delete object when distance (from starting position) is exceeded",
+          "functionType": "Condition",
+          "group": "Advanced projectile configuration",
+          "name": "DeleteWhenDistanceExceeded",
+          "sentence": "_PARAM0_ delete object when distance (from starting position) is exceeded",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "AdvancedProjectile::AdvancedProjectile::PropertyDeleteWhenDistanceExceeded"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "AdvancedProjectile::AdvancedProjectile",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change if delete object when distance (from starting position) is exceeded.",
+          "fullName": "Delete object when distance (from starting position) is exceeded",
+          "functionType": "Action",
+          "group": "Advanced projectile configuration",
+          "name": "SetDeleteWhenDistanceExceeded",
+          "sentence": "_PARAM0_ delete object when distance (from starting position) is exceeded: _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"Value\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "AdvancedProjectile::AdvancedProjectile::SetPropertyDeleteWhenDistanceExceeded"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "no"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"Value\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "AdvancedProjectile::AdvancedProjectile::SetPropertyDeleteWhenDistanceExceeded"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "yes"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "AdvancedProjectile::AdvancedProjectile",
+              "type": "behavior"
+            },
+            {
+              "defaultValue": "yes",
+              "description": "DeleteWhenDistanceExceeded",
+              "name": "Value",
+              "optional": true,
+              "type": "yesorno"
+            }
+          ],
+          "objectGroups": []
         }
       ],
       "propertyDescriptors": [
@@ -1334,7 +1701,7 @@
           "type": "Number",
           "unit": "Second",
           "label": "Lifetime",
-          "description": "Object is deleted after property has been exceeded. Use \"0\" to ignore this property.",
+          "description": "Use \"0\" to ignore this property.",
           "group": "",
           "extraInformation": [],
           "hidden": false,
@@ -1345,18 +1712,18 @@
           "type": "Number",
           "unit": "Pixel",
           "label": "Max distance from starting position",
-          "description": "Object is deleted after property has been exceeded. Use \"0\" to ignore this property.",
+          "description": "Use \"0\" to ignore this property.",
           "group": "",
           "extraInformation": [],
           "hidden": false,
-          "name": "MaxDistanceFromStart"
+          "name": "MaxDistanceFromStartingPosition"
         },
         {
           "value": "0",
           "type": "Number",
           "unit": "PixelSpeed",
           "label": "Max speed",
-          "description": "Object forces cannot exceed this value. Use \"0\" to ignore this property.",
+          "description": "Speed from object forces will not exceed this value. Use \"0\" to ignore this property.",
           "group": "",
           "extraInformation": [],
           "hidden": false,
@@ -1367,7 +1734,7 @@
           "type": "Number",
           "unit": "PixelSpeed",
           "label": "",
-          "description": "Object forces cannot go below this value. Use \"0\" to ignore this property.",
+          "description": "Speed from object forces will not go below this value. Use \"0\" to ignore this property.",
           "group": "",
           "extraInformation": [],
           "hidden": false,
@@ -1394,6 +1761,26 @@
           "extraInformation": [],
           "hidden": false,
           "name": "StartingSpeed"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "Delete object when lifetime is exceeded",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "DeleteWhenLifetimeExceeded"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "Delete object when distance (from starting position) is exceeded",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "DeleteWhenDistanceExceeded"
         }
       ],
       "sharedPropertyDescriptors": []
