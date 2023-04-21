@@ -25,18 +25,18 @@ If you've created an extension with GDevelop, you can submit it to be shared wit
 4. Submit it! You can either:
    - **Easy**: [submit it here](https://github.com/4ian/GDevelop-extensions/issues/new/choose), attaching the _.json file_ (as a zip, because GitHub won't accept json files directly).
    - **If you know how to use git**: fork this repository, clone the git, add your .json file in `extensions/community` folder. Finally [open a Pull Request](https://github.com/4ian/GDevelop-extensions/compare).
-   
-5. Your extension will be added after a automated checks and a *quick safety check*. 🚀
-  > **Note**: If automated checks are failing, please adapt your extension and submit it again to get it added! Even if we don't do a full review of all extensions, just safety checks, the automated checks must pass. Look at automated comments that will be added to the *Pull Request* corresponding to your submission.
+5. Your extension will be added after a automated checks and a _quick safety check_. 🚀
+
+  > **Note**: If automated checks are failing, please adapt your extension and submit it again to get it added! Even if we don't do a full review of all extensions, just safety checks, the automated checks must pass. Look at automated comments that will be added to the _Pull Request_ corresponding to your submission.
 
 ## Get your extension (reviewed extensions)
 
 Reviewed extensions are community extensions that got reviewed and adapted to meet all **[the best practices that are listed here](https://wiki.gdevelop.io/gdevelop5/extensions/best-practices)**.
 
-If your community extension is very useful and you think its quality is good enough: 
+If your community extension is very useful and you think its quality is good enough:
 
-1. open a *Pull Request* to move it from the `community` folder to the `reviewed` folder. 
-2. A member of the *GDevelop Extensions Team* will then review it and give you feedback on what to do to have it reviewed.
+1. open a _Pull Request_ to move it from the `community` folder to the `reviewed` folder.
+2. A member of the _GDevelop Extensions Team_ will then review it and give you feedback on what to do to have it reviewed.
 3. When it's ready, it will be merged and the extension now accessible in the "reviewed" extensions.
 
 > **Note**: When your extension gets reviewed, the extension team will ask you to adapt your extension to reach a fairly high quality bar. It's normal! The feedback is here to help get the extension in a state where it's super flexible and useful for all users.
