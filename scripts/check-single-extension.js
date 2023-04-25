@@ -13,7 +13,7 @@ exports.verifyExtension = async function (
   extensionsFolder = `${__dirname}/../extensions`
 ) {
   // Make sure the name is valid, as dots are not allowed in the name
-  // and could be used to do relative path schenanigans that could result in skipping automatic checks.
+  // and could be used to do relative path shenanigans that could result in skipping automatic checks.
   if (!isValidExtensionName(extensionName))
     return { code: 'invalid-file-name' };
 
