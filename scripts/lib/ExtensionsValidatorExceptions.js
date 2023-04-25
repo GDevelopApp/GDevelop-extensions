@@ -86,7 +86,7 @@ const extensionsAllowedProperties = {
     // Events tools are wrappers of the JavaScript APIs allowing them to be called by events.
     // They should not be used 99% of the time, the only base exception being
     // `common` as it contains utility functions like `clamp` that are not available
-    // in JavaScript by default. Appart from this, the JavaScript functions should be used instead.
+    // in JavaScript by default. Apart from this, the JavaScript functions should be used instead.
     gdjsEvtToolsAllowedProperties: ['common'],
     runtimeSceneAllowedProperties: [
       'getVariables',
