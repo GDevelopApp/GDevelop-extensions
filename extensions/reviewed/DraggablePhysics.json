@@ -8,7 +8,7 @@
   "name": "DraggablePhysics",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Glyphster Pack/Master/SVG/Virtual Reality/Virtual Reality_hand_vr_ar_360.svg",
   "shortDescription": "Drag a physics object with the mouse (or touch).",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": [
     "Enables players to click and drag on physics objects to move them.  The object retains velocity when the click is released, allowing players to fling objects across the screen.",
     "",
@@ -112,6 +112,17 @@
                 {
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [
+                    {
+                      "type": {
+                        "value": "DraggablePhysics::DraggablePhysics::PropertyMouseButton"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "!=",
+                        "\"None (Disable automatic dragging)\""
+                      ]
+                    },
                     {
                       "type": {
                         "value": "MouseButtonFromTextPressed"
@@ -759,6 +770,61 @@
             }
           ],
           "objectGroups": []
+        },
+        {
+          "description": "Start dragging the object.  The \"Release drag\" action can be used if automatic dragging is disabled.",
+          "fullName": "Start dragging the object",
+          "functionType": "Action",
+          "name": "StartDragging",
+          "sentence": "Start dragging (physics) _PARAM0_ ",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Physics2::AddMouseJoint"
+                  },
+                  "parameters": [
+                    "Object",
+                    "PhysicsBehavior",
+                    "MouseX(Object.Layer(),0)",
+                    "MouseY(Object.Layer(),0)",
+                    "Object.Behavior::PropertyMaxForce()",
+                    "Object.Behavior::PropertyFrequency()",
+                    "Object.Behavior::PropertyDamping()",
+                    "__DraggablePhysics.MouseJointID"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "DraggablePhysics::DraggablePhysics::SetPropertyMouseJointID"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Variable(__DraggablePhysics.MouseJointID)"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "DraggablePhysics::DraggablePhysics",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
         }
       ],
       "propertyDescriptors": [
@@ -783,7 +849,8 @@
           "extraInformation": [
             "Left",
             "Right",
-            "Middle"
+            "Middle",
+            "None (Disable automatic dragging)"
           ],
           "hidden": false,
           "name": "MouseButton"
