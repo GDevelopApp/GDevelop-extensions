@@ -137,6 +137,15 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Billboard: {
+      gdjsAllowedProperties: [
+        'Cube3DRuntimeObject',
+        'Cube3DRuntimeObjectRenderer'
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     BoidsMovement: {
       gdjsAllowedProperties: [
         '__boidsExtension',
