@@ -140,7 +140,7 @@ const extensionsAllowedProperties = {
     Billboard: {
       gdjsAllowedProperties: [
         'Cube3DRuntimeObject',
-        'Cube3DRuntimeObjectRenderer'
+        'Cube3DRuntimeObjectRenderer',
       ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
