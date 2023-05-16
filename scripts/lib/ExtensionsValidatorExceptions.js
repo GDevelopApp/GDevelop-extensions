@@ -156,6 +156,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Compressor: {
+      gdjsAllowedProperties: ['_pakoTools'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     CurvedMovement: {
       gdjsAllowedProperties: [
         '__curvedMovementExtension',
@@ -172,10 +178,22 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: ['getObjects', 'getSoundManager'],
       javaScriptObjectAllowedProperties: [],
     },
+    DiscordRichPresence: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['discordRP'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     FlexBox: {
       gdjsAllowedProperties: ['layoutContainers'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    Gamepads: {
+      gdjsAllowedProperties: ['_extensionController'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getElapsedTime'],
       javaScriptObjectAllowedProperties: [],
     },
     Geolocation: {
@@ -184,18 +202,17 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
-    MQTT: {
-      gdjsAllowedProperties: [],
-      gdjsEvtToolsAllowedProperties: ['mqtt'],
+    JointConnector: {
+      gdjsAllowedProperties: ['LinksManager', 'Physics2RuntimeBehavior'],
+      gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [
-        'prototype',
-        'getPrototypeOf',
-        'setPrototypeOf',
-        'getOwnPropertySymbols',
-        'getOwnPropertyDescriptor',
-        'getOwnPropertyDescriptors',
-      ],
+      javaScriptObjectAllowedProperties: [],
+    },
+    LinkTools: {
+      gdjsAllowedProperties: ['LinksManager'],
+      gdjsEvtToolsAllowedProperties: ['object'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
     },
     MarchingSquares: {
       gdjsAllowedProperties: [
@@ -216,6 +233,19 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    MQTT: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['mqtt'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [
+        'prototype',
+        'getPrototypeOf',
+        'setPrototypeOf',
+        'getOwnPropertySymbols',
+        'getOwnPropertyDescriptor',
+        'getOwnPropertyDescriptors',
+      ],
+    },
     NavMeshPathfinding: {
       gdjsAllowedProperties: ['__NavMeshPathfinding'],
       gdjsEvtToolsAllowedProperties: [],
@@ -227,6 +257,24 @@ const extensionsAllowedProperties = {
       gdjsAllowedProperties: ['_extensionNoise', 'randomInRange'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    ObjectSlicer: {
+      gdjsAllowedProperties: ['_objectSlicer'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    ObjectStack: {
+      gdjsAllowedProperties: [
+        'registerObjectDeletedFromSceneCallback',
+        'RuntimeObject',
+      ],
+      gdjsEvtToolsAllowedProperties: ['object'],
+      runtimeSceneAllowedProperties: [
+        '__allObjectStacks',
+        '__objectStacks_allUsedObjects',
+      ],
       javaScriptObjectAllowedProperties: [],
     },
     PixelPerfectMovement: {
@@ -259,12 +307,6 @@ const extensionsAllowedProperties = {
     },
     PokiGamesSDKHtml: {
       gdjsAllowedProperties: ['_pokiGamesSDKHtmlExtension'],
-      gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
-    },
-    TextEntryVirtualKeyboard: {
-      gdjsAllowedProperties: ['_extensionMobileKeyboard'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
@@ -306,10 +348,10 @@ const extensionsAllowedProperties = {
       ],
       javaScriptObjectAllowedProperties: [],
     },
-    Gamepads: {
-      gdjsAllowedProperties: ['_extensionController'],
+    ReadPixels: {
+      gdjsAllowedProperties: ['_readPixels'],
       gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: ['getElapsedTime'],
+      runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
     Sticker: {
@@ -324,27 +366,9 @@ const extensionsAllowedProperties = {
         'getPrototypeOf',
       ],
     },
-    ObjectStack: {
-      gdjsAllowedProperties: [
-        'registerObjectDeletedFromSceneCallback',
-        'RuntimeObject',
-      ],
-      gdjsEvtToolsAllowedProperties: ['object'],
-      runtimeSceneAllowedProperties: [
-        '__allObjectStacks',
-        '__objectStacks_allUsedObjects',
-      ],
-      javaScriptObjectAllowedProperties: [],
-    },
-    ReadPixels: {
-      gdjsAllowedProperties: ['_readPixels'],
+    TextEntryVirtualKeyboard: {
+      gdjsAllowedProperties: ['_extensionMobileKeyboard'],
       gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
-    },
-    LinkTools: {
-      gdjsAllowedProperties: ['LinksManager'],
-      gdjsEvtToolsAllowedProperties: ['object'],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
@@ -372,8 +396,8 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
-    YandexGamesSDK: {
-      gdjsAllowedProperties: ['_YandexGamesSDK'],
+    VoiceRecognition: {
+      gdjsAllowedProperties: ['_extensionVoiceRecognition'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
@@ -384,32 +408,8 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
-    Compressor: {
-      gdjsAllowedProperties: ['_pakoTools'],
-      gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
-    },
-    DiscordRichPresence: {
-      gdjsAllowedProperties: [],
-      gdjsEvtToolsAllowedProperties: ['discordRP'],
-      runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
-    },
-    VoiceRecognition: {
-      gdjsAllowedProperties: ['_extensionVoiceRecognition'],
-      gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
-    },
-    ObjectSlicer: {
-      gdjsAllowedProperties: ['_objectSlicer'],
-      gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
-    },
-    JointConnector: {
-      gdjsAllowedProperties: ['LinksManager', 'Physics2RuntimeBehavior'],
+    YandexGamesSDK: {
+      gdjsAllowedProperties: ['_YandexGamesSDK'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
