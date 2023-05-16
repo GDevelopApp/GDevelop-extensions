@@ -354,6 +354,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    ShakeObject3D: {
+      gdjsAllowedProperties: ['_shakeObjectExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     Sticker: {
       gdjsAllowedProperties: [
         'registerObjectDeletedFromSceneCallback',
