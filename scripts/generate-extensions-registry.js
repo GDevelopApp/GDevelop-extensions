@@ -20,6 +20,7 @@ const distBasePath = path.join(__dirname, '..', 'dist');
 const distDatabasesPath = path.join(distBasePath, 'extensions-database');
 const distExtensionsPath = path.join(distBasePath, 'extensions');
 const extensionsBaseUrl = 'https://resources.gdevelop-app.com/extensions';
+const extensionsWithoutValidation = new Set(['WithThreeJS']);
 
 /**
  * @param {string} path
@@ -123,22 +124,26 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
         const { name } = extension;
 
         // Check for errors:
-        const errors = await validateExtension(extensionWithFileInfo);
-        if (errors.length !== 0) {
-          shell.echo(
-            `\n❌ ${errors.length} Error${
-              errors.length > 1 ? 's' : ''
-            } found in extension '${name}':\n`
-          );
-          errors.forEach((error) => {
-            totalErrors++;
-            if (error.fix)
-              if (args['fix']) {
-                totalErrors--;
-                error.fix();
-              } else fixableErrors++;
-            shell.echo(`  ⟶ ❌${error.fix ? ' (🔧)' : ''} ${error.message}`);
-          });
+        if (extensionsWithoutValidation.has(name)) {
+          shell.echo(`ℹ️ Ignoring validation for extension "${name}".`);
+        } else {
+          const errors = await validateExtension(extensionWithFileInfo);
+          if (errors.length !== 0) {
+            shell.echo(
+              `\n❌ ${errors.length} Error${
+                errors.length > 1 ? 's' : ''
+              } found in extension '${name}':\n`
+            );
+            errors.forEach((error) => {
+              totalErrors++;
+              if (error.fix)
+                if (args['fix']) {
+                  totalErrors--;
+                  error.fix();
+                } else fixableErrors++;
+              shell.echo(`  ⟶ ❌${error.fix ? ' (🔧)' : ''} ${error.message}`);
+            });
+          }
         }
 
         // Override the base extensions when fixing
