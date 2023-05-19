@@ -8,7 +8,7 @@
   "name": "Gamepads",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/gamepad-variant-outline.svg",
   "shortDescription": "Add support for gamepads (or other controllers) to your game, giving access to information such as button presses, axis positions, trigger pressure, etc...",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": [
     "Add support for gamepads (or other controllers).",
     "",
@@ -112,11 +112,11 @@
       "objectGroups": []
     },
     {
-      "description": "Get the force value of a gamepad stick.\n0 is stick on default position, 1 is at the maximum.",
-      "fullName": "Value of a stick force",
-      "functionType": "Expression",
+      "description": "the force of gamepad stick (from 0 to 1).",
+      "fullName": "Stick force",
+      "functionType": "ExpressionAndCondition",
       "name": "StickForce",
-      "sentence": "Player _PARAM1_ push axis _PARAM2_ to _PARAM3_",
+      "sentence": "the gamepad _PARAM1_ _PARAM2_ stick force",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -184,10 +184,51 @@
     },
     {
       "description": "Get the rotation value of a gamepad stick.\nIf the deadzone value is high, the angle value is rounded to main axes, left, left, up, down.\nAn zero deadzone value give a total freedom on the angle value.",
-      "fullName": "Value of a stick rotation",
+      "fullName": "Value of a stick rotation (deprecated)",
       "functionType": "Expression",
       "name": "StickRotationValue",
+      "private": true,
       "sentence": "Player _PARAM1_ push axis _PARAM2_ to _PARAM3_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "Gamepads::StickAngle(GetArgumentAsNumber(\"player_ID\"), GetArgumentAsString(\"stick\"))"
+              ]
+            }
+          ]
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "type": "expression"
+        },
+        {
+          "description": "Stick: \"Left\" or \"Right\"",
+          "name": "stick",
+          "supplementaryInformation": "[\"Left\",\"Right\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the angle of a gamepad stick.\nIf the deadzone value is high, the angle value is rounded to main axes, left, left, up, down.\nAn zero deadzone value give a total freedom on the angle value.",
+      "fullName": "Stick angle",
+      "functionType": "Expression",
+      "name": "StickAngle",
+      "sentence": "",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -252,9 +293,10 @@
     },
     {
       "description": "Get the value of axis of a gamepad stick.",
-      "fullName": "Value of a gamepad axis",
+      "fullName": "Value of a gamepad axis (deprecated)",
       "functionType": "Expression",
       "name": "AxisValue",
+      "private": true,
       "sentence": "Player _PARAM1_ push axis _PARAM2_ to _PARAM3_",
       "events": [
         {
@@ -394,6 +436,120 @@
           "description": "Direction",
           "name": "direction",
           "supplementaryInformation": "[\"Up\",\"Down\",\"Left\",\"Right\",\"Horizontal\",\"Vertical\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the gamepad stick position on X axis (from -1 at the left to 1 at the right).",
+      "fullName": "Stick X position",
+      "functionType": "Expression",
+      "name": "StickX",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "/** @type {Gamepad[]} */\r",
+            "const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r",
+            "\r",
+            "//Get function parameters\r",
+            "const playerId = eventsFunctionContext.getArgument(\"Gamepad\") - 1;\r",
+            "const stick = eventsFunctionContext.getArgument(\"Stick\").toLowerCase();\r",
+            "\r",
+            "if (playerId < 0 || playerId > 4) {\r",
+            "    console.error('Parameter gamepad identifier is not valid in expression: \"Value of a gamepad axis\"');\r",
+            "    return;\r",
+            "}\r",
+            "if (stick != \"left\" && stick != \"right\") {\r",
+            "    console.error('Parameter stick is not valid in expression: \"Value of a gamepad axis\"');\r",
+            "    return;\r",
+            "}\r",
+            "const gamepad = gamepads[playerId];\r",
+            "\r",
+            "//we need keep this condition because when use have not yet plug her controller we can't get the controller in the gamepad variable.\r",
+            "if (gamepad == null) return;\r",
+            "\r",
+            "const axisIndex = stick === 'right' ? 2 : 0;\r",
+            "eventsFunctionContext.returnValue = gdjs._extensionController.getNormalizedAxisValue(gamepad.axes[axisIndex], playerId);\r",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "Gamepad",
+          "type": "expression"
+        },
+        {
+          "description": "Stick: \"Left\" or \"Right\"",
+          "name": "Stick",
+          "supplementaryInformation": "[\"Left\",\"Right\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the gamepad stick position on Y axis (from -1 at the top to 1 at the bottom).",
+      "fullName": "Stick Y position",
+      "functionType": "Expression",
+      "name": "StickY",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "/** @type {Gamepad[]} */\r",
+            "const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r",
+            "\r",
+            "//Get function parameters\r",
+            "const playerId = eventsFunctionContext.getArgument(\"Gamepad\") - 1;\r",
+            "const stick = eventsFunctionContext.getArgument(\"Stick\").toLowerCase();\r",
+            "\r",
+            "if (playerId < 0 || playerId > 4) {\r",
+            "    console.error('Parameter gamepad identifier is not valid in expression: \"Value of a gamepad axis\"');\r",
+            "    return;\r",
+            "}\r",
+            "if (stick != \"left\" && stick != \"right\") {\r",
+            "    console.error('Parameter stick is not valid in expression: \"Value of a gamepad axis\"');\r",
+            "    return;\r",
+            "}\r",
+            "const gamepad = gamepads[playerId];\r",
+            "\r",
+            "//we need keep this condition because when use have not yet plug her controller we can't get the controller in the gamepad variable.\r",
+            "if (gamepad == null) return;\r",
+            "\r",
+            "const axisIndex = stick === 'right' ? 3 : 1;\r",
+            "eventsFunctionContext.returnValue = gdjs._extensionController.getNormalizedAxisValue(gamepad.axes[axisIndex], playerId);\r",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "Gamepad",
+          "type": "expression"
+        },
+        {
+          "description": "Stick: \"Left\" or \"Right\"",
+          "name": "Stick",
+          "supplementaryInformation": "[\"Left\",\"Right\"]",
           "type": "stringWithSelector"
         }
       ],
