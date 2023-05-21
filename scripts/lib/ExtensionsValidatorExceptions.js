@@ -43,6 +43,7 @@ const lifecycleFunctions = new Set([
   'onSceneResumed',
   'onScenePostEvents',
   'onScenePreEvents',
+  'onHotReloading',
 ]);
 
 /**

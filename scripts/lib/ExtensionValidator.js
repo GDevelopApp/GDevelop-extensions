@@ -28,16 +28,23 @@ const loadRules = (async function loadRules() {
 async function validateExtension(extensionWithFileInfo) {
   /** @type {Error[]} */
   const errors = [];
-  const { eventsBasedBehaviors, eventsFunctions } =
+  const { eventsBasedBehaviors, eventsBasedObjects, eventsFunctions } =
     extensionWithFileInfo.extension;
 
   /**
    * A list of all events functions of the extension.
    * @type {EventsFunction[]}
    */
-  const allEventsFunctions = eventsFunctions.concat(
-    eventsBasedBehaviors.flatMap(({ eventsFunctions }) => eventsFunctions)
+  const behaviorFunctions = eventsBasedBehaviors.flatMap(
+    ({ eventsFunctions }) => eventsFunctions
   );
+  const objectFunctions = eventsBasedObjects
+    ? eventsBasedObjects.flatMap(({ eventsFunctions }) => eventsFunctions)
+    : [];
+  const allEventsFunctions = [];
+  Array.prototype.push.apply(allEventsFunctions, eventsFunctions);
+  Array.prototype.push.apply(allEventsFunctions, behaviorFunctions);
+  Array.prototype.push.apply(allEventsFunctions, objectFunctions);
 
   /**
    * A list of all events functions that will be used by extension users (non-lifecycle and non-private functions).
