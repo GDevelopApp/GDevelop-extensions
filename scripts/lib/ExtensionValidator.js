@@ -31,16 +31,16 @@ async function validateExtension(extensionWithFileInfo) {
   const { eventsBasedBehaviors, eventsBasedObjects, eventsFunctions } =
     extensionWithFileInfo.extension;
 
-  /**
-   * A list of all events functions of the extension.
-   * @type {EventsFunction[]}
-   */
   const behaviorFunctions = eventsBasedBehaviors.flatMap(
     ({ eventsFunctions }) => eventsFunctions
   );
   const objectFunctions = eventsBasedObjects
     ? eventsBasedObjects.flatMap(({ eventsFunctions }) => eventsFunctions)
     : [];
+  /**
+   * A list of all events functions of the extension.
+   * @type {EventsFunction[]}
+   */
   const allEventsFunctions = [];
   Array.prototype.push.apply(allEventsFunctions, eventsFunctions);
   Array.prototype.push.apply(allEventsFunctions, behaviorFunctions);
