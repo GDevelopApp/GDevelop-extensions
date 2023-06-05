@@ -1,6 +1,7 @@
 /** @typedef {import("../../types").Extension} Extension */
 /** @typedef {import("../../types").EventsFunction} EventsFunction */
 /** @typedef {import("../../types").EventsBasedBehaviors} EventsBasedBehaviors */
+/** @typedef {import("../../types").EventsBasedObjects} EventsBasedObjects */
 /** @typedef {import("../../types").Parameter} Parameter */
 
 /**
@@ -17,6 +18,8 @@ const NECESSARY_FIELDS = {
   ACTION_WITH_OPERATOR: ['name', 'getterName'],
   /** @type {Partial<keyof EventsBasedBehaviors>[]} */
   BEHAVIOR: ['name', 'fullName', 'description'],
+  /** @type {Partial<keyof EventsBasedObjects>[]} */
+  OBJECT: ['name', 'fullName', 'description'],
   /** @type {Partial<keyof Parameter>[]} */
   PARAMETER: ['description', 'name', 'type'],
 };
@@ -88,6 +91,16 @@ async function validate({ extension, publicEventsFunctions, onError }) {
       `the behavior '${behavior.name}'`,
       onError
     );
+  if (extension.eventsBasedObjects) {
+    for (const object of extension.eventsBasedObjects) {
+      checkForFilledOutString(
+        object,
+        NECESSARY_FIELDS.OBJECT,
+        `the object '${object.name}'`,
+        onError
+      );
+    }
+  }
 }
 
 /** @type {import("./rule").RuleModule} */

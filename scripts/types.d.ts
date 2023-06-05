@@ -98,12 +98,21 @@ export interface EventsBasedBehaviors {
   eventsFunctions: EventsFunction[];
 }
 
+export interface EventsBasedObjects {
+  description: string;
+  fullName: string;
+  name: string;
+  defaultName: string;
+  eventsFunctions: EventsFunction[];
+}
+
 export interface Extension
   extends ExtensionAndShortHeaderFields,
     ExtensionAndHeaderFields {
   tags: string | string[];
   eventsFunctions: EventsFunction[];
   eventsBasedBehaviors: EventsBasedBehaviors[];
+  eventsBasedObjects?: EventsBasedObjects[];
 }
 
 export interface ExtensionWithProperFileInfo {
