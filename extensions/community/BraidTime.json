@@ -1,0 +1,165 @@
+{
+  "author": "",
+  "category": "Game mechanic",
+  "extensionNamespace": "",
+  "fullName": "Braid Time Mechanic",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLXJld2luZC1vdXRsaW5lIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEwLDkuOUw3LDEyTDEwLDE0LjFWOS45TTE5LDkuOUwxNiwxMkwxOSwxNC4xVjkuOU0xMiw2VjE4TDMuNSwxMkwxMiw2TTIxLDZWMThMMTIuNSwxMkwyMSw2WiIgLz48L3N2Zz4=",
+  "name": "BraidTime",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/b09db7a84a598912521b4f7f31a31b1d6d9c27745458743e049cde5ebdb810b8_rewind-outline.svg",
+  "shortDescription": "Record and rewind player actions.",
+  "version": "1.0.0",
+  "description": [
+    "Record a character's movement.",
+    "",
+    "record [object] - records the movement of an object.",
+    "replay [object] - replays up to 150 previous frames (~2.5 seconds) in reverse.",
+    "",
+    "Extension extracted from Joshua's example (source https://github.com/j-c-levin/braid-time-mechanic.git)."
+  ],
+  "tags": [
+    "Rewind",
+    "reverse",
+    "braid time",
+    "prince of persia",
+    "replay"
+  ],
+  "authorIds": [
+    "6dgsuavVqJgA9oqJ2ypmkXZWuyY2",
+    "QrZ8Ol93yOdDKrrOEE8oP9t8xq03"
+  ],
+  "dependencies": [],
+  "eventsFunctions": [
+    {
+      "description": "Records the object's actions.",
+      "fullName": "Record",
+      "functionType": "Action",
+      "name": "Recorder",
+      "sentence": "Record _PARAM1_",
+      "events": [
+        {
+          "colorB": 228,
+          "colorG": 176,
+          "colorR": 74,
+          "creationTime": 0,
+          "name": "Store the object's data",
+          "source": "",
+          "type": "BuiltinCommonInstructions::Group",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = eventsFunctionContext.getObjects(\"Object\")[0]",
+                "",
+                "let data = object.getVariables().get(\"record_data\").getAsString()",
+                "",
+                "if (data === \"0\") {",
+                "    data = JSON.stringify(\"\")",
+                "}",
+                "",
+                "const frame = {",
+                "    xPos: object.getX(),",
+                "    yPos: object.getY(),",
+                "    animationName: object.getAnimationName(),",
+                "    animationFrame: object.getAnimationFrame()",
+                "}",
+                "",
+                "// // Don't store stationary frames - use with the animate character action",
+                "// if (frame.animationName === \"idle\") {",
+                "//     return",
+                "// }",
+                "",
+                "let  newdata = Array.from(JSON.parse(data))",
+                "",
+                "// Add the frame to the end of the array",
+                "newdata.push(frame)",
+                "",
+                "// Remove the first/oldest frame",
+                "if (newdata.length > 150) {",
+                "    newdata.shift()",
+                "}",
+                "",
+                "object.getVariables().get(\"record_data\").setString(JSON.stringify(newdata))"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": []
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object to record",
+          "name": "Object",
+          "type": "objectList"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Replays the object's actions.",
+      "fullName": "Replay",
+      "functionType": "Action",
+      "name": "Replayer",
+      "sentence": "Replay _PARAM1_",
+      "events": [
+        {
+          "colorB": 228,
+          "colorG": 176,
+          "colorR": 74,
+          "creationTime": 0,
+          "name": "Replay the object's data",
+          "source": "",
+          "type": "BuiltinCommonInstructions::Group",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = eventsFunctionContext.getObjects(\"Object\")[0]",
+                "",
+                "let data = object.getVariables().get(\"record_data\").getAsString()",
+                "",
+                "if (data.length === 0 || data === \"0\") {",
+                "    return",
+                "}",
+                "",
+                "let  newdata = Array.from(JSON.parse(data))",
+                "",
+                "if (newdata.length === 0 || data === \"0\") {",
+                "    return",
+                "}",
+                "",
+                "// Get and remove the newest/last frame in the array ",
+                "const frame = newdata.pop()",
+                "",
+                "// Apply the frame to the scene",
+                "object.setX(frame.xPos)",
+                "object.setY(frame.yPos)",
+                "object.setAnimationName(frame.animationName)",
+                "object.setAnimationFrame(frame.animationFrame)",
+                "",
+                "object.getVariables().get(\"record_data\").setString(JSON.stringify(newdata))"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": []
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object to replay",
+          "name": "Object",
+          "type": "objectList"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
+}
