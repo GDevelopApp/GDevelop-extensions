@@ -41,81 +41,444 @@
   "dependencies": [],
   "eventsFunctions": [
     {
-      "description": "Move along the rectangular border of an object. Run once, or every time the center object moves.",
-      "fullName": "Move along the rectangular border of an object",
-      "functionType": "Action",
-      "name": "MoveAlongObject",
-      "sentence": "Move _PARAM1_ along the rectangular border of _PARAM3_",
+      "description": "Distance from object to the closest edge of second object",
+      "fullName": "Distance from object to the closest edge of second object",
+      "functionType": "Expression",
+      "name": "DistanceToClosestEdge",
+      "private": true,
+      "sentence": "Distance from _PARAM1_ to the closest edge of _PARAM2_ ",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::ForEach",
-          "object": "CenterObject",
-          "conditions": [],
-          "actions": [],
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "If point is inside rectangle, just use min distance"
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "CenterX"
+              },
+              "parameters": [
+                "MovingObject",
+                ">=",
+                "CenterObject.BoundingBoxLeft()"
+              ]
+            },
+            {
+              "type": {
+                "value": "CenterX"
+              },
+              "parameters": [
+                "MovingObject",
+                "<=",
+                "CenterObject.BoundingBoxRight()"
+              ]
+            },
+            {
+              "type": {
+                "value": "CenterY"
+              },
+              "parameters": [
+                "MovingObject",
+                ">=",
+                "CenterObject.BoundingBoxTop()"
+              ]
+            },
+            {
+              "type": {
+                "value": "CenterY"
+              },
+              "parameters": [
+                "MovingObject",
+                "<=",
+                "CenterObject.BoundingBoxBottom()"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "min(\nmin(\nMovingObject.BoundingBoxCenterY() - CenterObject.BoundingBoxTop(), \nCenterObject.BoundingBoxBottom() - MovingObject.BoundingBoxCenterY()),\nmin(\nMovingObject.BoundingBoxCenterX() - CenterObject.BoundingBoxLeft(), \nCenterObject.BoundingBoxRight() - MovingObject.BoundingBoxCenterX())\n)"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "If point is outside rectangle, find distance to clamped position on rectangle"
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Or"
+              },
+              "parameters": [],
+              "subInstructions": [
+                {
+                  "type": {
+                    "value": "CenterX"
+                  },
+                  "parameters": [
+                    "MovingObject",
+                    "<",
+                    "CenterObject.BoundingBoxLeft()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "CenterX"
+                  },
+                  "parameters": [
+                    "MovingObject",
+                    ">",
+                    "CenterObject.BoundingBoxRight()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "CenterY"
+                  },
+                  "parameters": [
+                    "MovingObject",
+                    "<",
+                    "CenterObject.BoundingBoxTop()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "CenterY"
+                  },
+                  "parameters": [
+                    "MovingObject",
+                    ">",
+                    "CenterObject.BoundingBoxBottom()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "DistanceBetweenPositions(\nMovingObject.BoundingBoxCenterX(),\nMovingObject.BoundingBoxCenterY(),\nclamp(MovingObject.BoundingBoxCenterX(), CenterObject.BoundingBoxLeft(), CenterObject.BoundingBoxRight()),\nclamp(MovingObject.BoundingBoxCenterY(), CenterObject.BoundingBoxTop(), CenterObject.BoundingBoxBottom())\n)"
+              ]
+            }
+          ]
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Center object",
+          "name": "CenterObject",
+          "type": "objectList"
+        },
+        {
+          "description": "Moving object",
+          "name": "MovingObject",
+          "type": "objectList"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Update rectangular movement to follow the border of an object. Run once, or every time the center object moves.",
+      "fullName": "Update rectangular movement to follow the border of an object",
+      "functionType": "Action",
+      "name": "MoveAlongBorderOfObject",
+      "sentence": "Update rectangular movement  of _PARAM1_ to follow the border of _PARAM3_",
+      "events": [
+        {
+          "colorB": 228,
+          "colorG": 176,
+          "colorR": 74,
+          "creationTime": 0,
+          "name": "Create object link (if one has not been created)",
+          "source": "",
+          "type": "BuiltinCommonInstructions::Group",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
                   "type": {
-                    "value": "LinkedObjects::PickObjectsLinkedTo"
+                    "value": "ObjectVariableAsBoolean"
                   },
                   "parameters": [
-                    "",
                     "MovingObject",
-                    "CenterObject",
-                    ""
+                    "__RectangleMovement.Linked",
+                    "False"
                   ]
                 }
               ],
-              "actions": [
+              "actions": [],
+              "events": [
                 {
-                  "type": {
-                    "value": "RectangleMovement::RectangleMovement::SetTop"
-                  },
-                  "parameters": [
-                    "MovingObject",
-                    "RectangleMovement",
-                    "CenterObject.BoundingBoxTop()",
-                    ""
-                  ]
-                },
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Set a valid initial value by picking any Center object",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::ForEach",
+                      "object": "MovingObject",
+                      "conditions": [],
+                      "actions": [],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "ModVarObjet"
+                              },
+                              "parameters": [
+                                "MovingObject",
+                                "__RectangleMovement.DistanceToClosestEdge",
+                                "=",
+                                "RectangleMovement::DistanceToClosestEdge(CenterObject, MovingObject)"
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "colorB": 228,
+                          "colorG": 176,
+                          "colorR": 74,
+                          "creationTime": 0,
+                          "name": "Update value if distance is lower than existing minimum",
+                          "source": "",
+                          "type": "BuiltinCommonInstructions::Group",
+                          "events": [
+                            {
+                              "type": "BuiltinCommonInstructions::ForEach",
+                              "object": "CenterObject",
+                              "conditions": [],
+                              "actions": [],
+                              "events": [
+                                {
+                                  "type": "BuiltinCommonInstructions::Standard",
+                                  "conditions": [],
+                                  "actions": [
+                                    {
+                                      "type": {
+                                        "value": "ModVarObjet"
+                                      },
+                                      "parameters": [
+                                        "MovingObject",
+                                        "__RectangleMovement.DistanceToClosestEdge",
+                                        "=",
+                                        "min(MovingObject.Variable(__RectangleMovement.DistanceToClosestEdge), RectangleMovement::DistanceToClosestEdge(CenterObject, MovingObject))"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "parameters": []
+                        },
+                        {
+                          "colorB": 228,
+                          "colorG": 176,
+                          "colorR": 74,
+                          "creationTime": 0,
+                          "name": "Link objects that have the closest distance",
+                          "source": "",
+                          "type": "BuiltinCommonInstructions::Group",
+                          "events": [
+                            {
+                              "type": "BuiltinCommonInstructions::ForEach",
+                              "object": "CenterObject",
+                              "conditions": [],
+                              "actions": [],
+                              "events": [
+                                {
+                                  "type": "BuiltinCommonInstructions::Comment",
+                                  "color": {
+                                    "b": 109,
+                                    "g": 230,
+                                    "r": 255,
+                                    "textB": 0,
+                                    "textG": 0,
+                                    "textR": 0
+                                  },
+                                  "comment": "Link the MovingObject that has the shortest distance (and don't create more links even if another object has the same distance)"
+                                },
+                                {
+                                  "type": "BuiltinCommonInstructions::Standard",
+                                  "conditions": [
+                                    {
+                                      "type": {
+                                        "value": "ObjectVariableAsBoolean"
+                                      },
+                                      "parameters": [
+                                        "MovingObject",
+                                        "__RectangleMovement.Linked",
+                                        "False"
+                                      ]
+                                    },
+                                    {
+                                      "type": {
+                                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                                      },
+                                      "parameters": [
+                                        "RectangleMovement::DistanceToClosestEdge(CenterObject, MovingObject)",
+                                        "=",
+                                        "MovingObject.Variable(__RectangleMovement.DistanceToClosestEdge)"
+                                      ]
+                                    }
+                                  ],
+                                  "actions": [
+                                    {
+                                      "type": {
+                                        "value": "LinkedObjects::LinkObjects"
+                                      },
+                                      "parameters": [
+                                        "",
+                                        "MovingObject",
+                                        "CenterObject"
+                                      ]
+                                    },
+                                    {
+                                      "type": {
+                                        "value": "SetObjectVariableAsBoolean"
+                                      },
+                                      "parameters": [
+                                        "MovingObject",
+                                        "__RectangleMovement.Linked",
+                                        "True"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "parameters": []
+                        }
+                      ]
+                    }
+                  ],
+                  "parameters": []
+                }
+              ]
+            }
+          ],
+          "parameters": []
+        },
+        {
+          "colorB": 228,
+          "colorG": 176,
+          "colorR": 74,
+          "creationTime": 0,
+          "name": "Update rectangular movement to follow the border of object",
+          "source": "",
+          "type": "BuiltinCommonInstructions::Group",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::ForEach",
+              "object": "CenterObject",
+              "conditions": [],
+              "actions": [],
+              "events": [
                 {
-                  "type": {
-                    "value": "RectangleMovement::RectangleMovement::SetBottom"
-                  },
-                  "parameters": [
-                    "MovingObject",
-                    "RectangleMovement",
-                    "CenterObject.BoundingBoxBottom()",
-                    ""
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "RectangleMovement::RectangleMovement::SetLeft"
-                  },
-                  "parameters": [
-                    "MovingObject",
-                    "RectangleMovement",
-                    "CenterObject.BoundingBoxLeft()",
-                    ""
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "RectangleMovement::RectangleMovement::SetRight"
-                  },
-                  "parameters": [
-                    "MovingObject",
-                    "RectangleMovement",
-                    "CenterObject.BoundingBoxRight()",
-                    ""
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "LinkedObjects::PickObjectsLinkedTo"
+                      },
+                      "parameters": [
+                        "",
+                        "MovingObject",
+                        "CenterObject",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "RectangleMovement::RectangleMovement::SetTop"
+                      },
+                      "parameters": [
+                        "MovingObject",
+                        "RectangleMovement",
+                        "CenterObject.BoundingBoxTop()",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "RectangleMovement::RectangleMovement::SetBottom"
+                      },
+                      "parameters": [
+                        "MovingObject",
+                        "RectangleMovement",
+                        "CenterObject.BoundingBoxBottom()",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "RectangleMovement::RectangleMovement::SetLeft"
+                      },
+                      "parameters": [
+                        "MovingObject",
+                        "RectangleMovement",
+                        "CenterObject.BoundingBoxLeft()",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "RectangleMovement::RectangleMovement::SetRight"
+                      },
+                      "parameters": [
+                        "MovingObject",
+                        "RectangleMovement",
+                        "CenterObject.BoundingBoxRight()",
+                        ""
+                      ]
+                    }
                   ]
                 }
               ]
             }
-          ]
+          ],
+          "parameters": []
         }
       ],
       "parameters": [
@@ -139,21 +502,65 @@
       "objectGroups": []
     },
     {
-      "description": "Create an object link between two objects that are colliding with each other.",
-      "fullName": "Create object link between colliding objects",
+      "description": "Move to the nearest corner of the center object.",
+      "fullName": "Move to the nearest corner of the center object",
       "functionType": "Action",
-      "name": "LinkCollidingObjects",
-      "sentence": "Create an object link between _PARAM1_ and the _PARAM2_ that are colliding with each other",
+      "name": "MoveToNearestCorner",
+      "sentence": "Move _PARAM1_ to the nearest corner of _PARAM3_",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::ForEach",
-          "object": "FirstObject",
-          "conditions": [],
-          "actions": [],
+          "colorB": 228,
+          "colorG": 176,
+          "colorR": 74,
+          "creationTime": 0,
+          "name": "Create a link to the closest object",
+          "source": "",
+          "type": "BuiltinCommonInstructions::Group",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "ObjectVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "MovingObject",
+                    "__RectangleMovement.Linked",
+                    "False"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "RectangleMovement::MoveAlongBorderOfObject"
+                  },
+                  "parameters": [
+                    "",
+                    "MovingObject",
+                    "RectangleMovement",
+                    "CenterObject",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": []
+        },
+        {
+          "colorB": 228,
+          "colorG": 176,
+          "colorR": 74,
+          "creationTime": 0,
+          "name": "Move to nearest corner",
+          "source": "",
+          "type": "BuiltinCommonInstructions::Group",
           "events": [
             {
               "type": "BuiltinCommonInstructions::ForEach",
-              "object": "SecondObject",
+              "object": "MovingObject",
               "conditions": [],
               "actions": [],
               "events": [
@@ -162,84 +569,234 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "ObjectVariableAsBoolean"
+                        "value": "LinkedObjects::PickObjectsLinkedTo"
                       },
                       "parameters": [
-                        "FirstObject",
-                        "__RectangleMovement.Linked",
-                        "False"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "ObjectVariableAsBoolean"
-                      },
-                      "parameters": [
-                        "SecondObject",
-                        "__RectangleMovement.Linked",
-                        "False"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "CollisionNP"
-                      },
-                      "parameters": [
-                        "FirstObject",
-                        "SecondObject",
                         "",
-                        "",
+                        "CenterObject",
+                        "MovingObject",
                         ""
                       ]
                     }
                   ],
-                  "actions": [
+                  "actions": [],
+                  "events": [
                     {
-                      "type": {
-                        "value": "LinkedObjects::LinkObjects"
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
                       },
-                      "parameters": [
-                        "",
-                        "FirstObject",
-                        "SecondObject"
+                      "comment": "Distance to TopLeft (don't use a condition on the first check so the variable starts with a valid corner)"
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "ModVarObjet"
+                          },
+                          "parameters": [
+                            "MovingObject",
+                            "__RectangleMovement.ClosestCornerDistance",
+                            "=",
+                            "DistanceBetweenPositions(MovingObject.BoundingBoxCenterX(), MovingObject.BoundingBoxCenterY(), CenterObject.BoundingBoxLeft(), CenterObject.BoundingBoxTop())"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "RectangleMovement::RectangleMovement::TeleportToCorner"
+                          },
+                          "parameters": [
+                            "MovingObject",
+                            "RectangleMovement",
+                            "\"Top-left corner\"",
+                            ""
+                          ]
+                        }
                       ]
                     },
                     {
-                      "type": {
-                        "value": "SetObjectVariableAsBoolean"
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
                       },
-                      "parameters": [
-                        "SecondObject",
-                        "__RectangleMovement.Linked",
-                        "True"
+                      "comment": "Distance to TopRight"
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                          },
+                          "parameters": [
+                            "DistanceBetweenPositions(MovingObject.BoundingBoxCenterX(), MovingObject.BoundingBoxCenterY(), CenterObject.BoundingBoxRight(), CenterObject.BoundingBoxTop())",
+                            "<",
+                            "MovingObject.Variable(__RectangleMovement.ClosestCornerDistance)"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "ModVarObjet"
+                          },
+                          "parameters": [
+                            "MovingObject",
+                            "__RectangleMovement.ClosestCornerDistance",
+                            "=",
+                            "DistanceBetweenPositions(MovingObject.BoundingBoxCenterX(), MovingObject.BoundingBoxCenterY(), CenterObject.BoundingBoxRight(), CenterObject.BoundingBoxTop())"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "RectangleMovement::RectangleMovement::TeleportToCorner"
+                          },
+                          "parameters": [
+                            "MovingObject",
+                            "RectangleMovement",
+                            "\"Top-right corner\"",
+                            ""
+                          ]
+                        }
                       ]
                     },
                     {
-                      "type": {
-                        "value": "SetObjectVariableAsBoolean"
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
                       },
-                      "parameters": [
-                        "FirstObject",
-                        "__RectangleMovement.Linked",
-                        "True"
+                      "comment": "Distance to BottomLeft"
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                          },
+                          "parameters": [
+                            "DistanceBetweenPositions(MovingObject.BoundingBoxCenterX(), MovingObject.BoundingBoxCenterY(), CenterObject.BoundingBoxLeft(), CenterObject.BoundingBoxBottom())",
+                            "<",
+                            "MovingObject.Variable(__RectangleMovement.ClosestCornerDistance)"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "ModVarObjet"
+                          },
+                          "parameters": [
+                            "MovingObject",
+                            "__RectangleMovement.ClosestCornerDistance",
+                            "=",
+                            "DistanceBetweenPositions(MovingObject.BoundingBoxCenterX(), MovingObject.BoundingBoxCenterY(), CenterObject.BoundingBoxLeft(), CenterObject.BoundingBoxBottom())"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "RectangleMovement::RectangleMovement::TeleportToCorner"
+                          },
+                          "parameters": [
+                            "MovingObject",
+                            "RectangleMovement",
+                            "\"Bottom-left corner\"",
+                            ""
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
+                      },
+                      "comment": "Distance to BottomRight"
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                          },
+                          "parameters": [
+                            "DistanceBetweenPositions(MovingObject.BoundingBoxCenterX(), MovingObject.BoundingBoxCenterY(), CenterObject.BoundingBoxRight(), CenterObject.BoundingBoxBottom())",
+                            "<",
+                            "MovingObject.Variable(__RectangleMovement.ClosestCornerDistance)"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "ModVarObjet"
+                          },
+                          "parameters": [
+                            "MovingObject",
+                            "__RectangleMovement.ClosestCornerDistance",
+                            "=",
+                            "DistanceBetweenPositions(MovingObject.BoundingBoxCenterX(), MovingObject.BoundingBoxCenterY(), CenterObject.BoundingBoxRight(), CenterObject.BoundingBoxBottom())"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "RectangleMovement::RectangleMovement::TeleportToCorner"
+                          },
+                          "parameters": [
+                            "MovingObject",
+                            "RectangleMovement",
+                            "\"Bottom-right corner\"",
+                            ""
+                          ]
+                        }
                       ]
                     }
                   ]
                 }
               ]
             }
-          ]
+          ],
+          "parameters": []
         }
       ],
       "parameters": [
         {
-          "description": "First object",
-          "name": "FirstObject",
+          "description": "Moving object",
+          "name": "MovingObject",
           "type": "objectList"
         },
         {
-          "description": "Second object",
-          "name": "SecondObject",
+          "description": "Rectangle Movement (required)",
+          "name": "RectangleMovement",
+          "supplementaryInformation": "RectangleMovement::RectangleMovement",
+          "type": "behavior"
+        },
+        {
+          "description": "Center object",
+          "name": "CenterObject",
           "type": "objectList"
         }
       ],
@@ -297,8 +854,7 @@
                 "textG": 0,
                 "textR": 0
               },
-              "comment": "Set the initial state according to the configuration.",
-              "comment2": ""
+              "comment": "Set the initial state according to the configuration."
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -447,8 +1003,7 @@
                 "textG": 0,
                 "textR": 0
               },
-              "comment": "Update the rectangle when the object is moved outside of the behavior.",
-              "comment2": ""
+              "comment": "Update the rectangle when the object is moved outside of the behavior."
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -488,8 +1043,7 @@
                 "textG": 0,
                 "textR": 0
               },
-              "comment": "Move the object on the rectangular path.",
-              "comment2": ""
+              "comment": "Move the object on the rectangular path."
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -519,8 +1073,7 @@
                 "textG": 0,
                 "textR": 0
               },
-              "comment": "Save the position to detect when the object is moved outside of the behavior.",
-              "comment2": ""
+              "comment": "Save the position to detect when the object is moved outside of the behavior."
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -582,8 +1135,7 @@
                 "textG": 0,
                 "textR": 0
               },
-              "comment": "Step on the path.",
-              "comment2": ""
+              "comment": "Step on the path."
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
