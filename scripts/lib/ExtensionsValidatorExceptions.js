@@ -412,6 +412,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    TweenGroup: {
+      gdjsAllowedProperties: ['TweenRuntimeBehavior'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getObjects'],
+      javaScriptObjectAllowedProperties: [],
+    },
     VoiceRecognition: {
       gdjsAllowedProperties: ['_extensionVoiceRecognition'],
       gdjsEvtToolsAllowedProperties: [],
