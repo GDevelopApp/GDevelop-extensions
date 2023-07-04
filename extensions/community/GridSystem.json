@@ -1,0 +1,1998 @@
+{
+  "author": "",
+  "category": "Movement",
+  "extensionNamespace": "",
+  "fullName": "Grid system",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWdyaWQtbGFyZ2UiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNCwySDIwQTIsMiAwIDAsMSAyMiw0VjIwQTIsMiAwIDAsMSAyMCwyMkg0QzIuOTIsMjIgMiwyMS4xIDIsMjBWNEEyLDIgMCAwLDEgNCwyTTQsNFYxMUgxMVY0SDRNNCwyMEgxMVYxM0g0VjIwTTIwLDIwVjEzSDEzVjIwSDIwTTIwLDRIMTNWMTFIMjBWNFoiIC8+PC9zdmc+",
+  "name": "GridSystem",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/f70f7577000abf9f1547244d623aeb4f3f223ad7113371890503518be605cc27_grid-large.svg",
+  "shortDescription": "Controller for grid based systems.",
+  "version": "1.0.0",
+  "description": [
+    "Adds tools to make complex shapes and push them around with each other.",
+    "",
+    "**How to use:**",
+    "1. Add the `Grid object` behavior to all objects that can interact with each other.",
+    "2. Set the grid size with the `Set grid` action.",
+    "3. Connect objects together to make more complex Grobjects (see below)",
+    "4. Flag objects that you want to move with the `Flag for moving` action.",
+    "5. Use the `Calculate movement` action to calculate which objects will move.",
+    "6. Use the `Can move` condition on the objects, and move them accordingly.",
+    "",
+    "**Important!**",
+    "The extension often refers to things called \"grobject\". These are made of one or more connected objects with the `Grid object` behavior. Objects in the same grobject will stick to each other when calculating their movement.",
+    "It is important that you don't mix the two things together. An object is an object, and a grobject is one or more objects connected (yes. a single object on its own is also a grobject)!"
+  ],
+  "tags": [
+    "grid"
+  ],
+  "authorIds": [
+    "AX15J5TSnpSLUglk4nQVamviftr2"
+  ],
+  "dependencies": [],
+  "eventsFunctions": [
+    {
+      "description": "Set the grid's size across all scenes (globally).\nThis grid will only affect actions of this extension.",
+      "fullName": "Set the grid",
+      "functionType": "Action",
+      "name": "SetGrid",
+      "sentence": "Set the grid: _PARAM1_x_PARAM2_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "ModVarGlobal"
+              },
+              "parameters": [
+                "__GridSystem.Grid.Width",
+                "=",
+                "GetArgumentAsNumber(\"Width\")"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarGlobal"
+              },
+              "parameters": [
+                "__GridSystem.Grid.Height",
+                "=",
+                "GetArgumentAsNumber(\"Height\")"
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Width",
+          "name": "Width",
+          "type": "expression"
+        },
+        {
+          "description": "Height",
+          "name": "Height",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Calculate the movement of all grobjects.\nAll flagged grobjects (at least one flagged object) attempt to move one grid step in the specified direction, pushing other grobjects in the way.\nThis action does not make any of the objects actually move. It only calculates if the objects could move or not. To see the results, use the \"Can move\" condition on the objects.",
+      "fullName": "Calculate movement",
+      "functionType": "Action",
+      "name": "Calculate",
+      "sentence": "Calculate the movement of _PARAM1_ objects by moving all flagged grobjects one grid step in the _PARAM3_ direction",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 255,
+            "g": 255,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "1. For each flagged grobject.\n2. While there are still grobjects to check in RemainingGrobjects.\n3. Check next to (in the specified direction) each object in the currently checked grobject.\n   If the found object (if any) ...\n   * ... is from a different grobject than the one currently being checked, add its GrobjectIdentifier to RemainingGrobjects (so it will also be checked later).\n   * ... is static, stop checking this flagged grobject, and set all grobjects leading up to the static grobject to static.\n4. If no static grobjects were found, all objects checked are marked with CanMove."
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__GridSystem.MovedObjects",
+                "=",
+                "0"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "Turn the direction string into X and Y values"
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__GridSystem.Calculate.Direction.X",
+                "=",
+                "GridSystem::DirectionToPosition(\"X\", GetArgumentAsString(\"Direction\")) * GlobalVariable(__GridSystem.Grid.Width)"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__GridSystem.Calculate.Direction.Y",
+                "=",
+                "GridSystem::DirectionToPosition(\"Y\", GetArgumentAsString(\"Direction\")) * GlobalVariable(__GridSystem.Grid.Height)"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarSceneTxt"
+              },
+              "parameters": [
+                "__GridSystem.LastDirection",
+                "=",
+                "GetArgumentAsString(\"Direction\")"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::ForEach",
+          "object": "Group",
+          "conditions": [],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "If an object is set to static, set its grobject temporarily to static as well"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "ObjectVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "Group",
+                    "__GridSystem.Static",
+                    "True"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::Not"
+                  },
+                  "parameters": [],
+                  "subInstructions": [
+                    {
+                      "type": {
+                        "value": "VariableChildExists"
+                      },
+                      "parameters": [
+                        "__GridSystem.Calculate.Static",
+                        "Group.VariableString(__GridSystem.GrobjectIdentifier)"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetSceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__GridSystem.Calculate.Static[Group.VariableString(__GridSystem.GrobjectIdentifier)]",
+                    "True"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "If an object is set to flagged, set its grobject to flagged as well"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "ObjectVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "Group",
+                    "__GridSystem.Flagged",
+                    "True"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::Not"
+                  },
+                  "parameters": [],
+                  "subInstructions": [
+                    {
+                      "type": {
+                        "value": "VariableChildExists"
+                      },
+                      "parameters": [
+                        "__GridSystem.Calculate.Flagged",
+                        "Group.VariableString(__GridSystem.GrobjectIdentifier)"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetSceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__GridSystem.Calculate.Flagged[Group.VariableString(__GridSystem.GrobjectIdentifier)]",
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetObjectVariableAsBoolean"
+              },
+              "parameters": [
+                "Group",
+                "__GridSystem.Flagged",
+                "False"
+              ]
+            },
+            {
+              "type": {
+                "value": "SetObjectVariableAsBoolean"
+              },
+              "parameters": [
+                "Group",
+                "__GridSystem.CanMove",
+                "False"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "For every flagged grobject, start the whole process by adding them to RemainingGrobjects and Added"
+        },
+        {
+          "type": "BuiltinCommonInstructions::ForEachChildVariable",
+          "iterableVariableName": "__GridSystem.Calculate.Flagged",
+          "valueIteratorVariableName": "__GridSystem.Ignore",
+          "keyIteratorVariableName": "__GridSystem.Calculate.GrobjectIdentifier",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SceneVariablePushString"
+              },
+              "parameters": [
+                "__GridSystem.Calculate.RemainingGrobjects",
+                "VariableString(__GridSystem.Calculate.GrobjectIdentifier)"
+              ]
+            },
+            {
+              "type": {
+                "value": "SetSceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__GridSystem.Calculate.Added[VariableString(__GridSystem.Calculate.GrobjectIdentifier)]",
+                "True"
+              ]
+            },
+            {
+              "type": {
+                "value": "SetSceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__GridSystem.Stop",
+                ""
+              ]
+            }
+          ],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Do these while there are still stuff to calculate in RemainingGrobjects"
+            },
+            {
+              "infiniteLoopWarning": true,
+              "type": "BuiltinCommonInstructions::While",
+              "whileConditions": [
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::CompareNumbers"
+                  },
+                  "parameters": [
+                    "VariableChildCount(__GridSystem.Calculate.RemainingGrobjects)",
+                    "!=",
+                    "0"
+                  ]
+                }
+              ],
+              "conditions": [],
+              "actions": [],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Comment",
+                  "color": {
+                    "b": 109,
+                    "g": 230,
+                    "r": 255,
+                    "textB": 0,
+                    "textG": 0,
+                    "textR": 0
+                  },
+                  "comment": "Add the first grobject's identifier to its own FamilyLine"
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SceneVariablePushString"
+                      },
+                      "parameters": [
+                        "__GridSystem.Calculate.FamilyLine[SceneVariableFirstString(__GridSystem.Calculate.RemainingGrobjects)]",
+                        "SceneVariableFirstString(__GridSystem.Calculate.RemainingGrobjects)"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
+                      },
+                      "comment": "Check for an object next to each object in the grobject"
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "VarObjetTxt"
+                          },
+                          "parameters": [
+                            "Group",
+                            "__GridSystem.GrobjectIdentifier",
+                            "=",
+                            "SceneVariableFirstString(__GridSystem.Calculate.RemainingGrobjects)"
+                          ]
+                        }
+                      ],
+                      "actions": [],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::ForEach",
+                          "object": "Group",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "SceneVariableAsBoolean"
+                              },
+                              "parameters": [
+                                "__GridSystem.Stop",
+                                ""
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetObjectVariableAsBoolean"
+                              },
+                              "parameters": [
+                                "Group",
+                                "__GridSystem.CouldMove",
+                                "True"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "ModVarScene"
+                              },
+                              "parameters": [
+                                "__GridSystem.Calculate.X",
+                                "=",
+                                "Group.X() + Variable(__GridSystem.Calculate.Direction.X)"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "ModVarScene"
+                              },
+                              "parameters": [
+                                "__GridSystem.Calculate.Y",
+                                "=",
+                                "Group.Y() + Variable(__GridSystem.Calculate.Direction.Y)"
+                              ]
+                            }
+                          ],
+                          "events": [
+                            {
+                              "type": "BuiltinCommonInstructions::Comment",
+                              "color": {
+                                "b": 109,
+                                "g": 230,
+                                "r": 255,
+                                "textB": 0,
+                                "textG": 0,
+                                "textR": 0
+                              },
+                              "comment": "If the object is from a new grobject (it isn't in Added) add it to RemainingGrobjects, Added and copy the identifiers from the previous grobject's FamilyLine to this grobject's FamilyLine"
+                            },
+                            {
+                              "type": "BuiltinCommonInstructions::Comment",
+                              "color": {
+                                "b": 195,
+                                "g": 244,
+                                "r": 255,
+                                "textB": 0,
+                                "textG": 0,
+                                "textR": 0
+                              },
+                              "comment": "Possible optimisation: If the found grobject is already moving, stop checking the flagged grobject."
+                            },
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [
+                                {
+                                  "type": {
+                                    "value": "AjoutObjConcern"
+                                  },
+                                  "parameters": [
+                                    "",
+                                    "Group"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "PosX"
+                                  },
+                                  "parameters": [
+                                    "Group",
+                                    "=",
+                                    "Variable(__GridSystem.Calculate.X)"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "PosY"
+                                  },
+                                  "parameters": [
+                                    "Group",
+                                    "=",
+                                    "Variable(__GridSystem.Calculate.Y)"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "BuiltinCommonInstructions::Not"
+                                  },
+                                  "parameters": [],
+                                  "subInstructions": [
+                                    {
+                                      "type": {
+                                        "value": "VariableChildExists"
+                                      },
+                                      "parameters": [
+                                        "__GridSystem.Calculate.Added",
+                                        "Group.VariableString(__GridSystem.GrobjectIdentifier)"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "SceneVariablePushString"
+                                  },
+                                  "parameters": [
+                                    "__GridSystem.Calculate.RemainingGrobjects",
+                                    "Group.VariableString(__GridSystem.GrobjectIdentifier)"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "SetSceneVariableAsBoolean"
+                                  },
+                                  "parameters": [
+                                    "__GridSystem.Calculate.Added[Group.VariableString(__GridSystem.GrobjectIdentifier)]",
+                                    "True"
+                                  ]
+                                }
+                              ],
+                              "events": [
+                                {
+                                  "type": "BuiltinCommonInstructions::ForEachChildVariable",
+                                  "iterableVariableName": "__GridSystem.Calculate.FamilyLine[SceneVariableFirstString(__GridSystem.Calculate.RemainingGrobjects)]",
+                                  "valueIteratorVariableName": "__GridSystem.Calculate.CopyFamilyLine",
+                                  "keyIteratorVariableName": "",
+                                  "conditions": [],
+                                  "actions": [
+                                    {
+                                      "type": {
+                                        "value": "SceneVariablePushString"
+                                      },
+                                      "parameters": [
+                                        "__GridSystem.Calculate.FamilyLine[Group.VariableString(__GridSystem.GrobjectIdentifier)]",
+                                        "VariableString(__GridSystem.Calculate.CopyFamilyLine)"
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "BuiltinCommonInstructions::Comment",
+                                  "color": {
+                                    "b": 109,
+                                    "g": 230,
+                                    "r": 255,
+                                    "textB": 0,
+                                    "textG": 0,
+                                    "textR": 0
+                                  },
+                                  "comment": "If the found grobject is static, stop checking the current flagged grobject"
+                                },
+                                {
+                                  "type": "BuiltinCommonInstructions::Standard",
+                                  "conditions": [
+                                    {
+                                      "type": {
+                                        "value": "VariableChildExists"
+                                      },
+                                      "parameters": [
+                                        "__GridSystem.Calculate.Static",
+                                        "Group.VariableString(__GridSystem.GrobjectIdentifier)"
+                                      ]
+                                    }
+                                  ],
+                                  "actions": [
+                                    {
+                                      "type": {
+                                        "value": "SetSceneVariableAsBoolean"
+                                      },
+                                      "parameters": [
+                                        "__GridSystem.Stop",
+                                        "True"
+                                      ]
+                                    },
+                                    {
+                                      "type": {
+                                        "value": "VariableClearChildren"
+                                      },
+                                      "parameters": [
+                                        "__GridSystem.Calculate.RemainingGrobjects"
+                                      ]
+                                    }
+                                  ],
+                                  "events": [
+                                    {
+                                      "type": "BuiltinCommonInstructions::Comment",
+                                      "color": {
+                                        "b": 109,
+                                        "g": 230,
+                                        "r": 255,
+                                        "textB": 0,
+                                        "textG": 0,
+                                        "textR": 0
+                                      },
+                                      "comment": "The FamilyLine stores all the identifiers of the grobjects that tried to push this static grobject. Set all of these grobjects to static (temporarily)"
+                                    },
+                                    {
+                                      "type": "BuiltinCommonInstructions::ForEachChildVariable",
+                                      "iterableVariableName": "__GridSystem.Calculate.FamilyLine[Group.VariableString(__GridSystem.GrobjectIdentifier)]",
+                                      "valueIteratorVariableName": "__GridSystem.Calculate.SetStatic",
+                                      "keyIteratorVariableName": "",
+                                      "conditions": [],
+                                      "actions": [
+                                        {
+                                          "type": {
+                                            "value": "SetSceneVariableAsBoolean"
+                                          },
+                                          "parameters": [
+                                            "__GridSystem.Calculate.Static[VariableString(__GridSystem.Calculate.SetStatic)]",
+                                            "True"
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "SceneVariableAsBoolean"
+                      },
+                      "parameters": [
+                        "__GridSystem.Stop",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SceneVariableRemoveAt"
+                      },
+                      "parameters": [
+                        "__GridSystem.Calculate.RemainingGrobjects",
+                        "0"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "If the calculation didin't run into any static grobjects, all objects marked with CouldMove are marked with CanMove (which is what the user uses to determine if an object can move or not)"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "SceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__GridSystem.Stop",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ObjectVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "Group",
+                    "__GridSystem.CouldMove",
+                    "True"
+                  ]
+                }
+              ],
+              "actions": [],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::ForEach",
+                  "object": "Group",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetObjectVariableAsBoolean"
+                      },
+                      "parameters": [
+                        "Group",
+                        "__GridSystem.CanMove",
+                        "True"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "ModVarScene"
+                      },
+                      "parameters": [
+                        "__GridSystem.MovedObjects",
+                        "+",
+                        "1"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Reset CouldMove, Added and FamilyLine for the next flagged grobject"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetObjectVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "Group",
+                    "__GridSystem.CouldMove",
+                    "False"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "VariableClearChildren"
+                  },
+                  "parameters": [
+                    "__GridSystem.Calculate.Added"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "VariableClearChildren"
+                  },
+                  "parameters": [
+                    "__GridSystem.Calculate.FamilyLine"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "VariableClearChildren"
+              },
+              "parameters": [
+                "__GridSystem.Calculate.Static"
+              ]
+            },
+            {
+              "type": {
+                "value": "VariableClearChildren"
+              },
+              "parameters": [
+                "__GridSystem.Calculate.Flagged"
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object group that the movement might interact with",
+          "longDescription": "This must include the flagged objects, pushable objects, and static objects. Anything that isn't included will be entirely ignored.",
+          "name": "Group",
+          "supplementaryInformation": "Sprite",
+          "type": "objectList"
+        },
+        {
+          "description": "Grid object behavior",
+          "name": "Behavior",
+          "supplementaryInformation": "GridSystem::GridObject",
+          "type": "behavior"
+        },
+        {
+          "description": "Direction",
+          "name": "Direction",
+          "supplementaryInformation": "[\"Right\",\"Down\",\"Left\",\"Up\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Slice an object into grid-objects (forming a grobject out of them), taking into account its width and height.\nObjects will be created on the same layer and with the same z-order as the spliced object.",
+      "fullName": "Slice an object into grid-objects",
+      "functionType": "Action",
+      "name": "Slice",
+      "sentence": "Slice _PARAM1_ into _PARAM2_ tiles",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::ForEach",
+          "object": "ObjectToSlice",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__GridSystem.Slice.Width",
+                "=",
+                "round(ObjectToSlice.Width() / GlobalVariable(__GridSystem.Grid.Width))"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__GridSystem.Slice.Height",
+                "=",
+                "round(ObjectToSlice.Height() / GlobalVariable(__GridSystem.Grid.Height))"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__GridSystem.Slice.X",
+                "=",
+                "0"
+              ]
+            },
+            {
+              "type": {
+                "value": "SetSceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__GridSystem.Slice.First",
+                "True"
+              ]
+            }
+          ],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Repeat",
+              "repeatExpression": "Variable(__GridSystem.Slice.Width)",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__GridSystem.Slice.Y",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Repeat",
+                  "repeatExpression": "Variable(__GridSystem.Slice.Height)",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "Create"
+                      },
+                      "parameters": [
+                        "",
+                        "ObjectReplace",
+                        "Variable(__GridSystem.Slice.X) * GlobalVariable(__GridSystem.Grid.Width) + ObjectToSlice.X()",
+                        "Variable(__GridSystem.Slice.Y) * GlobalVariable(__GridSystem.Grid.Height) + ObjectToSlice.Y()",
+                        "ObjectToSlice.Layer()"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "ChangePlan"
+                      },
+                      "parameters": [
+                        "ObjectReplace",
+                        "=",
+                        "ObjectToSlice.ZOrder()"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "ModVarScene"
+                      },
+                      "parameters": [
+                        "__GridSystem.Slice.Y",
+                        "+",
+                        "1"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "SceneVariableAsBoolean"
+                          },
+                          "parameters": [
+                            "__GridSystem.Slice.First",
+                            "False"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "ModVarObjetTxt"
+                          },
+                          "parameters": [
+                            "ObjectReplace",
+                            "__GridSystem.GrobjectIdentifier",
+                            "=",
+                            "VariableString(__GridSystem.Slice.GrobjectIdentifier)"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "SceneVariableAsBoolean"
+                          },
+                          "parameters": [
+                            "__GridSystem.Slice.First",
+                            "True"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "ModVarSceneTxt"
+                          },
+                          "parameters": [
+                            "__GridSystem.Slice.GrobjectIdentifier",
+                            "=",
+                            "ObjectReplace.VariableString(__GridSystem.GrobjectIdentifier)"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetSceneVariableAsBoolean"
+                          },
+                          "parameters": [
+                            "__GridSystem.Slice.First",
+                            "False"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "ModVarScene"
+                      },
+                      "parameters": [
+                        "__GridSystem.Slice.X",
+                        "+",
+                        "1"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object to slice",
+          "name": "ObjectToSlice",
+          "type": "objectList"
+        },
+        {
+          "description": "Objects to replace the sliced object with",
+          "name": "ObjectReplace",
+          "supplementaryInformation": "Sprite",
+          "type": "objectList"
+        },
+        {
+          "description": "Grid object behavior",
+          "name": "Behavior",
+          "supplementaryInformation": "GridSystem::GridObject",
+          "type": "behavior"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Turns a direction (\"Right\", \"Down\", etc...) into an X or Y position (-1, 0, or 1).",
+      "fullName": "Direction to position",
+      "functionType": "Expression",
+      "name": "DirectionToPosition",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "CompareArgumentAsString"
+              },
+              "parameters": [
+                "\"Axis\"",
+                "=",
+                "\"X\""
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "CompareArgumentAsString"
+                  },
+                  "parameters": [
+                    "\"Direction\"",
+                    "=",
+                    "\"Right\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "CompareArgumentAsString"
+                  },
+                  "parameters": [
+                    "\"Direction\"",
+                    "=",
+                    "\"Down\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "0"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "CompareArgumentAsString"
+                  },
+                  "parameters": [
+                    "\"Direction\"",
+                    "=",
+                    "\"Left\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "-1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "CompareArgumentAsString"
+                  },
+                  "parameters": [
+                    "\"Direction\"",
+                    "=",
+                    "\"Up\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "0"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "CompareArgumentAsString"
+              },
+              "parameters": [
+                "\"Axis\"",
+                "=",
+                "\"Y\""
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "CompareArgumentAsString"
+                  },
+                  "parameters": [
+                    "\"Direction\"",
+                    "=",
+                    "\"Right\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "0"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "CompareArgumentAsString"
+                  },
+                  "parameters": [
+                    "\"Direction\"",
+                    "=",
+                    "\"Down\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "CompareArgumentAsString"
+                  },
+                  "parameters": [
+                    "\"Direction\"",
+                    "=",
+                    "\"Left\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "0"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "CompareArgumentAsString"
+                  },
+                  "parameters": [
+                    "\"Direction\"",
+                    "=",
+                    "\"Up\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "-1"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Axis",
+          "name": "Axis",
+          "supplementaryInformation": "[\"X\",\"Y\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Direction",
+          "name": "Direction",
+          "supplementaryInformation": "[\"Right\",\"Down\",\"Left\",\"Up\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "the number of objects that can move (from the last calculation).",
+      "fullName": "Number of objects that can move",
+      "functionType": "ExpressionAndCondition",
+      "name": "MovingObjects",
+      "sentence": "The number of objects that can move from the last calculation",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "Variable(__GridSystem.MovedObjects)"
+              ]
+            }
+          ]
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the direction that was used in the last calculation.",
+      "fullName": "Last direction used",
+      "functionType": "StringExpression",
+      "name": "LastDirection",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnString"
+              },
+              "parameters": [
+                "VariableString(__GridSystem.LastDirection)"
+              ]
+            }
+          ]
+        }
+      ],
+      "expressionType": {
+        "supplementaryInformation": "[\"Right\",\"Down\",\"Left\",\"Up\"]",
+        "type": "stringWithSelector"
+      },
+      "parameters": [],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [
+    {
+      "description": "Allows the object to interact with the grid system controller.",
+      "fullName": "Grid object",
+      "name": "GridObject",
+      "objectType": "Sprite",
+      "eventsFunctions": [
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onCreated",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "GridSystem::GridObject::NewGrobjectIdentifier"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "GridSystem::GridObject::PropertyStatic"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetObjectVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__GridSystem.Static",
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "GridSystem::GridObject",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Connect to an another grobject.",
+          "fullName": "Connect to a grobject",
+          "functionType": "Action",
+          "group": "Grid object/Connect",
+          "name": "Connect",
+          "sentence": "Connect _PARAM0_ object to _PARAM2_ grobject",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarObjetTxt"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__GridSystem.GrobjectIdentifier",
+                    "=",
+                    "ParentGrobject.VariableString(__GridSystem.GrobjectIdentifier)"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "GridSystem::GridObject",
+              "type": "behavior"
+            },
+            {
+              "description": "Grobject to connect to",
+              "name": "ParentGrobject",
+              "supplementaryInformation": "Sprite",
+              "type": "objectList"
+            },
+            {
+              "description": "Grid object behavior",
+              "name": "ParentBehavior",
+              "supplementaryInformation": "GridSystem::GridObject",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Connect the objects together by a number expression. Objects with the same number will be connected together.",
+          "fullName": "Connect objects together by numbers",
+          "functionType": "Action",
+          "group": "Grid object/Connect",
+          "name": "ConnectFromNumber",
+          "sentence": "Connect _PARAM0_ objects together using _PARAM2_ as grouping numbers",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetSceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__GridSystem.Else",
+                    "True"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "VariableChildExists"
+                  },
+                  "parameters": [
+                    "__GridSystem.Connect",
+                    "ToString(GetArgumentAsNumber(\"Expression\"))"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetSceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__GridSystem.Else",
+                    "False"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ModVarObjetTxt"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__GridSystem.GrobjectIdentifier",
+                    "=",
+                    "VariableString(__GridSystem.Connect[ToString(GetArgumentAsNumber(\"Expression\"))])"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "SceneVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "__GridSystem.Else",
+                    "True"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarSceneTxt"
+                  },
+                  "parameters": [
+                    "__GridSystem.Connect[ToString(GetArgumentAsNumber(\"Expression\"))]",
+                    "=",
+                    "Object.VariableString(__GridSystem.GrobjectIdentifier)"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 27,
+                "g": 2,
+                "r": 208,
+                "textB": 255,
+                "textG": 255,
+                "textR": 255
+              },
+              "comment": "Hacky workaround to clear Connect. Contact me on discord or github if you know how to fix it (or just do a pull request or whatever its called)."
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__GridSystem.HackyCounter",
+                    "+",
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "VarScene"
+                  },
+                  "parameters": [
+                    "__GridSystem.HackyCounter",
+                    "=",
+                    "GetArgumentAsNumber(\"PickedInstancesCount\")"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "VariableClearChildren"
+                  },
+                  "parameters": [
+                    "__GridSystem.Connect"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "GridSystem::GridObject",
+              "type": "behavior"
+            },
+            {
+              "description": "Number expression (object variable, z-order, etc...)",
+              "name": "Expression",
+              "type": "expression"
+            },
+            {
+              "description": "Number of picked instanced (required!)",
+              "longDescription": "Please use the expression PickedInstancesCount(ObjectName) here. This is unfortunately required. If you know how to fix this, please let me know!",
+              "name": "PickedInstancesCount",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Disconnect from the object's current grobject, forming a grobject of its own.",
+          "fullName": "Disconnect",
+          "functionType": "Action",
+          "group": "Grid object/Connect",
+          "name": "Disconnect",
+          "sentence": "Disconnect _PARAM0_ from its current grobject",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "GridSystem::GridObject::NewGrobjectIdentifier"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "GridSystem::GridObject",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Flag the object for moving.",
+          "fullName": "Flag for moving",
+          "functionType": "Action",
+          "name": "Flag",
+          "sentence": "Flag _PARAM0_ for moving",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetObjectVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__GridSystem.Flagged",
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "GridSystem::GridObject",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Set the object as static.",
+          "fullName": "Set as static",
+          "functionType": "Action",
+          "name": "Static",
+          "sentence": "Set _PARAM0_ as static: _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"Value\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetObjectVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__GridSystem.Static",
+                    "True"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"Value\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetObjectVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__GridSystem.Static",
+                    "False"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "GridSystem::GridObject",
+              "type": "behavior"
+            },
+            {
+              "defaultValue": "yes",
+              "description": "Set as static",
+              "name": "Value",
+              "optional": true,
+              "type": "yesorno"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if the object can move after calculating its movement.",
+          "fullName": "Can move",
+          "functionType": "Condition",
+          "name": "CanMove",
+          "sentence": "_PARAM0_ can move",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "ObjectVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__GridSystem.CanMove",
+                    "True"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "GridSystem::GridObject",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Give the object a new grobject identifier.",
+          "fullName": "New grobject identifier",
+          "functionType": "Action",
+          "name": "NewGrobjectIdentifier",
+          "private": true,
+          "sentence": "Give _PARAM0_ a new grobject identifier",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 255,
+                "g": 255,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "All identifier names are strings so they can be used as variable names in structure variables (instead of array variables)."
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarObjetTxt"
+                  },
+                  "parameters": [
+                    "Object",
+                    "__GridSystem.GrobjectIdentifier",
+                    "=",
+                    "ToString(Variable(__GridSystem.NextGrobjectIdentifier))"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__GridSystem.NextGrobjectIdentifier",
+                    "+",
+                    "1"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "GridSystem::GridObject",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        }
+      ],
+      "propertyDescriptors": [
+        {
+          "value": "",
+          "type": "Boolean",
+          "label": "Static",
+          "description": "",
+          "group": "",
+          "extraInformation": [
+            "Static",
+            "Dynamic"
+          ],
+          "hidden": false,
+          "name": "Static"
+        }
+      ],
+      "sharedPropertyDescriptors": []
+    }
+  ],
+  "eventsBasedObjects": []
+}
