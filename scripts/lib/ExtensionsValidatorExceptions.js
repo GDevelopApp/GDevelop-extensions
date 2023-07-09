@@ -430,6 +430,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Share: {
+      gdjsAllowedProperties: ['_shareExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
   },
 };
 
