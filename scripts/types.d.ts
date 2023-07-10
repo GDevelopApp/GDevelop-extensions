@@ -111,7 +111,7 @@ export interface EventsBasedBehaviors {
   fullName: string;
   name: string;
   objectType: string;
-  private: boolean;
+  private?: boolean;
   eventsFunctions: EventsFunction[];
 }
 
