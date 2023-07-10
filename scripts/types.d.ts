@@ -1,14 +1,28 @@
-interface ExtensionAndShortHeaderFields {
+interface ItemExtensionHeaderFields {
   authorIds: Array<string>;
-  shortDescription: string;
   extensionNamespace: string;
-  fullName: string;
-  name: string;
   version: string;
   gdevelopVersion?: string;
   tags: Array<string>;
   category: string;
   previewIconUrl: string;
+}
+
+type ExtensionTier = 'community' | 'reviewed';
+
+/**
+ * An extension, behavior or object.
+ */
+export interface RegisteryItem extends ItemExtensionHeaderFields {
+  tier: ExtensionTier;
+  url: string;
+  headerUrl: string;
+}
+
+interface ExtensionAndShortHeaderFields extends ItemExtensionHeaderFields {
+  shortDescription: string;
+  fullName: string;
+  name: string;
 }
 
 interface ExtensionAndHeaderFields {
@@ -17,30 +31,40 @@ interface ExtensionAndHeaderFields {
   iconUrl: string;
 }
 
-type ExtensionTier = 'community' | 'reviewed';
-
-export interface ExtensionShortHeader extends ExtensionAndShortHeaderFields {
+export interface ExtensionShortHeader
+  extends RegisteryItem,
+    ExtensionAndShortHeaderFields {
   tier: ExtensionTier;
   url: string;
   headerUrl: string;
   eventsBasedBehaviorsCount: number;
   eventsFunctionsCount: number;
-  behaviorHeaders: Array<BehaviorHeaders>;
-  objectHeaders: Array<ObjectHeaders>;
 }
 
-export interface BehaviorHeaders {
-  name: string;
-  fullName: string;
+interface BehaviorAndShortHeaderFields {
   description: string;
+  fullName: string;
+  name: string;
   objectType: string;
   private: boolean;
 }
 
-export interface ObjectHeaders {
-  name: string;
-  fullName: string;
+export interface BehaviorHeader
+  extends RegisteryItem,
+    BehaviorAndShortHeaderFields {
+  extensionName: string;
+}
+
+interface ObjectAndShortHeaderFields {
   description: string;
+  fullName: string;
+  name: string;
+}
+
+export interface ObjectHeader
+  extends RegisteryItem,
+    ObjectAndShortHeaderFields {
+  extensionName: string;
 }
 
 export interface ExtensionHeader
@@ -52,6 +76,16 @@ export interface ExtensionsDatabase {
   allTags: Array<string>;
   allCategories: Array<string>;
   extensionShortHeaders: Array<ExtensionShortHeader>;
+  behavior: {
+    tags: Array<string>;
+    categories: Array<string>;
+    headers: Array<BehaviorHeader>;
+  };
+  object: {
+    tags: Array<string>;
+    categories: Array<string>;
+    headers: Array<ObjectHeader>;
+  };
   views: {
     default: {
       firstExtensionIds: Array<string>;

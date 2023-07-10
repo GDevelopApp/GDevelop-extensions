@@ -8,6 +8,9 @@ const {
 const args = require('minimist')(process.argv.slice(2));
 
 /** @typedef {import('./types').ExtensionShortHeader} ExtensionShortHeader */
+/** @typedef {import('./types').BehaviorHeader} BehaviorHeader */
+/** @typedef {import('./types').ObjectHeader} ObjectHeader */
+/** @typedef {import('./types').RegisteryItem} RegisteryItem */
 /** @typedef {import('./types').ExtensionsDatabase} ExtensionsDatabase */
 /** @typedef {import('./types').ExtensionHeader} ExtensionHeader */
 /** @typedef {import('./types').ExtensionWithFileInfo} ExtensionWithFileInfo */
@@ -95,10 +98,19 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
     ];
 
     const allTagsSet = new Set();
+    const behaviorTagsSet = new Set();
+    const objectTagsSet = new Set();
+
     const allCategoriesSet = new Set();
+    const behaviorCategoriesSet = new Set();
+    const objectCategoriesSet = new Set();
 
     /** @type {ExtensionShortHeader[]} */
     const extensionShortHeaders = [];
+    /** @type {Array<BehaviorHeader>} */
+    const behaviorHeaders = [];
+    /** @type {Array<ObjectHeader>} */
+    const objectHeaders = [];
 
     let totalErrors = 0;
     let fixableErrors = 0;
@@ -159,11 +171,10 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
         }
 
         // Generate the headers of the extension
-        /** @type {ExtensionShortHeader} */
-        const extensionShortHeader = {
+        /** @type {RegisteryItem} */
+        const registryItem = {
           tier,
           authorIds: extension.authorIds,
-          shortDescription: extension.shortDescription,
           extensionNamespace: extension.extensionNamespace,
           fullName: extension.fullName,
           name,
@@ -174,27 +185,15 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
           tags: extension.tags,
           category: extension.category || 'General',
           previewIconUrl: extension.previewIconUrl,
+        };
+        /** @type {ExtensionShortHeader} */
+        const extensionShortHeader = {
+          ...registryItem,
+          shortDescription: extension.shortDescription,
+          fullName: extension.fullName,
+          name,
           eventsBasedBehaviorsCount: extension.eventsBasedBehaviors.length,
           eventsFunctionsCount: extension.eventsFunctions.length,
-          behaviorHeaders: extension.eventsBasedBehaviors
-            .map((behavior) =>
-              behavior.private
-                ? null
-                : {
-                    name: behavior.name,
-                    fullName: behavior.fullName,
-                    description: behavior.description,
-                    objectType: behavior.objectType,
-                  }
-            )
-            .filter(Boolean),
-          objectHeaders: extension.eventsBasedObjects
-            ? extension.eventsBasedObjects.map((object) => ({
-                name: object.name,
-                fullName: object.fullName,
-                description: object.description,
-              }))
-            : [],
         };
 
         extensionShortHeaders.push(extensionShortHeader);
@@ -209,14 +208,66 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
           iconUrl: extension.iconUrl,
         };
 
-        extension.tags.split(',').map(
+        /** @type {Array<BehaviorHeader>} */
+        behaviorHeaders.push.apply(
+          behaviorHeaders,
+          extension.eventsBasedBehaviors
+            .map((behavior) =>
+              behavior.private
+                ? null
+                : {
+                    ...registryItem,
+                    extensionName: name,
+                    name: behavior.name,
+                    fullName: behavior.fullName,
+                    description: behavior.description,
+                    objectType: behavior.objectType,
+                  }
+            )
+            .filter(Boolean)
+        );
+
+        /** @type {Array<ObjectHeader>} */
+        objectHeaders.push.apply(
+          objectHeaders,
+          extension.eventsBasedObjects
+            ? extension.eventsBasedObjects.map((object) => ({
+                ...registryItem,
+                extensionName: name,
+                name: object.name,
+                fullName: object.fullName,
+                description: object.description,
+              }))
+            : []
+        );
+
+        extension.tags.split(',').forEach(
           /** @param {string} tag */
           (tag) => {
-            allTagsSet.add(tag.trim().toLowerCase());
+            const lowerCaseTag = tag.trim().toLowerCase();
+            allTagsSet.add(lowerCaseTag);
+            if (extension.eventsBasedBehaviors.length > 0) {
+              behaviorTagsSet.add(lowerCaseTag);
+            }
+            if (
+              extension.eventsBasedObjects &&
+              extension.eventsBasedObjects.length > 0
+            ) {
+              objectTagsSet.add(lowerCaseTag);
+            }
           }
         );
         if (extension.category) {
           allCategoriesSet.add(extension.category);
+          if (extension.eventsBasedBehaviors.length > 0) {
+            behaviorCategoriesSet.add(extension.category);
+          }
+          if (
+            extension.eventsBasedObjects &&
+            extension.eventsBasedObjects.length > 0
+          ) {
+            objectCategoriesSet.add(extension.category);
+          }
         }
 
         await writeJSONFile(
@@ -259,6 +310,16 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
       allTags: Array.from(allTagsSet),
       allCategories: Array.from(allCategoriesSet),
       extensionShortHeaders,
+      behavior: {
+        tags: Array.from(behaviorTagsSet),
+        categories: Array.from(behaviorCategoriesSet),
+        headers: behaviorHeaders,
+      },
+      object: {
+        tags: Array.from(objectTagsSet),
+        categories: Array.from(objectCategoriesSet),
+        headers: objectHeaders,
+      },
       views,
     };
 
