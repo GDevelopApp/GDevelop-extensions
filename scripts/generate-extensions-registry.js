@@ -98,12 +98,7 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
     ];
 
     const allTagsSet = new Set();
-    const behaviorTagsSet = new Set();
-    const objectTagsSet = new Set();
-
     const allCategoriesSet = new Set();
-    const behaviorCategoriesSet = new Set();
-    const objectCategoriesSet = new Set();
 
     /** @type {ExtensionShortHeader[]} */
     const extensionShortHeaders = [];
@@ -244,30 +239,11 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
         extension.tags.split(',').forEach(
           /** @param {string} tag */
           (tag) => {
-            const lowerCaseTag = tag.trim().toLowerCase();
-            allTagsSet.add(lowerCaseTag);
-            if (extension.eventsBasedBehaviors.length > 0) {
-              behaviorTagsSet.add(lowerCaseTag);
-            }
-            if (
-              extension.eventsBasedObjects &&
-              extension.eventsBasedObjects.length > 0
-            ) {
-              objectTagsSet.add(lowerCaseTag);
-            }
+            allTagsSet.add(tag.trim().toLowerCase());
           }
         );
         if (extension.category) {
           allCategoriesSet.add(extension.category);
-          if (extension.eventsBasedBehaviors.length > 0) {
-            behaviorCategoriesSet.add(extension.category);
-          }
-          if (
-            extension.eventsBasedObjects &&
-            extension.eventsBasedObjects.length > 0
-          ) {
-            objectCategoriesSet.add(extension.category);
-          }
         }
 
         await writeJSONFile(
@@ -311,13 +287,9 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
       allCategories: Array.from(allCategoriesSet),
       extensionShortHeaders,
       behavior: {
-        tags: Array.from(behaviorTagsSet),
-        categories: Array.from(behaviorCategoriesSet),
         headers: behaviorHeaders,
       },
       object: {
-        tags: Array.from(objectTagsSet),
-        categories: Array.from(objectCategoriesSet),
         headers: objectHeaders,
       },
       views,

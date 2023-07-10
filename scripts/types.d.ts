@@ -73,17 +73,16 @@ export interface ExtensionHeader
 
 export interface ExtensionsDatabase {
   version: string;
+  /** @deprecated Tags list should be built by the UI. When only reviewed
+   * extensions are shown, some tags could lead to no extension. */
   allTags: Array<string>;
+  /** @deprecated Categories list should be built by the UI. */
   allCategories: Array<string>;
   extensionShortHeaders: Array<ExtensionShortHeader>;
   behavior: {
-    tags: Array<string>;
-    categories: Array<string>;
     headers: Array<BehaviorHeader>;
   };
   object: {
-    tags: Array<string>;
-    categories: Array<string>;
     headers: Array<ObjectHeader>;
   };
   views: {
