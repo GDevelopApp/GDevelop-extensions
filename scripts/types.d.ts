@@ -25,6 +25,22 @@ export interface ExtensionShortHeader extends ExtensionAndShortHeaderFields {
   headerUrl: string;
   eventsBasedBehaviorsCount: number;
   eventsFunctionsCount: number;
+  behaviorHeaders: Array<BehaviorHeaders>;
+  objectHeaders: Array<ObjectHeaders>;
+}
+
+export interface BehaviorHeaders {
+  name: string;
+  fullName: string;
+  description: string;
+  objectType: string;
+  private: boolean;
+}
+
+export interface ObjectHeaders {
+  name: string;
+  fullName: string;
+  description: string;
 }
 
 export interface ExtensionHeader
@@ -95,6 +111,7 @@ export interface EventsBasedBehaviors {
   fullName: string;
   name: string;
   objectType: string;
+  private: boolean;
   eventsFunctions: EventsFunction[];
 }
 

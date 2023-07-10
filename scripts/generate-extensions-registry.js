@@ -176,6 +176,25 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
           previewIconUrl: extension.previewIconUrl,
           eventsBasedBehaviorsCount: extension.eventsBasedBehaviors.length,
           eventsFunctionsCount: extension.eventsFunctions.length,
+          behaviorHeaders: extension.eventsBasedBehaviors
+            .map((behavior) =>
+              behavior.private
+                ? null
+                : {
+                    name: behavior.name,
+                    fullName: behavior.fullName,
+                    description: behavior.description,
+                    objectType: behavior.objectType,
+                  }
+            )
+            .filter(Boolean),
+          objectHeaders: extension.eventsBasedObjects
+            ? extension.eventsBasedObjects.map((object) => ({
+                name: object.name,
+                fullName: object.fullName,
+                description: object.description,
+              }))
+            : [],
         };
 
         extensionShortHeaders.push(extensionShortHeader);
