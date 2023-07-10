@@ -46,7 +46,6 @@ interface BehaviorAndShortHeaderFields {
   fullName: string;
   name: string;
   objectType: string;
-  private: boolean;
 }
 
 export interface BehaviorHeader
