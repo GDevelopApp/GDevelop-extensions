@@ -8,7 +8,7 @@
   "name": "WithThreeJS",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/rotate-3d.svg",
   "shortDescription": "Create a simple 3D scene.",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": [
     "Extension for GDevelop to create simple 3D scenes.  ",
     "This extension is intended for easy and simple 3D rendering. It does not currently aim for realistic rendering with light and shadow.  ",
@@ -5436,6 +5436,74 @@
       "objectGroups": []
     },
     {
+      "description": "Change all animations speed scale of a 3D Object.\n0 is pause.\nNegative values play backwards.",
+      "fullName": "Change 3D Object All Animations Speed Scale",
+      "functionType": "Action",
+      "group": "3D Object",
+      "name": "ChangeAllAnimationsSpeedScale",
+      "sentence": "Change All Animations Speed Scale (ID: _PARAM1_, _PARAM2_, Speed: _PARAM3_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const AnimationActions = gdjs.__WithThreeJS.get(\"AnimationActions\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const Operator = eventsFunctionContext.getArgument(\"Operator\");",
+            "const Speed = eventsFunctionContext.getArgument(\"Speed\");",
+            "//",
+            "const Obj = Scene.getObjectByName(Id);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + Id);",
+            "    return;",
+            "}",
+            "//",
+            "const OBJ_UUID = Obj.uuid;",
+            "if (AnimationActions.has(OBJ_UUID)) {",
+            "    for (const [K, V] of AnimationActions.get(OBJ_UUID)) {",
+            "        if (Operator == \"=\") {",
+            "            V.timeScale = Speed;",
+            "        } else if (Operator == \"+\") {",
+            "            V.timeScale += Speed;",
+            "        } else {",
+            "            V.timeScale -= Speed;",
+            "        }",
+            "    }",
+            "}",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "Operator",
+          "name": "Operator",
+          "supplementaryInformation": "[\"=\",\"+\",\"-\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Animation Speed Scale (Default: 1)",
+          "name": "Speed",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
       "description": "Resolve collisions between Bounding Boxes.\nIt is not necessary to use the \"Check Bounding Box Collision\" condition beforehand. (It will do almost the same processing)\nNote that the 3D Objects are still in contact after resolution. (\"Check Bounding Box Collision\" condition will not be false.)\n3D Object thickness too thin for the amount of movement will not resolve correctly.\nThis action updates the \"Bounding Box Collision Result\".",
       "fullName": "Resolve Bounding Box Collision",
       "functionType": "Action",
@@ -5637,11 +5705,12 @@
       "objectGroups": []
     },
     {
+      "description": "Play 3D animation.\nIf already playing, only the \"Animation Speed Scale\" and \"Loop\" parameters are updated.",
       "fullName": "Play 3D Animation",
       "functionType": "Action",
       "group": "3D Object",
       "name": "Play3DAnimation",
-      "sentence": "Play 3D Animation (ID: _PARAM1_, Animation: _PARAM2_, Loop: _PARAM3_, Fade: _PARAM4_)",
+      "sentence": "Play 3D Animation (ID: _PARAM1_, Animation: _PARAM2_, Speed: _PARAM3_, Loop: _PARAM4_, Fade: _PARAM5_)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -5654,7 +5723,8 @@
             "const AnimationMixer = gdjs.__WithThreeJS.get(\"AnimationMixer\");",
             "const AnimationActions = gdjs.__WithThreeJS.get(\"AnimationActions\");",
             "const Id = eventsFunctionContext.getArgument(\"Id\");",
-            "const ANumber = eventsFunctionContext.getArgument(\"Number\");",
+            "const ANumber = eventsFunctionContext.getArgument(\"ANumber\");",
+            "const Speed = eventsFunctionContext.getArgument(\"Speed\");",
             "const Duration = eventsFunctionContext.getArgument(\"Duration\");",
             "let Loop = eventsFunctionContext.getArgument(\"Loop\");",
             "if (Loop == \"Once\") {",
@@ -5680,22 +5750,43 @@
             "const OBJ_UUID = Obj.uuid;",
             "const Clip_UUID = Clip.uuid;",
             "if (AnimationActions.has(OBJ_UUID)) {",
+            "    if (AnimationActions.get(OBJ_UUID).has(Clip_UUID)) {",
+            "        Action = AnimationActions.get(OBJ_UUID).get(Clip_UUID);",
+            "        if (Action.isRunning()) {",
+            "            Action.timeScale = Speed;",
+            "            Action.setLoop(Loop, Infinity);",
+            "            return;",
+            "        }",
+            "    }",
+            "}",
+            "//",
+            "if (AnimationActions.has(OBJ_UUID)) {",
             "    for (const [K, V] of AnimationActions.get(OBJ_UUID)) {",
-            "        // V.stop();",
-            "        V.fadeOut(Duration);",
+            "        if (K != Clip_UUID) {",
+            "            if (Duration === 0) {",
+            "                V.stop();",
+            "            } else {",
+            "                V.fadeOut(Duration);  ",
+            "            }",
+            "        }",
             "    }",
             "} else {",
             "    AnimationActions.set(OBJ_UUID, new Map());",
             "}",
-            "if (AnimationActions.get(OBJ_UUID).has(Clip_UUID)) {",
-            "    Action = AnimationActions.get(OBJ_UUID).get(Clip_UUID);",
-            "} else {",
+            "if (Action === undefined) {",
             "    Action = AnimationMixer.clipAction(Clip, Obj);",
             "    AnimationActions.get(OBJ_UUID).set(Clip_UUID, Action);",
             "}",
+            "Action.timeScale = Speed;",
             "Action.setLoop(Loop, Infinity);",
             "Action.clampWhenFinished = true;",
-            "Action.reset().play().fadeIn(Duration);",
+            "if (Speed >= 0) {",
+            "    Action.reset().play().fadeIn(Duration);",
+            "} else {",
+            "    Action.reset();",
+            "    Action.time = Clip.duration;",
+            "    Action.play().fadeIn(Duration);",
+            "}",
             "",
             ""
           ],
@@ -5712,8 +5803,14 @@
           "type": "identifier"
         },
         {
-          "description": "Animation Number",
-          "name": "Number",
+          "description": "Original Animation Number",
+          "name": "ANumber",
+          "type": "expression"
+        },
+        {
+          "description": "Animation Speed Scale (Default: 1)",
+          "longDescription": "0 is pause. Negative values play backwards.",
+          "name": "Speed",
           "type": "expression"
         },
         {
@@ -5735,8 +5832,7 @@
       "functionType": "Action",
       "group": "3D Object",
       "name": "Stop3DAnimation",
-      "private": true,
-      "sentence": "Stop 3D Animation (ID: _PARAM1_, Animation: _PARAM2_)",
+      "sentence": "Stop 3D Animation (ID: _PARAM1_, Animation: _PARAM2_, Fade: _PARAM3_)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -5746,10 +5842,10 @@
             "    return;",
             "}",
             "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
-            "const AnimationMixer = gdjs.__WithThreeJS.get(\"AnimationMixer\");",
             "const AnimationActions = gdjs.__WithThreeJS.get(\"AnimationActions\");",
             "const Id = eventsFunctionContext.getArgument(\"Id\");",
-            "const ANumber = eventsFunctionContext.getArgument(\"Number\");",
+            "const ANumber = eventsFunctionContext.getArgument(\"ANumber\");",
+            "const Duration = eventsFunctionContext.getArgument(\"Duration\");",
             "//",
             "const Obj = Scene.getObjectByName(Id);",
             "if (!Obj) {",
@@ -5768,7 +5864,11 @@
             "if (AnimationActions.has(OBJ_UUID)) {",
             "    if (AnimationActions.get(OBJ_UUID).has(Clip_UUID)) {",
             "        const Action = AnimationActions.get(OBJ_UUID).get(Clip_UUID);",
-            "        V.stop();",
+            "        if (Duration === 0) {",
+            "            Action.stop();",
+            "        } else {",
+            "            Action.fadeOut(Duration);  ",
+            "        }",
             "    }",
             "}",
             "",
@@ -5787,19 +5887,25 @@
           "type": "identifier"
         },
         {
-          "description": "Animation Number",
-          "name": "Number",
+          "description": "Original Animation Number",
+          "name": "ANumber",
+          "type": "expression"
+        },
+        {
+          "description": "Cross-Fade Duration (in seconds)",
+          "name": "Duration",
           "type": "expression"
         }
       ],
       "objectGroups": []
     },
     {
-      "fullName": "Stop All 3D Animation",
+      "fullName": "Stop All 3D Animation (Deprecated)",
       "functionType": "Action",
       "group": "3D Object",
       "name": "StopAll3DAnimation",
-      "sentence": "Stop All 3D Animation (ID: _PARAM1_)",
+      "private": true,
+      "sentence": "⚠️ Stop All 3D Animation (ID: _PARAM1_)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -5809,7 +5915,6 @@
             "    return;",
             "}",
             "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
-            "const AnimationMixer = gdjs.__WithThreeJS.get(\"AnimationMixer\");",
             "const AnimationActions = gdjs.__WithThreeJS.get(\"AnimationActions\");",
             "const Id = eventsFunctionContext.getArgument(\"Id\");",
             "//",
@@ -6309,6 +6414,190 @@
       "objectGroups": []
     },
     {
+      "fullName": "3D Object Animation Speed Scale",
+      "functionType": "Expression",
+      "group": "3D Object",
+      "name": "ObjectAnimationSpeedScale",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const AnimationActions = gdjs.__WithThreeJS.get(\"AnimationActions\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const ANumber = eventsFunctionContext.getArgument(\"ANumber\");",
+            "//",
+            "const Obj = Scene.getObjectByName(Id);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + Id);",
+            "    return;",
+            "}",
+            "const Clip = Obj.animations[ANumber];",
+            "if (!Clip) {",
+            "    return;",
+            "}",
+            "//",
+            "const OBJ_UUID = Obj.uuid;",
+            "const Clip_UUID = Clip.uuid;",
+            "if (AnimationActions.has(OBJ_UUID)) {",
+            "    if (AnimationActions.get(OBJ_UUID).has(Clip_UUID)) {",
+            "        const Action = AnimationActions.get(OBJ_UUID).get(Clip_UUID);",
+            "        eventsFunctionContext.returnValue = Action.timeScale;",
+            "    }",
+            "}",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "supplementaryInformation": "scene",
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "Original Animation Number",
+          "name": "ANumber",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "3D Object Animation Time",
+      "functionType": "Expression",
+      "group": "3D Object",
+      "name": "ObjectAnimationTime",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const AnimationActions = gdjs.__WithThreeJS.get(\"AnimationActions\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const ANumber = eventsFunctionContext.getArgument(\"ANumber\");",
+            "//",
+            "const Obj = Scene.getObjectByName(Id);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + Id);",
+            "    return;",
+            "}",
+            "const Clip = Obj.animations[ANumber];",
+            "if (!Clip) {",
+            "    return;",
+            "}",
+            "//",
+            "const OBJ_UUID = Obj.uuid;",
+            "const Clip_UUID = Clip.uuid;",
+            "if (AnimationActions.has(OBJ_UUID)) {",
+            "    if (AnimationActions.get(OBJ_UUID).has(Clip_UUID)) {",
+            "        const Action = AnimationActions.get(OBJ_UUID).get(Clip_UUID);",
+            "        eventsFunctionContext.returnValue = Action.time;",
+            "    }",
+            "}",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "supplementaryInformation": "scene",
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "Original Animation Number",
+          "name": "ANumber",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "3D Object Animation Duration",
+      "functionType": "Expression",
+      "group": "3D Object",
+      "name": "ObjectAnimationDuration",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const AnimationActions = gdjs.__WithThreeJS.get(\"AnimationActions\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const ANumber = eventsFunctionContext.getArgument(\"ANumber\");",
+            "//",
+            "const Obj = Scene.getObjectByName(Id);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + Id);",
+            "    return;",
+            "}",
+            "const Clip = Obj.animations[ANumber];",
+            "if (!Clip) {",
+            "    return;",
+            "}",
+            "eventsFunctionContext.returnValue = Clip.duration;",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "supplementaryInformation": "scene",
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "Original Animation Number",
+          "name": "ANumber",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
       "fullName": "Distance From 3D Object To 3D Object",
       "functionType": "Expression",
       "group": "3D Object",
@@ -6598,7 +6887,7 @@
             "const AnimationMixer = gdjs.__WithThreeJS.get(\"AnimationMixer\");",
             "const AnimationActions = gdjs.__WithThreeJS.get(\"AnimationActions\");",
             "const Id = eventsFunctionContext.getArgument(\"Id\");",
-            "const ANumber = eventsFunctionContext.getArgument(\"Number\");",
+            "const ANumber = eventsFunctionContext.getArgument(\"ANumber\");",
             "eventsFunctionContext.returnValue = false;",
             "//",
             "const Obj = Scene.getObjectByName(Id);",
@@ -6635,10 +6924,65 @@
           "type": "identifier"
         },
         {
-          "description": "Animation Number",
-          "name": "Number",
+          "description": "Original Animation Number",
+          "name": "ANumber",
           "supplementaryInformation": "scene3D Object ID",
           "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Check if all 3D animations are stopped.",
+      "fullName": "Check All 3D Animations Are Stopped",
+      "functionType": "Condition",
+      "group": "3D Object",
+      "name": "CheckAll3DAnimationsAreStopped",
+      "private": true,
+      "sentence": "Check All 3D Animations Are Stopped (ID: _PARAM1_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const AnimationMixer = gdjs.__WithThreeJS.get(\"AnimationMixer\");",
+            "const AnimationActions = gdjs.__WithThreeJS.get(\"AnimationActions\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "eventsFunctionContext.returnValue = true;",
+            "//",
+            "const Obj = Scene.getObjectByName(Id);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + Id);",
+            "    return;",
+            "}",
+            "//",
+            "const OBJ_UUID = Obj.uuid;",
+            "if (AnimationActions.has(OBJ_UUID)) {",
+            "    for (const [K, V] of AnimationActions.get(OBJ_UUID)) {",
+            "        if (V.isRunning()) {",
+            "            eventsFunctionContext.returnValue = false;",
+            "            break;",
+            "        }",
+            "    }",
+            "}",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
         }
       ],
       "objectGroups": []
@@ -6662,7 +7006,7 @@
             "const AnimationMixer = gdjs.__WithThreeJS.get(\"AnimationMixer\");",
             "const AnimationActions = gdjs.__WithThreeJS.get(\"AnimationActions\");",
             "const Id = eventsFunctionContext.getArgument(\"Id\");",
-            "const ANumber = eventsFunctionContext.getArgument(\"Number\");",
+            "const ANumber = eventsFunctionContext.getArgument(\"ANumber\");",
             "eventsFunctionContext.returnValue = false;",
             "//",
             "const Obj = Scene.getObjectByName(Id);",
@@ -6680,8 +7024,16 @@
             "if (AnimationActions.has(OBJ_UUID)) {",
             "    if (AnimationActions.get(OBJ_UUID).has(Clip_UUID)) {",
             "        const Action = AnimationActions.get(OBJ_UUID).get(Clip_UUID);",
-            "        if (Action.time >= Clip.duration && Action.loop === THREE.LoopOnce) {",
-            "            eventsFunctionContext.returnValue = true;",
+            "        if (Action.loop === THREE.LoopOnce) {",
+            "            if (Action.timeScale >= 0) {",
+            "                if (Action.time >= Clip.duration) {",
+            "                    eventsFunctionContext.returnValue = true;",
+            "                }",
+            "            } else {",
+            "                if (Action.time <= 0) {",
+            "                    eventsFunctionContext.returnValue = true;",
+            "                }",
+            "            }",
             "        }",
             "    }",
             "}",
@@ -6701,8 +7053,8 @@
           "type": "identifier"
         },
         {
-          "description": "Animation Number",
-          "name": "Number",
+          "description": "Original Animation Number",
+          "name": "ANumber",
           "supplementaryInformation": "scene3D Object ID",
           "type": "expression"
         }
