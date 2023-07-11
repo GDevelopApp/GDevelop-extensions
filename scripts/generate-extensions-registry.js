@@ -8,6 +8,9 @@ const {
 const args = require('minimist')(process.argv.slice(2));
 
 /** @typedef {import('./types').ExtensionShortHeader} ExtensionShortHeader */
+/** @typedef {import('./types').BehaviorShortHeader} BehaviorShortHeader */
+/** @typedef {import('./types').ObjectShortHeader} ObjectShortHeader */
+/** @typedef {import('./types').RegistryItem} RegistryItem */
 /** @typedef {import('./types').ExtensionsDatabase} ExtensionsDatabase */
 /** @typedef {import('./types').ExtensionHeader} ExtensionHeader */
 /** @typedef {import('./types').ExtensionWithFileInfo} ExtensionWithFileInfo */
@@ -99,6 +102,10 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
 
     /** @type {ExtensionShortHeader[]} */
     const extensionShortHeaders = [];
+    /** @type {Array<BehaviorShortHeader>} */
+    const behaviorShortHeaders = [];
+    /** @type {Array<ObjectShortHeader>} */
+    const objectShortHeaders = [];
 
     let totalErrors = 0;
     let fixableErrors = 0;
@@ -159,11 +166,10 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
         }
 
         // Generate the headers of the extension
-        /** @type {ExtensionShortHeader} */
-        const extensionShortHeader = {
+        /** @type {RegistryItem} */
+        const registryItem = {
           tier,
           authorIds: extension.authorIds,
-          shortDescription: extension.shortDescription,
           extensionNamespace: extension.extensionNamespace,
           fullName: extension.fullName,
           name,
@@ -174,6 +180,13 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
           tags: extension.tags,
           category: extension.category || 'General',
           previewIconUrl: extension.previewIconUrl,
+        };
+        /** @type {ExtensionShortHeader} */
+        const extensionShortHeader = {
+          ...registryItem,
+          shortDescription: extension.shortDescription,
+          fullName: extension.fullName,
+          name,
           eventsBasedBehaviorsCount: extension.eventsBasedBehaviors.length,
           eventsFunctionsCount: extension.eventsFunctions.length,
         };
@@ -190,7 +203,40 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
           iconUrl: extension.iconUrl,
         };
 
-        extension.tags.split(',').map(
+        /** @type {Array<BehaviorShortHeader>} */
+        behaviorShortHeaders.push.apply(
+          behaviorShortHeaders,
+          extension.eventsBasedBehaviors
+            .map((behavior) =>
+              behavior.private
+                ? null
+                : {
+                    ...registryItem,
+                    extensionName: name,
+                    name: behavior.name,
+                    fullName: behavior.fullName,
+                    description: behavior.description,
+                    objectType: behavior.objectType,
+                  }
+            )
+            .filter(Boolean)
+        );
+
+        /** @type {Array<ObjectShortHeader>} */
+        objectShortHeaders.push.apply(
+          objectShortHeaders,
+          extension.eventsBasedObjects
+            ? extension.eventsBasedObjects.map((object) => ({
+                ...registryItem,
+                extensionName: name,
+                name: object.name,
+                fullName: object.fullName,
+                description: object.description,
+              }))
+            : []
+        );
+
+        extension.tags.split(',').forEach(
           /** @param {string} tag */
           (tag) => {
             allTagsSet.add(tag.trim().toLowerCase());
@@ -240,6 +286,12 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
       allTags: Array.from(allTagsSet),
       allCategories: Array.from(allCategoriesSet),
       extensionShortHeaders,
+      behavior: {
+        headers: behaviorShortHeaders,
+      },
+      object: {
+        headers: objectShortHeaders,
+      },
       views,
     };
 
