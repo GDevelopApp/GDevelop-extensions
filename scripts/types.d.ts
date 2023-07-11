@@ -48,7 +48,7 @@ interface BehaviorAndShortHeaderFields {
   objectType: string;
 }
 
-export interface BehaviorHeader
+export interface BehaviorShortHeader
   extends RegisteryItem,
     BehaviorAndShortHeaderFields {
   extensionName: string;
@@ -60,7 +60,7 @@ interface ObjectAndShortHeaderFields {
   name: string;
 }
 
-export interface ObjectHeader
+export interface ObjectShortHeader
   extends RegisteryItem,
     ObjectAndShortHeaderFields {
   extensionName: string;
@@ -79,10 +79,10 @@ export interface ExtensionsDatabase {
   allCategories: Array<string>;
   extensionShortHeaders: Array<ExtensionShortHeader>;
   behavior: {
-    headers: Array<BehaviorHeader>;
+    headers: Array<BehaviorShortHeader>;
   };
   object: {
-    headers: Array<ObjectHeader>;
+    headers: Array<ObjectShortHeader>;
   };
   views: {
     default: {

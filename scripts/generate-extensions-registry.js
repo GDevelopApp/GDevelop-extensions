@@ -8,8 +8,8 @@ const {
 const args = require('minimist')(process.argv.slice(2));
 
 /** @typedef {import('./types').ExtensionShortHeader} ExtensionShortHeader */
-/** @typedef {import('./types').BehaviorHeader} BehaviorHeader */
-/** @typedef {import('./types').ObjectHeader} ObjectHeader */
+/** @typedef {import('./types').BehaviorShortHeader} BehaviorShortHeader */
+/** @typedef {import('./types').ObjectShortHeader} ObjectShortHeader */
 /** @typedef {import('./types').RegisteryItem} RegisteryItem */
 /** @typedef {import('./types').ExtensionsDatabase} ExtensionsDatabase */
 /** @typedef {import('./types').ExtensionHeader} ExtensionHeader */
@@ -102,10 +102,10 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
 
     /** @type {ExtensionShortHeader[]} */
     const extensionShortHeaders = [];
-    /** @type {Array<BehaviorHeader>} */
-    const behaviorHeaders = [];
-    /** @type {Array<ObjectHeader>} */
-    const objectHeaders = [];
+    /** @type {Array<BehaviorShortHeader>} */
+    const behaviorShortHeaders = [];
+    /** @type {Array<ObjectShortHeader>} */
+    const objectShortHeaders = [];
 
     let totalErrors = 0;
     let fixableErrors = 0;
@@ -203,9 +203,9 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
           iconUrl: extension.iconUrl,
         };
 
-        /** @type {Array<BehaviorHeader>} */
-        behaviorHeaders.push.apply(
-          behaviorHeaders,
+        /** @type {Array<BehaviorShortHeader>} */
+        behaviorShortHeaders.push.apply(
+          behaviorShortHeaders,
           extension.eventsBasedBehaviors
             .map((behavior) =>
               behavior.private
@@ -222,9 +222,9 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
             .filter(Boolean)
         );
 
-        /** @type {Array<ObjectHeader>} */
-        objectHeaders.push.apply(
-          objectHeaders,
+        /** @type {Array<ObjectShortHeader>} */
+        objectShortHeaders.push.apply(
+          objectShortHeaders,
           extension.eventsBasedObjects
             ? extension.eventsBasedObjects.map((object) => ({
                 ...registryItem,
@@ -287,10 +287,10 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
       allCategories: Array.from(allCategoriesSet),
       extensionShortHeaders,
       behavior: {
-        headers: behaviorHeaders,
+        headers: behaviorShortHeaders,
       },
       object: {
-        headers: objectHeaders,
+        headers: objectShortHeaders,
       },
       views,
     };
