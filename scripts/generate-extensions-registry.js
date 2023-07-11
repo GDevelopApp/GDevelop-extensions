@@ -10,7 +10,7 @@ const args = require('minimist')(process.argv.slice(2));
 /** @typedef {import('./types').ExtensionShortHeader} ExtensionShortHeader */
 /** @typedef {import('./types').BehaviorShortHeader} BehaviorShortHeader */
 /** @typedef {import('./types').ObjectShortHeader} ObjectShortHeader */
-/** @typedef {import('./types').RegisteryItem} RegisteryItem */
+/** @typedef {import('./types').RegistryItem} RegistryItem */
 /** @typedef {import('./types').ExtensionsDatabase} ExtensionsDatabase */
 /** @typedef {import('./types').ExtensionHeader} ExtensionHeader */
 /** @typedef {import('./types').ExtensionWithFileInfo} ExtensionWithFileInfo */
@@ -166,7 +166,7 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
         }
 
         // Generate the headers of the extension
-        /** @type {RegisteryItem} */
+        /** @type {RegistryItem} */
         const registryItem = {
           tier,
           authorIds: extension.authorIds,

@@ -13,7 +13,7 @@ type ExtensionTier = 'community' | 'reviewed';
 /**
  * An extension, behavior or object.
  */
-export interface RegisteryItem extends ItemExtensionHeaderFields {
+export interface RegistryItem extends ItemExtensionHeaderFields {
   tier: ExtensionTier;
   url: string;
   headerUrl: string;
@@ -32,7 +32,7 @@ interface ExtensionAndHeaderFields {
 }
 
 export interface ExtensionShortHeader
-  extends RegisteryItem,
+  extends RegistryItem,
     ExtensionAndShortHeaderFields {
   tier: ExtensionTier;
   url: string;
@@ -49,7 +49,7 @@ interface BehaviorAndShortHeaderFields {
 }
 
 export interface BehaviorShortHeader
-  extends RegisteryItem,
+  extends RegistryItem,
     BehaviorAndShortHeaderFields {
   extensionName: string;
 }
@@ -61,7 +61,7 @@ interface ObjectAndShortHeaderFields {
 }
 
 export interface ObjectShortHeader
-  extends RegisteryItem,
+  extends RegistryItem,
     ObjectAndShortHeaderFields {
   extensionName: string;
 }
