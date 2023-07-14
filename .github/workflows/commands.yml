@@ -56,7 +56,7 @@ jobs:
 
   update:
     runs-on: ubuntu-latest
-    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '!update') }}
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '!update') && !contains(github.event.comment.body, 'Uploading') }}
     steps:
       - uses: xt0rted/pull-request-comment-branch@v2
         id: comment-branch
@@ -79,14 +79,32 @@ jobs:
           node scripts/generate-extensions-registry.js --disable-exit-code >> $GITHUB_ENV
           echo 'EOF' >> $GITHUB_ENV
 
-      - name: Commit and push
+      - name: Setup git config
         if: ${{ contains(env.BUILD_LOGS, 'successfully updated') }}
         run: |
           git config --global user.name '${{ github.actor }}'
           git config --global user.email '${{ github.actor }}@users.noreply.github.com'
+
+      - name: Check for changed file
+        if: ${{ contains(env.BUILD_LOGS, 'successfully updated') }}
+        id: git-diff
+        run: |
+          echo "changed=false" >> $GITHUB_OUTPUT
+          git diff --quiet || echo "changed=true" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Commit and push
+        if: ${{ steps.git-diff.outputs.changed == 'true' }}
+        run: |
           git add extensions
           git commit -m "Updated extension"
           git push
+
+      - name: Notify no changed
+        if: ${{ steps.git-diff.outputs.changed != 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr comment ${{ github.event.issue.number }} --body "❗ No updates found. Please check your file."
 
       - name: Notify success
         if: ${{ contains(env.BUILD_LOGS, 'successfully updated') }}
@@ -95,7 +113,7 @@ jobs:
         run: gh pr comment ${{ github.event.issue.number }} --body "✅ Successfully updated the extension."
 
       - name: Notify build error
-        if: ${{ !contains(env.BUILD_LOGS, 'successfully updated') }}
+        if: ${{ steps.git-diff.outputs.changed == 'true' && !contains(env.BUILD_LOGS, 'successfully updated') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
