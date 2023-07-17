@@ -8,7 +8,7 @@
   "name": "CurvedMovement",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Line Hero Pack/Master/SVG/Graphic Design/Graphic Design_bezier_curve.svg",
   "shortDescription": "Move objects on curved paths.",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": [
     "This extension allows to move objects on Bézier curve paths.",
     "- Paths can be built dynamically or from predetermined paths in SVG format.",
@@ -293,10 +293,10 @@
             "      const clone = curve.clone();",
             "      for (const point of clone.points) {",
             "        point[0] += endX;",
-            "        point[1] *= path.scaleY / this.speedScaleY;",
+            "        point[1] *= path.speedScaleY / this.speedScaleY;",
             "        point[1] += endY;",
             "      }",
-            "      this.add(clone);",
+            "      this._add(clone);",
             "    }",
             "  };",
             "",
@@ -523,8 +523,17 @@
             "   * @param {number} angle",
             "   */",
             "  CurvedPath.prototype.rotate = function (angle) {",
-            "    const cos = Math.cos(angle);",
-            "    const sin = Math.sin(angle);",
+            "    let cos = Math.cos(angle);",
+            "    let sin = Math.sin(angle);",
+            "",
+            "    // Avoid rounding errors around 0.",
+            "    if (cos === -1 || cos === 1) {",
+            "      sin = 0;",
+            "    }",
+            "    if (sin === -1 || sin === 1) {",
+            "      cos = 0;",
+            "    }",
+            "    ",
             "    for (const curve of this.curves) {",
             "      for (const point of curve.points) {",
             "        const x = point[0];",
@@ -636,6 +645,7 @@
             "    const clone = new CubicBezierCurve();",
             "    clone.points = this.points.map(point => [...point]);",
             "    clone.arcLengths = [...this.arcLengths];",
+            "    clone.speedScaleY = this.speedScaleY;",
             "    return clone;",
             "  }",
             "",
@@ -970,14 +980,14 @@
             " * @param {CurvedPath} path",
             " */",
             "CurvedPath.toSvg = function (path) {",
-            "  let svgString = 'C';",
+            "  let svgString = '';",
             "  for (const curve of path.curves) {",
+            "    svgString += 'C'",
             "    for (const point of curve.points) {",
-            "      svgString += `${point[0]},${point[0]}`;",
+            "      svgString += `${point[0]},${point[1]} `;",
             "    }",
-            "    svgString += ' ';",
             "  }",
-            "  return path;",
+            "  return svgString;",
             "}",
             "",
             "gdjs.__curvedMovementExtension = gdjs.__curvedMovementExtension || {};",
@@ -1433,6 +1443,48 @@
         {
           "description": "Name of the path to add to the first one",
           "name": "AddedPathName",
+          "supplementaryInformation": "sceneBezierCurve",
+          "type": "identifier"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Duplicate a path.",
+      "fullName": "Duplicate a path",
+      "functionType": "Action",
+      "name": "DuplicatedPath",
+      "sentence": "Create path _PARAM1_ as a duplicate of path _PARAM2_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const createdPathName = eventsFunctionContext.getArgument(\"CreatedPathName\");",
+            "const sourcePathName = eventsFunctionContext.getArgument(\"SourcePathName\");",
+            "/** @type {Map<string, gdjs.__curvedMovementExtension.CurvedPath>} */",
+            "const curvedPaths = runtimeScene.__curvedMovementExtension.curvedPaths;",
+            "",
+            "let sourcePath = curvedPaths.get(sourcePathName);",
+            "if (sourcePath) {",
+            "    const createdPath = sourcePath.clone();",
+            "    curvedPaths.set(createdPathName, createdPath);",
+            "}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Name of the path to create",
+          "name": "CreatedPathName",
+          "supplementaryInformation": "sceneBezierCurve",
+          "type": "identifier"
+        },
+        {
+          "description": "Name of the source path",
+          "name": "SourcePathName",
           "supplementaryInformation": "sceneBezierCurve",
           "type": "identifier"
         }
@@ -6266,14 +6318,14 @@
                           "subInstructions": [
                             {
                               "type": {
-                                "value": "CurvedMovement::SpeedPathMovement::PropertySpeed"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                ">",
-                                "0"
-                              ]
+                            "value": "CurvedMovement::SpeedPathMovement::PropertySpeed"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            ">",
+                            "0"
+                          ]
                             },
                             {
                               "type": {
@@ -6315,14 +6367,14 @@
                           "subInstructions": [
                             {
                               "type": {
-                                "value": "CurvedMovement::SpeedPathMovement::PropertySpeed"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                "<",
-                                "0"
-                              ]
+                            "value": "CurvedMovement::SpeedPathMovement::PropertySpeed"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "<",
+                            "0"
+                          ]
                             },
                             {
                               "type": {
@@ -6334,11 +6386,11 @@
                                 "<",
                                 "0"
                               ]
-                            }
-                          ]
                         }
                       ]
                     }
+                  ]
+                }
                   ]
                 }
               ],
