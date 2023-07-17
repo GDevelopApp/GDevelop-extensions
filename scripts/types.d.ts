@@ -80,9 +80,19 @@ export interface ExtensionsDatabase {
   extensionShortHeaders: Array<ExtensionShortHeader>;
   behavior: {
     headers: Array<BehaviorShortHeader>;
+    views: {
+      default: {
+        firstIds: Array<{ extensionName: string; behaviorName: string }>;
+      };
+    };
   };
   object: {
     headers: Array<ObjectShortHeader>;
+    views: {
+      default: {
+        firstIds: Array<{ extensionName: string; objectName: string }>;
+      };
+    };
   };
   views: {
     default: {

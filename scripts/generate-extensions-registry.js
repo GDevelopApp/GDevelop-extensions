@@ -288,11 +288,25 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
       extensionShortHeaders,
       behavior: {
         headers: behaviorShortHeaders,
+        views: {
+          default: {
+            firstIds: views.default.firstBehaviorIds,
+          },
+        },
       },
       object: {
         headers: objectShortHeaders,
+        views: {
+          default: {
+            firstIds: views.default.firstObjectIds,
+          },
+        },
       },
-      views,
+      views: {
+        default: {
+          firstExtensionIds: views.default.firstExtensionIds,
+        },
+      },
     };
 
     await writeJSONFile(
