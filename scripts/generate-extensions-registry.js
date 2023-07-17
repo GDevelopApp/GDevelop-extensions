@@ -288,11 +288,19 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
       extensionShortHeaders,
       behavior: {
         headers: behaviorShortHeaders,
-        firstIds: views.default.firstBehaviorIds,
+        views: {
+          default: {
+            firstIds: views.default.firstBehaviorIds,
+          },
+        },
       },
       object: {
         headers: objectShortHeaders,
-        firstIds: views.default.firstObjectIds,
+        views: {
+          default: {
+            firstIds: views.default.firstObjectIds,
+          },
+        },
       },
       views: {
         default: {
