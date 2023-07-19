@@ -132,6 +132,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    AudioContext: {
+      gdjsAllowedProperties: ['__audioContextExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     BackButton: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: ['back_button'],
