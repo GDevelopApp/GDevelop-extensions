@@ -8,15 +8,17 @@
   "name": "CheatCode",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/5ab10adef033825feddc9138b59d79d9a7aa94c58dd58fba0d21cd7b99be4aff_form-textbox-password.svg",
   "shortDescription": "Add cheat codes to your game.",
-  "version": "1.0.1",
+  "version": "1.1.1",
   "description": [
     "- Use \"Cheat Code Entered\" (A Condition to check if a cheat code was entered).",
     "",
-    "Note: Only lowercase alphabets and no special characters can be used in a cheat code."
+    "Note: Only lowercase alphabets and no special characters can be used as a cheat code."
   ],
   "tags": [
     "cheatcode",
-    "code"
+    "code",
+    "debug",
+    "tool"
   ],
   "authorIds": [
     "TJLmS4MUFJSWNNietFUWDxVSKnB3"
@@ -25,7 +27,7 @@
   "eventsFunctions": [
     {
       "description": "Check if a cheat code was entered.",
-      "fullName": "Cheat Code Entered",
+      "fullName": "Cheat code entered",
       "functionType": "Condition",
       "name": "CheatCodeEntered",
       "sentence": "_PARAM1_ code entered",
@@ -40,79 +42,54 @@
             "textG": 0,
             "textR": 0
           },
-          "comment": "How it works:\n\n1) The program checks if a key is pressed.\n2) In a structure named \"CheatCodeIndexStructure\" each code has a variable that stores the index of the current letter in the code that is to be checked.\n3) If the key that was pressed matches the required letter, the variable's value is incremented by 1 (one).\n4) If not, the variable is set back to 0 (zero).\n5) Once each letter is checked, the variable reaches the final index, confirming that the correct code was entered and the condition returns true.",
-          "comment2": ""
+          "comment": "How it works:\n\n1) The program checks if a key is pressed.\n2) In a structure (__CheatCode.IndexStructure) each code has a variable that stores the index of the current letter in the code that is to be checked.\n3) If the key that was pressed matches the required letter, the variable's value is incremented by 1 (one).\n4) If not, the variable is set back to 0 (zero).\n5) Once each letter is checked, the variable reaches the final index, confirming that the correct code was entered and the condition returns true.\n\nNote: the time TimeLimit parameter is not nil then a scene timer is created by the name \"__CheatCode_<code>\" for that specific code. This timer is checked in step 3 to ensure there is time left to enter the code."
         },
         {
+          "folded": true,
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [
             {
               "type": {
-                "value": "AnyKeyPressed"
+                "value": "DepartScene"
               },
               "parameters": [
                 ""
               ]
-            },
-            {
-              "type": {
-                "value": "BuiltinCommonInstructions::Once"
-              },
-              "parameters": []
             }
           ],
-          "actions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "ModVarSceneTxt"
+              },
+              "parameters": [
+                "__CheatCode.LastCodeChecked",
+                "=",
+                "\"\""
+              ]
+            }
+          ],
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
                   "type": {
-                    "value": "BuiltinCommonInstructions::CompareStrings"
+                    "value": "GetArgumentAsBoolean"
                   },
                   "parameters": [
-                    "LastPressedKey()",
-                    "!=",
-                    "StrAt(GetArgumentAsString(\"Code\"), Variable(CheatCodeIndexStructure[GetArgumentAsString(\"Code\")]))"
+                    "\"TimeLimit\""
                   ]
                 }
               ],
               "actions": [
                 {
                   "type": {
-                    "value": "ModVarScene"
+                    "value": "ResetTimer"
                   },
                   "parameters": [
-                    "CheatCodeIndexStructure[GetArgumentAsString(\"Code\")]",
-                    "=",
-                    "0"
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "BuiltinCommonInstructions::CompareStrings"
-                  },
-                  "parameters": [
-                    "LastPressedKey()",
-                    "=",
-                    "StrAt(GetArgumentAsString(\"Code\"), Variable(CheatCodeIndexStructure[GetArgumentAsString(\"Code\")]))"
-                  ]
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "value": "ModVarScene"
-                  },
-                  "parameters": [
-                    "CheatCodeIndexStructure[GetArgumentAsString(\"Code\")]",
-                    "+",
-                    "1"
+                    "",
+                    "\"__CheatCode_\"+GetArgumentAsString(\"Code\")"
                   ]
                 }
               ]
@@ -124,10 +101,164 @@
           "conditions": [
             {
               "type": {
+                "value": "AnyKeyPressed"
+              },
+              "parameters": [
+                ""
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "folded": true,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::CompareStrings"
+                  },
+                  "parameters": [
+                    "LastPressedKey()",
+                    "!=",
+                    "StrAt(GetArgumentAsString(\"Code\"), Variable(__CheatCode.IndexStructure[GetArgumentAsString(\"Code\")]))"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::Once"
+                  },
+                  "parameters": []
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__CheatCode.IndexStructure[GetArgumentAsString(\"Code\")]",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "GetArgumentAsBoolean"
+                      },
+                      "parameters": [
+                        "\"TimeLimit\""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "ResetTimer"
+                      },
+                      "parameters": [
+                        "",
+                        "\"__CheatCode_\"+GetArgumentAsString(\"Code\")"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::CompareStrings"
+                  },
+                  "parameters": [
+                    "LastPressedKey()",
+                    "=",
+                    "StrAt(GetArgumentAsString(\"Code\"), Variable(__CheatCode.IndexStructure[GetArgumentAsString(\"Code\")]))"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::Or"
+                  },
+                  "parameters": [],
+                  "subInstructions": [
+                    {
+                      "type": {
+                        "inverted": true,
+                        "value": "GetArgumentAsBoolean"
+                      },
+                      "parameters": [
+                        "\"TimeLimit\""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "BuiltinCommonInstructions::And"
+                      },
+                      "parameters": [],
+                      "subInstructions": [
+                        {
+                          "type": {
+                            "value": "GetArgumentAsBoolean"
+                          },
+                          "parameters": [
+                            "\"TimeLimit\""
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "CompareTimer"
+                          },
+                          "parameters": [
+                            "",
+                            "\"__CheatCode_\"+GetArgumentAsString(\"Code\")",
+                            "<",
+                            "GetArgumentAsNumber(\"TimeLimit\")"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::Once"
+                  },
+                  "parameters": []
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__CheatCode.IndexStructure[GetArgumentAsString(\"Code\")]",
+                    "+",
+                    "1"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "folded": true,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
                 "value": "VarScene"
               },
               "parameters": [
-                "CheatCodeIndexStructure[GetArgumentAsString(\"Code\")]",
+                "__CheatCode.IndexStructure[GetArgumentAsString(\"Code\")]",
                 "=",
                 "StrLength(GetArgumentAsString(\"Code\"))"
               ]
@@ -139,7 +270,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "CheatCodeIndexStructure[GetArgumentAsString(\"Code\")]",
+                "__CheatCode.IndexStructure[GetArgumentAsString(\"Code\")]",
                 "=",
                 "0"
               ]
@@ -152,6 +283,32 @@
                 "True"
               ]
             }
+          ],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"TimeLimit\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ResetTimer"
+                  },
+                  "parameters": [
+                    "",
+                    "\"__CheatCode_\"+GetArgumentAsString(\"Code\")"
+                  ]
+                }
+              ]
+            }
           ]
         }
       ],
@@ -160,6 +317,11 @@
           "description": "Code",
           "name": "Code",
           "type": "string"
+        },
+        {
+          "description": "Time in seconds under which the code must be entered (leave empty for no time limit)",
+          "name": "TimeLimit",
+          "type": "expression"
         }
       ],
       "objectGroups": []
