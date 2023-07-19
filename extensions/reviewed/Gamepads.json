@@ -8,11 +8,19 @@
   "name": "Gamepads",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/gamepad-variant-outline.svg",
   "shortDescription": "Add support for gamepads (or other controllers) to your game, giving access to information such as button presses, axis positions, trigger pressure, etc...",
-  "version": "0.4.1",
+  "version": "0.6.1",
   "description": [
-    "Add support for gamepads (or other controllers) to your game, giving access to information such as button presses, axis positions, axis force, trigger pressure, deadzone for each gamepad, etc...",
+    "Add support for gamepads (or other controllers).",
     "",
-    "Up to 4 gamepads can be connected. For each condition or expression, you'll have to enter the index of the gamepad to read. This is 1, 2, 3 or 4."
+    "It gives access to:",
+    "- button presses",
+    "- axis positions and force",
+    "- trigger pressure",
+    "- configurable deadzone",
+    "- vibration",
+    "- automatic mappers for platformer characters and top-down movement",
+    "",
+    "The Bomberman-like example handles 4 players with gamepads ([open the project online](https://editor.gdevelop.io/?project=example://goose-bomberman))."
   ],
   "origin": {
     "identifier": "Gamepads",
@@ -27,7 +35,9 @@
     "ps4"
   ],
   "authorIds": [
-    "2OwwM8ToR9dx9RJ2sAKTcrLmCB92"
+    "2OwwM8ToR9dx9RJ2sAKTcrLmCB92",
+    "taRwmWxwAFYFL9yyBwB3cwBw0BO2",
+    "mnImQKdn8nQxwzkS5D6a1JB27V23"
   ],
   "dependencies": [],
   "eventsFunctions": [
@@ -102,11 +112,11 @@
       "objectGroups": []
     },
     {
-      "description": "Get the force value of a gamepad stick.\n0 is stick on default position, 1 is at the maximum.",
-      "fullName": "Value of a stick force",
-      "functionType": "Expression",
+      "description": "the force of gamepad stick (from 0 to 1).",
+      "fullName": "Stick force",
+      "functionType": "ExpressionAndCondition",
       "name": "StickForce",
-      "sentence": "Player _PARAM1_ push axis _PARAM2_ to _PARAM3_",
+      "sentence": "the gamepad _PARAM1_ _PARAM2_ stick force",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -174,10 +184,51 @@
     },
     {
       "description": "Get the rotation value of a gamepad stick.\nIf the deadzone value is high, the angle value is rounded to main axes, left, left, up, down.\nAn zero deadzone value give a total freedom on the angle value.",
-      "fullName": "Value of a stick rotation",
+      "fullName": "Value of a stick rotation (deprecated)",
       "functionType": "Expression",
       "name": "StickRotationValue",
+      "private": true,
       "sentence": "Player _PARAM1_ push axis _PARAM2_ to _PARAM3_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "Gamepads::StickAngle(GetArgumentAsNumber(\"player_ID\"), GetArgumentAsString(\"stick\"))"
+              ]
+            }
+          ]
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "player_ID",
+          "type": "expression"
+        },
+        {
+          "description": "Stick: \"Left\" or \"Right\"",
+          "name": "stick",
+          "supplementaryInformation": "[\"Left\",\"Right\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the angle of a gamepad stick.\nIf the deadzone value is high, the angle value is rounded to main axes, left, left, up, down.\nAn zero deadzone value give a total freedom on the angle value.",
+      "fullName": "Stick angle",
+      "functionType": "Expression",
+      "name": "StickAngle",
+      "sentence": "",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -242,9 +293,10 @@
     },
     {
       "description": "Get the value of axis of a gamepad stick.",
-      "fullName": "Value of a gamepad axis",
+      "fullName": "Value of a gamepad axis (deprecated)",
       "functionType": "Expression",
       "name": "AxisValue",
+      "private": true,
       "sentence": "Player _PARAM1_ push axis _PARAM2_ to _PARAM3_",
       "events": [
         {
@@ -384,6 +436,120 @@
           "description": "Direction",
           "name": "direction",
           "supplementaryInformation": "[\"Up\",\"Down\",\"Left\",\"Right\",\"Horizontal\",\"Vertical\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the gamepad stick force on X axis (from -1 at the left to 1 at the right).",
+      "fullName": "Stick X force",
+      "functionType": "Expression",
+      "name": "StickForceX",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "/** @type {Gamepad[]} */\r",
+            "const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r",
+            "\r",
+            "//Get function parameters\r",
+            "const playerId = eventsFunctionContext.getArgument(\"Gamepad\") - 1;\r",
+            "const stick = eventsFunctionContext.getArgument(\"Stick\").toLowerCase();\r",
+            "\r",
+            "if (playerId < 0 || playerId > 4) {\r",
+            "    console.error('Parameter gamepad identifier is not valid in expression: \"Value of a gamepad axis\"');\r",
+            "    return;\r",
+            "}\r",
+            "if (stick != \"left\" && stick != \"right\") {\r",
+            "    console.error('Parameter stick is not valid in expression: \"Value of a gamepad axis\"');\r",
+            "    return;\r",
+            "}\r",
+            "const gamepad = gamepads[playerId];\r",
+            "\r",
+            "//we need keep this condition because when use have not yet plug her controller we can't get the controller in the gamepad variable.\r",
+            "if (gamepad == null) return;\r",
+            "\r",
+            "const axisIndex = stick === 'right' ? 2 : 0;\r",
+            "eventsFunctionContext.returnValue = gdjs._extensionController.getNormalizedAxisValue(gamepad.axes[axisIndex], playerId);\r",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "Gamepad",
+          "type": "expression"
+        },
+        {
+          "description": "Stick: \"Left\" or \"Right\"",
+          "name": "Stick",
+          "supplementaryInformation": "[\"Left\",\"Right\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the gamepad stick force on Y axis (from -1 at the top to 1 at the bottom).",
+      "fullName": "Stick Y force",
+      "functionType": "Expression",
+      "name": "StickForceY",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "/** @type {Gamepad[]} */\r",
+            "const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r",
+            "\r",
+            "//Get function parameters\r",
+            "const playerId = eventsFunctionContext.getArgument(\"Gamepad\") - 1;\r",
+            "const stick = eventsFunctionContext.getArgument(\"Stick\").toLowerCase();\r",
+            "\r",
+            "if (playerId < 0 || playerId > 4) {\r",
+            "    console.error('Parameter gamepad identifier is not valid in expression: \"Value of a gamepad axis\"');\r",
+            "    return;\r",
+            "}\r",
+            "if (stick != \"left\" && stick != \"right\") {\r",
+            "    console.error('Parameter stick is not valid in expression: \"Value of a gamepad axis\"');\r",
+            "    return;\r",
+            "}\r",
+            "const gamepad = gamepads[playerId];\r",
+            "\r",
+            "//we need keep this condition because when use have not yet plug her controller we can't get the controller in the gamepad variable.\r",
+            "if (gamepad == null) return;\r",
+            "\r",
+            "const axisIndex = stick === 'right' ? 3 : 1;\r",
+            "eventsFunctionContext.returnValue = gdjs._extensionController.getNormalizedAxisValue(gamepad.axes[axisIndex], playerId);\r",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "Gamepad",
+          "type": "expression"
+        },
+        {
+          "description": "Stick: \"Left\" or \"Right\"",
+          "name": "Stick",
+          "supplementaryInformation": "[\"Left\",\"Right\"]",
           "type": "stringWithSelector"
         }
       ],
@@ -901,7 +1067,7 @@
         {
           "description": "Name of the button",
           "name": "button",
-          "supplementaryInformation": "[\"A\",\"Cross\",\"B\",\"Circle\",\"X\",\"Square\",\"Y\",\"Triangle\",\"LB\",\"L1\",\"RB\",\"R1\",\"LT\",\"L2\",\"RT\",\"R2\",\"Up\",\"Down\",\"Left\",\"Right\",\"BAck\",\"Share\",\"Start\",\"Options\",\"Click_Stick_Left\",\"Click_Stick_Right\",\"PS_Button\",\"Click_Touchpad\"]",
+          "supplementaryInformation": "[\"A\",\"Cross\",\"B\",\"Circle\",\"X\",\"Square\",\"Y\",\"Triangle\",\"LB\",\"L1\",\"RB\",\"R1\",\"LT\",\"L2\",\"RT\",\"R2\",\"Up\",\"Down\",\"Left\",\"Right\",\"Back\",\"Share\",\"Start\",\"Options\",\"Click_Stick_Left\",\"Click_Stick_Right\",\"PS_Button\",\"Click_Touchpad\"]",
           "type": "stringWithSelector"
         }
       ],
@@ -1348,11 +1514,6 @@
       "sentence": "Make gamepad _PARAM1_ vibrate for _PARAM2_ seconds",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": []
-        },
-        {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
             "/** @type {Gamepad[]} */",
@@ -1360,8 +1521,8 @@
             "const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);",
             "",
             "//Get function parameters",
-            "const playerId = eventsFunctionContext.getArgument(\"player_ID\") - 1;",
-            "const duration = eventsFunctionContext.getArgument(\"duration\") || 1;",
+            "const playerId = eventsFunctionContext.getArgument(\"Player_ID\") - 1;",
+            "const duration = eventsFunctionContext.getArgument(\"Duration\") || 1;",
             "",
             "if (playerId < 0 || playerId > 4) {",
             "  console.error('Parameter gamepad identifier in action: \"Gamepad connected\", is not valid number, must be between 0 and 4.');",
@@ -1390,12 +1551,171 @@
       "parameters": [
         {
           "description": "The gamepad identifier: 1, 2, 3 or 4",
-          "name": "player_ID",
+          "name": "Player_ID",
           "type": "expression"
         },
         {
           "description": "Time of the vibration, in seconds (optional, default value is 1)",
-          "name": "duration",
+          "name": "Duration",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Generate an advanced vibration on the specified controller. Incompatible with Firefox.",
+      "fullName": "Advanced gamepad vibration",
+      "functionType": "Action",
+      "name": "A_Advanced_Vibration_Controller",
+      "sentence": "Make gamepad _PARAM1_ vibrate for _PARAM2_ seconds with the vibration magnitude of _PARAM3_ and _PARAM4_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "/** @type {Gamepad[]} */",
+            "//Vibration work only on game in browser.",
+            "const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);",
+            "",
+            "//Get function parameters",
+            "const playerId = eventsFunctionContext.getArgument(\"Player_ID\") - 1;",
+            "const duration = eventsFunctionContext.getArgument(\"Duration\") || 1;",
+            "const strongRumbleMagnitude = eventsFunctionContext.getArgument(\"StrongMagnitude\");",
+            "const weakRumbleMagnitude = eventsFunctionContext.getArgument(\"WeakMagnitude\");",
+            "",
+            "if (playerId < 0 || playerId > 4) {",
+            "  console.error('Parameter gamepad identifier in action: \"Advanced gamepad vibration\", is not valid number, must be between 0 and 4.');",
+            "  return;",
+            "}",
+            "if (weakRumbleMagnitude < 0 || weakRumbleMagnitude > 1) {",
+            "  console.error('Parameter weakRumble identifier in action: \"Advanced gamepad vibration\", is not valid number, must be between 0 and 1.');",
+            "  return;",
+            "}",
+            "if (strongRumbleMagnitude < 0 || strongRumbleMagnitude > 1) {",
+            "  console.error('Parameter strongRumble identifier in action: \"Advanced gamepad vibration\", is not valid number, must be between 0 and 1.');",
+            "  return;",
+            "}",
+            "",
+            "const gamepad = gamepads[playerId];",
+            "",
+            "//we need keep this condition because when use have not yet plug the controller we can't get the controller in the gamepad variable.",
+            "if (gamepad == null) return;",
+            "",
+            "if (gamepad && gamepad.vibrationActuator) {",
+            "  gamepad.vibrationActuator.playEffect(\"dual-rumble\", {",
+            "    startDelay: 0,",
+            "    duration: duration * 1000,",
+            "    weakMagnitude: weakRumbleMagnitude,",
+            "    strongMagnitude: strongRumbleMagnitude",
+            "  });",
+            "}",
+            "",
+            "gdjs._extensionController.players[playerId].rumble.duration = duration;",
+            "gdjs._extensionController.players[playerId].rumble.elapsedTime = 0;",
+            "gdjs._extensionController.players[playerId].rumble.weakMagnitude = weakRumbleMagnitude;",
+            "gdjs._extensionController.players[playerId].rumble.strongMagnitude = strongRumbleMagnitude;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "Player_ID",
+          "type": "expression"
+        },
+        {
+          "description": "Time of the vibration, in seconds (optional, default value is 1)",
+          "name": "Duration",
+          "type": "expression"
+        },
+        {
+          "description": "Strong rumble magnitude (from 0 to 1)",
+          "name": "StrongMagnitude",
+          "type": "expression"
+        },
+        {
+          "description": "Weak rumble magnitude (from 0 to 1)",
+          "name": "WeakMagnitude",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Change a vibration on the specified controller. Incompatible with Firefox.",
+      "fullName": "Change gamepad active vibration",
+      "functionType": "Action",
+      "name": "A_Change_Vibration_Magnitude",
+      "sentence": "Change the vibration magnitude of _PARAM2_ & _PARAM3_ on gamepad _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "/** @type {Gamepad[]} */",
+            "//Vibration work only on game in browser.",
+            "const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);",
+            "",
+            "//Get function parameters",
+            "const playerId = eventsFunctionContext.getArgument(\"Player_ID\") - 1;",
+            "const elapsedTime = gdjs._extensionController.players[playerId].rumble.elapsedTime || 0;",
+            "const originalDuration = gdjs._extensionController.players[playerId].rumble.duration || 1;",
+            "const strongRumbleMagnitude = eventsFunctionContext.getArgument(\"StrongMagnitude\");",
+            "const weakRumbleMagnitude = eventsFunctionContext.getArgument(\"WeakMagnitude\");",
+            "",
+            "",
+            "if (playerId < 0 || playerId > 4) {",
+            "  console.error('Parameter gamepad identifier in action: \"Change gamepad active vibration\", is not valid number, must be between 0 and 4.');",
+            "  return;",
+            "}",
+            "if (weakRumbleMagnitude < 0 || weakRumbleMagnitude > 1) {",
+            "  console.error('Parameter weakRumble identifier in action: \"Change gamepad active vibration\", is not valid number, must be between 0 and 1.');",
+            "  return;",
+            "}",
+            "if (strongRumbleMagnitude < 0 || strongRumbleMagnitude > 1) {",
+            "  console.error('Parameter strongRumble identifier in action: \"Change gamepad active vibration\", is not valid number, must be between 0 and 1.');",
+            "  return;",
+            "}",
+            "",
+            "const gamepad = gamepads[playerId];",
+            "",
+            "//we need keep this condition because when use have not yet plug the controller we can't get the controller in the gamepad variable.",
+            "if (gamepad == null) return;",
+            "",
+            "if (originalDuration - elapsedTime <= 0) return;",
+            "",
+            "if (gamepad && gamepad.vibrationActuator) {",
+            "  gamepad.vibrationActuator.playEffect(\"dual-rumble\", {",
+            "    startDelay: 0,",
+            "    duration: 1000 * (originalDuration - elapsedTime),",
+            "    weakMagnitude: weakRumbleMagnitude,",
+            "    strongMagnitude: strongRumbleMagnitude",
+            "  });",
+            "}",
+            "",
+            "gdjs._extensionController.players[playerId].rumble.weakMagnitude = weakRumbleMagnitude;",
+            "gdjs._extensionController.players[playerId].rumble.strongMagnitude = strongRumbleMagnitude;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "Player_ID",
+          "type": "expression"
+        },
+        {
+          "description": "Strong rumble magnitude (from 0 to 1)",
+          "name": "StrongMagnitude",
+          "type": "expression"
+        },
+        {
+          "description": "Weak rumble magnitude (from 0 to 1)",
+          "name": "WeakMagnitude",
           "type": "expression"
         }
       ],
@@ -1418,10 +1738,10 @@
             "//Define an new private object javascript for the gamepad extension\r",
             "gdjs._extensionController = {\r",
             "    players: {\r",
-            "        0: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r",
-            "        1: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r",
-            "        2: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r",
-            "        3: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, },\r",
+            "        0: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, rumble: {} },\r",
+            "        1: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, rumble: {} },\r",
+            "        2: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, rumble: {} },\r",
+            "        3: { mapping: 'DEFAULT', lastButtonUsed: -1, deadzone: 0.2, previousFrameStateButtons: {}, rumble: {} },\r",
             "    },\r",
             "    lastActiveController: -1, // Last active controller\r",
             "    controllerButtonNames: { //Map associating controller button ids to button names\r",
@@ -1582,9 +1902,19 @@
             "            gdjs._extensionController.players[i].previousFrameStateButtons[b] = { pressed: false };",
             "        }",
             "    }",
+            "",
+            "",
+            "    gdjs._extensionController.players[i].rumble.elapsedTime += runtimeScene.getElapsedTime(runtimeScene) / 1000;",
+            "    if (",
+            "        gdjs._extensionController.players[i].rumble.duration - gdjs._extensionController.players[i].rumble.elapsedTime <= 0 &&",
+            "        (gdjs._extensionController.players[i].rumble.weakMagnitude || gdjs._extensionController.players[i].rumble.strongMagnitude)",
+            "    ) {",
+            "        gdjs._extensionController.players[i].rumble.weakMagnitude = 0;",
+            "        gdjs._extensionController.players[i].rumble.strongMagnitude = 0;",
+            "    }",
+            "",
+            "",
             "}",
-            "",
-            "",
             ""
           ],
           "parameterObjects": "",
@@ -1668,6 +1998,66 @@
         {
           "description": "The gamepad identifier: 1, 2, 3 or 4",
           "name": "player_ID",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the strength of the weak vibration motor on the gamepad of a player.",
+      "fullName": "Weak rumble magnitude",
+      "functionType": "Expression",
+      "name": "WeakVibrationMagnitude",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const playerId = eventsFunctionContext.getArgument(\"Player_ID\") - 1;\r",
+            "eventsFunctionContext.returnValue = gdjs._extensionController.players[playerId].rumble.weakMagnitude;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "Player_ID",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the strength of the strong vibration motor on the gamepad of a player.",
+      "fullName": "Strong rumble magnitude",
+      "functionType": "Expression",
+      "name": "StrongVibrationMagnitude",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const playerId = eventsFunctionContext.getArgument(\"Player_ID\") - 1;\r",
+            "eventsFunctionContext.returnValue = gdjs._extensionController.players[playerId].rumble.strongMagnitude;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "The gamepad identifier: 1, 2, 3 or 4",
+          "name": "Player_ID",
           "type": "expression"
         }
       ],

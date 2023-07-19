@@ -9,7 +9,7 @@ exports.isValidExtensionName = (extensionName) => {
   const len = extensionName.length;
   for (let i = 1; i < len; i++) {
     const charCode = extensionName.charCodeAt(i);
-    // Use the ascii table to check quickly if a character is a normal upper- or lowecase character or a number,
+    // Use the ascii table to check quickly if a character is a normal upper- or lowercase character or a number,
     // as only those are allowed as extension names.
     if (
       // If below numbers range...

@@ -1,14 +1,28 @@
-interface ExtensionAndShortHeaderFields {
+interface ItemExtensionHeaderFields {
   authorIds: Array<string>;
-  shortDescription: string;
   extensionNamespace: string;
-  fullName: string;
-  name: string;
   version: string;
   gdevelopVersion?: string;
   tags: Array<string>;
   category: string;
   previewIconUrl: string;
+}
+
+type ExtensionTier = 'community' | 'reviewed';
+
+/**
+ * An extension, behavior or object.
+ */
+export interface RegistryItem extends ItemExtensionHeaderFields {
+  tier: ExtensionTier;
+  url: string;
+  headerUrl: string;
+}
+
+interface ExtensionAndShortHeaderFields extends ItemExtensionHeaderFields {
+  shortDescription: string;
+  fullName: string;
+  name: string;
 }
 
 interface ExtensionAndHeaderFields {
@@ -17,14 +31,39 @@ interface ExtensionAndHeaderFields {
   iconUrl: string;
 }
 
-type ExtensionTier = 'community' | 'reviewed';
-
-export interface ExtensionShortHeader extends ExtensionAndShortHeaderFields {
+export interface ExtensionShortHeader
+  extends RegistryItem,
+    ExtensionAndShortHeaderFields {
   tier: ExtensionTier;
   url: string;
   headerUrl: string;
   eventsBasedBehaviorsCount: number;
   eventsFunctionsCount: number;
+}
+
+interface BehaviorAndShortHeaderFields {
+  description: string;
+  fullName: string;
+  name: string;
+  objectType: string;
+}
+
+export interface BehaviorShortHeader
+  extends RegistryItem,
+    BehaviorAndShortHeaderFields {
+  extensionName: string;
+}
+
+interface ObjectAndShortHeaderFields {
+  description: string;
+  fullName: string;
+  name: string;
+}
+
+export interface ObjectShortHeader
+  extends RegistryItem,
+    ObjectAndShortHeaderFields {
+  extensionName: string;
 }
 
 export interface ExtensionHeader
@@ -33,9 +72,28 @@ export interface ExtensionHeader
 
 export interface ExtensionsDatabase {
   version: string;
+  /** @deprecated Tags list should be built by the UI. When only reviewed
+   * extensions are shown, some tags could lead to no extension. */
   allTags: Array<string>;
+  /** @deprecated Categories list should be built by the UI. */
   allCategories: Array<string>;
   extensionShortHeaders: Array<ExtensionShortHeader>;
+  behavior: {
+    headers: Array<BehaviorShortHeader>;
+    views: {
+      default: {
+        firstIds: Array<{ extensionName: string; behaviorName: string }>;
+      };
+    };
+  };
+  object: {
+    headers: Array<ObjectShortHeader>;
+    views: {
+      default: {
+        firstIds: Array<{ extensionName: string; objectName: string }>;
+      };
+    };
+  };
   views: {
     default: {
       firstExtensionIds: Array<string>;
@@ -95,6 +153,15 @@ export interface EventsBasedBehaviors {
   fullName: string;
   name: string;
   objectType: string;
+  private?: boolean;
+  eventsFunctions: EventsFunction[];
+}
+
+export interface EventsBasedObjects {
+  description: string;
+  fullName: string;
+  name: string;
+  defaultName: string;
   eventsFunctions: EventsFunction[];
 }
 
@@ -104,6 +171,7 @@ export interface Extension
   tags: string | string[];
   eventsFunctions: EventsFunction[];
   eventsBasedBehaviors: EventsBasedBehaviors[];
+  eventsBasedObjects?: EventsBasedObjects[];
 }
 
 export interface ExtensionWithProperFileInfo {

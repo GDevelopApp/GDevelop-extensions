@@ -34,7 +34,7 @@ exports.extractExtension = async function (
   if (ext !== '.json') return { error: 'invalid-file-name' };
 
   // Ensure no special characters are in the extension name to prevent relative path
-  // name schenanigans with dots that could put the extension in the reviewed folder.
+  // name shenanigans with dots that could put the extension in the reviewed folder.
   if (dir) return { error: 'invalid-file-name' };
   if (!isValidExtensionName(extensionName))
     return { error: 'invalid-file-name' };
