@@ -8,7 +8,7 @@
   "name": "CurvedMovement",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Line Hero Pack/Master/SVG/Graphic Design/Graphic Design_bezier_curve.svg",
   "shortDescription": "Move objects on curved paths.",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": [
     "This extension allows to move objects on Bézier curve paths.",
     "- Paths can be built dynamically or from predetermined paths in SVG format.",
@@ -5770,11 +5770,91 @@
           "objectGroups": []
         },
         {
-          "description": "the length between the trajectory origin and the current position.",
+          "description": "the length between the trajectory origin and the current position without counting the loops.",
+          "fullName": "Position on the loop",
+          "functionType": "ExpressionAndCondition",
+          "name": "PositionOnLoop",
+          "sentence": "the length from the trajectory origin in the current loop",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "mod(Object.Behavior::PropertyCurrentLength(), Object.Behavior::TotalLength())"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "CurvedMovement::SpeedPathMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the number time the object loop the trajectory.",
+          "fullName": "Current loop",
+          "functionType": "ExpressionAndCondition",
+          "name": "Loop",
+          "sentence": "the current loop",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "ceil(Object.Behavior::PropertyCurrentLength() / Object.Behavior::TotalLength())"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "CurvedMovement::SpeedPathMovement",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the length between the trajectory origin and the current position counting the loops.",
           "fullName": "Position on the path",
           "functionType": "ExpressionAndCondition",
           "name": "PositionOnPath",
-          "sentence": "the length from the trajectory origin",
+          "sentence": "the length from the trajectory origin counting the loops",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -5867,7 +5947,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "mod(GetArgumentAsNumber(\"Value\"), Object.Behavior::TotalLength())"
+                    "GetArgumentAsNumber(\"Value\")"
                   ]
                 }
               ]
@@ -6004,6 +6084,7 @@
           "fullName": "Current length",
           "functionType": "Condition",
           "name": "CheckPositionOnPath",
+          "private": true,
           "sentence": "_PARAM0_ is less than _PARAM2_ pixels away from the trajectory origin",
           "events": [
             {
@@ -6014,7 +6095,7 @@
                     "value": "BuiltinCommonInstructions::CompareNumbers"
                   },
                   "parameters": [
-                    "Object.Behavior::PositionOnPath()",
+                    "Object.Behavior::PositionOnLoop()",
                     "<",
                     "GetArgumentAsNumber(\"Length\")"
                   ]
@@ -6318,14 +6399,14 @@
                           "subInstructions": [
                             {
                               "type": {
-                            "value": "CurvedMovement::SpeedPathMovement::PropertySpeed"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Behavior",
-                            ">",
-                            "0"
-                          ]
+                                "value": "CurvedMovement::SpeedPathMovement::PropertySpeed"
+                              },
+                              "parameters": [
+                                "Object",
+                                "Behavior",
+                                ">",
+                                "0"
+                              ]
                             },
                             {
                               "type": {
@@ -6367,14 +6448,14 @@
                           "subInstructions": [
                             {
                               "type": {
-                            "value": "CurvedMovement::SpeedPathMovement::PropertySpeed"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Behavior",
-                            "<",
-                            "0"
-                          ]
+                                "value": "CurvedMovement::SpeedPathMovement::PropertySpeed"
+                              },
+                              "parameters": [
+                                "Object",
+                                "Behavior",
+                                "<",
+                                "0"
+                              ]
                             },
                             {
                               "type": {
@@ -6386,11 +6467,11 @@
                                 "<",
                                 "0"
                               ]
+                            }
+                          ]
                         }
                       ]
                     }
-                  ]
-                }
                   ]
                 }
               ],
@@ -7089,7 +7170,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "mod(Object.Behavior::PropertyCurrentLength(), Object.Behavior::PathLength())"
+                    "mod(Object.Behavior::PositionOnLoop(), Object.Behavior::PathLength())"
                   ]
                 }
               ]
@@ -7179,7 +7260,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "floor(Object.Behavior::PropertyCurrentLength() / Object.Behavior::PathLength())"
+                    "floor(Object.Behavior::PositionOnLoop() / Object.Behavior::PathLength())"
                   ]
                 }
               ]
@@ -7257,7 +7338,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "mod(Object.Behavior::PropertyCurrentLength(), Object.Behavior::TotalLength())"
+                    "mod(Object.Behavior::PositionOnLoop(), Object.Behavior::TotalLength())"
                   ]
                 }
               ]
