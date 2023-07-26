@@ -52,6 +52,10 @@ export interface BehaviorShortHeader
   extends RegistryItem,
     BehaviorAndShortHeaderFields {
   extensionName: string;
+  /**
+   * All required behaviors including transitive ones.
+   */
+  allRequiredBehaviorTypes: Array<string>;
 }
 
 interface ObjectAndShortHeaderFields {
@@ -148,13 +152,19 @@ export interface EventsFunction {
   objectGroups: string[];
 }
 
-export interface EventsBasedBehaviors {
+export interface PropertyDescriptor {
+  type: 'Number' | 'String' | 'Boolean' | 'Choice' | 'Color' | 'Behavior';
+  extraInformation: string[];
+}
+
+export interface EventsBasedBehavior {
   description: string;
   fullName: string;
   name: string;
   objectType: string;
   private?: boolean;
   eventsFunctions: EventsFunction[];
+  propertyDescriptors: PropertyDescriptor[];
 }
 
 export interface EventsBasedObjects {
@@ -170,7 +180,7 @@ export interface Extension
     ExtensionAndHeaderFields {
   tags: string | string[];
   eventsFunctions: EventsFunction[];
-  eventsBasedBehaviors: EventsBasedBehaviors[];
+  eventsBasedBehaviors: EventsBasedBehavior[];
   eventsBasedObjects?: EventsBasedObjects[];
 }
 
