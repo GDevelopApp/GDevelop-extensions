@@ -15,6 +15,8 @@ const args = require('minimist')(process.argv.slice(2));
 /** @typedef {import('./types').ExtensionHeader} ExtensionHeader */
 /** @typedef {import('./types').ExtensionWithFileInfo} ExtensionWithFileInfo */
 /** @typedef {import('./types').ExtensionTier} ExtensionTier */
+/** @typedef {import('./types').Extension} Extension */
+/** @typedef {import('./types').EventsBasedBehavior} EventsBasedBehavior */
 
 const extensionsBasePath = path.join(__dirname, '..', 'extensions');
 const reviewedExtensionsTier = 'reviewed';
@@ -76,6 +78,50 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
       }
     })
   );
+};
+
+/**
+ * Find all required behaviors including transitive ones.
+ * @param {Extension} extension
+ * @param {EventsBasedBehavior} behavior
+ * @param {Array<string>} requiredBehaviorTypes
+ */
+const findAllRequiredBehaviorTypes = (
+  extension,
+  behavior,
+  requiredBehaviorTypes = []
+) => {
+  for (const propertyDescriptor of behavior.propertyDescriptors) {
+    if (propertyDescriptor.type == 'Behavior') {
+      const requiredBehaviorType = propertyDescriptor.extraInformation[0];
+      const extensionPrefix = extension.name + '::';
+      if (!requiredBehaviorTypes.includes(requiredBehaviorType)) {
+        requiredBehaviorTypes.push(requiredBehaviorType);
+
+        if (requiredBehaviorType.startsWith(extensionPrefix)) {
+          const behaviorName = requiredBehaviorType.substring(
+            extensionPrefix.length
+          );
+          const requiredBehavior = extension.eventsBasedBehaviors.find(
+            (behavior) => behavior.name === behaviorName
+          );
+          if (!requiredBehavior) {
+            throw new Error(
+              'Required behavior: ' +
+                requiredBehaviorTypes +
+                ' is missing in the extension.'
+            );
+          }
+          findAllRequiredBehaviorTypes(
+            extension,
+            requiredBehavior,
+            requiredBehaviorTypes
+          );
+        }
+      }
+    }
+  }
+  return requiredBehaviorTypes;
 };
 
 (async () => {
@@ -217,6 +263,10 @@ const readExtensionsFromFolder = async (folderPath, tier) => {
                     fullName: behavior.fullName,
                     description: behavior.description,
                     objectType: behavior.objectType,
+                    allRequiredBehaviorTypes: findAllRequiredBehaviorTypes(
+                      extension,
+                      behavior
+                    ),
                   }
             )
             .filter(Boolean)

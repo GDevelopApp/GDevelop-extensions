@@ -1,6 +1,6 @@
 /** @typedef {import("../../types").Extension} Extension */
 /** @typedef {import("../../types").EventsFunction} EventsFunction */
-/** @typedef {import("../../types").EventsBasedBehaviors} EventsBasedBehaviors */
+/** @typedef {import("../../types").EventsBasedBehavior} EventsBasedBehaviors */
 /** @typedef {import("../../types").Parameter} Parameter */
 /** @typedef {import("./rule").ErrorLogger} ErrorLogger */
 
