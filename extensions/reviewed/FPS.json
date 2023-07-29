@@ -10,10 +10,12 @@
   "shortDescription": "Calculate and display the frames per second (FPS) of the game.",
   "version": "1.1.0",
   "description": [
-    "Provides an expression to get the current FPS and a behavior to simplify displaying the current FPS.",
+    "Provides an expression to get the current FPS and a text object behavior to display the current FPS.",
     "",
     "Frames Per Second (FPS) describes how many times in the last second your game logic was executed. ",
-    "This includes running behaviors and events, and then rendering the new game state into the game window. The higher the FPS, the more fluid and performant your game looks."
+    "This includes running behaviors and events, and then rendering the new game state into the game window. The higher the FPS, the more fluid and performant your game looks.",
+    "",
+    "Note: Use the Performance Profiler (inside in the Debugger) for detailed performance information about your game."
   ],
   "origin": {
     "identifier": "FPS",
@@ -40,39 +42,16 @@
       "sentence": "",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::Comment",
-          "color": {
-            "b": 109,
-            "g": 230,
-            "r": 255,
-            "textB": 0,
-            "textG": 0,
-            "textR": 0
-          },
-          "comment": "Save starting time and set default value"
-        },
-        {
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [],
           "actions": [
             {
               "type": {
-                "value": "FPS::RestartFpsCounter"
+                "value": "SceneVariablePushNumber"
               },
               "parameters": [
-                "",
-                "",
-                ""
-              ]
-            },
-            {
-              "type": {
-                "value": "ModVarScene"
-              },
-              "parameters": [
-                "__FPS.UpdatePeriod",
-                "=",
-                "1"
+                "__FPS.FrameTimestamps",
+                "Time(\"timestamp\")"
               ]
             }
           ]
@@ -88,63 +67,128 @@
       "sentence": "",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": [
+          "colorB": 228,
+          "colorG": 176,
+          "colorR": 74,
+          "creationTime": 0,
+          "name": "Keep timestamps for every frame inside the lookback period",
+          "source": "",
+          "type": "BuiltinCommonInstructions::Group",
+          "events": [
             {
-              "type": {
-                "value": "ModVarScene"
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
               },
-              "parameters": [
-                "__FPS.FramesCounted",
-                "+",
-                "1"
-              ]
-            }
-          ]
-        },
-        {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [
+              "comment": "Record how much time has elapsed"
+            },
             {
-              "type": {
-                "value": "BuiltinCommonInstructions::CompareNumbers"
-              },
-              "parameters": [
-                "Time(\"timestamp\") - Variable(__FPS.StartTime)",
-                ">",
-                "1000 * Variable(__FPS.UpdatePeriod) "
-              ]
-            }
-          ],
-          "actions": [
-            {
-              "type": {
-                "value": "ModVarScene"
-              },
-              "parameters": [
-                "__FPS.FramesPerSecond",
-                "=",
-                "1000 * Variable(__FPS.FramesCounted) / (Time(\"timestamp\") - Variable(__FPS.StartTime))"
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__FPS.TimeElapsed",
+                    "=",
+                    "Time(\"timestamp\") - Variable(__FPS.FrameTimestamps[0])"
+                  ]
+                }
               ]
             },
             {
-              "type": {
-                "value": "FPS::RestartFpsCounter"
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
               },
-              "parameters": [
-                "",
-                ""
+              "comment": "Remove any data before the last second from the beginning of the array"
+            },
+            {
+              "infiniteLoopWarning": true,
+              "type": "BuiltinCommonInstructions::While",
+              "whileConditions": [
+                {
+                  "type": {
+                    "value": "SceneVariableChildCount"
+                  },
+                  "parameters": [
+                    "__FPS.FrameTimestamps",
+                    ">",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "VarScene"
+                  },
+                  "parameters": [
+                    "__FPS.FrameTimestamps[0]",
+                    "<",
+                    "Time(\"timestamp\") - 1000"
+                  ]
+                }
+              ],
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SceneVariableRemoveAt"
+                  },
+                  "parameters": [
+                    "__FPS.FrameTimestamps",
+                    "0"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Add the current timestamp to the end of the array"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SceneVariablePushNumber"
+                  },
+                  "parameters": [
+                    "__FPS.FrameTimestamps",
+                    "Time(\"timestamp\")"
+                  ]
+                }
               ]
             }
-          ]
+          ],
+          "parameters": []
         }
       ],
       "parameters": [],
       "objectGroups": []
     },
     {
-      "description": "Average frames per second (FPS) during the last update period.",
+      "description": "Frames per second (FPS) during the last second.",
       "fullName": "Frames Per Second (FPS)",
       "functionType": "Expression",
       "name": "FPS",
@@ -159,7 +203,7 @@
                 "value": "SetReturnNumber"
               },
               "parameters": [
-                "Variable(__FPS.FramesPerSecond)"
+                "VariableChildCount(__FPS.FrameTimestamps) / (Variable(__FPS.TimeElapsed) / 1000)"
               ]
             }
           ]
@@ -172,10 +216,11 @@
       "objectGroups": []
     },
     {
-      "description": "Return your game's current FPS count, with more control over rounding.",
-      "fullName": "Precise FPS (Frames per second) [Deprecated]",
+      "description": "Frames per second (FPS) during the last second. [Deprecated]",
+      "fullName": "Frames Per Second (FPS) [Deprecated]",
       "functionType": "Expression",
       "name": "PreciseFPS",
+      "private": true,
       "sentence": "",
       "events": [
         {
@@ -205,86 +250,6 @@
         }
       ],
       "objectGroups": []
-    },
-    {
-      "description": "Change time period between FPS updates. Default: 1 second.",
-      "fullName": "Change time period between FPS updates",
-      "functionType": "Action",
-      "name": "SetUpdatePeriod",
-      "sentence": "Change time period between FPS updates to _PARAM1_ seconds",
-      "events": [
-        {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": [
-            {
-              "type": {
-                "value": "ModVarScene"
-              },
-              "parameters": [
-                "__FPS.UpdatePeriod",
-                "=",
-                "max(0, GetArgumentAsNumber(\"UpdatePeriod\"))"
-              ]
-            },
-            {
-              "type": {
-                "value": "FPS::RestartFpsCounter"
-              },
-              "parameters": [
-                "",
-                ""
-              ]
-            }
-          ]
-        }
-      ],
-      "parameters": [
-        {
-          "description": "Update period (seconds)",
-          "name": "UpdatePeriod",
-          "type": "expression"
-        }
-      ],
-      "objectGroups": []
-    },
-    {
-      "description": "Restart the FPS counter.",
-      "fullName": "Restart FPS counter",
-      "functionType": "Action",
-      "name": "RestartFpsCounter",
-      "private": true,
-      "sentence": "Restart the FPS counter",
-      "events": [
-        {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": [
-            {
-              "type": {
-                "value": "ModVarScene"
-              },
-              "parameters": [
-                "__FPS.FramesCounted",
-                "=",
-                "0"
-              ]
-            },
-            {
-              "type": {
-                "value": "ModVarScene"
-              },
-              "parameters": [
-                "__FPS.StartTime",
-                "=",
-                "Time(\"timestamp\")"
-              ]
-            }
-          ]
-        }
-      ],
-      "parameters": [],
-      "objectGroups": []
     }
   ],
   "eventsBasedBehaviors": [
@@ -301,6 +266,119 @@
           "sentence": "",
           "events": [
             {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Generate the raw FPS text"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarSceneTxt"
+                  },
+                  "parameters": [
+                    "__FPS.UnformattedFPS",
+                    "=",
+                    "ToString(roundTo(FPS::FPS(), Object.Behavior::PropertyDecimalDigits()))"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Add trailing zeroes, if needed"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::CompareNumbers"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyDecimalDigits()",
+                    ">",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::CompareNumbers"
+                  },
+                  "parameters": [
+                    "StrFind(VariableString(__FPS.UnformattedFPS),\".\")",
+                    "=",
+                    "-1"
+                  ]
+                }
+              ],
+              "actions": [],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "ModVarSceneTxt"
+                      },
+                      "parameters": [
+                        "__FPS.UnformattedFPS",
+                        "+",
+                        "\".\""
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Repeat",
+                  "repeatExpression": "Object.Behavior::PropertyDecimalDigits()",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "ModVarSceneTxt"
+                      },
+                      "parameters": [
+                        "__FPS.UnformattedFPS",
+                        "+",
+                        "\"0\""
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Show the formatted FPS text including the prefix"
+            },
+            {
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [],
               "actions": [
@@ -311,7 +389,7 @@
                   "parameters": [
                     "Object",
                     "=",
-                    "Object.Behavior::Propertyprefix() + ToString(FPS::FPS())"
+                    "Object.Behavior::Propertyprefix() + VariableString(__FPS.UnformattedFPS)"
                   ]
                 }
               ]
@@ -344,6 +422,17 @@
           "extraInformation": [],
           "hidden": false,
           "name": "prefix"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Number of decimal digits to display",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "DecimalDigits"
         }
       ],
       "sharedPropertyDescriptors": []
