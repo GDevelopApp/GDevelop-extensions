@@ -69,9 +69,20 @@ jobs:
           ref: ${{ steps.comment-branch.outputs.head_ref }}
 
       - name: Download extension
+        id: download-extension
         env:
           BODY: ${{ github.event.comment.body }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          FILEURL=$(echo $BODY | grep -ioEh 'https?://\S+.zip' -m1)
+          FILENAME=$(basename $FILEURL)
+
+          if [[ "${FILENAME,,}" == *"sample"* ]]; then
+            echo "sample=true" >> $GITHUB_OUTPUT
+            gh pr comment ${{ github.event.issue.number }} --body "✅ Cannot update the sample via command. Please feel free to upload the updated sample zip file in a comment!"
+            exit 0
+          fi
+
           curl -L $(echo $BODY | grep -ioEh 'https?://\S+.zip' -m1) -o /tmp/ext.zip
           unzip -o /tmp/ext.zip -d ./extensions/community
 
@@ -101,7 +112,7 @@ jobs:
           git push
 
       - name: Notify no changed
-        if: ${{ steps.git-diff.outputs.changed != 'true' }}
+        if: ${{ steps.git-diff.outputs.changed != 'true' && steps.download-extension.outputs.sample != 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr comment ${{ github.event.issue.number }} --body "❗ No updates found. Please check your file."
