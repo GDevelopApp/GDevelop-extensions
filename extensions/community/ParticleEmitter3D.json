@@ -5193,8 +5193,7 @@
           "inlineCode": [
             "\r",
             "runtimeScene.__particleEmmiter3DExtension = runtimeScene.__particleEmmiter3DExtension || {};\r",
-            "runtimeScene.__particleEmmiter3DExtension.canStep = true;\r",
-            ""
+            "runtimeScene.__particleEmmiter3DExtension.emittersStepped = 0;"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -5367,6 +5366,8 @@
                 "    ParticleEmitter3D.get3DRendererObject = () => this.__emitter;",
                 "}",
                 "",
+                "gameScene.__particleEmmiter3DExtension.emittersCount = gameScene.__particleEmmiter3DExtension.emittersCount || 0;",
+                "gameScene.__particleEmmiter3DExtension.emittersCount++;",
                 "",
                 ""
               ],
@@ -5413,7 +5414,8 @@
                 "const object = objects[0];",
                 "",
                 "object.__particleSystem.dispose();",
-                ""
+                "",
+                "gameScene.__particleEmmiter3DExtension.emittersCount--;"
               ],
               "parameterObjects": "Object",
               "useStrict": true,
@@ -5736,12 +5738,6 @@
                 "// Here runtimeScene is the gdjs.CustomRuntimeObjectInstanceContainer inside the custom object.",
                 "const gameScene = object.getRuntimeScene();",
                 "",
-                "// update batched renderer",
-                "if (gameScene.__particleEmmiter3DExtension.canStep) {",
-                "    gameScene.__particleEmmiter3DExtension.canStep = false;",
-                "    gameScene.__particleEmmiter3DExtension.batchSystem.update(object.getElapsedTime() / 1000);",
-                "}",
-                "",
                 "const emitter = object.__particleSystem.emitter;",
                 "emitter.position.x = object.getX();",
                 "emitter.position.y = -object.getY();",
@@ -5750,7 +5746,12 @@
                 "emitter.rotation.order = 'ZYX';",
                 "emitter.rotation.y = Math.PI / 2;",
                 "emitter.rotation.z = -object.getAngle() * Math.PI / 180;",
-                ""
+                "",
+                "// Update batch system after having moved every emitter.",
+                "gameScene.__particleEmmiter3DExtension.emittersStepped++;",
+                "if (gameScene.__particleEmmiter3DExtension.emittersStepped === gameScene.__particleEmmiter3DExtension.emittersCount) {",
+                "    gameScene.__particleEmmiter3DExtension.batchSystem.update(object.getElapsedTime() / 1000);",
+                "}"
               ],
               "parameterObjects": "Object",
               "useStrict": true,
