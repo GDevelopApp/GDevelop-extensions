@@ -5352,11 +5352,12 @@
                 "const applyForce = new ApplyForce(new THREE.Vector3(0, 0, -1), new ConstantValue(0));",
                 "particleSystem.addBehavior(applyForce);",
                 "",
+                "particleSystem.emitter.rotation.order = 'ZYX';",
                 "particleSystem.emitter.name = object.getName() + object.getNameId();",
                 "batchSystem.addSystem(particleSystem);",
                 "",
+                "",
                 "object.__particleEmitterAdapter = new ParticleEmitterAdapter(particleSystem, colorOverLife, sizeOverLife, applyForce);",
-                "object.__z = 0;",
                 "",
                 "layer.get3DRendererObject().add(particleSystem.emitter);",
                 "",
@@ -5478,6 +5479,39 @@
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [],
               "actions": [
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetZ"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Object.Z()",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetRotationX"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Object.PropertyRotationX()",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetRotationY"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Object.PropertyRotationY()",
+                    ""
+                  ]
+                },
                 {
                   "type": {
                     "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartColor"
@@ -5784,10 +5818,7 @@
                     "const emitter = object.__particleSystem.emitter;",
                     "emitter.position.x = object.getX();",
                     "emitter.position.y = -object.getY();",
-                    "emitter.position.z = object.__z;",
                     "",
-                    "emitter.rotation.order = 'ZYX';",
-                    "emitter.rotation.y = Math.PI / 2;",
                     "emitter.rotation.z = -object.getAngle() * Math.PI / 180;",
                     "",
                     "// Update batch system after having moved every emitter.",
@@ -5912,15 +5943,23 @@
           "description": "the Z position of the emitter.",
           "fullName": "Z (elevation)",
           "functionType": "ExpressionAndCondition",
+          "group": "Position",
           "name": "Z",
           "sentence": "the Z position",
           "events": [
             {
-              "type": "BuiltinCommonInstructions::JsCode",
-              "inlineCode": "eventsFunctionContext.returnValue = object.__z || 0;",
-              "parameterObjects": "Object",
-              "useStrict": true,
-              "eventsSheetExpanded": false
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.PropertyZ()"
+                  ]
+                }
+              ]
             }
           ],
           "expressionType": {
@@ -5944,8 +5983,190 @@
           "sentence": "",
           "events": [
             {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetPropertyZ"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            },
+            {
               "type": "BuiltinCommonInstructions::JsCode",
-              "inlineCode": "object.__z = eventsFunctionContext.getArgument(\"Value\");",
+              "inlineCode": [
+                "const object = objects[0];",
+                "",
+                "object.__particleSystem.emitter.position.z = eventsFunctionContext.getArgument(\"Value\");"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the rotation on X axis of the emitter.",
+          "fullName": "Rotation on X axis",
+          "functionType": "ExpressionAndCondition",
+          "group": "Angle",
+          "name": "RotationX",
+          "sentence": "the rotation on X axis",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.PropertyRotationX()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "RotationX",
+          "name": "SetRotationX",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetPropertyRotationX"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "\r",
+                "object.__particleSystem.emitter.rotation.x = eventsFunctionContext.getArgument(\"Value\") * Math.PI / 180;"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the rotation on Y axis of the emitter.",
+          "fullName": "Rotation on Y axis",
+          "functionType": "ExpressionAndCondition",
+          "group": "Angle",
+          "name": "RotationY",
+          "sentence": "the rotation on Y axis",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.PropertyRotationY()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "RotationY",
+          "name": "SetRotationY",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetPropertyRotationY"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "\r",
+                "object.__particleSystem.emitter.rotation.y = (90 + eventsFunctionContext.getArgument(\"Value\")) * Math.PI / 180;"
+              ],
               "parameterObjects": "Object",
               "useStrict": true,
               "eventsSheetExpanded": false
@@ -7773,7 +7994,7 @@
           "unit": "DegreeAngle",
           "label": "Spay cone angle",
           "description": "",
-          "group": "",
+          "group": "Position",
           "extraInformation": [],
           "hidden": false,
           "name": "SpayConeAngle"
@@ -7837,6 +8058,39 @@
           "extraInformation": [],
           "hidden": true,
           "name": "ParentOrigin"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Pixel",
+          "label": "Z (elevation)",
+          "description": "",
+          "group": "Position",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "Z"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "DegreeAngle",
+          "label": "Rotation on X axis",
+          "description": "",
+          "group": "Position",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "RotationX"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "DegreeAngle",
+          "label": "Rotation on Y axis",
+          "description": "",
+          "group": "Position",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "RotationY"
         }
       ],
       "objects": [
