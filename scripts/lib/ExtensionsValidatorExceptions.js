@@ -293,6 +293,16 @@ const extensionsAllowedProperties = {
       ],
       javaScriptObjectAllowedProperties: [],
     },
+    ParticleEmitter3D: {
+      gdjsAllowedProperties: [
+        '__particleEmmiter3DExtension',
+        'CustomRuntimeObject',
+        'CustomRuntimeObjectInstanceContainer',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['__particleEmmiter3DExtension'],
+      javaScriptObjectAllowedProperties: ['getPrototypeOf'],
+    },
     PixelPerfectMovement: {
       gdjsAllowedProperties: [
         '__pixelPerfectExtension',
