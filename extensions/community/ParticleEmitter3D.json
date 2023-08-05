@@ -5192,6 +5192,7 @@
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
             "\r",
+            "// See doStepPostEvents\r",
             "runtimeScene.__particleEmmiter3DExtension = runtimeScene.__particleEmmiter3DExtension || {};\r",
             "runtimeScene.__particleEmmiter3DExtension.emittersStepped = 0;"
           ],
@@ -5277,6 +5278,7 @@
                 "    .getGame()",
                 "    .getImageManager().getThreeTexture(resourceName);",
                 "",
+                "// Set the blending here because changes are not applied after the emitter creation.",
                 "let blending = THREE.NormalBlending",
                 "switch (object._getBlending()) {",
                 "    case \"Normal\":",
@@ -5300,7 +5302,8 @@
                 "        break;",
                 "}",
                 "",
-                "// Particle system configuration",
+                "// Build a configuration with the right kind of objects.",
+                "// These values are not important as they are overrided by the object properties values.",
                 "const muzzle = {",
                 "    duration: 10,",
                 "    looping: false,",
@@ -5320,12 +5323,9 @@
                 "        probability: 1,",
                 "    }],",
                 "",
-                "    //shape: new PointEmitter(),",
-                "    shape: new ConeEmitter({ radius: 0.1, angle: Math.PI / 8 }),",
+                "    shape: new PointEmitter(),",
                 "    material: new THREE.MeshBasicMaterial({",
                 "        map: texture,",
-                "        blending: THREE.AdditiveBlending,",
-                "        //blending: THREE.NormalBlending,",
                 "        blending: blending,",
                 "        transparent: true,",
                 "        side: THREE.DoubleSide",
@@ -5336,13 +5336,9 @@
                 "    renderOrder: 2,",
                 "    renderMode: RenderMode.BillBoard",
                 "};",
-                "",
-                "// Create particle system based on your configuration",
                 "const particleSystem = new ParticleSystem(muzzle);",
                 "object.__particleSystem = particleSystem;",
                 "",
-                "// developers can customize how the particle system works by ",
-                "// using existing behavior or adding their own Behavior.",
                 "const colorOverLife = new ColorOverLife(new ColorRange(",
                 "    new THREE.Vector4(1, 0.3882312, 0.125, 1),",
                 "    new THREE.Vector4(1, 0.826827, 0.3014706, 1)));",
@@ -5356,17 +5352,16 @@
                 "particleSystem.emitter.name = object.getName() + object.getNameId();",
                 "batchSystem.addSystem(particleSystem);",
                 "",
-                "",
                 "object.__particleEmitterAdapter = new ParticleEmitterAdapter(particleSystem, colorOverLife, sizeOverLife, applyForce);",
                 "",
                 "layer.get3DRendererObject().add(particleSystem.emitter);",
-                "",
                 "const ParticleEmitter3D = Object.getPrototypeOf(object);",
                 "if (!ParticleEmitter3D.__isDefined) {",
                 "    ParticleEmitter3D.__isDefined = true;",
                 "    ParticleEmitter3D.get3DRendererObject = () => this.__emitter;",
                 "}",
                 "",
+                "// See doStepPostEvents",
                 "gameScene.__particleEmmiter3DExtension.emittersCount = gameScene.__particleEmmiter3DExtension.emittersCount || 0;",
                 "gameScene.__particleEmmiter3DExtension.emittersCount++;",
                 "",
@@ -5418,6 +5413,7 @@
                 "",
                 "object.__particleSystem.dispose();",
                 "",
+                "// See doStepPostEvents",
                 "gameScene.__particleEmmiter3DExtension.emittersCount--;"
               ],
               "parameterObjects": "Object",
@@ -5680,24 +5676,6 @@
               ],
               "events": [
                 {
-                  "disabled": true,
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "ParticleEmitter3D::ParticleEmitter3D::SetBlending"
-                      },
-                      "parameters": [
-                        "Object",
-                        "=",
-                        "Object.Blending()",
-                        ""
-                      ]
-                    }
-                  ]
-                },
-                {
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [
                     {
@@ -5743,6 +5721,36 @@
                       "parameters": [
                         "Object",
                         "yes",
+                        ""
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Comment",
+                  "color": {
+                    "b": 109,
+                    "g": 230,
+                    "r": 255,
+                    "textB": 0,
+                    "textG": 0,
+                    "textR": 0
+                  },
+                  "comment": "TODO: Blending can't be changed."
+                },
+                {
+                  "disabled": true,
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "ParticleEmitter3D::ParticleEmitter3D::SetBlending"
+                      },
+                      "parameters": [
+                        "Object",
+                        "=",
+                        "Object.Blending()",
                         ""
                       ]
                     }
@@ -5822,6 +5830,7 @@
                     "emitter.rotation.z = -object.getAngle() * Math.PI / 180;",
                     "",
                     "// Update batch system after having moved every emitter.",
+                    "// See onScenePreEvents",
                     "gameScene.__particleEmmiter3DExtension.emittersStepped++;",
                     "if (gameScene.__particleEmmiter3DExtension.emittersStepped === gameScene.__particleEmmiter3DExtension.emittersCount) {",
                     "    gameScene.__particleEmmiter3DExtension.batchSystem.update(object.getElapsedTime() / 1000);",
