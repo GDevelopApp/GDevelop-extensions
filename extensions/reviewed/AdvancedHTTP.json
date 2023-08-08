@@ -449,24 +449,8 @@
       "getterName": "RequestBody",
       "group": "Request settings",
       "name": "SetFormDataRequestBody",
-      "private": true,
       "sentence": "Set body of request _PARAM1_ to contents of _PARAM2_ as form data",
       "events": [
-        {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": [
-            {
-              "type": {
-                "value": "CopyArgumentToVariable"
-              },
-              "parameters": [
-                "\"Body\"",
-                "__AdvancedHTTP.Body"
-              ]
-            }
-          ]
-        },
         {
           "type": "BuiltinCommonInstructions::Comment",
           "color": {
@@ -477,38 +461,24 @@
             "textG": 0,
             "textR": 0
           },
-          "comment": "Use the standard JavaScript FormData API to correctly encode all values. We could use a normal GDevelop loop but this ensures that the form data is correct.\n\nLol this does NOT work, FormData cannot be converted to a string and must be passed as fetch's body directly..."
+          "comment": "Merge form data with the form data of the request"
         },
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "const bodyVariable = runtimeScene.getVariables().get(\"__AdvancedHTTP\").getChild(\"Body\");",
-            "const formData = new FormData();",
-            "for (const [name, value] of Object.entries(bodyVariable.getAllChildren())) {",
-            "    formData.append(name, value);",
-            "}",
-            "bodyVariable.setString(formData.toString());",
+            "gdjs.Variable.copy(",
+            "    eventsFunctionContext.getArgument(\"Body\"),",
+            "    runtimeScene.getGame().getVariables().get(\"__AdvancedHTTP\")",
+            "        .getChild(\"Requests\")",
+            "        .getChild(eventsFunctionContext.getArgument(\"Request\"))",
+            "        .getChild(\"FormData\"),",
+            "    /* mergeVariables = */true",
+            ");",
             ""
           ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
-        },
-        {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": [
-            {
-              "type": {
-                "value": "ModVarGlobalTxt"
-              },
-              "parameters": [
-                "__AdvancedHTTP.Requests[GetArgumentAsString(\"Request\")].Options.body",
-                "=",
-                "VariableString(__AdvancedHTTP.Body)"
-              ]
-            }
-          ]
         }
       ],
       "parameters": [
@@ -904,12 +874,31 @@
             "    return;",
             "}",
             "",
+            "function isContentful(obj) {",
+            "    for (var x in obj) { return true; }",
+            "    return false;",
+            "}",
+            "const hasFormData = request.FormData && isContentful(request.FormData)",
+            "console.log(isContentful(request.FormData), request.FormData)",
+            "",
+            "if (hasFormData) {",
+            "    if (request.Options.body && request.Options.body !== \"\") {",
+            "        console.warn(`The request ${requestName} has both form data and a separate body - the body will be ignored and replaced by the form data.`);",
+            "    }",
+            "",
+            "    delete request.Options.body;",
+            "}",
+            "",
             "if (request.CORS) {",
             "    // Cache makes sense only on the client. CF Workers does not support cache property on fetch anyways.",
             "    const cache = request.Options.cache;",
             "    delete request.Options.cache;",
             "    eventsFunctionContext.task = new gdjs.PromiseTask(",
-            "        fetch(`https://cors.arthuro555.com?${JSON.stringify({ url: request.URL, options: request.Options })}`, { keepalive: true, cache })",
+            "        fetch(`https://cors.arthuro555.com?${JSON.stringify({",
+            "            url: request.URL,",
+            "            options: request.Options,",
+            "            formData: isContentful(request.FormData) ? request.FormData : undefined",
+            "        })}`, { keepalive: true, cache })",
             "            .then(async (response) => {",
             "                const { ok, status, headers, body } = await response.json();",
             "                result.fromJSObject({",
@@ -924,6 +913,13 @@
             "            })",
             "    );",
             "} else {",
+            "    if (hasFormData && request.Options.method !== 'GET' && request.Options.method !== 'HEAD') {",
+            "        const fd = request.Options.body = new FormData();",
+            "        for (const key of Object.keys(request.FormData)) {",
+            "            fd.append(key, request.FormData[key])",
+            "        }",
+            "    }",
+            "",
             "    eventsFunctionContext.task = new gdjs.PromiseTask(",
             "        fetch(request.URL, { keepalive: true, ...request.Options })",
             "            .then((response) => {",
