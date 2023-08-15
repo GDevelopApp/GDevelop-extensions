@@ -10,18 +10,24 @@
   "shortDescription": "A set of tools that allow players to draw selections in order to select object instances.",
   "version": "1.0.0",
   "description": [
-    "How to use:",
+    "### How to use:",
     "",
     "- Activate SelectionTools using the `De/Activate selection tools` action.",
     "- Create a shape painter object and add the `Selection painter` behavior to it. Create a single instance of this object in the scene.",
     "- Set the type of selection using one of these actions: `Set rectangular selection`, `Set polygonal selection`, and `Set lasso selection`.",
+    "- Use `Select` condition to check which object instances are inside the selection.",
     "",
-    "Tips:",
+    "---",
+    "",
+    "### Tips:",
     "",
     "- The `Set rectangular selection`, `Set polygonal selection`, and `Set lasso selection` actions are used for both setting properties and changing the current selection type.",
-    "- None of the action require you to call them each frame, it's adviced that you use them with `At the beginning of the scene` condition or a `Triggred Once`.",
+    "- None of the actions require you to call them each frame, it's advised that you use them with `At the beginning of the scene` condition or a `Triggred Once`.",
+    "- If you set `Pre select` to `Yes` in the `Select` condition. Make sure you don't add a `Triggred Once` to that event.",
     "",
-    "Actions:",
+    "---",
+    "",
+    "#### Actions:",
     "",
     "- `De/Activate selection tools`",
     "- `Set rectangular selection`",
@@ -29,16 +35,15 @@
     "- `Set lasso selection`",
     "- `Clear selection`",
     "",
-    "Condition:",
+    "#### Condition:",
     "",
     "- `Select`",
     "- `Selection activated`",
     "- `Current selection type`",
     "",
-    "Behavior:",
+    "#### Behavior:",
     "",
-    "- `Selection painter`",
-    ""
+    "- `Selection painter`"
   ],
   "tags": [
     "select",
@@ -432,7 +437,7 @@
       "fullName": "Select",
       "functionType": "Condition",
       "name": "Select",
-      "sentence": "Select all _PARAM1_ inside the selection boundary (invert selection: _PARAM2_)",
+      "sentence": "Select all _PARAM1_ inside the selection boundary (invert selection: _PARAM2_, pre select: _PARAM3_)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
@@ -448,12 +453,28 @@
             },
             {
               "type": {
-                "inverted": true,
-                "value": "MouseButtonPressed"
+                "value": "BuiltinCommonInstructions::Or"
               },
-              "parameters": [
-                "",
-                "Left"
+              "parameters": [],
+              "subInstructions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "MouseButtonPressed"
+                  },
+                  "parameters": [
+                    "",
+                    "Left"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"PreSelect\""
+                  ]
+                }
               ]
             }
           ],
@@ -591,11 +612,27 @@
                         },
                         {
                           "type": {
-                            "value": "SceneVariableAsBoolean"
+                            "value": "BuiltinCommonInstructions::Or"
                           },
-                          "parameters": [
-                            "__SelectionTools.CloseSelection",
-                            "True"
+                          "parameters": [],
+                          "subInstructions": [
+                            {
+                              "type": {
+                                "value": "GetArgumentAsBoolean"
+                              },
+                              "parameters": [
+                                "\"PreSelect\""
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "SceneVariableAsBoolean"
+                              },
+                              "parameters": [
+                                "__SelectionTools.CloseSelection",
+                                "True"
+                              ]
+                            }
                           ]
                         }
                       ]
@@ -606,10 +643,90 @@
               "actions": [],
               "events": [
                 {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "VarSceneTxt"
+                      },
+                      "parameters": [
+                        "__SelectionTools.SelectionType",
+                        "=",
+                        "\"Polygonal\""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "GetArgumentAsBoolean"
+                      },
+                      "parameters": [
+                        "\"PreSelect\""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SceneVariableChildCount"
+                      },
+                      "parameters": [
+                        "__SelectionTools.Vertices",
+                        ">",
+                        "1"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SceneVariableAsBoolean"
+                      },
+                      "parameters": [
+                        "__SelectionTools.CloseSelection",
+                        "False"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "VariableClearChildren"
+                      },
+                      "parameters": [
+                        "__SelectionTools.ChildVertex"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SceneVariablePushNumber"
+                      },
+                      "parameters": [
+                        "__SelectionTools.ChildVertex",
+                        "round(CursorX())"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SceneVariablePushNumber"
+                      },
+                      "parameters": [
+                        "__SelectionTools.ChildVertex",
+                        "round(CursorY())"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SceneVariablePush"
+                      },
+                      "parameters": [
+                        "__SelectionTools.Vertices",
+                        "__SelectionTools.ChildVertex"
+                      ]
+                    }
+                  ]
+                },
+                {
                   "type": "BuiltinCommonInstructions::JsCode",
                   "inlineCode": [
                     "const targets = eventsFunctionContext.getObjectsLists(\"Targets\").items;\r",
                     "const invertSelection = eventsFunctionContext.getArgument(\"InvertSelection\");\r",
+                    "const preSelect = eventsFunctionContext.getArgument(\"PreSelect\");\r",
                     "\r",
                     "const vertices = runtimeScene\r",
                     "    .getVariables()\r",
@@ -628,9 +745,11 @@
                     "    let inside = false;\r",
                     "\r",
                     "    for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {\r",
+                    "  \r",
                     "      const vi = [vertices[i].getAllChildrenArray()[0].getAsNumber(), vertices[i].getAllChildrenArray()[1].getAsNumber()];\r",
                     "      const vj = [vertices[j].getAllChildrenArray()[0].getAsNumber(), vertices[j].getAllChildrenArray()[1].getAsNumber()];\r",
-                    "      if (vi[1] > y != vj[1] > y && x < ((vj[0] - vi[0]) * (y - vi[1])) / (vj[1] - vi[1]) + vi[0]) {\r",
+                    "      \r",
+                    "      if (vi[1] > y != vj[1] > y && x < ((vj[0] - vi[0]) * (y - vi[1])) / (vj[1] - vi[1]) + vi[0]){\r",
                     "        inside = !inside;\r",
                     "      }\r",
                     "    }\r",
@@ -648,6 +767,59 @@
                   "parameterObjects": "",
                   "useStrict": true,
                   "eventsSheetExpanded": false
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "VarSceneTxt"
+                      },
+                      "parameters": [
+                        "__SelectionTools.SelectionType",
+                        "=",
+                        "\"Polygonal\""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "GetArgumentAsBoolean"
+                      },
+                      "parameters": [
+                        "\"PreSelect\""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SceneVariableChildCount"
+                      },
+                      "parameters": [
+                        "__SelectionTools.Vertices",
+                        ">",
+                        "1"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SceneVariableAsBoolean"
+                      },
+                      "parameters": [
+                        "__SelectionTools.CloseSelection",
+                        "False"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SceneVariableRemoveAt"
+                      },
+                      "parameters": [
+                        "__SelectionTools.Vertices",
+                        "VariableChildCount(__SelectionTools.Vertices) - 1"
+                      ]
+                    }
+                  ]
                 },
                 {
                   "type": "BuiltinCommonInstructions::Standard",
@@ -676,7 +848,14 @@
         },
         {
           "description": "Invert selection?",
+          "longDescription": "Select all object instances outside the selection boundary.",
           "name": "InvertSelection",
+          "type": "yesorno"
+        },
+        {
+          "description": "Pre select?",
+          "longDescription": "Don't wait for the shape to be closed or the mouse button/touch to be released.",
+          "name": "PreSelect",
           "type": "yesorno"
         }
       ],
