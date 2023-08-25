@@ -120,6 +120,12 @@ const extensionsAllowedProperties = {
   },
   /** @type {Record<string, ExtensionAllowedProperties>}} */
   extensionSpecificAllowance: {
+    AdvancedHTTP: {
+      gdjsAllowedProperties: ['_advancedHTTP', 'PromiseTask'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     AdvancedJump: {
       gdjsAllowedProperties: ['PlatformerObjectRuntimeBehavior'],
       gdjsEvtToolsAllowedProperties: [],
