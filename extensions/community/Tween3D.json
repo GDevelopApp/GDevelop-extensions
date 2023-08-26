@@ -11,9 +11,11 @@
   "version": "0.0.1",
   "description": "Change models proportions and orientation over time to make smooth animations.",
   "tags": [
+    "3d",
     "tween",
     "smooth",
-    "interpolation"
+    "interpolation",
+    "wobble"
   ],
   "authorIds": [
     "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
@@ -387,6 +389,56 @@
         }
       ],
       "objectGroups": []
+    },
+    {
+      "description": "Exponentially tween bewteen 2 values  according to an easing function.",
+      "fullName": "Ease exponentially",
+      "functionType": "Expression",
+      "name": "EaseExp",
+      "private": true,
+      "sentence": "the exponent-tweened value of tween _PARAM2_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "exp(Tween::Ease(GetArgumentAsString(\"Easing\"), log(GetArgumentAsNumber(\"InitialValue\")), log(GetArgumentAsNumber(\"TargetedValue\")), GetArgumentAsNumber(\"Weighting\")))"
+              ]
+            }
+          ]
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Easing",
+          "name": "Easing",
+          "type": "string"
+        },
+        {
+          "description": "Initial value",
+          "name": "InitialValue",
+          "type": "expression"
+        },
+        {
+          "description": "Targeted value",
+          "name": "TargetedValue",
+          "type": "expression"
+        },
+        {
+          "description": "Weighting",
+          "name": "Weighting",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
     }
   ],
   "eventsBasedBehaviors": [
@@ -582,7 +634,7 @@
               "type": "identifier"
             },
             {
-              "description": "Stretch",
+              "description": "Scale volume",
               "name": "TargetedValue",
               "type": "expression"
             },
@@ -1064,7 +1116,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "exp(Tween::Ease(Object.Behavior::Easing(VariableString(_Tween3D.Identifier)), log(Object.Behavior::InitialValue(VariableString(_Tween3D.Identifier))), log(Object.Behavior::TargetedValue(VariableString(_Tween3D.Identifier))), Object.Behavior::Progress(VariableString(_Tween3D.Identifier))))"
+                    "Tween3D::EaseExp(Object.Behavior::Easing(VariableString(_Tween3D.Identifier)), Object.Behavior::InitialValue(VariableString(_Tween3D.Identifier)), Object.Behavior::TargetedValue(VariableString(_Tween3D.Identifier)), Object.Behavior::Progress(VariableString(_Tween3D.Identifier)))"
                   ]
                 }
               ]
@@ -2729,6 +2781,1402 @@
         }
       ],
       "propertyDescriptors": [],
+      "sharedPropertyDescriptors": []
+    },
+    {
+      "description": "Squash and stretch a 3D model in loop.",
+      "fullName": "3D wobble",
+      "name": "Wobble",
+      "objectType": "Scene3D::Model3DObject",
+      "eventsFunctions": [
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onCreated",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::UpdateScaleVolume"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::UpdateStretch"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "doStepPreEvents",
+          "sentence": "",
+          "events": [
+            {
+              "colorB": 228,
+              "colorG": 176,
+              "colorR": 74,
+              "creationTime": 0,
+              "name": "Tween",
+              "source": "",
+              "type": "BuiltinCommonInstructions::Group",
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "Tween3D::Wobble::PropertyScaleMinTweenTime"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "<",
+                        "Object.Behavior::PropertyScaleMinTweenDuration()"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "Tween3D::Wobble::SetPropertyScaleMinTweenTime"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "+",
+                        "Object.Behavior::TimeDelta()"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "Tween3D::Wobble::SetPropertyScaleMin"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "=",
+                        "Tween3D::EaseExp(Object.Behavior::PropertyScaleMinTweenEasing(), Object.Behavior::PropertyScaleMinTweenInitialValue(), Object.Behavior::PropertyScaleMinTweenTarget(), Object.Behavior::PropertyScaleMinTweenTime() / Object.Behavior::PropertyScaleMinTweenDuration())"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "Tween3D::Wobble::PropertyScaleMinTweenTime"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            ">=",
+                            "Object.Behavior::PropertyScaleMinTweenDuration()"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "Tween3D::Wobble::SetPropertyScaleMin"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "=",
+                            "Object.Behavior::PropertyScaleMinTweenTarget()"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "Tween3D::Wobble::PropertyScaleMaxTweenTime"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "<",
+                        "Object.Behavior::PropertyScaleMaxTweenDuration()"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "Tween3D::Wobble::SetPropertyScaleMaxTweenTime"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "+",
+                        "Object.Behavior::TimeDelta()"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "Tween3D::Wobble::SetPropertyScaleMax"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "=",
+                        "Tween3D::EaseExp(Object.Behavior::PropertyScaleMaxTweenEasing(), Object.Behavior::PropertyScaleMaxTweenInitialValue(), Object.Behavior::PropertyScaleMaxTweenTarget(), Object.Behavior::PropertyScaleMaxTweenTime() / Object.Behavior::PropertyScaleMaxTweenDuration())"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "Tween3D::Wobble::PropertyScaleMaxTweenTime"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            ">=",
+                            "Object.Behavior::PropertyScaleMaxTweenDuration()"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "Tween3D::Wobble::SetPropertyScaleMin"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "=",
+                            "Object.Behavior::PropertyScaleMinTweenTarget()"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "parameters": []
+            },
+            {
+              "colorB": 228,
+              "colorG": 176,
+              "colorR": 74,
+              "creationTime": 0,
+              "name": "Wobble",
+              "source": "",
+              "type": "BuiltinCommonInstructions::Group",
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "Tween3D::Wobble::UpdateScaleVolume"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "Tween3D::Wobble::UpdateStretch"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ""
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "Tween3D::Wobble::SetPropertyAngle"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "+",
+                        "mod(Object.Behavior::TimeDelta() *  2 * Pi()\n / Object.Behavior::PropertyPeriodDuration(), 2 * Pi())"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "parameters": []
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the minimum scale volume of the object.",
+          "fullName": "Minimum scale volume",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D wobble scale configuration",
+          "name": "ScaleMin",
+          "sentence": "the minimum scale volume",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyScaleMin()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "ScaleMin",
+          "name": "SetScaleMin",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyScaleMin"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the maximum scale volume of the object.",
+          "fullName": "Maximum scale volume",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D wobble scale configuration",
+          "name": "ScaleMax",
+          "sentence": "the maximum scale volume",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyScaleMax()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "ScaleMax",
+          "name": "SetScaleMax",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyScaleMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Tweens the minimum scale volume from its current value to a new one. The scale volume can never be 0 or less.",
+          "fullName": "Tween minimum scale volume",
+          "functionType": "Action",
+          "group": "3D wobble scale configuration",
+          "name": "TweenScaleMin",
+          "sentence": "Tween the minimum scale volume of object _PARAM0_ to _PARAM2_ over _PARAM3_ seconds with _PARAM4_ easing",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyScaleMinTweenInitialValue"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Object.Behavior::ScaleMin()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyScaleMinTweenTime"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyScaleMinTweenTarget"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"TargetedValue\")"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyScaleMinTweenDuration"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Duration\")"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyScaleMinTweenEasing"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsString(\"Easing\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            },
+            {
+              "description": "Minimum scale volume",
+              "name": "TargetedValue",
+              "type": "expression"
+            },
+            {
+              "description": "Duration (in seconds)",
+              "name": "Duration",
+              "type": "expression"
+            },
+            {
+              "description": "Easing",
+              "name": "Easing",
+              "supplementaryInformation": "[\"linear\",\"easeInQuad\",\"easeOutQuad\",\"easeInOutQuad\",\"easeInCubic\",\"easeOutCubic\",\"easeInOutCubic\",\"easeInQuart\",\"easeOutQuart\",\"easeInOutQuart\",\"easeInQuint\",\"easeOutQuint\",\"easeInOutQuint\",\"easeInOutSine\",\"easeInExpo\",\"easeOutExpo\",\"easeInOutExpo\",\"easeInCirc\",\"easeOutCirc\",\"easeInOutCirc\",\"easeOutBounce\",\"easeInBack\",\"easeOutBack\",\"easeInOutBack\",\"elastic\",\"swingFromTo\",\"swingFrom\",\"swingTo\",\"bounce\",\"bouncePast\",\"easeFromTo\",\"easeFrom\",\"easeTo\"]",
+              "type": "stringWithSelector"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Tweens the maximum scale volume from its current value to a new one. The scale volume can never be 0 or less.",
+          "fullName": "Tween maximum scale volume",
+          "functionType": "Action",
+          "group": "3D wobble scale configuration",
+          "name": "TweenScaleMax",
+          "sentence": "Tween the maximum scale volume of object _PARAM0_ to _PARAM2_ over _PARAM3_ seconds with _PARAM4_ easing",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyScaleMaxTweenInitialValue"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Object.Behavior::ScaleMax()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyScaleMaxTweenTime"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyScaleMaxTweenTarget"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"TargetedValue\")"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyScaleMaxTweenDuration"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Duration\")"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyScaleMaxTweenEasing"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsString(\"Easing\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            },
+            {
+              "description": "Maximum scale volume",
+              "name": "TargetedValue",
+              "type": "expression"
+            },
+            {
+              "description": "Duration (in seconds)",
+              "name": "Duration",
+              "type": "expression"
+            },
+            {
+              "description": "Easing",
+              "name": "Easing",
+              "supplementaryInformation": "[\"linear\",\"easeInQuad\",\"easeOutQuad\",\"easeInOutQuad\",\"easeInCubic\",\"easeOutCubic\",\"easeInOutCubic\",\"easeInQuart\",\"easeOutQuart\",\"easeInOutQuart\",\"easeInQuint\",\"easeOutQuint\",\"easeInOutQuint\",\"easeInOutSine\",\"easeInExpo\",\"easeOutExpo\",\"easeInOutExpo\",\"easeInCirc\",\"easeOutCirc\",\"easeInOutCirc\",\"easeOutBounce\",\"easeInBack\",\"easeOutBack\",\"easeInOutBack\",\"elastic\",\"swingFromTo\",\"swingFrom\",\"swingTo\",\"bounce\",\"bouncePast\",\"easeFromTo\",\"easeFrom\",\"easeTo\"]",
+              "type": "stringWithSelector"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Time delta",
+          "functionType": "Expression",
+          "name": "TimeDelta",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "TimeDelta() * LayerTimeScale(Object.Layer())"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Update scale volume",
+          "functionType": "Action",
+          "name": "UpdateScaleVolume",
+          "private": true,
+          "sentence": "Update scale volume of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Tween3D::SetScaleVolume"
+                  },
+                  "parameters": [
+                    "",
+                    "=",
+                    "exp(log(Object.Behavior::PropertyScaleMin()) + (log(Object.Behavior::PropertyScaleMax()) - log(Object.Behavior::PropertyScaleMin())) * sin(Object.Behavior:: PropertyAngle() + Object.Behavior::PropertyScalePeriodOffset() / Object.Behavior::PropertyPeriodDuration() * 2 * Pi()))",
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Update stretch",
+          "functionType": "Action",
+          "name": "UpdateStretch",
+          "private": true,
+          "sentence": "Update stretch of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Tween3D::SetStretchZ"
+                  },
+                  "parameters": [
+                    "",
+                    "=",
+                    "exp(log(Object.Behavior::PropertyStretchMin()) + (log(Object.Behavior::PropertyStretchMax()) - log(Object.Behavior::PropertyStretchMin())) * sin(Object.Behavior:: PropertyAngle() + Object.Behavior::PropertyStretchPeriodOffset() / Object.Behavior::PropertyPeriodDuration() * 2 * Pi()))",
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the cycle duration of the object.",
+          "fullName": "Cycle duration",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D wobble configuration",
+          "name": "PeriodDuration",
+          "sentence": "the cycle duration",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyPeriodDuration()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PeriodDuration",
+          "name": "SetPeriodDuration",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyPeriodDuration"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the scale cycle offset of the object.",
+          "fullName": "Scale cycle offset",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D wobble scale configuration",
+          "name": "ScalePeriodOffset",
+          "sentence": "the scale cycle offset",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyScalePeriodOffset()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "ScalePeriodOffset",
+          "name": "SetScalePeriodOffset",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyScalePeriodOffset"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the minimum stretch of the object.",
+          "fullName": "Minimum stretch",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D wobble stretch configuration",
+          "name": "StretchMin",
+          "sentence": "the minimum stretch",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyStretchMin()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StretchMin",
+          "name": "SetStretchMin",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyStretchMin"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the maximum stretch of the object.",
+          "fullName": "Maximum stretch",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D wobble stretch configuration",
+          "name": "StretchMax",
+          "sentence": "the maximum stretch",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyStretchMax()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StretchMax",
+          "name": "SetStretchMax",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyStretchMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the stretch cycle offset of the object.",
+          "fullName": "Stretch cycle offset",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D wobble stretch configuration",
+          "name": "StretchPeriodOffset",
+          "sentence": "the stretch cycle offset",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyStretchPeriodOffset()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StretchPeriodOffset",
+          "name": "SetStretchPeriodOffset",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Tween3D::Wobble::SetPropertyStretchPeriodOffset"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Wobble",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        }
+      ],
+      "propertyDescriptors": [
+        {
+          "value": "0.75",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Minimum scale volume",
+          "description": "",
+          "group": "Scale",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "ScaleMin"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Maximum scale volume",
+          "description": "",
+          "group": "Scale",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "ScaleMax"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "unit": "Second",
+          "label": "Cycle duration",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "PeriodDuration"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Second",
+          "label": "Scale cycle offset",
+          "description": "",
+          "group": "Scale",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "ScalePeriodOffset"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Minimum stretch",
+          "description": "",
+          "group": "Stretch",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "StretchMin"
+        },
+        {
+          "value": "1.25",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Maximum stretch",
+          "description": "",
+          "group": "Stretch",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "StretchMax"
+        },
+        {
+          "value": "-0.25",
+          "type": "Number",
+          "unit": "Second",
+          "label": "Stretch cycle offset",
+          "description": "",
+          "group": "Stretch",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "StretchPeriodOffset"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "DegreeAngle",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "Angle"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "ScaleMinTweenTarget"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Second",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "ScaleMinTweenDuration"
+        },
+        {
+          "value": "",
+          "type": "String",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "ScaleMinTweenEasing"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "ScaleMaxTweenTarget"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Second",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "ScaleMaxTweenDuration"
+        },
+        {
+          "value": "",
+          "type": "String",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "ScaleMaxTweenEasing"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Second",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "ScaleMinTweenTime"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Second",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "ScaleMaxTweenTime"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "ScaleMinTweenInitialValue"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "ScaleMaxTweenInitialValue"
+        }
+      ],
       "sharedPropertyDescriptors": []
     }
   ],
