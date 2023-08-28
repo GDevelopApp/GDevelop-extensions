@@ -59,8 +59,8 @@
       "objectGroups": []
     },
     {
-      "description": "Check if the specified key is clicked twice in a short amount of time.",
-      "fullName": "Double-pressed",
+      "description": "Check how many times a specified key is pressed. ",
+      "fullName": "Key Pressed",
       "functionType": "Condition",
       "name": "HasPressedTimes",
       "sentence": "_PARAM1_ key is pressed _PARAM2_ times with a _PARAM3_'s maximum delay",
@@ -183,60 +183,6 @@
           "conditions": [
             {
               "type": {
-                "value": "CompareArgumentAsNumber"
-              },
-              "parameters": [
-                "\"MaxTimes\"",
-                "=",
-                ""
-              ]
-            }
-          ],
-          "actions": [
-            {
-              "type": {
-                "value": "ModVarGlobal"
-              },
-              "parameters": [
-                "__Press_MaxTimes",
-                "=",
-                "2"
-              ]
-            }
-          ]
-        },
-        {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [
-            {
-              "type": {
-                "value": "CompareArgumentAsNumber"
-              },
-              "parameters": [
-                "\"MaxDelay\"",
-                "=",
-                ""
-              ]
-            }
-          ],
-          "actions": [
-            {
-              "type": {
-                "value": "ModVarGlobal"
-              },
-              "parameters": [
-                "__Press_MaxDelay",
-                "=",
-                "0.3"
-              ]
-            }
-          ]
-        },
-        {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [
-            {
-              "type": {
                 "value": "CompareTimer"
               },
               "parameters": [
@@ -315,22 +261,6 @@
               ]
             }
           ]
-        },
-        {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": [
-            {
-              "type": {
-                "value": "DebuggerTools::ConsoleLog"
-              },
-              "parameters": [
-                "ToString(GlobalVariable(__KeyPressed_Times))",
-                "",
-                ""
-              ]
-            }
-          ]
         }
       ],
       "parameters": [
@@ -352,6 +282,315 @@
           "type": "expression"
         }
       ],
+      "objectGroups": []
+    },
+    {
+      "description": "Check how long a key is pressed.",
+      "fullName": "Key Pressed Duration",
+      "functionType": "Condition",
+      "name": "HasPressedDuration",
+      "sentence": "_PARAM1_ key is pressed for _PARAM2_ seconds",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "ModVarGlobal"
+              },
+              "parameters": [
+                "__HeldDown_Duration",
+                "=",
+                "GetArgumentAsNumber(\"duration\")"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "KeyFromTextPressed"
+              },
+              "parameters": [
+                "",
+                "GetArgumentAsString(\"key\")"
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::Once"
+                  },
+                  "parameters": []
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ResetTimer"
+                  },
+                  "parameters": [
+                    "",
+                    "\"__Pressed_Duration\""
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "KeyFromTextReleased"
+              },
+              "parameters": [
+                "",
+                "GetArgumentAsString(\"key\")"
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::Once"
+                  },
+                  "parameters": []
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "RemoveTimer"
+                  },
+                  "parameters": [
+                    "",
+                    "\"__Pressed_Duration\""
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "CompareTimer"
+              },
+              "parameters": [
+                "",
+                "\"__Pressed_Duration\"",
+                ">=",
+                "GetArgumentAsNumber(\"duration\")"
+              ]
+            },
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Once"
+              },
+              "parameters": []
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Key to track",
+          "name": "key",
+          "type": "key"
+        },
+        {
+          "description": "Duration",
+          "name": "duration",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "returns how long a key has been pressed.",
+      "fullName": "Return Key Pressed Duration",
+      "functionType": "Expression",
+      "name": "PressedDuration",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "KeyFromTextPressed"
+              },
+              "parameters": [
+                "",
+                "GetArgumentAsString(\"key\")"
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::Once"
+                  },
+                  "parameters": []
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ResetTimer"
+                  },
+                  "parameters": [
+                    "",
+                    "\"__Pressed_Duration_R\""
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "KeyFromTextReleased"
+              },
+              "parameters": [
+                "",
+                "GetArgumentAsString(\"key\")"
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::Once"
+                  },
+                  "parameters": []
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "RemoveTimer"
+                  },
+                  "parameters": [
+                    "",
+                    "\"__Pressed_Duration_R\""
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "TimerElapsedTime(\"__Pressed_Duration_R\")"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": []
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Key to track",
+          "name": "Parameter",
+          "type": "key"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "returns the completetion percentage of a key press.",
+      "fullName": "Return Key Pressed Percentage Complete",
+      "functionType": "Expression",
+      "name": "PercentComplete",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "ModVarGlobal"
+              },
+              "parameters": [
+                "__Percent_Complete",
+                "=",
+                "(TimerElapsedTime(\"__Pressed_Duration\") / GlobalVariable(__HeldDown_Duration)) * 100"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "GlobalVariable(__Percent_Complete)"
+              ]
+            }
+          ]
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
       "objectGroups": []
     }
   ],
