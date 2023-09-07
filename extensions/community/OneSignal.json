@@ -8,7 +8,7 @@
   "name": "OneSignal",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/Line Hero Pack/Master/SVG/Communication/83c3b1f43896ce61930a58332b1fa00a1dcd9d1cabb5eec469ea54b30f173cba_Communication_chat_message_sms_bell_ring_notification.svg",
   "shortDescription": "OneSignal is the fastest and most reliable service to send push notifications, in-app messages, SMS, and emails.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Check out the documentation here - https://documentation.onesignal.com/docs/onesignal-platform",
   "tags": [
     "network"
@@ -19,47 +19,40 @@
   "dependencies": [
     {
       "exportName": "onesignal-cordova-plugin",
-      "name": "onesignal-cordova-plugin",
+      "name": "Onesignal Cordova Plugin",
       "type": "cordova",
-      "version": "3.3.1"
+      "version": "5.0.0"
     }
   ],
   "eventsFunctions": [
     {
-      "description": "Initialize OneSignal.",
+      "description": "Initialize OneSignal",
       "fullName": "Initialize OneSignal",
       "functionType": "Action",
+      "group": "Static",
       "name": "Initialize",
       "sentence": "Initialize OneSignal",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "const appid = eventsFunctionContext.getArgument(\"appid\");",
-            "const prompt = eventsFunctionContext.getArgument(\"prompt\");",
-            "const permission = eventsFunctionContext.getArgument(\"permission\");",
+            "const appId = eventsFunctionContext.getArgument(\"appid\");",
+            "const consent = eventsFunctionContext.getArgument(\"consent\");",
             "",
-            "document.addEventListener('deviceready', OneSignalInit, false);",
-            "function OneSignalInit() {",
-            "    // NOTE: Update the init value below with your OneSignal AppId.",
-            "    window.plugins.OneSignal.init(appid);",
-            "    window.plugins.OneSignal.Notifications.setNotificationOpenedHandler(function(opened) {",
-            "        let notificationData = JSON.stringify(opened);",
-            "        console.log('notificationOpenedCallback: ' + notificationData);",
-            "    });",
+            "document.addEventListener('deviceready', () => {",
+            "    window.plugins.OneSignal.setConsentRequired(consent);",
+            "    window.plugins.OneSignal.initialize(appId);",
+            "}",
+            "    , false);",
             "",
-            "    if (prompt == true) {",
-            "        window.plugins.OneSignal.Notifications.requestPermission(function(accepted) {",
-            "        console.log(\"User accepted notifications: \" + accepted);",
-            "        permission = accepted",
-            "    });",
-            "    }",
-            "    ",
-            "}"
+            "",
+            "",
+            "",
+            ""
           ],
           "parameterObjects": "",
           "useStrict": true,
-          "eventsSheetExpanded": false
+          "eventsSheetExpanded": true
         }
       ],
       "parameters": [
@@ -69,38 +62,57 @@
           "type": "string"
         },
         {
-          "defaultValue": "yes",
-          "description": "Prompts the user for notification permissions",
-          "name": "prompt",
+          "defaultValue": "False",
+          "description": "Determine whether a user must consent to privacy prior to their user data being sent up to OneSignal.",
+          "name": "consent",
           "optional": true,
-          "type": "yesorno"
-        },
-        {
-          "description": "Variable to store notification permission status",
-          "name": "permission",
-          "type": "scenevar"
+          "type": "trueorfalse"
         }
       ],
       "objectGroups": []
     },
     {
-      "description": "Capture Email.",
-      "fullName": "Capture Email",
+      "description": "Onesignal Ready",
+      "fullName": "Onesignal Ready",
+      "functionType": "Condition",
+      "group": "Static",
+      "name": "Initialized",
+      "sentence": "Onesignal Ready",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "document.addEventListener('deviceready', () => {\r",
+            "    eventsFunctionContext.returnValue = true\r",
+            "}\r",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Add Email.",
+      "fullName": "Add Email",
       "functionType": "Action",
-      "name": "UserEmail",
-      "sentence": "Capture Email _PARAM1_",
+      "group": "User",
+      "name": "AddEmail",
+      "sentence": "Add email _PARAM1_",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
             "const email = eventsFunctionContext.getArgument(\"email\");",
             "",
-            "document.addEventListener('deviceready', OneSignalUserEmail, false);",
-            "function OneSignalUserEmail() {",
-            "",
+            "document.addEventListener('deviceready', () => {",
             "    window.plugins.OneSignal.User.addEmail(email);",
             "",
-            "}"
+            "}",
+            "    , false);"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -117,23 +129,88 @@
       "objectGroups": []
     },
     {
-      "description": "Capture SMS.",
-      "fullName": "Capture SMS",
+      "description": "Remove Email.",
+      "fullName": "Remove Email",
       "functionType": "Action",
-      "name": "UserSMS",
-      "sentence": "Capture SMS _PARAM1_",
+      "group": "User",
+      "name": "RemoveEmail",
+      "sentence": "Remove email _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const email = eventsFunctionContext.getArgument(\"email\");",
+            "",
+            "document.addEventListener('deviceready', () => {",
+            "    window.plugins.OneSignal.User.removeEmail(email);",
+            "",
+            "}",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Email",
+          "name": "email",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Add SMS.",
+      "fullName": "Add SMS",
+      "functionType": "Action",
+      "group": "User",
+      "name": "AddSMS",
+      "sentence": "Add SMS _PARAM1_",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
             "const sms = eventsFunctionContext.getArgument(\"sms\");",
             "",
-            "document.addEventListener('deviceready', OneSignalUserSMS, false);",
-            "function OneSignalUserSMS() {",
             "",
+            "document.addEventListener('deviceready', () => {",
             "    window.plugins.OneSignal.User.addSms(sms);",
+            "}",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "SMS",
+          "name": "sms",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Remove SMS.",
+      "fullName": "Remove SMS",
+      "functionType": "Action",
+      "group": "User",
+      "name": "RemoveSMS",
+      "sentence": "Remove SMS _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const sms = eventsFunctionContext.getArgument(\"sms\");",
             "",
-            "}"
+            "document.addEventListener('deviceready', () => {",
+            "    window.plugins.OneSignal.User.removeSms(sms);",
+            "}",
+            "    , false);"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -153,6 +230,7 @@
       "description": "Use Data Tags for custom user and event properties. These allow for message personalization and segmentation.",
       "fullName": "Data Tags",
       "functionType": "Action",
+      "group": "User",
       "name": "DataTags",
       "sentence": "Send Data Tags _PARAM1_",
       "events": [
@@ -161,12 +239,11 @@
           "inlineCode": [
             "const dataTags = eventsFunctionContext.getArgument(\"datatags\");\r",
             "\r",
-            "document.addEventListener('deviceready', OneSignalUserDataTags, false);\r",
-            "function OneSignalUserDataTags() {\r",
-            "\r",
+            "document.addEventListener('deviceready', () => {\r",
             "    window.plugins.OneSignal.User.addTags(dataTags);\r",
             "\r",
-            "}"
+            "}\r",
+            "    , false);"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -183,23 +260,22 @@
       "objectGroups": []
     },
     {
-      "description": "You will supply the external user id to the OneSignal SDK.",
+      "description": "This will associate the device’s push subscription to the user that can be identified via the alias external ID. If that user doesn’t already exist, it will be created. If the user does already exist, the user will be updated to own the device’s push subscription. Note that the push subscription for the device will always be transferred to the newly logged in user, as that user is the current owner of that push subscription.",
       "fullName": "Data Tags",
       "functionType": "Action",
+      "group": "Static",
       "name": "Login",
-      "sentence": "Send Data Tags _PARAM1_",
+      "sentence": "Login user with external ID _PARAM1_",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
             "const externalId = eventsFunctionContext.getArgument(\"login\");\r",
             "\r",
-            "document.addEventListener('deviceready', OneSignalUserLogin, false);\r",
-            "function OneSignalUserLogin() {\r",
-            "\r",
-            "    window.plugins.OneSignal.login(\"externalId\");\r",
-            "\r",
-            "}"
+            "document.addEventListener('deviceready', () => {\r",
+            "    window.plugins.OneSignal.login(externalId);\r",
+            "}\r",
+            "    , false);"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -210,7 +286,548 @@
         {
           "description": "External Id",
           "name": "login",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Logging out has the affect of reverting to a device-scoped user, which is the new owner of the device’s push subscription.",
+      "fullName": "Logout",
+      "functionType": "Action",
+      "group": "Static",
+      "name": "Logout",
+      "sentence": "Logout user",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "document.addEventListener('deviceready', () => {\r",
+            "    window.plugins.OneSignal.logout();\r",
+            "\r",
+            "}\r",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "The current device’s push subscription ID.",
+      "fullName": "Push Subscription ID",
+      "functionType": "Expression",
+      "group": "Push Subscription",
+      "name": "PushSubID",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "document.addEventListener('deviceready', () => {\r",
+            "    eventsFunctionContext.returnValue = window.plugins.OneSignal.User.pushSubscription.id;\r",
+            "}\r",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "The current device’s push subscription Token.",
+      "fullName": "Push Subscription Token",
+      "functionType": "StringExpression",
+      "group": "Push Subscription",
+      "name": "PushSubToken",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "document.addEventListener('deviceready', () => {\r",
+            "    eventsFunctionContext.returnValue = window.plugins.OneSignal.User.pushSubscription.token;\r",
+            "}\r",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "string"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "The current device’s push subscription Opted In.",
+      "fullName": "Push Subscription Opted In ",
+      "functionType": "StringExpression",
+      "group": "Push Subscription",
+      "name": "PushSubOptIn",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "document.addEventListener('deviceready', () => {\r",
+            "\r",
+            "    eventsFunctionContext.returnValue = window.plugins.OneSignal.User.pushSubscription.token;\r",
+            "\r",
+            "}\r",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "string"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "To receive push notifications on the device, If needed, this action will prompt the user for push notifications permission.",
+      "fullName": "Opting In to Push Notifications",
+      "functionType": "Action",
+      "group": "Push Subscription",
+      "name": "OptInPushNotifications",
+      "sentence": "Opt into push notifications",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "document.addEventListener('deviceready', () => {\r",
+            "    window.plugins.OneSignal.User.pushSubscription.optIn();\r",
+            "}\r",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "If at any point you want the user to stop receiving push notifications on the current device (regardless of system-level permission status).",
+      "fullName": "Opting Out of Push Notifications",
+      "functionType": "Action",
+      "group": "Push Subscription",
+      "name": "OptOutPushNotifications",
+      "sentence": "Opt out of push notifications",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "document.addEventListener('deviceready', () => {",
+            "    window.plugins.OneSignal.User.pushSubscription.optOut();",
+            "}",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Indicates whether privacy consent has been granted. This field is only relevant when the application has opted into data privacy protections.",
+      "fullName": "Set Consent Given",
+      "functionType": "Action",
+      "group": "Static",
+      "name": "SetConsentGiven",
+      "sentence": "Set consent given to _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "var consent = eventsFunctionContext.getArgument(\"consent\")",
+            "",
+            "document.addEventListener('deviceready', () => {",
+            "window.plugins.OneSignal.setConsentGiven(consent);",
+            "",
+            "}",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Set Consent Given",
+          "name": "consent",
+          "type": "trueorfalse"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Whether this app has push notification permission.",
+      "fullName": "Has Permission",
+      "functionType": "Condition",
+      "group": "Notifications",
+      "name": "HasPermission",
+      "sentence": "Has Permission",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "document.addEventListener('deviceready', () => {",
+            "    eventsFunctionContext.returnValue = window.plugins.OneSignal.Notifications.hasPermission()",
+            "}",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Whether attempting to request notification permission will show a prompt. Returns true if the device has not been prompted for push notification permission already.",
+      "fullName": "Can Request Permission",
+      "functionType": "Condition",
+      "group": "Notifications",
+      "name": "CanRequestPermission",
+      "sentence": "Can Request Permission",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "document.addEventListener('deviceready', () => {",
+            "",
+            "    eventsFunctionContext.returnValue = window.plugins.OneSignal.Notifications.canRequestPermission()",
+            "",
+            "",
+            "}",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Removes all OneSignal notifications.",
+      "fullName": "Remove all notifications",
+      "functionType": "Action",
+      "group": "Notifications",
+      "name": "ClearAllNotifications",
+      "sentence": "Remove all notifications",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "document.addEventListener('deviceready', () => {\r",
+            "\r",
+            "    window.plugins.OneSignal.Notifications.clearAll();\r",
+            "\r",
+            "}\r",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "(Android only) Cancels a single OneSignal notification based on its Android notification integer ID, otherwise the notification will be restored when your app is restarted.",
+      "fullName": "Remove notification",
+      "functionType": "Action",
+      "group": "Notifications",
+      "name": "RemoveNotification",
+      "sentence": "Remove notification with integer ID _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "var integer = eventsFunctionContext.getArgument(\"integer\")\r",
+            "\r",
+            "\r",
+            "document.addEventListener('deviceready', () => {\r",
+            "    window.plugins.OneSignal.Notifications.removeNotification(1234567890);\r",
+            "\r",
+            "}\r",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Android notification integer ID",
+          "name": "integer",
           "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "(Android only) Cancels a group of OneSignal notifications with the provided group key.",
+      "fullName": "Remove grouped notification",
+      "functionType": "Action",
+      "group": "Notifications",
+      "name": "RemoveGroupedNotification",
+      "sentence": "Remove a group  of notification with group key _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "var key = eventsFunctionContext.getArgument(\"key\")\r",
+            "\r",
+            "document.addEventListener('deviceready', () => {\r",
+            "\r",
+            "    window.plugins.OneSignal.Notifications.removeGroupedNotifications(key);\r",
+            "\r",
+            "}\r",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Group Key",
+          "name": "key",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Prompt the user for permission to receive push notifications. This will display the native system prompt to request push notification permission.",
+      "fullName": "Request Notification Permission",
+      "functionType": "Action",
+      "group": "Notifications",
+      "name": "RequestPermission",
+      "sentence": "Request Notification Permission",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "var response = eventsFunctionContext.getArgument(\"response\");\r",
+            "\r",
+            "document.addEventListener('deviceready', () => {\r",
+            "    window.plugins.OneSignal.Notifications.requestPermission(fallback)\r",
+            "}\r",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "defaultValue": "True",
+          "description": "Fallback to settings",
+          "name": "fallback",
+          "optional": true,
+          "type": "trueorfalse"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Whether location is currently shared with OneSignal.",
+      "fullName": "Location is shared",
+      "functionType": "StringExpression",
+      "group": "Location",
+      "name": "LocationShared",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "document.addEventListener('deviceready', () => {\r",
+            "    eventsFunctionContext.returnValue = window.plugins.OneSignal.Location.isShared();\r",
+            "}\r",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "string"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Enable or disable location sharing.",
+      "fullName": "Enable or Disable location sharing",
+      "functionType": "Action",
+      "group": "Location",
+      "name": "SetLocationPermission",
+      "sentence": "Enable location sharing _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "var location = eventsFunctionContext.getArgument(\"location\")",
+            "",
+            "",
+            "document.addEventListener('deviceready', () => {",
+            "    window.plugins.OneSignal.Location.setShared(location);",
+            "}",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Enable or disable location sharing",
+          "name": "location",
+          "type": "trueorfalse"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Manually prompt the user for location permissions. This allows for geotagging so you send notifications to users based on location.",
+      "fullName": "Request location permission ",
+      "functionType": "Action",
+      "group": "Location",
+      "name": "SetLocationRequestPermission",
+      "sentence": "Request location permission ",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "document.addEventListener('deviceready', () => {\r",
+            "\r",
+            "    window.plugins.OneSignal.Location.requestPermission();\r",
+            "\r",
+            "}\r",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Whether in-app messaging is currently paused.",
+      "fullName": "In App Messaging paused",
+      "functionType": "Condition",
+      "group": "In App Messaging",
+      "name": "GetIAMpaused",
+      "sentence": "In App Messaging paused",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "document.addEventListener('deviceready', () => {\r",
+            "\r",
+            "    eventsFunctionContext.returnValue = window.plugins.OneSignal.InAppMessages.getPaused()\r",
+            "\r",
+            "}\r",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "When set to true, no IAM will be presented to the user regardless of whether they qualify for them. When set to false, any IAMs the user qualifies for will be presented to the user at the appropriate time.",
+      "fullName": "In App Messaging paused",
+      "functionType": "Action",
+      "group": "In App Messaging",
+      "name": "SetIAMpaused",
+      "sentence": "In App Messaging paused _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "var paused = eventsFunctionContext.getArgument(\"paused\")\r",
+            "document.addEventListener('deviceready', () => {\r",
+            "\r",
+            "    window.plugins.OneSignal.InAppMessages.setPaused(paused);\r",
+            "\r",
+            "}\r",
+            "    , false);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "In App Messaging paused",
+          "name": "paused",
+          "type": "trueorfalse"
         }
       ],
       "objectGroups": []
