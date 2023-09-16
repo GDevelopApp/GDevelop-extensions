@@ -8,7 +8,7 @@
   "name": "ParticleEmitter3D",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/f2e5a34bf465f781866677762d385d6c8e9e8d203383f2df9a3b7e0fad6a2cb5_fire.svg",
   "shortDescription": "Display a large number of particles to create visual effects.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": [
     "Particle emitters can be used to display:",
     "- Fire",
@@ -19,6 +19,10 @@
     "Breaking change from 1.0.0:",
     "- Particles were 3 times too small"
   ],
+  "origin": {
+    "identifier": "ParticleEmitter3D",
+    "name": "gdevelop-extension-store"
+  },
   "tags": [
     "3d",
     "particle",
@@ -5187,7 +5191,7 @@
           ],
           "parameterObjects": "",
           "useStrict": true,
-          "eventsSheetExpanded": false
+          "eventsSheetExpanded": true
         }
       ],
       "parameters": [],
@@ -5249,15 +5253,6 @@
                 "",
                 "// Here runtimeScene is the gdjs.CustomRuntimeObjectInstanceContainer inside the custom object.",
                 "const gameScene = object.getRuntimeScene();",
-                "const layer = gameScene.getLayer(object.getLayer());",
-                "",
-                "gameScene.__particleEmmiter3DExtension = gameScene.__particleEmmiter3DExtension || {};",
-                "if (!gameScene.__particleEmmiter3DExtension.batchSystem) {",
-                "    const batchSystem = new BatchedRenderer();",
-                "    layer.getRenderer().getThreeScene().add(batchSystem);",
-                "    gameScene.__particleEmmiter3DExtension.batchSystem = batchSystem;",
-                "}",
-                "const batchSystem = gameScene.__particleEmmiter3DExtension.batchSystem;",
                 "",
                 "/** @type {SpriteObjectDataType} */",
                 "const particleSpriteData = object._instanceContainer._objects.get(\"Particle\");",
@@ -5313,7 +5308,6 @@
                 "    renderMode: RenderMode.BillBoard",
                 "};",
                 "const particleSystem = new ParticleSystem(muzzle);",
-                "object.__particleSystem = particleSystem;",
                 "",
                 "const colorOverLife = new ColorOverLife(new ColorRange(",
                 "    new THREE.Vector4(1, 0.3882312, 0.125, 1),",
@@ -5326,18 +5320,22 @@
                 "",
                 "particleSystem.emitter.rotation.order = 'ZYX';",
                 "particleSystem.emitter.name = object.getName() + object.getNameId();",
-                "batchSystem.addSystem(particleSystem);",
                 "",
                 "object.__particleEmitterAdapter = new ParticleEmitterAdapter(particleSystem, colorOverLife, sizeOverLife, applyForce);",
+                "object.__particleSystem = particleSystem;",
                 "",
-                "layer.get3DRendererObject().add(particleSystem.emitter);",
+                "const layer = gameScene.getLayer(object.getLayer());",
+                "layer.getRenderer().add3DRendererObject(particleSystem.emitter);",
                 "const ParticleEmitter3D = Object.getPrototypeOf(object);",
                 "if (!ParticleEmitter3D.__isDefined) {",
                 "    ParticleEmitter3D.__isDefined = true;",
-                "    ParticleEmitter3D.get3DRendererObject = () => this.__emitter;",
+                "    ParticleEmitter3D.get3DRendererObject = function() {",
+                "        return this.__particleSystem.emitter;",
+                "    };",
                 "}",
                 "",
                 "// See doStepPostEvents",
+                "gameScene.__particleEmmiter3DExtension = gameScene.__particleEmmiter3DExtension || {};",
                 "gameScene.__particleEmmiter3DExtension.emittersCount = gameScene.__particleEmmiter3DExtension.emittersCount || 0;",
                 "gameScene.__particleEmmiter3DExtension.emittersCount++;",
                 "",
@@ -5801,7 +5799,17 @@
                   ]
                 }
               ],
-              "actions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::RegisterInLayer"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ],
               "events": [
                 {
                   "type": "BuiltinCommonInstructions::JsCode",
@@ -5809,6 +5817,7 @@
                     "const object = objects[0];",
                     "// Here runtimeScene is the gdjs.CustomRuntimeObjectInstanceContainer inside the custom object.",
                     "const gameScene = object.getRuntimeScene();",
+                    "const layer = gameScene.getLayer(object.getLayer());",
                     "",
                     "const emitter = object.__particleSystem.emitter;",
                     "emitter.position.x = object.getX();",
@@ -5820,7 +5829,15 @@
                     "// See onScenePreEvents",
                     "gameScene.__particleEmmiter3DExtension.emittersStepped++;",
                     "if (gameScene.__particleEmmiter3DExtension.emittersStepped === gameScene.__particleEmmiter3DExtension.emittersCount) {",
-                    "    gameScene.__particleEmmiter3DExtension.batchSystem.update(object.getElapsedTime() / 1000);",
+                    "    gameScene.__particleEmmiter3DExtension.layerNames = gameScene.__particleEmmiter3DExtension.layerNames || [];",
+                    "    const layerNames = gameScene.__particleEmmiter3DExtension.layerNames;",
+                    "    gameScene.getAllLayerNames(layerNames);",
+                    "    for (const layerName of layerNames) {",
+                    "        const layer = gameScene.getLayer(layerName);",
+                    "        if (layer.__particleEmmiter3DExtension) {",
+                    "            layer.__particleEmmiter3DExtension.batchSystem.update(object.getElapsedTime() / 1000);",
+                    "        }",
+                    "    }",
                     "}"
                   ],
                   "parameterObjects": "Object",
@@ -5828,6 +5845,53 @@
                   "eventsSheetExpanded": true
                 }
               ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Register in layer",
+          "functionType": "Action",
+          "name": "RegisterInLayer",
+          "private": true,
+          "sentence": "Register _PARAM0_ in layer",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "/** @type {gdjs.CustomRuntimeObject} */",
+                "const object = objects[0];",
+                "",
+                "// TODO Handle layer changes?",
+                "if (object.__emitterLayerName === undefined) {",
+                "    // Here runtimeScene is the gdjs.CustomRuntimeObjectInstanceContainer inside the custom object.",
+                "    const gameScene = object.getRuntimeScene();",
+                "",
+                "    const layer = gameScene.getLayer(object.getLayer());",
+                "    layer.__particleEmmiter3DExtension = layer.__particleEmmiter3DExtension || {};",
+                "    if (!layer.__particleEmmiter3DExtension.batchSystem) {",
+                "        const batchSystem = new gdjs.__particleEmmiter3DExtension.BatchedRenderer();",
+                "        const threeScene = layer.getRenderer().getThreeScene();",
+                "        if (threeScene) {",
+                "            threeScene.add(batchSystem);",
+                "        }",
+                "        layer.__particleEmmiter3DExtension.batchSystem = batchSystem;",
+                "    }",
+                "    layer.__particleEmmiter3DExtension.batchSystem.addSystem(object.__particleSystem);",
+                "    object.__emitterLayerName = layer.getName();",
+                "}"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
             }
           ],
           "parameters": [
