@@ -465,9 +465,9 @@ const extensionsAllowedProperties = {
       javaScriptObjectAllowedProperties: [],
     },
     ObjectPickingTools: {
-      gdjsAllowedProperties: ['getObjects'],
+      gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getObjects'],
       javaScriptObjectAllowedProperties: [],
     },
   },
