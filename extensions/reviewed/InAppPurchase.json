@@ -1,7 +1,6 @@
 {
   "author": "",
   "category": "Ads",
-  "description": "> To set up In App Purchase, you'll need a developer account on Google Play Console or Apple App Store Connect. You will also need **real phones/devices** to test IAP, because emulators are not supported.\n\nIt's highly recommended to **read the [help page](https://wiki.gdevelop.io/gdevelop5/extensions/in-app-purchase) to begin**. \n\n> ⚠️ In-App Purchase **will only work after you exported your game and uploaded it to Google Play Console or Apple App Store Connect**, at least in a testing track.\n\nThe general worflow is the following:\n\n- Register your products on the Google Play Console or App Store Connect,\n- In your game, register the same products using the action *\"Register an item\"*,\n- Call the action to finalize the store registration,\n- Wait for \"the store is ready\" condition to be true,\n- Get the items data to know what to display (in particular the *price* of each items),\n- Display the price and available items in your game,\n- Register a variable that will be updated when an item purchase is approved (and other variables for when other things happen),\n- When the player clicks on an item, use the action to order it,\n- If the purchase is approved (the variable you set up is set to true), give the user what they bought,\n- Mark the purchase as completed for the user to be charged the money\n",
   "extensionNamespace": "",
   "fullName": "Mobile In-App Purchase (experimental)",
   "helpPath": "/extensions/in-app-purchase/setup",
@@ -9,7 +8,27 @@
   "name": "InAppPurchase",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Glyphster Pack/Master/SVG/Shopping and Ecommerce/Shopping and Ecommerce_wallet_money_cash.svg",
   "shortDescription": "Add items to buy directly in your game (\"In-App Purchase\"), for games published on Android or iOS.",
-  "version": "0.0.3",
+  "version": "0.0.4",
+  "description": [
+    "> To set up In App Purchase, you'll need a developer account on Google Play Console or Apple App Store Connect. You will also need **real phones/devices** to test IAP, because emulators are not supported.",
+    "",
+    "It's highly recommended to **read the [help page](https://wiki.gdevelop.io/gdevelop5/extensions/in-app-purchase) to begin**. ",
+    "",
+    "> ⚠️ In-App Purchase **will only work after you exported your game and uploaded it to Google Play Console or Apple App Store Connect**, at least in a testing track.",
+    "",
+    "The general worflow is the following:",
+    "",
+    "- Register your products on the Google Play Console or App Store Connect,",
+    "- In your game, register the same products using the action *\"Register an item\"*,",
+    "- Call the action to finalize the store registration,",
+    "- Wait for \"the store is ready\" condition to be true,",
+    "- Get the items data to know what to display (in particular the *price* of each items),",
+    "- Display the price and available items in your game,",
+    "- Register a variable that will be updated when an item purchase is approved (and other variables for when other things happen),",
+    "- When the player clicks on an item, use the action to order it,",
+    "- If the purchase is approved (the variable you set up is set to true), give the user what they bought",
+    ""
+  ],
   "tags": ["purchase", "iap", "android", "ios", "monetization"],
   "authorIds": ["ZgrsWuRTAkXgeuPV9bo0zuEcA2w1", "wWP8BSlAW0UP4NeaHa2LcmmDzmH2"],
   "dependencies": [
@@ -26,14 +45,20 @@
       "fullName": "Register an item",
       "functionType": "Action",
       "name": "RegisterItem",
-      "private": false,
-      "sentence": "Register item _PARAM1_ as a _PARAM2_ (alias: _PARAM3_)",
+      "sentence": "Register item _PARAM1_ as a _PARAM2_ (platform: _PARAM3_)",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "if(!window.store) return;\nstore.register({\n    id: eventsFunctionContext.getArgument(\"id\"),\n    type: eventsFunctionContext.getArgument(\"type\"),\n    alias: eventsFunctionContext.getArgument(\"alias\"),\n});\n",
+          "inlineCode": [
+            "if(!window.CdvPurchase || !window.CdvPurchase.store) return;",
+            "const store = window.CdvPurchase.store;",
+            "store.register({",
+            "    id: eventsFunctionContext.getArgument(\"id\"),",
+            "    type: eventsFunctionContext.getArgument(\"type\"),",
+            "    platform: eventsFunctionContext.getArgument(\"platform\"),",
+            "});",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -41,34 +66,22 @@
       ],
       "parameters": [
         {
-          "codeOnly": false,
-          "defaultValue": "",
           "description": "The internal ID of the item",
           "longDescription": "Use the ID of the item you entered on the IAP provider (Google play, Apple store...)",
           "name": "id",
-          "optional": false,
-          "supplementaryInformation": "",
           "type": "string"
         },
         {
-          "codeOnly": false,
-          "defaultValue": "",
           "description": "The type of item",
-          "longDescription": "",
           "name": "type",
-          "optional": false,
           "supplementaryInformation": "[\"free subscription\",\"paid subscription\",\"non renewing subscription\",\"consumable\",\"non consumable\"]",
           "type": "stringWithSelector"
         },
         {
-          "codeOnly": false,
-          "defaultValue": "",
-          "description": "(Optional) Alias name for the item",
-          "longDescription": "",
-          "name": "alias",
-          "optional": false,
-          "supplementaryInformation": "",
-          "type": "string"
+          "description": "Which platform you're registering the item to",
+          "name": "platform",
+          "supplementaryInformation": "[\"android-playstore\",\"ios-appstore\",\"braintree\",\"windows-store-transaction\",\"test\"]",
+          "type": "stringWithSelector"
         }
       ],
       "objectGroups": []
@@ -78,14 +91,23 @@
       "fullName": "Finalize registration",
       "functionType": "Action",
       "name": "FinalizeRegistration",
-      "private": false,
       "sentence": "Finalize store registration",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "if(!window.store) return;\nstore.refresh();\n",
+          "inlineCode": [
+            "if(!window.CdvPurchase || !window.CdvPurchase.store) return;",
+            "const store = window.CdvPurchase.store;",
+            "",
+            "store.initialize();",
+            "store.update();",
+            "store.ready(() => {",
+            "    console.info('IAP store is ready!')",
+            "    const variable = runtimeScene.getVariables().get(\"IAP_STORE_READY\");",
+            "    variable.setBoolean(true);",
+            "})",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -99,14 +121,19 @@
       "fullName": "Order an item",
       "functionType": "Action",
       "name": "OrderItem",
-      "private": false,
       "sentence": "Order item _PARAM1_",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "if(!window.store) return;\nstore.order(eventsFunctionContext.getArgument(\"id\"));\n",
+          "inlineCode": [
+            "if(!window.CdvPurchase || !window.CdvPurchase.store) return;",
+            "const store = window.CdvPurchase.store;",
+            "",
+            "const product = store.get(eventsFunctionContext.getArgument(\"id\"));",
+            "const offer = product.getOffer();",
+            "offer.order();",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -114,13 +141,8 @@
       ],
       "parameters": [
         {
-          "codeOnly": false,
-          "defaultValue": "",
-          "description": "The id or alias of the item to buy",
-          "longDescription": "",
+          "description": "The id of the item to buy",
           "name": "id",
-          "optional": false,
-          "supplementaryInformation": "",
           "type": "string"
         }
       ],
@@ -131,14 +153,20 @@
       "fullName": "Load item data in a variable",
       "functionType": "Action",
       "name": "GetProduct",
-      "private": false,
       "sentence": "Store data of _PARAM1_ in scene variable named _PARAM2_",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "if(!window.store) return;\nruntimeScene.getVariables().get(eventsFunctionContext.getArgument(\"variableName\")).fromJSObject(\n    store.get(eventsFunctionContext.getArgument(\"id\"))\n);\n",
+          "inlineCode": [
+            "if(!window.CdvPurchase || !window.CdvPurchase.store) return;",
+            "const store = window.CdvPurchase.store;",
+            "",
+            "const product = store.get(eventsFunctionContext.getArgument(\"id\"));",
+            "const destinationVariable = runtimeScene.getVariables().get(eventsFunctionContext.getArgument(\"variableName\"));",
+            "// Load product into destination variable.",
+            "destinationVariable.fromJSObject(product);",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -146,41 +174,65 @@
       ],
       "parameters": [
         {
-          "codeOnly": false,
-          "defaultValue": "",
           "description": "The id or alias of the item to get info about",
-          "longDescription": "",
           "name": "id",
-          "optional": false,
-          "supplementaryInformation": "",
           "type": "string"
         },
         {
-          "codeOnly": false,
-          "defaultValue": "",
           "description": "The name of the scene variable to store the item data in",
           "longDescription": "The variable will be a structure, see [this page](https://github.com/j3k0/cordova-plugin-purchase/blob/master/doc/api.md#storeproduct-public-attributes) to know what child variables are accessible.",
           "name": "variableName",
-          "optional": false,
-          "supplementaryInformation": "",
           "type": "string"
         }
       ],
       "objectGroups": []
     },
     {
-      "description": "When an event is triggered for an item (item loaded, approved, already owned, etc..), this sets a scene variable to true. \nYou can then compare the value of the variable in a condition, and have actions launched to react to the changes.",
-      "fullName": "Update a variable when an item is updated",
+      "description": "When an event is triggered for an item (approved or finished), this sets a scene variable to true. \nYou can then compare the value of the variable in a condition, and have actions launched to react to the changes.",
+      "fullName": "Update a variable when an item event is triggered",
       "functionType": "Action",
       "name": "WatchItemEvent",
-      "private": false,
       "sentence": "Watch the event _PARAM3_ for item _PARAM1_ and set scene variable named _PARAM2_ to true when it happens",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "if(!window.store) return;\n\nstore.when(eventsFunctionContext.getArgument(\"id\"), eventsFunctionContext.getArgument(\"event\"), () => {\n    const variable = runtimeScene.getVariables().get(eventsFunctionContext.getArgument(\"variableName\"));\n    variable.setBoolean(true);\n});\n",
+          "inlineCode": [
+            "if(!window.CdvPurchase || !window.CdvPurchase.store) return;",
+            "const store = window.CdvPurchase.store;",
+            "",
+            "const eventName = eventsFunctionContext.getArgument(\"event\");",
+            "const productId = eventsFunctionContext.getArgument(\"id\");",
+            "",
+            "const transactionCallback = (transaction) => {",
+            "    const products = transaction.products;",
+            "    // If the product being watched is in the list of products in the transaction, save into a variable.",
+            "    if (products.find(transactionProduct => transactionProduct.id === productId)) {",
+            "        const variable = runtimeScene.getVariables().get(eventsFunctionContext.getArgument(\"variableName\"));",
+            "        variable.setBoolean(true);",
+            "    }",
+            "}",
+            "",
+            "store.when().approved((transaction) => {",
+            "    // If we're watching this event, call the callback.",
+            "    if (eventName === 'approved') {",
+            "        transactionCallback(transaction);",
+            "    }",
+            "    // Automatically verify the transaction on approved.",
+            "    transaction.verify();",
+            "})",
+            "",
+            "// Automatically finish a receipt when verified.",
+            "store.when().verified(receipt => receipt.finish())",
+            "",
+            "store.when().finished((transaction) => {",
+            "    // If we're watching this event, call the callback.",
+            "    if (eventName === 'finished') {",
+            "        transactionCallback(transaction);",
+            "    }",
+            "    // Nothing left to do when finished.",
+            "})",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -188,33 +240,19 @@
       ],
       "parameters": [
         {
-          "codeOnly": false,
-          "defaultValue": "",
-          "description": "The id or alias of the item to watch",
-          "longDescription": "You can also type in `\"order\"` to make it apply to any item",
+          "description": "The id of the item to watch",
           "name": "id",
-          "optional": false,
-          "supplementaryInformation": "",
           "type": "string"
         },
         {
-          "codeOnly": false,
-          "defaultValue": "",
           "description": "The name of the scene variable to set to \"true\" when the event happens",
-          "longDescription": "",
           "name": "variableName",
-          "optional": false,
-          "supplementaryInformation": "",
           "type": "string"
         },
         {
-          "codeOnly": false,
-          "defaultValue": "",
           "description": "The event to listen to",
-          "longDescription": "",
           "name": "event",
-          "optional": false,
-          "supplementaryInformation": "[\"loaded\",\"updated\",\"error\",\"approved\",\"owned\",\"cancelled\",\"refunded\"]",
+          "supplementaryInformation": "[\"finished\",\"approved\"]",
           "type": "stringWithSelector"
         }
       ],
@@ -225,14 +263,16 @@
       "fullName": "Store is ready",
       "functionType": "Condition",
       "name": "StoreReady",
-      "private": false,
       "sentence": "Store is ready",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = window.store && store.ready();\n",
+          "inlineCode": [
+            "const variable = runtimeScene.getVariables().get(\"IAP_STORE_READY\");",
+            "",
+            "eventsFunctionContext.returnValue = variable.getAsBoolean() === true;",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -242,18 +282,26 @@
       "objectGroups": []
     },
     {
-      "description": "Mark a purchase as delivered, after you delivered the goods the user has paid for. Until you do so, the user will not be charged and keep on getting the event triggered each time the app starts.",
-      "fullName": "Finalize a purchase",
-      "functionType": "Action",
-      "name": "FinalizePurchase",
-      "private": false,
-      "sentence": "Mark purchase of _PARAM1_ as delivered",
+      "description": "Returns true if the item with ID is owned, false otherwise. (can return false until the store is initialized)",
+      "fullName": "Check if item is owned",
+      "functionType": "Condition",
+      "name": "IsItemOwned",
+      "sentence": "Item _PARAM1_ is owned",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "if(!window.store) return;\nstore.get(eventsFunctionContext.getArgument(\"id\")).finish();\n",
+          "inlineCode": [
+            "if(!window.CdvPurchase || !window.CdvPurchase.store) return false;",
+            "const store = window.CdvPurchase.store;",
+            "",
+            "const productId = eventsFunctionContext.getArgument(\"id\");",
+            "",
+            "// Owned does not have an event triggered, so we check synchronously.",
+            "const isProductOwned = store.owned(productId);",
+            "",
+            "eventsFunctionContext.returnValue = isProductOwned;",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -261,18 +309,14 @@
       ],
       "parameters": [
         {
-          "codeOnly": false,
-          "defaultValue": "",
-          "description": "The id or alias of the item to finalize",
-          "longDescription": "",
+          "description": "The id of the item to watch",
           "name": "id",
-          "optional": false,
-          "supplementaryInformation": "",
           "type": "string"
         }
       ],
       "objectGroups": []
     }
   ],
-  "eventsBasedBehaviors": []
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
 }
