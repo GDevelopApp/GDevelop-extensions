@@ -8,10 +8,10 @@
   "name": "WithThreeJS",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/rotate-3d.svg",
   "shortDescription": "Create a simple 3D scene.",
-  "version": "0.9.2",
+  "version": "1.0.0",
   "description": [
     "Extension for GDevelop to create simple 3D scenes.  ",
-    "This extension is intended for easy and simple 3D rendering. It does not currently aim for realistic rendering with light and shadow.  ",
+    "This extension is intended for easy and simple 3D rendering. It does not currently aim for realistic 3D rendering.  ",
     "",
     "## ⚠️ Precautions for use  ",
     "This extension is experimental. Destructive changes may be made.  ",
@@ -795,13 +795,15 @@
             "\t\t\t\t\t\t\t} else {",
             "",
             "\t\t\t\t\t\t\t\t// material = new THREE.MeshPhongMaterial();",
-            "\t\t\t\t\t\t\t\tmaterial = new THREE.MeshBasicMaterial();// Custom",
+            "\t\t\t\t\t\t\t\t// material = new THREE.MeshBasicMaterial();// Custom",
+            "        \t\t\t\t\t\tmaterial = new THREE.MeshLambertMaterial();// Custom",
             "",
             "",
             "\t\t\t\t\t\t\t}",
             "",
             "\t\t\t\t\t\t\tmaterial.name = sourceMaterial.name;",
-            "\t\t\t\t\t\t\t// material.flatShading = sourceMaterial.smooth ? false : true;// Custom",
+            "\t\t\t\t\t\t\t// material.flatShading = sourceMaterial.smooth ? false : true;// Custom (MeshBasicMaterial)",
+            "\t\t\t\t\t\t\tmaterial.flatShading = sourceMaterial.smooth ? false : true;// Custom (MeshLambertMaterial)",
             "\t\t\t\t\t\t\tmaterial.vertexColors = hasVertexColors;",
             "\t\t\t\t\t\t\tstate.materials[ materialHash ] = material;",
             "",
@@ -1333,7 +1335,7 @@
       "functionType": "Action",
       "group": "3D Scene",
       "name": "Create3DScene",
-      "sentence": "Create 3D Scene (Color: _PARAM1_, Image: _PARAM2_ Fog: _PARAM3_, _PARAM4_, _PARAM5_, Projection Scale: _PARAM6_, View Mode: _PARAM7_)",
+      "sentence": "Create 3D Scene (Background: _PARAM1_, _PARAM2_, Ambient: _PARAM3_, Fog: _PARAM4_, _PARAM5_, _PARAM6_, Projection Scale: _PARAM7_, View Mode: _PARAM8_)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -1344,16 +1346,20 @@
             "if (BuiltIn3D) {",
             "  // runtimescene-pixi-renderer.ts カスタム",
             "  console.log(\"[WithThreeJS] Built-in 3D is enabled.\");",
-            "  runtimeScene.getRenderer()._threeRenderer._render_WithThreeJS = runtimeScene.getRenderer()._threeRenderer.render;",
-            "  runtimeScene.getRenderer()._threeRenderer.render = function(S, C) {",
-            "    runtimeScene.getLayer(\"\").getRenderer().getThreeScene().background = null;",
-            "    this._render_WithThreeJS(S, C);",
+            "  if (!runtimeScene.getRenderer()._threeRenderer._render_WithThreeJS) {",
+            "    runtimeScene.getRenderer()._threeRenderer._render_WithThreeJS = runtimeScene.getRenderer()._threeRenderer.render;",
+            "    runtimeScene.getRenderer()._threeRenderer.render = function(S, C) {",
+            "      runtimeScene.getLayer(\"\").getRenderer().getThreeScene().background = null;",
+            "      this._render_WithThreeJS(S, C);",
+            "    }",
             "  }",
-            "  runtimeScene.getRenderer().getPIXIRenderer()._clear_WithThreeJS = runtimeScene.getRenderer().getPIXIRenderer().clear;",
-            "  runtimeScene.getRenderer().getPIXIRenderer().clear = function() {",
-            "    runtimeScene.setBackgroundColor(0,0,0);",
-            "    this.backgroundAlpha = 0;",
-            "    this._clear_WithThreeJS();",
+            "  if (!runtimeScene.getRenderer().getPIXIRenderer()._clear_WithThreeJS) {",
+            "    runtimeScene.getRenderer().getPIXIRenderer()._clear_WithThreeJS = runtimeScene.getRenderer().getPIXIRenderer().clear;",
+            "    runtimeScene.getRenderer().getPIXIRenderer().clear = function() {",
+            "      runtimeScene.setBackgroundColor(0,0,0);",
+            "      this.backgroundAlpha = 0;",
+            "      this._clear_WithThreeJS();",
+            "    }",
             "  }",
             "} else {",
             "  console.log(\"[WithThreeJS] Built-in 3D is disabled.\");",
@@ -1386,6 +1392,7 @@
             "//",
             "const BG_RGB = eventsFunctionContext.getArgument(\"BackGroundColor\") || \"0;0;0\";",
             "const BG_Img = eventsFunctionContext.getArgument(\"BackGroundImage\") || \"\";",
+            "const Ambient_RGB = eventsFunctionContext.getArgument(\"AmbientColor\") || \"255;255;255\";",
             "const FogColor = eventsFunctionContext.getArgument(\"FogColor\") || \"\";",
             "const FogNear = eventsFunctionContext.getArgument(\"FogNear\") || 1;",
             "const FogFar = eventsFunctionContext.getArgument(\"FogFar\") || 1000;",
@@ -1413,6 +1420,17 @@
             "  const RGB = BG_RGB.split(\";\");",
             "  Scene.background = new THREE.Color(`rgb(${RGB[0]}, ${RGB[1]}, ${RGB[2]})`);",
             "}",
+            "//",
+            "let AmbientLight;",
+            "const AmbientColor = Ambient_RGB.split(\";\");",
+            "if (gdjs.__WithThreeJS.has(\"AmbientLight\")) {",
+            "  AmbientLight = gdjs.__WithThreeJS.get(\"AmbientLight\");",
+            "} else {",
+            "  AmbientLight = new THREE.AmbientLight();",
+            "  gdjs.__WithThreeJS.set(\"AmbientLight\", AmbientLight);",
+            "}",
+            "Scene.add(AmbientLight);",
+            "AmbientLight.color.set(`rgb(${AmbientColor[0]}, ${AmbientColor[1]}, ${AmbientColor[2]})`);",
             "//",
             "if (FogColor === \"\") {",
             "  Scene.fog = null;",
@@ -1561,6 +1579,11 @@
           "type": "string"
         },
         {
+          "description": "Ambient Light Color",
+          "name": "AmbientColor",
+          "type": "color"
+        },
+        {
           "description": "Fog Color (\"\" is none fog)",
           "name": "FogColor",
           "type": "color"
@@ -1595,11 +1618,12 @@
     },
     {
       "description": "Use this action in place of the \"Create 3D Scene\" action.\nThe built-in 3D axes are different from the axes in WithThreeJS.\nSome WithThreeJS features are not available.\n⚠️ This may be deprecated in the future.",
-      "fullName": "Built-In 3D WithThreeJS (Ultra Super Experimental)",
+      "fullName": "Built-In 3D WithThreeJS (Deprecated)",
       "functionType": "Action",
       "group": "3D Scene",
       "name": "BuiltIn3dWithThreeJS",
-      "sentence": "Built-In 3D WithThreeJS",
+      "private": true,
+      "sentence": "⚠️ Built-In 3D WithThreeJS",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -1728,6 +1752,7 @@
             "        || All[i].hasBehavior(\"PlaneProjectionFromTiled\")",
             "        || All[i].hasBehavior(\"BoxProjectionFromTiled\")",
             "        || All[i].type == \"WithThreeJS::Box3D\"",
+            "        || All[i].hasBehavior(\"LinkedLight\")",
             "        ) {",
             "        All[i].deleteFromScene(runtimeScene);",
             "    }",
@@ -2435,7 +2460,8 @@
             "}",
             "//",
             "const Texture = Textures.get(TextureId);",
-            "const Material = new THREE.MeshBasicMaterial({map: Texture, side: THREE.DoubleSide, transparent:Transparent, alphaTest:AlphaTest, blending:Blend, opacity:Opacity});//transparent:false, alphaTest:0, opacity:1.0",
+            "// const Material = new THREE.MeshBasicMaterial({map: Texture, side: THREE.DoubleSide, transparent:Transparent, alphaTest:AlphaTest, blending:Blend, opacity:Opacity});//transparent:false, alphaTest:0, opacity:1.0",
+            "const Material = new THREE.MeshLambertMaterial({map: Texture, side: THREE.DoubleSide, transparent:Transparent, alphaTest:AlphaTest, blending:Blend, opacity:Opacity});//transparent:false, alphaTest:0, opacity:1.0",
             "const Geometry = new THREE.PlaneGeometry(Width, Height, 1, 1);",
             "Geometry.computeBoundingBox();",
             "const Plane = new THREE.Mesh(Geometry, Material);",
@@ -2582,11 +2608,13 @@
             "//",
             "let Materials;",
             "if (TextureList.length === 1) {",
-            "    Materials = new THREE.MeshBasicMaterial({map:TextureList[0], transparent:Transparent, alphaTest:AlphaTest, blending:Blend, opacity:Opacity});",
+            "    // Materials = new THREE.MeshBasicMaterial({map:TextureList[0], transparent:Transparent, alphaTest:AlphaTest, blending:Blend, opacity:Opacity});",
+            "    Materials = new THREE.MeshLambertMaterial({map:TextureList[0], transparent:Transparent, alphaTest:AlphaTest, blending:Blend, opacity:Opacity});",
             "} else if (TextureList.length == 6) {",
             "    Materials = [];",
             "    for (let i = 0; i < TextureList.length; i++) {",
-            "        Materials.push(new THREE.MeshBasicMaterial({map:TextureList[i], transparent:Transparent, alphaTest:AlphaTest, blending:Blend, opacity:Opacity}));//side:THREE.FrontSide, transparent:false, alphaTest:0, opacity:1.0",
+            "        // Materials.push(new THREE.MeshBasicMaterial({map:TextureList[i], transparent:Transparent, alphaTest:AlphaTest, blending:Blend, opacity:Opacity}));//side:THREE.FrontSide, transparent:false, alphaTest:0, opacity:1.0",
+            "        Materials.push(new THREE.MeshLambertMaterial({map:TextureList[i], transparent:Transparent, alphaTest:AlphaTest, blending:Blend, opacity:Opacity}));//side:THREE.FrontSide, transparent:false, alphaTest:0, opacity:1.0",
             "    }",
             "} else {",
             "    console.warn(\"Requires 1 or 6 Texture IDs\");",
@@ -2902,8 +2930,8 @@
             "    gdjs.__WithThreeJS.get(\"GetAllMaterials\")(ResourceModel, Mats);",
             "    // MeshStandardMaterial から指定のマテリアルへ変換",
             "    for (const [K, V] of Mats) {",
-            "        const BasicMaterial = new THREE.MeshBasicMaterial();",
-            "        // const LambertMaterial = new THREE.MeshLambertMaterial();",
+            "        // const BasicMaterial = new THREE.MeshBasicMaterial();",
+            "        const LambertMaterial = new THREE.MeshLambertMaterial();",
             "        for(const KK of Object.keys(V)) {",
             "            if (KK === \"isMaterial\") {",
             "                continue;",
@@ -2914,13 +2942,13 @@
             "            if (KK === \"type\") {",
             "                continue;",
             "            }",
-            "            if (BasicMaterial[KK] !== undefined) {",
-            "                BasicMaterial[KK] = V[KK];",
+            "            if (LambertMaterial[KK] !== undefined) {",
+            "                LambertMaterial[KK] = V[KK];",
             "            }",
             "            // console.log(`V.${KK} = ${V[KK]}`);",
             "        }",
             "        V.dispose();// ここで実行して意味ある？",
-            "        Mats.set(K, BasicMaterial);",
+            "        Mats.set(K, LambertMaterial);",
             "    }",
             "    gdjs.__WithThreeJS.get(\"ReplaceMaterial\")(ResourceModel, Mats);",
             "    Models.set(ModelResourceName, ResourceModel);",
@@ -2996,6 +3024,142 @@
         {
           "description": "Scale",
           "name": "Scale",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "⚠️ 3D Lights are highly loaded.\n3D Directional Light and 3D Spot Light emit light in the -Z direction.\n3D Lights can be handled like 3D Objects.",
+      "fullName": "Create 3D Light",
+      "functionType": "Action",
+      "group": "3D Light",
+      "name": "Create3DLight",
+      "sentence": "Create 3D Light (ID: _PARAM1_, Type: _PARAM2_, Color: _PARAM3_, Intensity: _PARAM4_, Distance: _PARAM5_, SpotAngle: _PARAM6_, SpotPenumbra: _PARAM7_, Pos: _PARAM8_, _PARAM9_, _PARAM10_, Ang: _PARAM11_, _PARAM12_, _PARAM13_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "//",
+            "const LightId = eventsFunctionContext.getArgument(\"LightId\");",
+            "const LightType = eventsFunctionContext.getArgument(\"Type\");",
+            "const Color = eventsFunctionContext.getArgument(\"Color\") || \"255;255;255\";",
+            "const Intensity = eventsFunctionContext.getArgument(\"Intensity\");",
+            "const Distance = eventsFunctionContext.getArgument(\"Distance\");",
+            "const Decay = 2;",
+            "const SpotAngle = eventsFunctionContext.getArgument(\"SpotAngle\");",
+            "const SpotPenumbra = eventsFunctionContext.getArgument(\"SpotPenumbra\");",
+            "const X = eventsFunctionContext.getArgument(\"X\");",
+            "const Y = eventsFunctionContext.getArgument(\"Y\");",
+            "const Z = eventsFunctionContext.getArgument(\"Z\");",
+            "const AngleX = eventsFunctionContext.getArgument(\"AngleX\");",
+            "const AngleY = eventsFunctionContext.getArgument(\"AngleY\");",
+            "const AngleZ = eventsFunctionContext.getArgument(\"AngleZ\");",
+            "//",
+            "const RGB = Color.split(\";\");",
+            "let Light;",
+            "if (LightType == \"Directional Light\") {",
+            "    Light = new THREE.DirectionalLight(`rgb(${RGB[0]}, ${RGB[1]}, ${RGB[2]})`, Intensity);",
+            "    const Target = new THREE.Group();",
+            "    Target.translateZ(-1);",
+            "    Light.add(Target);",
+            "    Light.target = Target;",
+            "} else if (LightType == \"Spot Light\") {",
+            "    Light = new THREE.SpotLight(`rgb(${RGB[0]}, ${RGB[1]}, ${RGB[2]})`, Intensity, Distance, gdjs.toRad(SpotAngle), SpotPenumbra, Decay);",
+            "    const Target = new THREE.Group();",
+            "    Target.translateZ(-1);",
+            "    Light.add(Target);",
+            "    Light.target = Target;",
+            "} else {",
+            "    // Point",
+            "    Light = new THREE.PointLight(`rgb(${RGB[0]}, ${RGB[1]}, ${RGB[2]})`, Intensity, Distance, Decay);",
+            "}",
+            "Light.name = LightId;",
+            "Light.position.set(X, Y, Z);",
+            "Light.rotation.set(gdjs.toRad(AngleX), gdjs.toRad(AngleY), gdjs.toRad(AngleZ));",
+            "Scene.add(Light);",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "3D Light ID (3D Object ID)",
+          "name": "LightId",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "Light Type",
+          "name": "Type",
+          "supplementaryInformation": "[\"Directional Light\",\"Point Light\",\"Spot Light\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Color",
+          "name": "Color",
+          "type": "color"
+        },
+        {
+          "description": "Intensity (Default: 1)",
+          "name": "Intensity",
+          "type": "expression"
+        },
+        {
+          "description": "Distance (Default: 0)",
+          "longDescription": "For Point and Spot Lights.\n0 is no limit.",
+          "name": "Distance",
+          "type": "expression"
+        },
+        {
+          "description": "Spot Angle (0 to 180)",
+          "longDescription": "For Spot Lights.",
+          "name": "SpotAngle",
+          "type": "expression"
+        },
+        {
+          "description": "Spot Penumbra (0 to 1)",
+          "longDescription": "For Spot Lights.",
+          "name": "SpotPenumbra",
+          "type": "expression"
+        },
+        {
+          "description": "X",
+          "name": "X",
+          "type": "expression"
+        },
+        {
+          "description": "Y",
+          "name": "Y",
+          "type": "expression"
+        },
+        {
+          "description": "Z",
+          "name": "Z",
+          "type": "expression"
+        },
+        {
+          "description": "Angle X Axis",
+          "name": "AngleX",
+          "type": "expression"
+        },
+        {
+          "description": "Angle Y Axis",
+          "name": "AngleY",
+          "type": "expression"
+        },
+        {
+          "description": "Angle Z Axis",
+          "name": "AngleZ",
           "type": "expression"
         }
       ],
@@ -5705,7 +5869,7 @@
       "objectGroups": []
     },
     {
-      "description": "Play 3D animation.\nIf already playing, only the \"Animation Speed Scale\" and \"Loop\" parameters are updated.",
+      "description": "Play 3D animation.\nIf already playing, only the \"Animation Speed Scale\" and \"Loop\" properties are updated.",
       "fullName": "Play 3D Animation",
       "functionType": "Action",
       "group": "3D Object",
@@ -8385,7 +8549,8 @@
                     "const Texture = Textures.get(TextureId);",
                     "const TextureWidth = Texture.image.width;",
                     "const TextureHeight = Texture.image.height;",
-                    "const Material = new THREE.MeshBasicMaterial({map:Texture, side:THREE.DoubleSide, transparent:Transparent, alphaTest:AlphaTest});// blendingとopacityは2D依存",
+                    "//const Material = new THREE.MeshBasicMaterial({map:Texture, side:THREE.DoubleSide, transparent:Transparent, alphaTest:AlphaTest});// blendingとopacityは2D依存",
+                    "const Material = new THREE.MeshLambertMaterial({map:Texture, side:THREE.DoubleSide, transparent:Transparent, alphaTest:AlphaTest});// blendingとopacityは2D依存",
                     "const Geometry = new THREE.PlaneGeometry(TextureWidth * ProjectionScale, TextureHeight * ProjectionScale, 1, 1);",
                     "Geometry.computeBoundingBox();",
                     "Geometry.boundingBox.expandByVector(new THREE.Vector3(0, 0, (Depth * ProjectionScale) / 2));",
@@ -9193,7 +9358,8 @@
                     "Texture.needsUpdate = true;//必須",
                     "Textures.set(TextureId, Texture);",
                     "//",
-                    "const Material = new THREE.MeshBasicMaterial({map: Texture, side: THREE.DoubleSide, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});",
+                    "// const Material = new THREE.MeshBasicMaterial({map: Texture, side: THREE.DoubleSide, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});",
+                    "const Material = new THREE.MeshLambertMaterial({map: Texture, side: THREE.DoubleSide, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});",
                     "const Geometry = new THREE.PlaneGeometry(Width * ProjectionScale, Height * ProjectionScale, 1, 1);",
                     "Geometry.computeBoundingBox();",
                     "Geometry.boundingBox.expandByVector(new THREE.Vector3(0, 0, (Depth * ProjectionScale) / 2));",
@@ -10136,7 +10302,8 @@
                     "FRTexture.colorSpace = THREE.SRGBColorSpace;",
                     "FRTexture.needsUpdate = true;//必須",
                     "Textures.set(FRTextureId, FRTexture);",
-                    "const FRMaterial = new THREE.MeshBasicMaterial({map: FRTexture, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});",
+                    "// const FRMaterial = new THREE.MeshBasicMaterial({map: FRTexture, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});",
+                    "const FRMaterial = new THREE.MeshLambertMaterial({map: FRTexture, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});",
                     "//",
                     "// 正方形なら1パターン、違うなら3パターン（2パターンはありえない）",
                     "const IsCube = (Width == Height && Width == Depth);",
@@ -10167,7 +10334,8 @@
                     "    LRTexture.colorSpace = THREE.SRGBColorSpace;",
                     "    LRTexture.needsUpdate = true;//必須",
                     "    Textures.set(LRTextureId, LRTexture);",
-                    "    const LRMaterial = new THREE.MeshBasicMaterial({map: LRTexture, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});",
+                    "    // const LRMaterial = new THREE.MeshBasicMaterial({map: LRTexture, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});",
+                    "    const LRMaterial = new THREE.MeshLambertMaterial({map: LRTexture, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});",
                     "    //",
                     "    // TopBottom",
                     "    let TBRepeatU, TBRepeatV;",
@@ -10190,7 +10358,8 @@
                     "    TBTexture.colorSpace = THREE.SRGBColorSpace;",
                     "    TBTexture.needsUpdate = true;//必須",
                     "    Textures.set(TBTextureId, TBTexture);",
-                    "    const TBMaterial = new THREE.MeshBasicMaterial({map: TBTexture, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});",
+                    "    // const TBMaterial = new THREE.MeshBasicMaterial({map: TBTexture, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});",
+                    "    const TBMaterial = new THREE.MeshLambertMaterial({map: TBTexture, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});",
                     "    //",
                     "    Material = [LRMaterial, LRMaterial, TBMaterial, TBMaterial, FRMaterial, FRMaterial];",
                     "}",
@@ -11879,10 +12048,505 @@
       "sharedPropertyDescriptors": []
     },
     {
+      "description": "⚠️ 3D Lights are highly loaded.\nLink a Sprite object and  a 3D Light.",
+      "fullName": "Linked 3D Light",
+      "name": "LinkedLight",
+      "objectType": "Sprite",
+      "eventsFunctions": [
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "doStepPostEvents",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "WithThreeJS::LinkedLight::PropertyFirstFrame"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "WithThreeJS::LinkedLight::SetPropertyFirstFrame"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "no"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::JsCode",
+                  "inlineCode": [
+                    "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+                    "    console.warn(\"!\");",
+                    "    return;",
+                    "}",
+                    "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+                    "//",
+                    "const Behavior = objects[0].getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                    "const Id = objects[0].name + objects[0].id;",
+                    "//",
+                    "const LightType = Behavior._getType();",
+                    "const Color = Behavior._getColor() || \"255;255;255\";",
+                    "const Intensity = Behavior._getIntensity();",
+                    "const Distance = Behavior._getDistance();",
+                    "const Decay = 2;",
+                    "const SpotAngle = Behavior._getSpotAngle();",
+                    "const SpotPenumbra = Behavior._getSpotPenumbra();",
+                    "//",
+                    "const RGB = Color.split(\";\");",
+                    "let Light;",
+                    "if (LightType == \"Directional Light\") {",
+                    "    Light = new THREE.DirectionalLight(`rgb(${RGB[0]}, ${RGB[1]}, ${RGB[2]})`, Intensity);",
+                    "    const Target = new THREE.Group();",
+                    "    Target.translateZ(-1);",
+                    "    Light.add(Target);",
+                    "    Light.target = Target;",
+                    "} else if (LightType == \"Spot Light\") {",
+                    "    Light = new THREE.SpotLight(`rgb(${RGB[0]}, ${RGB[1]}, ${RGB[2]})`, Intensity, Distance, gdjs.toRad(SpotAngle), SpotPenumbra, Decay);",
+                    "    const Target = new THREE.Group();",
+                    "    Target.translateZ(-1);",
+                    "    Light.add(Target);",
+                    "    Light.target = Target;",
+                    "} else {",
+                    "    // Point",
+                    "    Light = new THREE.PointLight(`rgb(${RGB[0]}, ${RGB[1]}, ${RGB[2]})`, Intensity, Distance, Decay);",
+                    "}",
+                    "Light.name = Id;",
+                    "Behavior._setId(Id);",
+                    "Light.userData.Use3DProjectionBehavior = true;",
+                    "Scene.add(Light);",
+                    "",
+                    ""
+                  ],
+                  "parameterObjects": "Object",
+                  "useStrict": true,
+                  "eventsSheetExpanded": true
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "WithThreeJS::LinkedLight::PropertyHide"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "Cache"
+                      },
+                      "parameters": [
+                        "Object"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {\r",
+                "    console.warn(\"!\");\r",
+                "    return;\r",
+                "}\r",
+                "const Scene = gdjs.__WithThreeJS.get(\"Scene\");\r",
+                "//\r",
+                "const Behavior = objects[0].getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));\r",
+                "const Id = Behavior.Id();\r",
+                "const Tilt = Behavior.Tilt();\r",
+                "const X = objects[0].getCenterXInScene();\r",
+                "const Y = objects[0].getCenterYInScene();\r",
+                "const Z = objects[0].zOrder;\r",
+                "const ProjectionScale = gdjs.__WithThreeJS.get(\"ProjectionScale\");\r",
+                "const ViewMode = gdjs.__WithThreeJS.get(\"ViewMode\");\r",
+                "//\r",
+                "const Obj = Scene.getObjectByName(Id);\r",
+                "// Move & Rotate\r",
+                "const Angle = objects[0].angle;\r",
+                "if (ViewMode == \"Top Down\") {\r",
+                "    Obj.position.set(X * ProjectionScale, Z * ProjectionScale, Y * ProjectionScale);\r",
+                "    Obj.rotation.set(gdjs.toRad(0), gdjs.toRad((Angle + 90) * -1), gdjs.toRad(0));\r",
+                "    Obj.rotateX(gdjs.toRad(Tilt));\r",
+                "} else {\r",
+                "    // Side\r",
+                "    Obj.position.set(X * ProjectionScale, -Y * ProjectionScale, Z * ProjectionScale);\r",
+                "    Obj.rotation.set(0, gdjs.toRad(-90), gdjs.toRad(0));\r",
+                "    Obj.rotateY(gdjs.toRad(Tilt));\r",
+                "    Obj.rotateX(gdjs.toRad(Angle * -1));\r",
+                "}\r",
+                "\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "WithThreeJS::LinkedLight",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onDestroy",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "// 生成と同時に削除された場合、3D化されていないので回避\r",
+                "// FirstFrame == true のほうが理想的だが取得がめんどくさいので Id を利用。\r",
+                "const Behavior = objects[0].getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));\r",
+                "const Id = Behavior.Id();\r",
+                "if (Id === \"\") {\r",
+                "    return;\r",
+                "}\r",
+                "//\r",
+                "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {\r",
+                "    console.warn(\"!\");\r",
+                "    return;\r",
+                "}\r",
+                "const Scene = gdjs.__WithThreeJS.get(\"Scene\");\r",
+                "const Obj = Scene.getObjectByName(Id);\r",
+                "//\r",
+                "Obj.dispose();\r",
+                "Obj.removeFromParent();\r",
+                "\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "WithThreeJS::LinkedLight",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "3D Object ID",
+          "functionType": "StringExpression",
+          "name": "Id",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnString"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyId()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "string"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "WithThreeJS::LinkedLight",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Type",
+          "functionType": "StringExpression",
+          "name": "Type",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnString"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyType()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "stringWithSelector"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "WithThreeJS::LinkedLight",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Tilt",
+          "functionType": "Expression",
+          "name": "Tilt",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Object.Behavior::PropertyTilt()"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "WithThreeJS::LinkedLight",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Set Tilt",
+          "functionType": "Action",
+          "name": "SetTilt",
+          "private": true,
+          "sentence": "Set Tilt (_PARAM0_, Value: _PARAM2_)",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "WithThreeJS::LinkedLight::SetPropertyTilt"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "GetArgumentAsNumber(\"Value\")"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "WithThreeJS::LinkedLight",
+              "type": "behavior"
+            },
+            {
+              "description": "Tilt Value (Recommended: -90 to 90)",
+              "name": "Value",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        }
+      ],
+      "propertyDescriptors": [
+        {
+          "value": "",
+          "type": "String",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "Id"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "FirstFrame"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "Hide 2D Object",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "Hide"
+        },
+        {
+          "value": "Directional Light",
+          "type": "Choice",
+          "label": "Type",
+          "description": "",
+          "group": "",
+          "extraInformation": [
+            "Directional Light",
+            "Point Light",
+            "Spot Light"
+          ],
+          "hidden": false,
+          "name": "Type"
+        },
+        {
+          "value": "255;255;255",
+          "type": "Color",
+          "label": "Color",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "Color"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "label": "Intensity (Default: 1)",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "Intensity"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Distance (Default: 0)",
+          "description": "For Point and Spot Lights. 0 is no limit.",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "Distance"
+        },
+        {
+          "value": "45",
+          "type": "Number",
+          "label": "Spot Angle (0 to 180)",
+          "description": "For Spot Lights.",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "SpotAngle"
+        },
+        {
+          "value": "0.5",
+          "type": "Number",
+          "label": "Spot Penumbra (0 to 1)",
+          "description": "For Spot Lights.",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "SpotPenumbra"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Tilt (Recommended: -90 to 90)",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "Tilt"
+        }
+      ],
+      "sharedPropertyDescriptors": []
+    },
+    {
       "description": "🚫 The recommendation is to use the \"Create 3D Model From Built-In 3D Model\" action instead of this behavior.\nThis behavior transfers the built-in 3D model to the WithThreeJS 3D Scene.\nThe original 2D object is deleted.\n⚠️ This may be deprecated in the future.",
-      "fullName": "3D Model Transfer (Deprecated)",
+      "fullName": "⚠️ 3D Model Transfer (Deprecated)",
       "name": "ModelTransfer",
       "objectType": "Scene3D::Model3DObject",
+      "private": true,
       "eventsFunctions": [
         {
           "fullName": "",
@@ -12291,12 +12955,18 @@
                 "    TextureRight.needsUpdate = true;//必須\r",
                 "    Textures.set(Obj2D._getTextureIdRight(), TextureRight);\r",
                 "    //\r",
-                "    const MaterialTop = new THREE.MeshBasicMaterial({map: TextureTop, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
-                "    const MaterialBottom = new THREE.MeshBasicMaterial({map: TextureBottom, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
-                "    const MaterialFront = new THREE.MeshBasicMaterial({map: TextureFront, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
-                "    const MaterialBack = new THREE.MeshBasicMaterial({map: TextureBack, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
-                "    const MaterialLeft = new THREE.MeshBasicMaterial({map: TextureLeft, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
-                "    const MaterialRight = new THREE.MeshBasicMaterial({map: TextureRight, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
+                "    // const MaterialTop = new THREE.MeshBasicMaterial({map: TextureTop, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
+                "    // const MaterialBottom = new THREE.MeshBasicMaterial({map: TextureBottom, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
+                "    // const MaterialFront = new THREE.MeshBasicMaterial({map: TextureFront, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
+                "    // const MaterialBack = new THREE.MeshBasicMaterial({map: TextureBack, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
+                "    // const MaterialLeft = new THREE.MeshBasicMaterial({map: TextureLeft, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
+                "    // const MaterialRight = new THREE.MeshBasicMaterial({map: TextureRight, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
+                "    const MaterialTop = new THREE.MeshLambertMaterial({map: TextureTop, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
+                "    const MaterialBottom = new THREE.MeshLambertMaterial({map: TextureBottom, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
+                "    const MaterialFront = new THREE.MeshLambertMaterial({map: TextureFront, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
+                "    const MaterialBack = new THREE.MeshLambertMaterial({map: TextureBack, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
+                "    const MaterialLeft = new THREE.MeshLambertMaterial({map: TextureLeft, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
+                "    const MaterialRight = new THREE.MeshLambertMaterial({map: TextureRight, transparent:Transparent, alphaTest:AlphaTest, blending:Blend});\r",
                 "    //\r",
                 "    const Material = [MaterialLeft, MaterialRight, MaterialTop, MaterialBottom, MaterialFront, MaterialBack];\r",
                 "    let Geometry;\r",
