@@ -463,6 +463,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    ObjectPickingTools: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getObjects'],
+      javaScriptObjectAllowedProperties: [],
+    },
   },
 };
 
