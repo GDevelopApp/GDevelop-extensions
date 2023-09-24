@@ -22,7 +22,6 @@ const legacyCamelCaseExtensions = new Set([
 const legacyGetPrefixedExpressionsExtensions = new Set([
   'TextEntryConsole',
   'MQTT',
-  'ArrayTools',
 ]);
 
 /**
