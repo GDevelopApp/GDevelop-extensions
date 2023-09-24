@@ -22,7 +22,6 @@ const legacyCamelCaseExtensions = new Set([
 const legacyGetPrefixedExpressionsExtensions = new Set([
   'TextEntryConsole',
   'MQTT',
-  'ArrayTools',
 ]);
 
 /**
@@ -120,6 +119,12 @@ const extensionsAllowedProperties = {
   },
   /** @type {Record<string, ExtensionAllowedProperties>}} */
   extensionSpecificAllowance: {
+    AdvancedHTTP: {
+      gdjsAllowedProperties: ['_advancedHTTP', 'PromiseTask'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     AdvancedJump: {
       gdjsAllowedProperties: ['PlatformerObjectRuntimeBehavior'],
       gdjsEvtToolsAllowedProperties: [],
@@ -293,6 +298,16 @@ const extensionsAllowedProperties = {
       ],
       javaScriptObjectAllowedProperties: [],
     },
+    ParticleEmitter3D: {
+      gdjsAllowedProperties: [
+        '__particleEmmiter3DExtension',
+        'CustomRuntimeObject',
+        'CustomRuntimeObjectInstanceContainer',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['__particleEmmiter3DExtension'],
+      javaScriptObjectAllowedProperties: ['getPrototypeOf'],
+    },
     PixelPerfectMovement: {
       gdjsAllowedProperties: [
         '__pixelPerfectExtension',
@@ -440,6 +455,18 @@ const extensionsAllowedProperties = {
       gdjsAllowedProperties: ['_shareExtension'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    Flash: {
+      gdjsAllowedProperties: ['SpriteRuntimeObject'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    ObjectPickingTools: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getObjects'],
       javaScriptObjectAllowedProperties: [],
     },
   },
