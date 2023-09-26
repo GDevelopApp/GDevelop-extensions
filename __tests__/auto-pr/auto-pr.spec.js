@@ -17,7 +17,11 @@ const wrappedExtractExtension = async (zipName) =>
 
 /** @param {string} extensionName */
 const wrappedVerifyExtension = async (extensionName) =>
-  (await verifyExtension(extensionName, TEST_EXTENSIONS_FOLDER)).code;
+  (
+    await verifyExtension(extensionName, {
+      extensionsFolder: TEST_EXTENSIONS_FOLDER,
+    })
+  ).code;
 
 describe('Auto-pr pipeline', () => {
   beforeAll(async () =>
