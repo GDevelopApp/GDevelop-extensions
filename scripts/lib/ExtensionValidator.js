@@ -23,9 +23,13 @@ const loadRules = (async function loadRules() {
 /**
  * Check the extension for any properties that are not on the allow list.
  * @param {ExtensionWithProperFileInfo} extensionWithFileInfo
+ * @param {boolean} preliminaryCheck True if we are to skip some checks meant for the reviewer, not the extension creator.
  * @returns {Promise<Error[]>}
  */
-async function validateExtension(extensionWithFileInfo) {
+async function validateExtension(
+  extensionWithFileInfo,
+  preliminaryCheck = false
+) {
   /** @type {Error[]} */
   const errors = [];
   const { eventsBasedBehaviors, eventsBasedObjects, eventsFunctions } =
@@ -59,6 +63,7 @@ async function validateExtension(extensionWithFileInfo) {
 
   const promises = [];
   for (const rule of rules) {
+    if (preliminaryCheck && rule.preliminary) continue;
     promises.push(
       rule.validate({
         allEventsFunctions,

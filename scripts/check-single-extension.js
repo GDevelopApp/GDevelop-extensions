@@ -6,11 +6,13 @@ const { validateExtension } = require('./lib/ExtensionValidator');
  * A function used by the CI to check for issues in a single extension.
  * @param {string} extensionName
  * @param {string} [extensionsFolder] The folder with the extensions.
+ * @param {boolean} preliminaryCheck True if we are to skip some checks meant for the reviewer, not the extension creator.
  * @returns {Promise<{code: "invalid-file-name" | "not-found" | "duplicated" | "invalid-json" | "success"} | {code: "rule-break", errors: string[]}>}
  */
 exports.verifyExtension = async function (
   extensionName,
-  extensionsFolder = `${__dirname}/../extensions`
+  extensionsFolder = `${__dirname}/../extensions`,
+  preliminaryCheck = false
 ) {
   // Make sure the name is valid, as dots are not allowed in the name
   // and could be used to do relative path shenanigans that could result in skipping automatic checks.
@@ -42,12 +44,15 @@ exports.verifyExtension = async function (
     return { code: 'invalid-json' };
   }
 
-  const validationDetails = await validateExtension({
-    state: 'success',
-    extension,
-    tier: community ? 'community' : 'reviewed',
-    filename: `${extensionName}.json`,
-  });
+  const validationDetails = await validateExtension(
+    {
+      state: 'success',
+      extension,
+      tier: community ? 'community' : 'reviewed',
+      filename: `${extensionName}.json`,
+    },
+    preliminaryCheck
+  );
 
   if (validationDetails.length > 0)
     return {
