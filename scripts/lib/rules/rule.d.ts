@@ -12,4 +12,5 @@ export interface RuleContext extends ExtensionWithProperFileInfo {
 export interface RuleModule {
   name: string;
   validate: Rule;
+  ignoreDuringPreliminaryChecks?: boolean;
 }
