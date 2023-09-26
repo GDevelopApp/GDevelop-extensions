@@ -63,7 +63,7 @@ async function validateExtension(
 
   const promises = [];
   for (const rule of rules) {
-    if (preliminaryCheck && rule.preliminary) continue;
+    if (preliminaryCheck && rule.ignoreDuringPreliminaryChecks) continue;
     promises.push(
       rule.validate({
         allEventsFunctions,
