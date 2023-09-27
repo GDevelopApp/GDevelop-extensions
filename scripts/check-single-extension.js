@@ -6,7 +6,7 @@ const { validateExtension } = require('./lib/ExtensionValidator');
  * A function used by the CI to check for issues in a single extension.
  * @param {string} extensionName
  * @param {{extensionsFolder?: string, preliminaryCheck?: boolean}} [options]
- * @returns {Promise<{code: "invalid-file-name" | "not-found" | "duplicated" | "invalid-json" | "success"} | {code: "rule-break", errors: string[]}>}
+ * @returns {Promise<{code: "invalid-file-name" | "not-found" | "duplicated" | "invalid-json" | "unknown-json-contents" | "gdevelop-project-file" | "success"} | {code: "rule-break", errors: string[]}>}
  */
 exports.verifyExtension = async function (extensionName, options) {
   const {
@@ -41,6 +41,25 @@ exports.verifyExtension = async function (extensionName, options) {
     extension = JSON.parse(file);
   } catch {
     return { code: 'invalid-json' };
+  }
+
+  // Basic check to see if it is a GDevelop project
+  if (
+    typeof extension.properties === 'object' &&
+    typeof extension.properties.name === 'string'
+  ) {
+    return { code: 'gdevelop-project-file' };
+  }
+
+  // Basic check to see if it is a GDevelop extension
+  if (
+    !(
+      Array.isArray(extension.eventsFunctions) &&
+      Array.isArray(extension.eventsBasedBehaviors) &&
+      typeof extension.name === 'string'
+    )
+  ) {
+    return { code: 'unknown-json-contents' };
   }
 
   const validationDetails = await validateExtension(

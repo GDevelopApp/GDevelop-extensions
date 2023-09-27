@@ -22,13 +22,15 @@ jobs:
 
       - name: Extract and verify extension
         uses: actions/github-script@v6
+        env:
+          BODY: ${{ github.event.issue.body }}
         with:
           script: |
             const { extractExtension } = require('./scripts/extract-extension.js');
             const { verifyExtension } = require('./scripts/check-single-extension.js')
 
-
-            const { error, extensionName } = await extractExtension("/tmp/ext.zip");
+            const reviewed = !process.env.BODY.includes("Community (Unreviewed)");
+            const { error, extensionName } = await extractExtension("/tmp/ext.zip", { reviewed });
 
             if(error === "zip-error")
               github.rest.issues.createComment({
@@ -90,7 +92,7 @@ jobs:
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `👋 Thanks for your submission! We are sorry, but it seems we already have a reviewed extension with that name. Extensions cannot be in both the community and reviewed extensions list at once. If you are trying to update that extension, please ask a member of the extension team for help. If the name clash is a coincidence, please update your original submission post with a new zip file containing your extension with a file name that is not already taken 🙏`
+                body: `👋 Thanks for your submission! We are sorry, but it seems we already have a ${reviewed ? 'community' : 'reviewed'} extension with that name. Extensions cannot share a name between the community and reviewed extensions list. If you are trying to update that other extension, please make sure you selected the correct review type. If the name clash is a coincidence, please update your original submission post with a new zip file containing your extension with a file and extension name that is not already taken 🙏`
               })
 
             if(code === "invalid-json")
@@ -99,6 +101,22 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 body: `👋 Thanks for your submission! We are sorry, but your extension file inside the zip file seems to be damaged, as our system wasn't able to understand its content. Try to re-export the extension JSON file, or to create the zip with another software, and to update your original submission post with the new zip file. If that still doesn't work, ask a member of the extension team for help 😉`
+              })
+
+            if(code === "gdevelop-project-file")
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `👋 Thanks for your submission! It would seem you confused the extension file with your project file, and thus we cannot find your extension. Make sure you exported the extension itself from the extension editor as a standalone file, zip that standalone extension file, and make sure you did not confuse the "Example" and "Extension" fields while submitting!`
+              })
+
+            if(code === "unknown-json-contents")
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `👋 Thanks for your submission! It would seem your JSON file is not a valid GDevelop extension, although it is a JSON file. Please make sure you are exporting with the latest version of GDevelop and that you are not modifying the JSON incorrectly after the export.`
               })
 
             if(code === "rule-break")
