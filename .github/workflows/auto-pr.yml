@@ -22,6 +22,7 @@ jobs:
 
       - name: Extract and verify extension
         uses: actions/github-script@v6
+        id: prepare-extension
         env:
           BODY: ${{ github.event.issue.body }}
         with:
@@ -30,6 +31,7 @@ jobs:
             const { verifyExtension } = require('./scripts/check-single-extension.js')
 
             const reviewed = !process.env.BODY.includes("Community (Unreviewed)");
+            core.setOutput("reviewed", reviewed);
             const { error, extensionName } = await extractExtension("/tmp/ext.zip", { reviewed });
 
             if(error === "zip-error")
@@ -145,7 +147,9 @@ jobs:
             ---
 
             Extension by @${{ github.event.issue.user.login }}
-          labels: ✨ New extension
+          labels: |
+            ✨ New extension
+            ${{(steps.prepare-extension.outputs.reviewed == 'true' && '🔍 Reviewed extension') || '👨‍👩‍👧‍👦 Community extension'}}
 
       - name: Add card to pending review
         uses: peter-evans/create-or-update-project-card@v2
