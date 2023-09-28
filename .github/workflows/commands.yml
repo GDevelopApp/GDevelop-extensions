@@ -75,14 +75,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           FILEURL=$(echo $BODY | grep -ioEh 'https?://\S+.zip' -m1)
-          FILENAME=$(basename $FILEURL)
-
-          if [[ "${FILENAME,,}" == *"example"* ]]; then
-            echo "example=true" >> $GITHUB_OUTPUT
-            gh pr comment ${{ github.event.issue.number }} --body "✅ Cannot update the example via command. Please feel free to upload the updated example zip file in a comment!"
-            exit 0
-          fi
-
           curl -L $FILEURL -o /tmp/ext.zip
           unzip -o /tmp/ext.zip -d ./extensions/community
 
@@ -112,7 +104,7 @@ jobs:
           git push
 
       - name: Notify no changed
-        if: ${{ steps.git-diff.outputs.changed != 'true' && steps.download-extension.outputs.example != 'true' }}
+        if: ${{ steps.git-diff.outputs.changed != 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr comment ${{ github.event.issue.number }} --body "❗ No updates found. Please check your file."
