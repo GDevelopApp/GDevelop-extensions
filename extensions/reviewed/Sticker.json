@@ -1,0 +1,526 @@
+{
+  "author": "D8H",
+  "category": "Movement",
+  "extensionNamespace": "",
+  "fullName": "Stick objects to others",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLXN0aWNrZXItb3V0bGluZSIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik01LjUgMkMzLjYgMiAyIDMuNiAyIDUuNVYxOC41QzIgMjAuNCAzLjYgMjIgNS41IDIySDE2TDIyIDE2VjUuNUMyMiAzLjYgMjAuNCAyIDE4LjUgMkg1LjVNNS44IDRIMTguM0MxOS4zIDQgMjAuMSA0LjggMjAuMSA1LjhWMTVIMTguNkMxNi43IDE1IDE1LjEgMTYuNiAxNS4xIDE4LjVWMjBINS44QzQuOCAyMCA0IDE5LjIgNCAxOC4yVjUuOEM0IDQuOCA0LjggNCA1LjggNCIgLz48L3N2Zz4=",
+  "name": "Sticker",
+  "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/sticker-outline.svg",
+  "shortDescription": "Make objects follow the position and rotation of the object they are stuck to.",
+  "version": "0.4.0",
+  "description": [
+    "This extension can be useful to:",
+    "* Stick accessories to moving objects",
+    "* Animate a skeleton",
+    "* Delete an object with another one",
+    "",
+    "An example allows to check it out ([open the project online](https://editor.gdevelop.io/?project=example://stick-objects))."
+  ],
+  "origin": {
+    "identifier": "Sticker",
+    "name": "gdevelop-extension-store"
+  },
+  "tags": [
+    "sticker",
+    "stick",
+    "follow",
+    "skeleton",
+    "joint",
+    "pin",
+    "bind",
+    "glue",
+    "tie",
+    "attach",
+    "hold",
+    "paste",
+    "wear"
+  ],
+  "authorIds": [
+    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
+  ],
+  "dependencies": [],
+  "eventsFunctions": [
+    {
+      "description": "Check if the object is stuck to another object.",
+      "fullName": "Is stuck to another object",
+      "functionType": "Condition",
+      "name": "IsStuck",
+      "sentence": "_PARAM1_ is stuck to _PARAM3_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const stickerBehaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+            "/** @type {Hashtable<gdjs.RuntimeObject[]>} */",
+            "const stickerObjectsLists = eventsFunctionContext.getObjectsLists(\"Object\");",
+            "/** @type {Hashtable<gdjs.RuntimeObject[]>} */",
+            "const basisObjectsLists = eventsFunctionContext.getObjectsLists(\"BasisObject\");",
+            "",
+            "eventsFunctionContext.returnValue = gdjs.evtTools.object.twoListsTest(",
+            "  (stickerObject, basisObject, stickerBehaviorName) => {",
+            "    const behavior = stickerObject.getBehavior(stickerBehaviorName);",
+            "    return behavior.basisObject === basisObject;",
+            "  },",
+            "  stickerObjectsLists,",
+            "  basisObjectsLists,",
+            "  false,",
+            "  stickerBehaviorName",
+            ");"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Sticker",
+          "name": "Object",
+          "type": "objectList"
+        },
+        {
+          "description": "Sticker behavior",
+          "name": "Behavior",
+          "supplementaryInformation": "Sticker::Sticker",
+          "type": "behavior"
+        },
+        {
+          "description": "Basis",
+          "name": "BasisObject",
+          "type": "objectList"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [
+    {
+      "description": "Stick the object to another. Use the action to stick the object, or unstick it later.",
+      "fullName": "Sticker",
+      "name": "Sticker",
+      "objectType": "",
+      "eventsFunctions": [
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onCreated",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(behaviorName);",
+                "",
+                "// Set up the scene sticker objects list - if not done already.",
+                "runtimeScene.__allStickers = runtimeScene.__allStickers || new Set();",
+                "",
+                "// Set up the behavior extra methods - if not done already.",
+                "const prototype = Object.getPrototypeOf(behavior);",
+                "if (!prototype.updateRelativeCoordinates) {",
+                "    // Unstick from deleted objects.",
+                "    gdjs.registerObjectDeletedFromSceneCallback(function (runtimeScene, deletedObject) {",
+                "        const allStickers = runtimeScene.__allStickers;",
+                "        if (!allStickers) return;",
+                "",
+                "        for (const sticker of allStickers) {",
+                "            if (sticker.basisObject === deletedObject) {",
+                "                if (sticker._getIsDestroyedWithParent()) {",
+                "                  sticker.owner.deleteFromScene(runtimeScene);",
+                "                }",
+                "                sticker.basisObject = null;",
+                "            }",
+                "        }",
+                "    });",
+                "",
+                "    /**",
+                "     * Update the coordinates in the basisObject basis.",
+                "     * ",
+                "     * It uses the basisObject coordinates from the previous frame.",
+                "     * This way, the sticker can move relatively to it and still",
+                "     * follow basisObject.",
+                "     * ",
+                "     * @param {gdjs.RuntimeObject} basisObject",
+                "     */",
+                "    prototype.updateRelativeCoordinates = function (basisObject) {",
+                "        const object = this.owner;",
+                "",
+                "        // Update relative coordinates",
+                "        this.relativeX = object.getX() - this.basisOldX;",
+                "        this.relativeY = object.getY() - this.basisOldY;",
+                "        if (!this._getOnlyFollowPosition()) {",
+                "            this.relativeAngle = object.getAngle() - this.basisOldAngle;",
+                "            this.relativeWidth = object.getWidth() / this.basisOldWidth;",
+                "            this.relativeHeight = object.getHeight() / this.basisOldHeight;",
+                "            const deltaX = object.getCenterXInScene() - this.basisOldCenterXInScene;",
+                "            const deltaY = object.getCenterYInScene() - this.basisOldCenterYInScene;",
+                "            const angle = this.basisOldAngle * Math.PI / 180;",
+                "            this.relativeRotatedX = (deltaX * Math.cos(angle) + deltaY * Math.sin(angle)) / this.basisOldWidth;",
+                "            this.relativeRotatedY = (-deltaX * Math.sin(angle) + deltaY * Math.cos(angle)) / this.basisOldHeight;",
+                "",
+                "            // Save initial values to avoid calculus and rounding errors",
+                "            this.basisOriginalWidth = basisObject.getWidth();",
+                "            this.basisOriginalHeight = basisObject.getHeight();",
+                "            this.basisOriginalAngle = basisObject.getAngle();",
+                "        }",
+                "    }",
+                "",
+                "    /**",
+                "     * Copy the coordinates to use it the next frame.",
+                "     * @param basisObject {gdjs.RuntimeObject}",
+                "     */",
+                "    prototype.updateOldCoordinates = function (basisObject) {",
+                "        const object = this.owner;",
+                "",
+                "        this.ownerOldX = object.getX();",
+                "        this.ownerOldY = object.getY();",
+                "",
+                "        this.basisOldX = basisObject.getX();",
+                "        this.basisOldY = basisObject.getY();",
+                "",
+                "        if (!this._getOnlyFollowPosition()) {",
+                "            this.ownerOldAngle = object.getAngle();",
+                "            this.ownerOldWidth = object.getWidth();",
+                "            this.ownerOldHeight = object.getHeight();",
+                "",
+                "            this.basisOldAngle = basisObject.getAngle();",
+                "            this.basisOldWidth = basisObject.getWidth();",
+                "            this.basisOldHeight = basisObject.getHeight();",
+                "            this.basisOldCenterXInScene = basisObject.getCenterXInScene();",
+                "            this.basisOldCenterYInScene = basisObject.getCenterYInScene();",
+                "        }",
+                "    }",
+                "    /**",
+                "     * Follow the basisObject (called in doStepPostEvents).",
+                "     * ",
+                "     * This method is also called by children to ensure",
+                "     * parents are updated first.",
+                "     */",
+                "    prototype.followBasisObject = function () {",
+                "        if (this.followingDoneThisFrame) {",
+                "            return;",
+                "        }",
+                "        this.followingDoneThisFrame = true;",
+                "        /** @type {gdjs.RuntimeObject} */",
+                "        const basisObject = this.basisObject;",
+                "        if (basisObject) {",
+                "            // If the behavior on the basis object has a different name,",
+                "            // the objects will still follow their basis objects",
+                "            // but frame delays could happen.",
+                "            if (basisObject.hasBehavior(behaviorName)) {",
+                "                const basisBehavior = basisObject.getBehavior(behaviorName);",
+                "                if (basisBehavior.type === this.type) {",
+                "                    // Follow parents 1st to avoid frame delays",
+                "                    basisBehavior.followBasisObject();",
+                "                }",
+                "            }",
+                "",
+                "            const object = this.owner;",
+                "",
+                "            if (this._getOnlyFollowPosition()) {",
+                "                if (object.getX() !== this.ownerOldX",
+                "                    || object.getY() !== this.ownerOldY) {",
+                "                    this.updateRelativeCoordinates(basisObject);",
+                "                }",
+                "",
+                "                if (this.basisOldX !== basisObject.getX() ||",
+                "                    this.basisOldY !== basisObject.getY()) {",
+                "                    object.setPosition(",
+                "                        basisObject.getX() + this.relativeX,",
+                "                        basisObject.getY() + this.relativeY);",
+                "                }",
+                "            } else {",
+                "                if (object.getX() !== this.ownerOldX",
+                "                    || object.getY() !== this.ownerOldY",
+                "                    || object.getAngle() !== this.ownerOldAngle",
+                "                    || object.getWidth() !== this.ownerOldWidth",
+                "                    || object.getHeight() !== this.ownerOldHeight) {",
+                "                    this.updateRelativeCoordinates(basisObject);",
+                "                }",
+                "",
+                "                // Follow basisObject",
+                "                if (basisObject.getAngle() === this.basisOriginalAngle && this.basisOriginalAngle === 0) {",
+                "                    if (basisObject.getWidth() === this.basisOriginalWidth ||",
+                "                        basisObject.getHeight() === this.basisOriginalHeight) {",
+                "                        if (this.basisOldX !== basisObject.getX() ||",
+                "                            this.basisOldY !== basisObject.getY()) {",
+                "                            object.setPosition(",
+                "                                basisObject.getX() + this.relativeX,",
+                "                                basisObject.getY() + this.relativeY);",
+                "                        }",
+                "                    } else {",
+                "                        object.setPosition(",
+                "                            basisObject.getX() + this.relativeRotatedX * basisObject.getWidth(),",
+                "                            basisObject.getY() + this.relativeRotatedY * basisObject.getHeight());",
+                "                    }",
+                "                } else {",
+                "                    object.setAngle(basisObject.getAngle() + this.relativeAngle);",
+                "",
+                "                    const deltaX = this.relativeRotatedX * basisObject.getWidth();",
+                "                    const deltaY = this.relativeRotatedY * basisObject.getHeight();",
+                "                    const angle = -basisObject.getAngle() * Math.PI / 180;",
+                "                    object.setX(basisObject.getCenterXInScene() + object.getX() - object.getCenterXInScene() + deltaX * Math.cos(angle) + deltaY * Math.sin(angle));",
+                "                    object.setY(basisObject.getCenterYInScene() + object.getY() - object.getCenterYInScene() - deltaX * Math.sin(angle) + deltaY * Math.cos(angle));",
+                "                }",
+                "                // Unproportional dimensions changes won't work as expected",
+                "                // if the object angle is not null but nothing more can be done",
+                "                // because there is no full affine transformation on objects.",
+                "                if (basisObject.getWidth() !== this.basisOriginalWidth) {",
+                "                    object.setWidth(this.relativeWidth * basisObject.getWidth());",
+                "                }",
+                "                if (basisObject.getHeight() !== this.basisOriginalHeight) {",
+                "                    object.setHeight(this.relativeHeight * basisObject.getHeight());",
+                "                }",
+                "            }",
+                "",
+                "            this.updateOldCoordinates(basisObject);",
+                "        }",
+                "    }",
+                "}",
+                "",
+                "// Register this object as a sticker.",
+                "runtimeScene.__allStickers.add(behavior);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Sticker::Sticker",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "doStepPreEvents",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(behaviorName);",
+                "",
+                "behavior.followingDoneThisFrame = false;"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Sticker::Sticker",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "doStepPostEvents",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(behaviorName);",
+                "",
+                "behavior.followBasisObject();"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Sticker::Sticker",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Stick on another object.",
+          "fullName": "Stick",
+          "functionType": "Action",
+          "name": "Stick",
+          "sentence": "Stick _PARAM0_ to _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "const basisObjects = eventsFunctionContext.getObjects(\"BasisObject\");",
+                "",
+                "if (basisObjects.length === 0) return;",
+                "const basisObject = basisObjects[0];",
+                "",
+                "const behavior = object.getBehavior(behaviorName);",
+                "",
+                "behavior.basisObject = basisObject;",
+                "behavior.updateOldCoordinates(basisObject);",
+                "behavior.updateRelativeCoordinates(basisObject);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Sticker::Sticker",
+              "type": "behavior"
+            },
+            {
+              "description": "Object to stick to",
+              "name": "BasisObject",
+              "type": "objectList"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Unstick from the object it was stuck to.",
+          "fullName": "Unstick",
+          "functionType": "Action",
+          "name": "Unstick",
+          "sentence": "Unstick _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "const behavior = object.getBehavior(behaviorName);",
+                "",
+                "behavior.basisObject = null;"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Sticker::Sticker",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onDestroy",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(behaviorName);",
+                "",
+                "if (runtimeScene.__allStickers)",
+                "    runtimeScene.__allStickers.delete(behavior);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Sticker::Sticker",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        }
+      ],
+      "propertyDescriptors": [
+        {
+          "value": "",
+          "type": "Boolean",
+          "label": "Only follow the position",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "OnlyFollowPosition"
+        },
+        {
+          "value": "",
+          "type": "Boolean",
+          "label": "Destroy when the object it's stuck on is destroyed",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": false,
+          "name": "IsDestroyedWithParent"
+        }
+      ],
+      "sharedPropertyDescriptors": []
+    }
+  ],
+  "eventsBasedObjects": []
+}

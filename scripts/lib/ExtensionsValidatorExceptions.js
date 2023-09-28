@@ -22,7 +22,6 @@ const legacyCamelCaseExtensions = new Set([
 const legacyGetPrefixedExpressionsExtensions = new Set([
   'TextEntryConsole',
   'MQTT',
-  'ArrayTools',
 ]);
 
 /**
@@ -43,6 +42,7 @@ const lifecycleFunctions = new Set([
   'onSceneResumed',
   'onScenePostEvents',
   'onScenePreEvents',
+  'onHotReloading',
 ]);
 
 /**
@@ -63,25 +63,83 @@ const extensionsAllowedProperties = {
     gdjsAllowedProperties: [
       'makeUuid',
       'rgbToHex',
+      'rgbOrHexToRGBColor',
+      'rgbToHexNumber',
+      'hexNumberToRGB',
+      'hexToRGBColor',
+      'copyArray',
+      'staticArray',
+      'staticArray2',
+      'staticObject',
+      'toDegrees',
+      'toRad',
+      'random',
+      'randomFloat',
+      'randomFloatInRange',
+      'randomInRange',
+      'randomWithStep',
       'evtTools',
       'Variable',
       'RuntimeObject',
       'Logger',
     ],
-    gdjsEvtToolsAllowedProperties: [
-      'network',
-      'common',
-      // 'object' is not allowed by default because it contains advanced object
-      // filtering functions that should be reviewed per extension.
+    // Events tools are wrappers of the JavaScript APIs allowing them to be called by events.
+    // They should not be used 99% of the time, the only base exception being
+    // `common` as it contains utility functions like `clamp` that are not available
+    // in JavaScript by default. Apart from this, the JavaScript functions should be used instead.
+    gdjsEvtToolsAllowedProperties: ['common'],
+    runtimeSceneAllowedProperties: [
+      'getVariables',
+      'getLayer',
+      'getGame',
+      'getBackgroundColor',
+      'getName',
+      'createObject',
+      'createObjectsFrom',
+      'setBackgroundColor',
+      'sceneJustResumed',
+      'requestChange',
+      'hasLayer',
+      'enableDebugDraw',
     ],
-    runtimeSceneAllowedProperties: ['getVariables', 'getLayer', 'getGame'],
-    javaScriptObjectAllowedProperties: ['keys'],
+    javaScriptObjectAllowedProperties: [
+      'keys',
+      'create',
+      'assign',
+      'is',
+      'values',
+      'entries',
+      'fromEntries',
+      'defineProperty',
+      'getOwnPropertyNames',
+      'getOwnPropertyDescriptor',
+      'defineProperties',
+      'prototype',
+    ],
   },
   /** @type {Record<string, ExtensionAllowedProperties>}} */
   extensionSpecificAllowance: {
+    AdvancedHTTP: {
+      gdjsAllowedProperties: ['_advancedHTTP', 'PromiseTask'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    AdvancedJump: {
+      gdjsAllowedProperties: ['PlatformerObjectRuntimeBehavior'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     AdvancedP2PEventHandling: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: ['p2p'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    AudioContext: {
+      gdjsAllowedProperties: ['__audioContextExtension'],
+      gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
@@ -91,33 +149,95 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Billboard: {
+      gdjsAllowedProperties: [
+        'Cube3DRuntimeObject',
+        'Cube3DRuntimeObjectRenderer',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    BoidsMovement: {
+      gdjsAllowedProperties: [
+        '__boidsExtension',
+        'RuntimeBehavior',
+        'BehaviorRBushAABB',
+        'randomFloatInRange',
+        'staticObject',
+        'staticArray',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['__boidsExtension'],
+      javaScriptObjectAllowedProperties: [],
+    },
+    CameraShake: {
+      gdjsAllowedProperties: ['_cameraShakeExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    Compressor: {
+      gdjsAllowedProperties: ['_pakoTools'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    CurvedMovement: {
+      gdjsAllowedProperties: [
+        '__curvedMovementExtension',
+        'AffineTransformation',
+        'ShapePainterRuntimeObject',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['__curvedMovementExtension'],
+      javaScriptObjectAllowedProperties: [],
+    },
+    DialogBox: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getObjects', 'getSoundManager'],
+      javaScriptObjectAllowedProperties: [],
+    },
+    DiscordRichPresence: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['discordRP'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     FlexBox: {
       gdjsAllowedProperties: ['layoutContainers'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: ['assign'],
+      javaScriptObjectAllowedProperties: [],
     },
-    MQTT: {
+    Gamepads: {
+      gdjsAllowedProperties: ['_extensionController'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getElapsedTime'],
+      javaScriptObjectAllowedProperties: [],
+    },
+    Geolocation: {
       gdjsAllowedProperties: [],
-      gdjsEvtToolsAllowedProperties: ['mqtt'],
+      gdjsEvtToolsAllowedProperties: ['geolocation'],
       runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [
-        'create',
-        'defineProperty',
-        'assign',
-        'prototype',
-        'getPrototypeOf',
-        'getOwnPropertyNames',
-        'setPrototypeOf',
-        'getOwnPropertySymbols',
-        'getOwnPropertyDescriptor',
-        'getOwnPropertyDescriptors',
-        'defineProperties',
-      ],
+      javaScriptObjectAllowedProperties: [],
+    },
+    JointConnector: {
+      gdjsAllowedProperties: ['LinksManager', 'Physics2RuntimeBehavior'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    LinkTools: {
+      gdjsAllowedProperties: ['LinksManager'],
+      gdjsEvtToolsAllowedProperties: ['object'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
     },
     MarchingSquares: {
       gdjsAllowedProperties: [
-        '__marchingSquares',
+        '__marchingSquaresExtension',
         'Polygon',
         'ShapePainterRuntimeObject',
       ],
@@ -134,14 +254,111 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    MQTT: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['mqtt'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [
+        'prototype',
+        'getPrototypeOf',
+        'setPrototypeOf',
+        'getOwnPropertySymbols',
+        'getOwnPropertyDescriptor',
+        'getOwnPropertyDescriptors',
+      ],
+    },
+    NavMeshPathfinding: {
+      gdjsAllowedProperties: ['__NavMeshPathfinding'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      // This is for UMD extends emulation.
+      javaScriptObjectAllowedProperties: ['setPrototypeOf'],
+    },
     Noise: {
       gdjsAllowedProperties: ['_extensionNoise', 'randomInRange'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
-    TextEntryVirtualKeyboard: {
-      gdjsAllowedProperties: ['_extensionMobileKeyboard'],
+    ObjectSlicer: {
+      gdjsAllowedProperties: ['_objectSlicer'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    ObjectStack: {
+      gdjsAllowedProperties: [
+        'registerObjectDeletedFromSceneCallback',
+        'RuntimeObject',
+      ],
+      gdjsEvtToolsAllowedProperties: ['object'],
+      runtimeSceneAllowedProperties: [
+        '__allObjectStacks',
+        '__objectStacks_allUsedObjects',
+      ],
+      javaScriptObjectAllowedProperties: [],
+    },
+    ParticleEmitter3D: {
+      gdjsAllowedProperties: [
+        '__particleEmmiter3DExtension',
+        'CustomRuntimeObject',
+        'CustomRuntimeObjectInstanceContainer',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['__particleEmmiter3DExtension'],
+      javaScriptObjectAllowedProperties: ['getPrototypeOf'],
+    },
+    PixelPerfectMovement: {
+      gdjsAllowedProperties: [
+        '__pixelPerfectExtension',
+        'RuntimeBehavior',
+        'TopDownMovementRuntimeBehavior',
+        'RuntimeInstanceContainer',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    PlatformLedgeGrabber: {
+      gdjsAllowedProperties: [
+        'PlatformerObjectRuntimeBehavior',
+        'PlatformRuntimeBehavior',
+        'PlatformObjectsManager',
+        'AABB',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    PlatformerTrajectory: {
+      gdjsAllowedProperties: ['PlatformerObjectRuntimeBehavior'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    PokiGamesSDKHtml: {
+      gdjsAllowedProperties: ['_pokiGamesSDKHtmlExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    Recolorizer: {
+      gdjsAllowedProperties: [
+        '__recolorizerExtension',
+        'SpriteRuntimeObject',
+        'TiledSpriteRuntimeObject',
+        'PanelSpriteRuntimeObject',
+        'rgbOrHexToRGBColor',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['__recolorizerExtension'],
+      javaScriptObjectAllowedProperties: [
+        // Extend a behavior with JavaScript:
+        'getPrototypeOf',
+      ],
+    },
+    Record: {
+      gdjsAllowedProperties: ['_extensionRecord'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
@@ -162,8 +379,14 @@ const extensionsAllowedProperties = {
       ],
       javaScriptObjectAllowedProperties: [],
     },
-    Gamepads: {
-      gdjsAllowedProperties: ['_extensionController'],
+    ReadPixels: {
+      gdjsAllowedProperties: ['_readPixels'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    ShakeObject3D: {
+      gdjsAllowedProperties: ['_shakeObjectExtension'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
@@ -180,27 +403,9 @@ const extensionsAllowedProperties = {
         'getPrototypeOf',
       ],
     },
-    ObjectStack: {
-      gdjsAllowedProperties: [
-        'registerObjectDeletedFromSceneCallback',
-        'RuntimeObject',
-      ],
-      gdjsEvtToolsAllowedProperties: ['object'],
-      runtimeSceneAllowedProperties: [
-        '__allObjectStacks',
-        '__objectStacks_allUsedObjects',
-      ],
-      javaScriptObjectAllowedProperties: [],
-    },
-    ReadPixels: {
-      gdjsAllowedProperties: ['_readPixels'],
+    TextEntryVirtualKeyboard: {
+      gdjsAllowedProperties: ['_extensionMobileKeyboard'],
       gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
-    },
-    LinkTools: {
-      gdjsAllowedProperties: ['LinksManager'],
-      gdjsEvtToolsAllowedProperties: ['object'],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
@@ -210,8 +415,26 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
-    YandexGamesSDK: {
-      gdjsAllowedProperties: ['_YandexGamesSDK'],
+    TextToSpeech: {
+      gdjsAllowedProperties: ['_ttsWait'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    TopDownCornerSliding: {
+      gdjsAllowedProperties: [
+        '__topDownCornerSlidingExtension',
+        'TopDownMovementRuntimeBehavior',
+        'RuntimeInstanceContainer',
+        'RuntimeBehavior',
+        'AABB',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    VoiceRecognition: {
+      gdjsAllowedProperties: ['_extensionVoiceRecognition'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
@@ -222,16 +445,28 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
-    Compressor: {
-      gdjsAllowedProperties: ['_pakoTools'],
+    YandexGamesSDK: {
+      gdjsAllowedProperties: ['_YandexGamesSDK'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
-    DiscordRichPresence: {
-      gdjsAllowedProperties: [],
-      gdjsEvtToolsAllowedProperties: ['discordRP'],
+    Share: {
+      gdjsAllowedProperties: ['_shareExtension'],
+      gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    Flash: {
+      gdjsAllowedProperties: ['SpriteRuntimeObject'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    ObjectPickingTools: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getObjects'],
       javaScriptObjectAllowedProperties: [],
     },
   },

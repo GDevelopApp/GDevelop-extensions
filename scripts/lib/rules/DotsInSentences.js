@@ -1,6 +1,6 @@
 /** @typedef {import("../../types").Extension} Extension */
 /** @typedef {import("../../types").EventsFunction} EventsFunction */
-/** @typedef {import("../../types").EventsBasedBehaviors} EventsBasedBehaviors */
+/** @typedef {import("../../types").EventsBasedBehavior} EventsBasedBehaviors */
 /** @typedef {import("../../types").Parameter} Parameter */
 /** @typedef {import("./rule").ErrorLogger} ErrorLogger */
 
@@ -14,6 +14,8 @@ const NO_DOT = {
   EXPRESSION: ['name', 'fullName'],
   /** @type {Partial<keyof EventsFunction>[]} */
   INSTRUCTION: ['name', 'fullName', 'sentence'],
+  /** @type {Partial<keyof EventsFunction>[]} */
+  ACTION_WITH_OPERATOR: ['name', 'getterName'],
   /** @type {Partial<keyof EventsBasedBehaviors>[]} */
   BEHAVIOR: ['name', 'fullName'],
   /** @type {Partial<keyof Parameter>[]} */
@@ -33,8 +35,24 @@ const DOT_REQUIRED = {
   EXPRESSION: ['description'],
   /** @type {Partial<keyof EventsFunction>[]} */
   INSTRUCTION: ['description'],
+  /** @type {Partial<keyof EventsFunction>[]} */
+  ACTION_WITH_OPERATOR: [],
   /** @type {Partial<keyof EventsBasedBehaviors>[]} */
   BEHAVIOR: ['description'],
+};
+
+/**
+ * @param {?(string | string[])} attribute The attribute to trim.
+ * @returns {string} a trimmed representation of the attribute value.
+ */
+const trim = function (attribute) {
+  return attribute
+    ? // Descriptions are arrays when they have several lines.
+      Array.isArray(attribute)
+      ? attribute.join('\n').trim()
+      : attribute.trim()
+    : // Some attributes are optionals
+      '';
 };
 
 /**
@@ -47,12 +65,13 @@ const DOT_REQUIRED = {
  */
 function checkForForbiddenDot(object, fields, sourceName, onError) {
   for (let key of fields) {
-    const trimmed = object[key].trim();
+    const trimmed = trim(object[key]);
     // Triple dots is the exception in case two parameters have complementary descriptions
     if (trimmed.endsWith('.') && !trimmed.endsWith('...'))
       onError(
-        `Field '${key}' of ${sourceName} has a dot, but it is fobidden there!`,
+        `Field '${key}' of ${sourceName} has a dot, but it is forbidden there!`,
         () => {
+          // @ts-ignore
           object[key] = trimmed.slice(0, -1);
         }
       );
@@ -69,7 +88,7 @@ function checkForForbiddenDot(object, fields, sourceName, onError) {
  */
 function checkForMissingDot(object, fields, sourceName, onError) {
   for (let key of fields) {
-    const trimmed = object[key].trim();
+    const trimmed = trim(object[key]);
     if (trimmed.length !== 0 && !trimmed.endsWith('.'))
       onError(
         `Field '${key}' of ${sourceName} misses a dot at the end of the sentence!`,
@@ -100,8 +119,12 @@ async function validate({ extension, publicEventsFunctions, onError }) {
   for (const func of publicEventsFunctions) {
     checkForDots(
       func,
-      func.functionType === 'Action' || func.functionType === 'Condition'
+      func.functionType === 'Action' ||
+        func.functionType === 'Condition' ||
+        func.functionType === 'ExpressionAndCondition'
         ? 'INSTRUCTION'
+        : func.functionType === 'ActionWithOperator'
+        ? 'ACTION_WITH_OPERATOR'
         : 'EXPRESSION',
       `the function '${func.name}'`,
       onError

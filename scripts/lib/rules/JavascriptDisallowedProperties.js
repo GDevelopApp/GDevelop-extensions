@@ -150,4 +150,5 @@ async function validate({ extension, onError }) {
 module.exports = {
   name: 'JavaScript disallowed properties',
   validate,
+  ignoreDuringPreliminaryChecks: true,
 };
