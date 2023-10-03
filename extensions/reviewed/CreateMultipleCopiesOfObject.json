@@ -14,14 +14,13 @@
     "",
     "- horizontal rows or vertical columns of objects",
     "- a solid rectangle or evenly spaced grid of objects",
-    "- a circular or elliptical ring of objects",
+    "- a circular ring of objects",
     "",
     "After the objects are created, you can reference their object variables to manage the objects:",
     "",
     "* `RowID`:  what horizontal row does this object reside in,",
     "* `ColumnID`:  what vertical column does this object reside in,",
     "* `CreationID`:  starting top-left, and proceeding from left to right, what is the number of the created object,",
-    "* `BatchID`:  optional identifier assigned to all objects created",
     "",
     "Watch this [tutorial video](https://youtu.be/rlGSlNSRR9w) to see examples of how to use this extension."
   ],
@@ -45,10 +44,324 @@
   "dependencies": [],
   "eventsFunctions": [
     {
-      "description": "Create multiple copies of an object.",
+      "description": "Create multiple copies of an object in a rectangular area.",
       "fullName": "Create multiple copies of an object",
       "functionType": "Action",
       "name": "CreateMultipleCopiesOfObject",
+      "sentence": "Create _PARAM2_ rows and _PARAM3_ columns of _PARAM1_ objects with top-left starting position: _PARAM4_;_PARAM5_ (_PARAM6_px between rows and _PARAM7_px between columns)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "Temp variables to track progress in drawing the grid"
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__CreateMultipleObjects.ColumnID",
+                "=",
+                "1"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__CreateMultipleObjects.RowID",
+                "=",
+                "1"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__CreateMultipleObjects.CreationID",
+                "=",
+                "1"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "Starting at top left, create objects in grid."
+        },
+        {
+          "infiniteLoopWarning": true,
+          "type": "BuiltinCommonInstructions::While",
+          "whileConditions": [
+            {
+              "type": {
+                "value": "VarScene"
+              },
+              "parameters": [
+                "__CreateMultipleObjects.ColumnID",
+                ">",
+                "0"
+              ]
+            },
+            {
+              "type": {
+                "value": "VarScene"
+              },
+              "parameters": [
+                "__CreateMultipleObjects.RowID",
+                ">",
+                "0"
+              ]
+            }
+          ],
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "Create"
+              },
+              "parameters": [
+                "",
+                "Object",
+                "GetArgumentAsNumber(\"StartingPositionX\") + (Variable(__CreateMultipleObjects.ColumnID) - 1) * GetArgumentAsNumber(\"ColumnSpacing\")",
+                "GetArgumentAsNumber(\"StartingPositionY\") + (Variable(__CreateMultipleObjects.RowID) - 1) * GetArgumentAsNumber(\"RowSpacing\")",
+                "GetArgumentAsString(\"Layer\")"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarObjet"
+              },
+              "parameters": [
+                "Object",
+                "RowID",
+                "=",
+                "Variable(__CreateMultipleObjects.RowID)"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarObjet"
+              },
+              "parameters": [
+                "Object",
+                "ColumnID",
+                "=",
+                "Variable(__CreateMultipleObjects.ColumnID)"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarObjet"
+              },
+              "parameters": [
+                "Object",
+                "CreationID",
+                "=",
+                "Variable(__CreateMultipleObjects.CreationID)"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarObjetTxt"
+              },
+              "parameters": [
+                "Object",
+                "BatchID",
+                "=",
+                "GetArgumentAsString(\"BatchID\")"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__CreateMultipleObjects.ColumnID",
+                "+",
+                "1"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__CreateMultipleObjects.CreationID",
+                "+",
+                "1"
+              ]
+            }
+          ],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "If the current row is complete, move to the next row."
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "VarScene"
+                  },
+                  "parameters": [
+                    "__CreateMultipleObjects.ColumnID",
+                    ">",
+                    "GetArgumentAsNumber(\"NumberOfColumns\")"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__CreateMultipleObjects.ColumnID",
+                    "=",
+                    "1"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__CreateMultipleObjects.RowID",
+                    "+",
+                    "1"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Comment",
+                  "color": {
+                    "b": 109,
+                    "g": 230,
+                    "r": 255,
+                    "textB": 0,
+                    "textG": 0,
+                    "textR": 0
+                  },
+                  "comment": "If the last row is complete, stop creating new objects."
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "VarScene"
+                      },
+                      "parameters": [
+                        "__CreateMultipleObjects.RowID",
+                        ">",
+                        "GetArgumentAsNumber(\"NumberOfRows\")"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "ModVarScene"
+                      },
+                      "parameters": [
+                        "__CreateMultipleObjects.RowID",
+                        "=",
+                        "-1"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "ModVarScene"
+                      },
+                      "parameters": [
+                        "__CreateMultipleObjects.ColumnID",
+                        "=",
+                        "-1"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object to create",
+          "name": "Object",
+          "type": "objectList"
+        },
+        {
+          "description": "Number of rows (default: 1)",
+          "name": "NumberOfRows",
+          "type": "expression"
+        },
+        {
+          "description": "Number of columns (default: 1)",
+          "name": "NumberOfColumns",
+          "type": "expression"
+        },
+        {
+          "description": "Top-left starting position (X)",
+          "name": "StartingPositionX",
+          "type": "expression"
+        },
+        {
+          "description": "Top-left starting position (Y)",
+          "name": "StartingPositionY",
+          "type": "expression"
+        },
+        {
+          "description": "Amount of space between rows",
+          "name": "RowSpacing",
+          "type": "expression"
+        },
+        {
+          "description": "Amount of space between columns",
+          "name": "ColumnSpacing",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Create multiple copies of an object in a rectangular area.",
+      "fullName": "Create multiple copies of an object",
+      "functionType": "Action",
+      "name": "CreateMultipleCopiesOfObject_SAVE",
       "sentence": "Create _PARAM2_ rows and _PARAM3_ columns of _PARAM1_ objects with top-left starting position: _PARAM4_;_PARAM5_ (_PARAM6_px between rows and _PARAM7_px between columns, create objects on _PARAM9_ with a Z-value of _PARAM10_. Assign objects BatchID: _PARAM8_)",
       "events": [
         {
@@ -84,7 +397,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CreateMultipleCopiesOfObject.ObjectWidth",
+                "__CreateMultipleObjects.ObjectWidth",
                 "=",
                 "Object.Width()"
               ]
@@ -94,7 +407,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CreateMultipleCopiesOfObject.ObjectHeight",
+                "__CreateMultipleObjects.ObjectHeight",
                 "=",
                 "Object.Height()"
               ]
@@ -131,7 +444,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CreateMultipleCopiesOfObject.x",
+                "__CreateMultipleObjects.x",
                 "=",
                 "1"
               ]
@@ -141,7 +454,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CreateMultipleCopiesOfObject.y",
+                "__CreateMultipleObjects.y",
                 "=",
                 "1"
               ]
@@ -151,7 +464,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CreateMultipleCopiesOfObject.CreationID",
+                "__CreateMultipleObjects.CreationID",
                 "=",
                 "1"
               ]
@@ -179,7 +492,7 @@
                 "value": "VarScene"
               },
               "parameters": [
-                "__CreateMultipleCopiesOfObject.x",
+                "__CreateMultipleObjects.x",
                 ">",
                 "0"
               ]
@@ -189,7 +502,7 @@
                 "value": "VarScene"
               },
               "parameters": [
-                "__CreateMultipleCopiesOfObject.y",
+                "__CreateMultipleObjects.y",
                 ">",
                 "0"
               ]
@@ -204,8 +517,8 @@
               "parameters": [
                 "",
                 "Object",
-                "GetArgumentAsNumber(\"StartingPositionX\") + (Variable(__CreateMultipleCopiesOfObject.x) - 1)*(Variable(__CreateMultipleCopiesOfObject.ObjectWidth) + GetArgumentAsNumber(\"ColumnSpacing\"))",
-                "GetArgumentAsNumber(\"StartingPositionY\") + (Variable(__CreateMultipleCopiesOfObject.y) - 1)*(Variable(__CreateMultipleCopiesOfObject.ObjectHeight) + GetArgumentAsNumber(\"RowSpacing\"))",
+                "GetArgumentAsNumber(\"StartingPositionX\") + (Variable(__CreateMultipleObjects.x) - 1)*(Variable(__CreateMultipleObjects.ObjectWidth) + GetArgumentAsNumber(\"ColumnSpacing\"))",
+                "GetArgumentAsNumber(\"StartingPositionY\") + (Variable(__CreateMultipleObjects.y) - 1)*(Variable(__CreateMultipleObjects.ObjectHeight) + GetArgumentAsNumber(\"RowSpacing\"))",
                 "GetArgumentAsString(\"Layer\")"
               ]
             },
@@ -217,7 +530,7 @@
                 "Object",
                 "RowID",
                 "=",
-                "Variable(__CreateMultipleCopiesOfObject.y)"
+                "Variable(__CreateMultipleObjects.y)"
               ]
             },
             {
@@ -228,7 +541,7 @@
                 "Object",
                 "ColumnID",
                 "=",
-                "Variable(__CreateMultipleCopiesOfObject.x)"
+                "Variable(__CreateMultipleObjects.x)"
               ]
             },
             {
@@ -239,7 +552,7 @@
                 "Object",
                 "CreationID",
                 "=",
-                "Variable(__CreateMultipleCopiesOfObject.CreationID)"
+                "Variable(__CreateMultipleObjects.CreationID)"
               ]
             },
             {
@@ -258,7 +571,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CreateMultipleCopiesOfObject.x",
+                "__CreateMultipleObjects.x",
                 "+",
                 "1"
               ]
@@ -268,7 +581,7 @@
                 "value": "ModVarScene"
               },
               "parameters": [
-                "__CreateMultipleCopiesOfObject.CreationID",
+                "__CreateMultipleObjects.CreationID",
                 "+",
                 "1"
               ]
@@ -322,7 +635,7 @@
                     "value": "VarScene"
                   },
                   "parameters": [
-                    "__CreateMultipleCopiesOfObject.x",
+                    "__CreateMultipleObjects.x",
                     ">",
                     "GetArgumentAsNumber(\"NumberOfColumns\")"
                   ]
@@ -334,7 +647,7 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__CreateMultipleCopiesOfObject.x",
+                    "__CreateMultipleObjects.x",
                     "=",
                     "1"
                   ]
@@ -344,7 +657,7 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__CreateMultipleCopiesOfObject.y",
+                    "__CreateMultipleObjects.y",
                     "+",
                     "1"
                   ]
@@ -371,7 +684,7 @@
                         "value": "VarScene"
                       },
                       "parameters": [
-                        "__CreateMultipleCopiesOfObject.y",
+                        "__CreateMultipleObjects.y",
                         ">",
                         "GetArgumentAsNumber(\"NumberOfRows\")"
                       ]
@@ -383,7 +696,7 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CreateMultipleCopiesOfObject.y",
+                        "__CreateMultipleObjects.y",
                         "=",
                         "-1"
                       ]
@@ -393,7 +706,7 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CreateMultipleCopiesOfObject.x",
+                        "__CreateMultipleObjects.x",
                         "=",
                         "-1"
                       ]
@@ -460,8 +773,8 @@
       "objectGroups": []
     },
     {
-      "description": "Create objects to fill the rectangular area of a larger target object.",
-      "fullName": "Create objects to fill the rectangular area of an object",
+      "description": "Create multiple objects to fill the rectangular area of a larger target object.",
+      "fullName": "Create multiple objects to cover another object",
       "functionType": "Action",
       "name": "CreateObjectsToFillAreaOfObject",
       "sentence": "Create _PARAM2_ objects that will cover _PARAM1_ objects (Space between rows:  _PARAM3_  Space between columns: _PARAM4_ Layer: _PARAM5_ Z-order: _PARAM6_ BatchID: _PARAM7_)",
@@ -493,7 +806,7 @@
                     "value": "ModVarSceneTxt"
                   },
                   "parameters": [
-                    "__RectangularFloodFill.BatchID",
+                    "__CreateMultipleObjects.BatchID",
                     "=",
                     "GetArgumentAsString(\"BatchID\")"
                   ]
@@ -508,7 +821,7 @@
                     "value": "VarSceneTxt"
                   },
                   "parameters": [
-                    "__RectangularFloodFill.BatchID",
+                    "__CreateMultipleObjects.BatchID",
                     "=",
                     "\"\""
                   ]
@@ -520,7 +833,7 @@
                     "value": "ModVarSceneTxt"
                   },
                   "parameters": [
-                    "__RectangularFloodFill.BatchID",
+                    "__CreateMultipleObjects.BatchID",
                     "=",
                     "\"RectangularFloodFill\""
                   ]
@@ -560,7 +873,7 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__RectangularFloodFill.FillObjectWidth",
+                    "__CreateMultipleObjects.FillObjectWidth",
                     "=",
                     "FillObject.Width()"
                   ]
@@ -570,7 +883,7 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__RectangularFloodFill.FillObjectHeight",
+                    "__CreateMultipleObjects.FillObjectHeight",
                     "=",
                     "FillObject.Height()"
                   ]
@@ -609,13 +922,13 @@
                   "parameters": [
                     "",
                     "FillObject",
-                    "floor(TargetObject.Height() / (Variable(__RectangularFloodFill.FillObjectHeight) + GetArgumentAsNumber(\"SpaceBetweenRows\")))",
-                    "floor(TargetObject.Width() / (Variable(__RectangularFloodFill.FillObjectWidth) + GetArgumentAsNumber(\"SpaceBetweenColumns\")))",
+                    "floor(TargetObject.Height() / (Variable(__CreateMultipleObjects.FillObjectHeight) + GetArgumentAsNumber(\"SpaceBetweenRows\")))",
+                    "floor(TargetObject.Width() / (Variable(__CreateMultipleObjects.FillObjectWidth) + GetArgumentAsNumber(\"SpaceBetweenColumns\")))",
                     "TargetObject.CenterX() - TargetObject.Width()/2",
                     "TargetObject.CenterY() - TargetObject.Height()/2",
                     "GetArgumentAsNumber(\"SpaceBetweenRows\")",
                     "GetArgumentAsNumber(\"SpaceBetweenColumns\")",
-                    "VariableString(__RectangularFloodFill.BatchID)",
+                    "VariableString(__CreateMultipleObjects.BatchID)",
                     "\"\"",
                     "GetArgumentAsNumber(\"Zorder\")",
                     ""
@@ -668,11 +981,11 @@
       "objectGroups": []
     },
     {
-      "description": "Create a ring of objects around a position.",
+      "description": "Create an elliptical ring of objects around a position.",
       "fullName": "Create a ring of objects",
       "functionType": "Action",
       "name": "CreateRingOfObjects",
-      "sentence": "Create a ring of _PARAM2_ instances of _PARAM1_ centered at _PARAM4_;_PARAM5_ at a radius of _PARAM3_ px (Rotate towards center: _PARAM6_, Angle offset: _PARAM7_)",
+      "sentence": "Create a ring of _PARAM2_ instances of _PARAM1_ centered at _PARAM4_;_PARAM5_ and radius _PARAM3_px (Rotate towards center: _PARAM6_, Angle offset: _PARAM7_)",
       "events": [
         {
           "colorB": 228,
@@ -692,7 +1005,7 @@
                     "value": "ModVarScene"
                   },
                   "parameters": [
-                    "__CreateMultipleCopiesOfObject.CreationID",
+                    "__CreateMultipleObjects.CreationID",
                     "=",
                     "1"
                   ]
@@ -720,72 +1033,112 @@
                     "value": "VarScene"
                   },
                   "parameters": [
-                    "__CreateMultipleCopiesOfObject.CreationID",
+                    "__CreateMultipleObjects.CreationID",
                     "<=",
                     "GetArgumentAsNumber(\"ObjectQuantity\")"
                   ]
                 }
               ],
               "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "value": "Create"
-                  },
-                  "parameters": [
-                    "",
-                    "Object",
-                    "GetArgumentAsNumber(\"CenterPositionX\")",
-                    "GetArgumentAsNumber(\"CenterPositionY\")",
-                    "GetArgumentAsString(\"Layer\")"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "ModVarObjet"
-                  },
-                  "parameters": [
-                    "Object",
-                    "CreationID",
-                    "=",
-                    "Variable(__CreateMultipleCopiesOfObject.CreationID)"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "MettreAutourPos"
-                  },
-                  "parameters": [
-                    "Object",
-                    "GetArgumentAsNumber(\"CenterPositionX\")",
-                    "GetArgumentAsNumber(\"CenterPositionY\")",
-                    "GetArgumentAsNumber(\"Radius\")",
-                    "360 * ((Variable(__CreateMultipleCopiesOfObject.CreationID) - 1) / GetArgumentAsNumber(\"ObjectQuantity\"))"
-                  ]
-                }
-              ],
+              "actions": [],
               "events": [
                 {
                   "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "GetArgumentAsBoolean"
-                      },
-                      "parameters": [
-                        "\"RotateTowardsCenter\""
-                      ]
-                    }
-                  ],
+                  "conditions": [],
                   "actions": [
                     {
                       "type": {
-                        "value": "SetAngle"
+                        "value": "Create"
+                      },
+                      "parameters": [
+                        "",
+                        "Object",
+                        "GetArgumentAsNumber(\"CenterPositionX\")",
+                        "GetArgumentAsNumber(\"CenterPositionY\")",
+                        "GetArgumentAsString(\"Layer\")"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "ModVarObjet"
                       },
                       "parameters": [
                         "Object",
+                        "CreationID",
                         "=",
-                        "Object.AngleToPosition(GetArgumentAsNumber(\"CenterPositionX\"), GetArgumentAsNumber(\"CenterPositionY\")) + GetArgumentAsNumber(\"AngleOffset\")"
+                        "Variable(__CreateMultipleObjects.CreationID)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "ModVarObjet"
+                      },
+                      "parameters": [
+                        "Object",
+                        "CreationAngle",
+                        "=",
+                        "Object.Variable(CreationID) * (360 / GetArgumentAsNumber(\"ObjectQuantity\"))"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCenter"
+                          },
+                          "parameters": [
+                            "Object",
+                            "=",
+                            "Object.X() +  XFromAngleAndDistance(Object.Variable(CreationAngle), GetArgumentAsNumber(\"RingRadius\"))",
+                            "=",
+                            "Object.Y() +  YFromAngleAndDistance(Object.Variable(CreationAngle), GetArgumentAsNumber(\"RingRadius\"))"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "GetArgumentAsBoolean"
+                          },
+                          "parameters": [
+                            "\"RotateTowardsCenter\""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetAngle"
+                          },
+                          "parameters": [
+                            "Object",
+                            "=",
+                            "Object.AngleToPosition(GetArgumentAsNumber(\"CenterPositionX\"), GetArgumentAsNumber(\"CenterPositionY\"))"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetAngle"
+                          },
+                          "parameters": [
+                            "Object",
+                            "+",
+                            "GetArgumentAsNumber(\"AngleOffset\")"
+                          ]
+                        }
                       ]
                     }
                   ]
@@ -799,7 +1152,7 @@
                         "value": "ModVarScene"
                       },
                       "parameters": [
-                        "__CreateMultipleCopiesOfObject.CreationID",
+                        "__CreateMultipleObjects.CreationID",
                         "+",
                         "1"
                       ]
@@ -824,8 +1177,8 @@
           "type": "expression"
         },
         {
-          "description": "Radius",
-          "name": "Radius",
+          "description": "Radius of ring (pixels)",
+          "name": "RingRadius",
           "type": "expression"
         },
         {
@@ -855,7 +1208,7 @@
       "objectGroups": []
     },
     {
-      "description": "Create a ring of objects around a center object. The size and shape of the ring are based on the dimensions of the center object.",
+      "description": "Create a ring of objects around a center object. The size of the ring is based on the dimensions of the center object.",
       "fullName": "Create a ring of objects around a center object",
       "functionType": "Action",
       "name": "CreateRingOfObjectsAroundObject",
@@ -882,12 +1235,12 @@
                 "",
                 "RingObject",
                 "GetArgumentAsNumber(\"ObjectQuantity\")",
-                "max(CenterObject.Width()/2, CenterObject.Height()/2)",
+                "min(CenterObject.Width(), CenterObject.Height()) / 2",
                 "CenterObject.BoundingBoxCenterX()",
                 "CenterObject.BoundingBoxCenterY()",
-                "",
+                "yes",
                 "GetArgumentAsNumber(\"AngleOffset\")",
-                ""
+                "GetArgumentAsNumber(\"AngleOffset\")"
               ]
             }
           ]
@@ -914,12 +1267,12 @@
                 "",
                 "RingObject",
                 "GetArgumentAsNumber(\"ObjectQuantity\")",
-                "min(CenterObject.Width()/2, CenterObject.Height()/2)",
+                "min(CenterObject.Width(), CenterObject.Height()) / 2",
                 "CenterObject.BoundingBoxCenterX()",
                 "CenterObject.BoundingBoxCenterY()",
-                "no",
+                "CenterObject.BoundingBoxCenterY()",
                 "GetArgumentAsNumber(\"AngleOffset\")",
-                ""
+                "GetArgumentAsNumber(\"AngleOffset\")"
               ]
             }
           ]
@@ -953,6 +1306,128 @@
           "longDescription": "Useful for objects that don't face to the right.",
           "name": "AngleOffset",
           "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Create objects around the border of an object.",
+      "fullName": "Create objects around the border of an object",
+      "functionType": "Action",
+      "name": "CreateObjectsAroundBorderOfObject",
+      "sentence": "Create _PARAM1_ that are placed around the border of _PARAM3_",
+      "events": [
+        {
+          "colorB": 228,
+          "colorG": 176,
+          "colorR": 74,
+          "creationTime": 0,
+          "name": "Top and Bottom",
+          "source": "",
+          "type": "BuiltinCommonInstructions::Group",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__CreateMultipleObjects.HorizontalBorderObjectQty",
+                    "=",
+                    "ceil(0.5 * GetArgumentAsNumber(\"ObjectQuantity\") * (CenterObject.Width() / (CenterObject.Width() + CenterObject.Height())))"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "CreateMultipleCopiesOfObject::CreateMultipleCopiesOfObject"
+                  },
+                  "parameters": [
+                    "",
+                    "BorderObject",
+                    "2",
+                    "Variable(__CreateMultipleObjects.HorizontalBorderObjectQty)",
+                    "CenterObject.BoundingBoxLeft()",
+                    "CenterObject.BoundingBoxTop()",
+                    "CenterObject.Height()",
+                    "CenterObject.Width() / Variable(__CreateMultipleObjects.HorizontalBorderObjectQty)",
+                    "\"TopAndBottomBorder\""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": []
+        },
+        {
+          "colorB": 228,
+          "colorG": 176,
+          "colorR": 74,
+          "creationTime": 0,
+          "name": "Left and Right",
+          "source": "",
+          "type": "BuiltinCommonInstructions::Group",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__CreateMultipleObjects.VerticalBorderObjectQty",
+                    "=",
+                    "ceil(0.5 * GetArgumentAsNumber(\"ObjectQuantity\") * (CenterObject.Height() / (CenterObject.Width() + CenterObject.Height())))"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "CreateMultipleCopiesOfObject::CreateMultipleCopiesOfObject"
+                  },
+                  "parameters": [
+                    "",
+                    "BorderObject",
+                    "Variable(__CreateMultipleObjects.VerticalBorderObjectQty)",
+                    "2",
+                    "CenterObject.BoundingBoxLeft()",
+                    "CenterObject.BoundingBoxTop()",
+                    "CenterObject.Height() / Variable(__CreateMultipleObjects.VerticalBorderObjectQty)",
+                    "CenterObject.Width()",
+                    "\"LeftAndRightBorder\""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": []
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Border object",
+          "name": "BorderObject",
+          "type": "objectList"
+        },
+        {
+          "description": "Center object",
+          "name": "CenterObject",
+          "type": "objectList"
         }
       ],
       "objectGroups": []
