@@ -211,6 +211,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    GamePixSDK: {
+      gdjsAllowedProperties: ['_gamePixSdkExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     Gamepads: {
       gdjsAllowedProperties: ['_extensionController'],
       gdjsEvtToolsAllowedProperties: [],
