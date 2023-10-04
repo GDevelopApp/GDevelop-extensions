@@ -8,7 +8,7 @@
   "name": "WithThreeJS",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/rotate-3d.svg",
   "shortDescription": "Create a simple 3D scene.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": [
     "Extension for GDevelop to create simple 3D scenes.  ",
     "This extension is intended for easy and simple 3D rendering. It does not currently aim for realistic 3D rendering.  ",
@@ -1222,6 +1222,37 @@
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": true
+        },
+        {
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "Commented out to always use built-in 3D. (GDevelop v5.2.173 and PixiJS v7.3.0 or later)"
+        },
+        {
+          "disabled": true,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "Scene3D::SetCameraNearPlane"
+              },
+              "parameters": [
+                "",
+                "+",
+                "0",
+                "\"\"",
+                "0"
+              ]
+            }
+          ]
         }
       ],
       "parameters": [],
@@ -1316,7 +1347,11 @@
             "    gdjs.__WithThreeJS.delete(\"Listener\");",
             "    gdjs.__WithThreeJS.delete(\"BuiltIn3DWithThreeJS\");",
             "}",
-            "runtimeScene.getRenderer().getPIXIRenderer().backgroundAlpha = 1;",
+            "if (runtimeScene.getRenderer().getPIXIRenderer().background) {",
+            "    runtimeScene.getRenderer().getPIXIRenderer().background.alpha = 1;// For PixiJS 7",
+            "} else {",
+            "    runtimeScene.getRenderer().getPIXIRenderer().backgroundAlpha = 1;// For PixiJS 6",
+            "}",
             "gdjs.__WithThreeJS.set(\"SceneIsReady\", false);",
             "",
             ""
@@ -1349,6 +1384,7 @@
             "  if (!runtimeScene.getRenderer()._threeRenderer._render_WithThreeJS) {",
             "    runtimeScene.getRenderer()._threeRenderer._render_WithThreeJS = runtimeScene.getRenderer()._threeRenderer.render;",
             "    runtimeScene.getRenderer()._threeRenderer.render = function(S, C) {",
+            "      // Three.js のレンダラーが利用される場合の透過設定",
             "      runtimeScene.getLayer(\"\").getRenderer().getThreeScene().background = null;",
             "      this._render_WithThreeJS(S, C);",
             "    }",
@@ -1356,16 +1392,22 @@
             "  if (!runtimeScene.getRenderer().getPIXIRenderer()._clear_WithThreeJS) {",
             "    runtimeScene.getRenderer().getPIXIRenderer()._clear_WithThreeJS = runtimeScene.getRenderer().getPIXIRenderer().clear;",
             "    runtimeScene.getRenderer().getPIXIRenderer().clear = function() {",
+            "      // PixiJS のレンダラーが利用される場合の透過設定",
             "      runtimeScene.setBackgroundColor(0,0,0);",
-            "      this.backgroundAlpha = 0;",
+            "      if (this.background) {",
+            "        this.background.alpha = 0;// For PixiJS 7",
+            "      } else {",
+            "        this.backgroundAlpha = 0;// For PixiJS 6",
+            "      }",
             "      this._clear_WithThreeJS();",
             "    }",
             "  }",
             "} else {",
-            "  console.log(\"[WithThreeJS] Built-in 3D is disabled.\");",
+            "  // v5.2.173 対応した v1.0.1 以降は使用されないはず",
+            "  console.log(\"[WithThreeJS] Built-in 3D is disabled. (LEGACY MODE)\");",
             "  // GDの背景を黒くした上で透明にする",
             "  runtimeScene.setBackgroundColor(0,0,0);",
-            "  runtimeScene.getRenderer().getPIXIRenderer().backgroundAlpha = 0;",
+            "  runtimeScene.getRenderer().getPIXIRenderer().backgroundAlpha = 0;// For PixiJS 6",
             "}",
             "//",
             "const ProjectionScale = eventsFunctionContext.getArgument(\"ProjectionScale\") || 1;",
