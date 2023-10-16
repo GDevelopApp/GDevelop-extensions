@@ -348,6 +348,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Raycaster3D: {
+      gdjsAllowedProperties: ['__raycaster3DExtension'],
+      gdjsEvtToolsAllowedProperties: ['object'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     Recolorizer: {
       gdjsAllowedProperties: [
         '__recolorizerExtension',
