@@ -349,8 +349,8 @@ const extensionsAllowedProperties = {
       javaScriptObjectAllowedProperties: [],
     },
     Raycaster3D: {
-      gdjsAllowedProperties: [],
-      gdjsEvtToolsAllowedProperties: ['__raycaster3DExtension'],
+      gdjsAllowedProperties: ['__raycaster3DExtension'],
+      gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: ['gdjs.evtTools'],
     },
