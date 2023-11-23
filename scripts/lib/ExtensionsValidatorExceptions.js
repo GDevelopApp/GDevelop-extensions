@@ -183,6 +183,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    CrazyGamesAdApi: {
+      gdjsAllowedProperties: ['_crazyGamesExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getSoundManager'],
+      javaScriptObjectAllowedProperties: [],
+    },
     CurvedMovement: {
       gdjsAllowedProperties: [
         '__curvedMovementExtension',
