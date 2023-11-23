@@ -178,6 +178,12 @@ const extensionsAllowedProperties = {
       javaScriptObjectAllowedProperties: [],
     },
     Compressor: {
+      gdjsAllowedProperties: ['_crazyGamesExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    CrazyGamesAdApi: {
       gdjsAllowedProperties: ['_pakoTools'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
