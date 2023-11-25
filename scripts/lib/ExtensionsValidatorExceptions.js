@@ -305,8 +305,7 @@ const extensionsAllowedProperties = {
       ],
       gdjsEvtToolsAllowedProperties: ['object'],
       runtimeSceneAllowedProperties: [
-        '__allObjectStacks',
-        '__objectStacks_allUsedObjects',
+        '_objectStackExtension',
       ],
       javaScriptObjectAllowedProperties: [],
     },
