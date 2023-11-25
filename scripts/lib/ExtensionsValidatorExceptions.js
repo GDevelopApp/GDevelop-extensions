@@ -300,6 +300,7 @@ const extensionsAllowedProperties = {
     },
     ObjectStack: {
       gdjsAllowedProperties: [
+        '_objectStackExtension',
         'registerObjectDeletedFromSceneCallback',
         'RuntimeObject',
       ],
