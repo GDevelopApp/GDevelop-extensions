@@ -305,9 +305,7 @@ const extensionsAllowedProperties = {
         'RuntimeObject',
       ],
       gdjsEvtToolsAllowedProperties: ['object'],
-      runtimeSceneAllowedProperties: [
-        '_objectStackExtension',
-      ],
+      runtimeSceneAllowedProperties: ['_objectStackExtension'],
       javaScriptObjectAllowedProperties: [],
     },
     ParticleEmitter3D: {
