@@ -300,14 +300,12 @@ const extensionsAllowedProperties = {
     },
     ObjectStack: {
       gdjsAllowedProperties: [
+        '_objectStackExtension',
         'registerObjectDeletedFromSceneCallback',
         'RuntimeObject',
       ],
       gdjsEvtToolsAllowedProperties: ['object'],
-      runtimeSceneAllowedProperties: [
-        '__allObjectStacks',
-        '__objectStacks_allUsedObjects',
-      ],
+      runtimeSceneAllowedProperties: ['_objectStackExtension'],
       javaScriptObjectAllowedProperties: [],
     },
     ParticleEmitter3D: {
