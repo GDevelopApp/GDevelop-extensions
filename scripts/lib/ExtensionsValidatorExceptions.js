@@ -411,15 +411,14 @@ const extensionsAllowedProperties = {
     },
     Sticker: {
       gdjsAllowedProperties: [
+        '_stickerExtension',
         'registerObjectDeletedFromSceneCallback',
         'RuntimeObject',
+        'RuntimeBehavior',
       ],
       gdjsEvtToolsAllowedProperties: ['object'],
-      runtimeSceneAllowedProperties: ['__allStickers'],
-      javaScriptObjectAllowedProperties: [
-        // Extend a behavior with JavaScript:
-        'getPrototypeOf',
-      ],
+      runtimeSceneAllowedProperties: ['_stickerExtension'],
+      javaScriptObjectAllowedProperties: [],
     },
     TextEntryVirtualKeyboard: {
       gdjsAllowedProperties: ['_extensionMobileKeyboard'],
