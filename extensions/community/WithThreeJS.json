@@ -8,7 +8,7 @@
   "name": "WithThreeJS",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/rotate-3d.svg",
   "shortDescription": "Create a simple 3D scene.",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": [
     "Extension for GDevelop to create simple 3D scenes.  ",
     "This extension is intended for easy and simple 3D rendering. It does not currently aim for realistic 3D rendering.  ",
@@ -3222,6 +3222,63 @@
       "objectGroups": []
     },
     {
+      "description": "This invisible 3D Object can be the parent of other 3D Objects.",
+      "fullName": "Create 3D Group",
+      "functionType": "Action",
+      "group": "3D Object",
+      "name": "Create3DGroup",
+      "sentence": "Create 3D Group (ID: _PARAM1_, X: _PARAM2_, Y: _PARAM3_, Z: _PARAM4_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const X = eventsFunctionContext.getArgument(\"X\");",
+            "const Y = eventsFunctionContext.getArgument(\"Y\");",
+            "const Z = eventsFunctionContext.getArgument(\"Z\");",
+            "const Group = new THREE.Group();",
+            "Group.position.set(X, Y, Z);",
+            "Group.name = Id;",
+            "Scene.add(Group);",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "X",
+          "name": "X",
+          "type": "expression"
+        },
+        {
+          "description": "Y",
+          "name": "Y",
+          "type": "expression"
+        },
+        {
+          "description": "Z",
+          "name": "Z",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
       "description": "Move a 3D Camera.\n'=' is relative to the parent axis.\n\"+\" and \"-\" are relative to the local axis.",
       "fullName": "Move 3D Camera",
       "functionType": "Action",
@@ -3542,7 +3599,9 @@
             "    return;",
             "}",
             "//",
-            "Camera.lookAt(Obj.position);",
+            "const WPos = new THREE.Vector3();",
+            "Obj.getWorldPosition(WPos);",
+            "Camera.lookAt(WPos);",
             "",
             ""
           ],
@@ -5055,7 +5114,9 @@
             "    return;",
             "}",
             "//",
-            "Obj.lookAt(TargetObj.position);",
+            "const WPos = new THREE.Vector3();",
+            "TargetObj.getWorldPosition(WPos);",
+            "Obj.lookAt(WPos);",
             "",
             ""
           ],
@@ -5725,11 +5786,11 @@
     },
     {
       "description": "Resolve collisions between Bounding Boxes.\nIt is not necessary to use the \"Check Bounding Box Collision\" condition beforehand. (It will do almost the same processing)\nNote that the 3D Objects are still in contact after resolution. (\"Check Bounding Box Collision\" condition will not be false.)\n3D Object thickness too thin for the amount of movement will not resolve correctly.\nThis action updates the \"Bounding Box Collision Result\".",
-      "fullName": "Resolve Bounding Box Collision",
+      "fullName": "Resolve Bounding Box Collision (Deprecated)",
       "functionType": "Action",
       "group": "3D Object",
       "name": "ResolveBoundingBoxCollision",
-      "sentence": "Resolve Bounding Box Collision (ID: _PARAM1_, Unmoved: _PARAM2_)",
+      "sentence": "⚠️ Resolve Bounding Box Collision (ID: _PARAM1_, Unmoved: _PARAM2_)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -5775,6 +5836,84 @@
           "name": "UnmovedId",
           "supplementaryInformation": "scene3D Object ID",
           "type": "identifier"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Resolve collisions between Bounding Boxes.\nIt is not necessary to use the \"Check Bounding Box Collision\" condition beforehand. (It will do almost the same processing)\nNote that the 3D Objects are still in contact after resolution. (\"Check Bounding Box Collision\" condition will not be false.)\n3D Object thickness too thin for the amount of movement will not resolve correctly.\nThis action updates the \"Bounding Box Collision Result\".\n\"Bounding Box Collision Result\" stores the value when the Target 3D Object is unmoved.",
+      "fullName": "Resolve Bounding Box Collision",
+      "functionType": "Action",
+      "group": "3D Object",
+      "name": "ResolveBoundingBoxCollisionV2",
+      "sentence": "Resolve Bounding Box Collision (ID: _PARAM1_, Target: _PARAM2_, Unmoved: _PARAM3_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const TargetId = eventsFunctionContext.getArgument(\"TargetId\");",
+            "const Unmoved = eventsFunctionContext.getArgument(\"Unmoved\");",
+            "//",
+            "const Obj = Scene.getObjectByName(Id);",
+            "const TargetObj = Scene.getObjectByName(TargetId);",
+            "if (!Obj || !TargetObj) {",
+            "    console.warn(\"3D Object not found: \" + Id + \" or \" + TargetId);",
+            "    return;",
+            "}",
+            "//",
+            "const BoundingBoxCollisionResult = gdjs.__WithThreeJS.get(\"SetBoundingBoxCollisionResult\")(Obj, TargetObj);",
+            "const Move3 = new THREE.Vector3(BoundingBoxCollisionResult.MoveX, BoundingBoxCollisionResult.MoveY, BoundingBoxCollisionResult.MoveZ);",
+            "if (Unmoved) {",
+            "    const WorldPosition = new THREE.Vector3();",
+            "    Obj.getWorldPosition(WorldPosition);",
+            "    WorldPosition.add(Move3);",
+            "    Obj.position.copy(Obj.parent.worldToLocal(WorldPosition));",
+            "} else {",
+            "    Move3.divideScalar(2);",
+            "    const Move3Neg = Move3.clone().negate();",
+            "    //",
+            "    const WorldPosition1 = new THREE.Vector3();",
+            "    const WorldPosition2 = new THREE.Vector3();",
+            "    Obj.getWorldPosition(WorldPosition1);",
+            "    TargetObj.getWorldPosition(WorldPosition2);",
+            "    WorldPosition1.add(Move3);",
+            "    WorldPosition2.add(Move3Neg);",
+            "    Obj.position.copy(Obj.parent.worldToLocal(WorldPosition1));",
+            "    TargetObj.position.copy(TargetObj.parent.worldToLocal(WorldPosition2));",
+            "}",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "Target 3D Object ID",
+          "name": "TargetId",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "defaultValue": "True",
+          "description": "Target 3D Object is unmoved",
+          "name": "Unmoved",
+          "optional": true,
+          "type": "trueorfalse"
         }
       ],
       "objectGroups": []
@@ -6164,6 +6303,156 @@
           "name": "Id",
           "supplementaryInformation": "scene3D Object ID",
           "type": "identifier"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Set number to 3D Object Variable",
+      "functionType": "Action",
+      "group": "3D Object",
+      "name": "SetNumberVariable",
+      "sentence": "Set number to 3D Object Variable (ID: _PARAM1_, Variable: _PARAM2_, _PARAM3_, _PARAM4_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const VariableName = eventsFunctionContext.getArgument(\"VariableName\");",
+            "const Operator = eventsFunctionContext.getArgument(\"Operator\");",
+            "const Value = eventsFunctionContext.getArgument(\"Value\");",
+            "//",
+            "const Obj = Scene.getObjectByName(Id);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + Id);",
+            "    return;",
+            "}",
+            "//",
+            "if (!Obj.userData.Variable) {",
+            "    Obj.userData.Variable = {};",
+            "}",
+            "if (!Obj.userData.Variable[VariableName]) {",
+            "    // false, 0, \"\", undefined ...",
+            "    Obj.userData.Variable[VariableName] = 0;",
+            "}",
+            "if (Operator == \"=\") {",
+            "    Obj.userData.Variable[VariableName] = Value;",
+            "} else if (Operator == \"+\") {",
+            "    Obj.userData.Variable[VariableName] += Value;",
+            "} else if (Operator == \"-\") {",
+            "    Obj.userData.Variable[VariableName] -= Value;",
+            "} else {",
+            "    Obj.userData.Variable[VariableName] *= Value;",
+            "}",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "3D Object Variable Name",
+          "name": "VariableName",
+          "supplementaryInformation": "scene3D Object Variable Name",
+          "type": "identifier"
+        },
+        {
+          "description": "Operator",
+          "name": "Operator",
+          "supplementaryInformation": "[\"=\",\"+\",\"-\",\"*\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Value",
+          "name": "Value",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Set string to 3D Object Variable",
+      "functionType": "Action",
+      "group": "3D Object",
+      "name": "SetStringVariable",
+      "sentence": "Set string to 3D Object Variable (ID: _PARAM1_, Variable: _PARAM2_, _PARAM3_, _PARAM4_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const VariableName = eventsFunctionContext.getArgument(\"VariableName\");",
+            "const Operator = eventsFunctionContext.getArgument(\"Operator\");",
+            "const Value = eventsFunctionContext.getArgument(\"Value\");",
+            "//",
+            "const Obj = Scene.getObjectByName(Id);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + Id);",
+            "    return;",
+            "}",
+            "//",
+            "if (!Obj.userData.Variable) {",
+            "    Obj.userData.Variable = {};",
+            "}",
+            "if (!Obj.userData.Variable[VariableName]) {",
+            "    // false, 0, \"\", undefined ...",
+            "    Obj.userData.Variable[VariableName] = \"\";",
+            "}",
+            "if (Operator == \"=\") {",
+            "    Obj.userData.Variable[VariableName] = Value;",
+            "} else {",
+            "    Obj.userData.Variable[VariableName] += Value;",
+            "}",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "3D Object Variable Name",
+          "name": "VariableName",
+          "supplementaryInformation": "scene3D Object Variable Name",
+          "type": "identifier"
+        },
+        {
+          "description": "Operator",
+          "name": "Operator",
+          "supplementaryInformation": "[\"=\",\"+\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Value",
+          "name": "Value",
+          "type": "string"
         }
       ],
       "objectGroups": []
@@ -6813,6 +7102,126 @@
           "description": "Original Animation Number",
           "name": "ANumber",
           "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "3D Object Number Variable",
+      "functionType": "Expression",
+      "group": "3D Object",
+      "name": "ObjectNumberVariable",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const VariableName = eventsFunctionContext.getArgument(\"VariableName\");",
+            "//",
+            "const Obj = Scene.getObjectByName(Id);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + Id);",
+            "    return;",
+            "}",
+            "//",
+            "if (!Obj.userData.Variable) {",
+            "    Obj.userData.Variable = {};",
+            "}",
+            "if (!Obj.userData.Variable[VariableName]) {",
+            "    // false, 0, \"\", undefined ...",
+            "    Obj.userData.Variable[VariableName] = 0;",
+            "}",
+            "eventsFunctionContext.returnValue = Obj.userData.Variable[VariableName];",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "supplementaryInformation": "scene",
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "3D Object Variable Name",
+          "name": "VariableName",
+          "supplementaryInformation": "scene3D Object Variable Name",
+          "type": "identifier"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "3D Object String Variable",
+      "functionType": "StringExpression",
+      "group": "3D Object",
+      "name": "ObjectStringVariable",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const VariableName = eventsFunctionContext.getArgument(\"VariableName\");",
+            "//",
+            "const Obj = Scene.getObjectByName(Id);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + Id);",
+            "    return;",
+            "}",
+            "//",
+            "if (!Obj.userData.Variable) {",
+            "    Obj.userData.Variable = {};",
+            "}",
+            "if (!Obj.userData.Variable[VariableName]) {",
+            "    // false, 0, \"\", undefined ...",
+            "    Obj.userData.Variable[VariableName] = \"\";",
+            "}",
+            "eventsFunctionContext.returnValue = Obj.userData.Variable[VariableName];",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "supplementaryInformation": "scene",
+        "type": "string"
+      },
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "3D Object Variable Name",
+          "name": "VariableName",
+          "supplementaryInformation": "scene3D Object Variable Name",
+          "type": "identifier"
         }
       ],
       "objectGroups": []
