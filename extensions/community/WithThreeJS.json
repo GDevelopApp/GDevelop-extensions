@@ -8,7 +8,7 @@
   "name": "WithThreeJS",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/rotate-3d.svg",
   "shortDescription": "Create a simple 3D scene.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": [
     "Extension for GDevelop to create simple 3D scenes.  ",
     "This extension is intended for easy and simple 3D rendering. It does not currently aim for realistic 3D rendering.  ",
@@ -2044,7 +2044,7 @@
       "description": "Do a Raycast.\nYou can get the count of 3D Objects in the result with the \"Raycast Result Count\" expression.\nThe result can be accessed via the \"Raycast Result Number\" expression or the \"Raycast Result String\" string expression.",
       "fullName": "Raycast",
       "functionType": "Action",
-      "group": "3D Scene",
+      "group": "3D Raycast",
       "name": "Raycast",
       "sentence": "Raycast (From: _PARAM1_, _PARAM2_, _PARAM3_, To: _PARAM4_, _PARAM5_, _PARAM6_)",
       "events": [
@@ -2126,7 +2126,7 @@
       "description": "Do a Raycast from the 3D Camera.\nYou can get the count of 3D Objects in the result with the \"Raycast Result Count\" expression.\nThe result can be accessed via the \"Raycast Result Number\" expression or the \"Raycast Result String\" string expression.",
       "fullName": "Raycast From 3D Camera",
       "functionType": "Action",
-      "group": "3D Camera",
+      "group": "3D Raycast",
       "name": "RaycastFrom3DCamera",
       "sentence": "Raycast From 3D Camera (ID: _PARAM1_, Screen: _PARAM2_, _PARAM3_)",
       "events": [
@@ -2196,10 +2196,159 @@
       "objectGroups": []
     },
     {
+      "description": "Do a Raycast from the 3D Object. (Z axis direction)\nYou can get the count of 3D Objects in the result with the \"Raycast Result Count\" expression.\nThe result can be accessed via the \"Raycast Result Number\" expression or the \"Raycast Result String\" string expression.",
+      "fullName": "Raycast From 3D Object",
+      "functionType": "Action",
+      "group": "3D Raycast",
+      "name": "RaycastFrom3DObject",
+      "sentence": "Raycast From 3D Object (ID: _PARAM1_, Distance: _PARAM2_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "if (!gdjs.__WithThreeJS.has(\"Raycaster\")) {",
+            "    gdjs.__WithThreeJS.set(\"Raycaster\", new THREE.Raycaster());",
+            "    gdjs.__WithThreeJS.set(\"RaycastResult\", new Array());",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const Camera = gdjs.__WithThreeJS.get(\"GetCamera\")(1);// 現状は1で固定",
+            "const Raycaster = gdjs.__WithThreeJS.get(\"Raycaster\");",
+            "//",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const Distance = eventsFunctionContext.getArgument(\"Distance\");",
+            "//",
+            "const Obj = Scene.getObjectByName(Id);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + Id);",
+            "    return;",
+            "}",
+            "const WorldPosition = new THREE.Vector3();",
+            "const WorldDirection = new THREE.Vector3();",
+            "Obj.getWorldPosition(WorldPosition);",
+            "Obj.getWorldDirection(WorldDirection);",
+            "//",
+            "Raycaster.camera = Camera;",
+            "Raycaster.set(WorldPosition, WorldDirection);",
+            "Raycaster.far = Distance;",
+            "gdjs.__WithThreeJS.set(\"RaycastResult\", Raycaster.intersectObjects(Scene.children, true));",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "Distance",
+          "name": "Distance",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Place 3D Object Using Raycast Result",
+      "functionType": "Action",
+      "group": "3D Raycast",
+      "name": "Place3DObjectUsingRaycastResult",
+      "sentence": "Place 3D Object Using Raycast Result (ID: _PARAM1_, Result: _PARAM2_, Position: _PARAM3_, Normal: _PARAM4_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "if (!gdjs.__WithThreeJS.has(\"RaycastResult\")) {",
+            "    console.warn(\"No Raycast has been done yet.\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const RaycastResult = gdjs.__WithThreeJS.get(\"RaycastResult\");",
+            "//",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const Index = eventsFunctionContext.getArgument(\"Index\");",
+            "const Position = eventsFunctionContext.getArgument(\"Position\");",
+            "const Normal = eventsFunctionContext.getArgument(\"Normal\");",
+            "//",
+            "const Obj = Scene.getObjectByName(Id);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + Id);",
+            "    return;",
+            "}",
+            "if (Index < 0 || RaycastResult.length <= Index) {",
+            "    console.warn(\"Incorrect Raycast Result index.\");",
+            "    return;",
+            "}",
+            "//",
+            "const Parent = Obj.parent;",
+            "Scene.attach(Obj);",
+            "if (Position) {",
+            "    Obj.position.copy(RaycastResult[Index].point);",
+            "}",
+            "if (Normal && RaycastResult[Index].normal) {",
+            "    const DirY = new THREE.Vector3(0, 1, 0);",
+            "    const DifQua = new THREE.Quaternion();",
+            "    DirY.applyQuaternion(Obj.quaternion);",
+            "    DifQua.setFromUnitVectors(DirY, RaycastResult[Index].normal);",
+            "    Obj.applyQuaternion(DifQua);",
+            "}",
+            "Parent.attach(Obj);",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "Index of Raycast Result (0 or more)",
+          "name": "Index",
+          "type": "expression"
+        },
+        {
+          "defaultValue": "yes",
+          "description": "Position",
+          "name": "Position",
+          "optional": true,
+          "type": "yesorno"
+        },
+        {
+          "defaultValue": "yes",
+          "description": "Normal",
+          "name": "Normal",
+          "optional": true,
+          "type": "yesorno"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
       "description": "Count of 3D Objects in Raycast Result",
       "fullName": "Raycast Result Count",
       "functionType": "Expression",
-      "group": "3D Scene",
+      "group": "3D Raycast",
       "name": "RaycastResultCount",
       "sentence": "Raycast (From: _PARAM1_, _PARAM2_, _PARAM3_, To: _PARAM4_, _PARAM5_, _PARAM6_)",
       "events": [
@@ -2211,7 +2360,7 @@
             "    return;",
             "}",
             "if (!gdjs.__WithThreeJS.has(\"RaycastResult\")) {",
-            "    console.warn(\"No raycast has been done yet.\");",
+            "    console.warn(\"No Raycast has been done yet.\");",
             "    return;",
             "}",
             "const RaycastResult = gdjs.__WithThreeJS.get(\"RaycastResult\");",
@@ -2233,7 +2382,7 @@
     {
       "fullName": "Raycast Result Number",
       "functionType": "Expression",
-      "group": "3D Scene",
+      "group": "3D Raycast",
       "name": "RaycastResultNumber",
       "sentence": "Raycast (From: _PARAM1_, _PARAM2_, _PARAM3_, To: _PARAM4_, _PARAM5_, _PARAM6_)",
       "events": [
@@ -2245,7 +2394,7 @@
             "    return;",
             "}",
             "if (!gdjs.__WithThreeJS.has(\"RaycastResult\")) {",
-            "    console.warn(\"No raycast has been done yet.\");",
+            "    console.warn(\"No Raycast has been done yet.\");",
             "    return;",
             "}",
             "const RaycastResult = gdjs.__WithThreeJS.get(\"RaycastResult\");",
@@ -2266,6 +2415,12 @@
             "    eventsFunctionContext.returnValue = RaycastResult[Index].point.y;",
             "} else if (Item == \"Point Z\") {",
             "    eventsFunctionContext.returnValue = RaycastResult[Index].point.z;",
+            "} else if (Item == \"Normal X\") {",
+            "    eventsFunctionContext.returnValue = RaycastResult[Index].normal.x;",
+            "} else if (Item == \"Normal Y\") {",
+            "    eventsFunctionContext.returnValue = RaycastResult[Index].normal.y;",
+            "} else if (Item == \"Normal Z\") {",
+            "    eventsFunctionContext.returnValue = RaycastResult[Index].normal.z;",
             "}",
             "",
             ""
@@ -2287,7 +2442,7 @@
         {
           "description": "Item",
           "name": "Item",
-          "supplementaryInformation": "[\"Distance\",\"Point X\",\"Point Y\",\"Point Z\"]",
+          "supplementaryInformation": "[\"Distance\",\"Point X\",\"Point Y\",\"Point Z\",\"Normal X\",\"Normal Y\",\"Normal Z\"]",
           "type": "stringWithSelector"
         }
       ],
@@ -2296,7 +2451,7 @@
     {
       "fullName": "Raycast Result String",
       "functionType": "StringExpression",
-      "group": "3D Scene",
+      "group": "3D Raycast",
       "name": "RaycastResultString",
       "sentence": "Raycast (From: _PARAM1_, _PARAM2_, _PARAM3_, To: _PARAM4_, _PARAM5_, _PARAM6_)",
       "events": [
@@ -2308,7 +2463,7 @@
             "    return;",
             "}",
             "if (!gdjs.__WithThreeJS.has(\"RaycastResult\")) {",
-            "    console.warn(\"No raycast has been done yet.\");",
+            "    console.warn(\"No Raycast has been done yet.\");",
             "    return;",
             "}",
             "const RaycastResult = gdjs.__WithThreeJS.get(\"RaycastResult\");",
@@ -3001,8 +3156,9 @@
             "            if (LambertMaterial[KK] !== undefined) {",
             "                LambertMaterial[KK] = V[KK];",
             "            }",
-            "            // console.log(`V.${KK} = ${V[KK]}`);",
+            "            //console.log(`V.${KK} = ${V[KK]}`);",
             "        }",
+            "        LambertMaterial.side = THREE.FrontSide;",
             "        V.dispose();// ここで実行して意味ある？",
             "        Mats.set(K, LambertMaterial);",
             "    }",
@@ -3222,12 +3378,12 @@
       "objectGroups": []
     },
     {
-      "description": "This invisible 3D Object can be the parent of other 3D Objects.",
+      "description": "This 3D Object without geometry is useful for grouping other 3D Objects together or changing their center point.",
       "fullName": "Create 3D Group",
       "functionType": "Action",
       "group": "3D Object",
       "name": "Create3DGroup",
-      "sentence": "Create 3D Group (ID: _PARAM1_, X: _PARAM2_, Y: _PARAM3_, Z: _PARAM4_)",
+      "sentence": "Create 3D Group (ID: _PARAM1_, X: _PARAM2_, Y: _PARAM3_, Z: _PARAM4_, AX: _PARAM5_, AY: _PARAM6_, AZ: _PARAM7_)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -3241,8 +3397,12 @@
             "const X = eventsFunctionContext.getArgument(\"X\");",
             "const Y = eventsFunctionContext.getArgument(\"Y\");",
             "const Z = eventsFunctionContext.getArgument(\"Z\");",
+            "const AngleX = eventsFunctionContext.getArgument(\"AngleX\");",
+            "const AngleY = eventsFunctionContext.getArgument(\"AngleY\");",
+            "const AngleZ = eventsFunctionContext.getArgument(\"AngleZ\");",
             "const Group = new THREE.Group();",
             "Group.position.set(X, Y, Z);",
+            "Group.rotation.set(gdjs.toRad(AngleX), gdjs.toRad(AngleY), gdjs.toRad(AngleZ));",
             "Group.name = Id;",
             "Scene.add(Group);",
             "",
@@ -3273,6 +3433,21 @@
         {
           "description": "Z",
           "name": "Z",
+          "type": "expression"
+        },
+        {
+          "description": "Angle X Axis",
+          "name": "AngleX",
+          "type": "expression"
+        },
+        {
+          "description": "Angle Y Axis",
+          "name": "AngleY",
+          "type": "expression"
+        },
+        {
+          "description": "Angle Z Axis",
+          "name": "AngleZ",
           "type": "expression"
         }
       ],
@@ -3631,6 +3806,7 @@
       "functionType": "Action",
       "group": "3D Camera",
       "name": "Correct3DCameraRotationWithinLimits",
+      "private": true,
       "sentence": "⚠️ Correct 3D Camera Rotation Within Limits (ID: _PARAM1_, Axis: _PARAM2_, Limit: _PARAM3_ to _PARAM4_)",
       "events": [
         {
@@ -4094,6 +4270,78 @@
         {
           "description": "Camera4 Viewport: Right (0 to 1)",
           "name": "Right4",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Linearly interpolate 3D Camera",
+      "functionType": "Action",
+      "group": "3D Camera",
+      "name": "LerpCamera",
+      "sentence": "Linearly Interpolate 3D Camera (Camera ID: _PARAM1_, Target ID: _PARAM2_, Position: _PARAM3_, Rotation: _PARAM4_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const Camera = gdjs.__WithThreeJS.get(\"GetCamera\")(Id);",
+            "const TargetId = eventsFunctionContext.getArgument(\"TargetId\");",
+            "const FactorP = eventsFunctionContext.getArgument(\"FactorP\");",
+            "const FactorR = eventsFunctionContext.getArgument(\"FactorR\");",
+            "//",
+            "const Obj = Scene.getObjectByName(TargetId);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + TargetId);",
+            "    return;",
+            "}",
+            "//",
+            "if (FactorP) {",
+            "    const WPos = new THREE.Vector3();",
+            "    Obj.getWorldPosition(WPos);",
+            "    Camera.position.lerp(WPos, FactorP);",
+            "}",
+            "if (FactorR) {",
+            "    const WQua = new THREE.Quaternion();",
+            "    Obj.getWorldQuaternion(WQua);",
+            "    Camera.quaternion.slerp(WQua, FactorR);",
+            "}",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "3D Camera ID (1 to 4)",
+          "name": "Id",
+          "type": "expression"
+        },
+        {
+          "description": "Target 3D Object ID",
+          "name": "TargetId",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "Position interpolation factor (0 to 1)",
+          "longDescription": "Disable with 0",
+          "name": "FactorP",
+          "type": "expression"
+        },
+        {
+          "description": "Rotation interpolation factor (0 to 1)",
+          "longDescription": "Disable with 0",
+          "name": "FactorR",
           "type": "expression"
         }
       ],
@@ -5197,6 +5445,7 @@
       "functionType": "Action",
       "group": "3D Object",
       "name": "Correct3DObjectRotationWithinLimits",
+      "private": true,
       "sentence": "⚠️ Correct 3D Object Rotation Within Limits (ID: _PARAM1_, Axis: _PARAM2_, Limit: _PARAM3_ to _PARAM4_)",
       "events": [
         {
@@ -5790,6 +6039,7 @@
       "functionType": "Action",
       "group": "3D Object",
       "name": "ResolveBoundingBoxCollision",
+      "private": true,
       "sentence": "⚠️ Resolve Bounding Box Collision (ID: _PARAM1_, Unmoved: _PARAM2_)",
       "events": [
         {
@@ -6453,6 +6703,82 @@
           "description": "Value",
           "name": "Value",
           "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Linearly interpolate 3D Object",
+      "functionType": "Action",
+      "group": "3D Object",
+      "name": "Lerp3DObject",
+      "sentence": "Linearly Interpolate 3D Object (ID: _PARAM1_, Target ID: _PARAM2_, Position: _PARAM3_, Rotation: _PARAM4_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const TargetId = eventsFunctionContext.getArgument(\"TargetId\");",
+            "const FactorP = eventsFunctionContext.getArgument(\"FactorP\");",
+            "const FactorR = eventsFunctionContext.getArgument(\"FactorR\");",
+            "//",
+            "const Obj = Scene.getObjectByName(Id);",
+            "const TargetObj = Scene.getObjectByName(TargetId);",
+            "if (!Obj || !TargetObj) {",
+            "    console.warn(\"3D Object not found: \" + Id + \" or \" + TargetId);",
+            "    return;",
+            "}",
+            "//",
+            "const Parent = Obj.parent;",
+            "Scene.attach(Obj);",
+            "if (FactorP) {",
+            "    const WPos = new THREE.Vector3();",
+            "    TargetObj.getWorldPosition(WPos);",
+            "    Obj.position.lerp(WPos, FactorP);",
+            "}",
+            "if (FactorR) {",
+            "    const WQua = new THREE.Quaternion();",
+            "    TargetObj.getWorldQuaternion(WQua);",
+            "    Obj.quaternion.slerp(WQua, FactorR);",
+            "}",
+            "Parent.attach(Obj);",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "Target 3D Object ID",
+          "name": "TargetId",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "Position interpolation factor (0 to 1)",
+          "longDescription": "Disable with 0",
+          "name": "FactorP",
+          "type": "expression"
+        },
+        {
+          "description": "Rotation interpolation factor (0 to 1)",
+          "longDescription": "Disable with 0",
+          "name": "FactorR",
+          "type": "expression"
         }
       ],
       "objectGroups": []
@@ -7563,12 +7889,12 @@
     },
     {
       "description": "Check if all 3D animations are stopped.",
-      "fullName": "Check All 3D Animations Are Stopped",
+      "fullName": "Check All 3D Animations Are Stopped (Deprecated)",
       "functionType": "Condition",
       "group": "3D Object",
       "name": "CheckAll3DAnimationsAreStopped",
       "private": true,
-      "sentence": "Check All 3D Animations Are Stopped (ID: _PARAM1_)",
+      "sentence": "⚠️ Check All 3D Animations Are Stopped (ID: _PARAM1_)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
