@@ -486,7 +486,7 @@ const extensionsAllowedProperties = {
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: ['getOwnPropertySymbols'],
-    }
+    },
   },
 };
 
