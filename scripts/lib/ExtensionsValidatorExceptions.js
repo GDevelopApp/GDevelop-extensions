@@ -485,7 +485,10 @@ const extensionsAllowedProperties = {
       gdjsAllowedProperties: ['__SupabaseSaveState'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: ['getOwnPropertySymbols', 'getPrototypeOf'],
+      javaScriptObjectAllowedProperties: [
+        'getOwnPropertySymbols',
+        'getPrototypeOf',
+      ],
     },
   },
 };
