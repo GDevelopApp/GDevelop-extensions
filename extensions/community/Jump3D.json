@@ -479,6 +479,45 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Jump3D::Jump3D::SetPropertyPreviousJumpSpeed"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "CurrentJumpSpeed"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Jump3D::Jump3D::SetPropertyPreviousFallSpeed"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "CurrentFallSpeed"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Jump3D::Jump3D::SetPropertyPreviousState"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "State"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
                   "type": {
@@ -503,23 +542,6 @@
                   "source": "",
                   "type": "BuiltinCommonInstructions::Group",
                   "events": [
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [],
-                      "actions": [
-                        {
-                          "type": {
-                            "value": "Jump3D::Jump3D::SetPropertyPreviousJumpSpeed"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Behavior",
-                            "=",
-                            "CurrentJumpSpeed"
-                          ]
-                        }
-                      ]
-                    },
                     {
                       "type": "BuiltinCommonInstructions::Standard",
                       "conditions": [
@@ -607,17 +629,6 @@
                       "type": "BuiltinCommonInstructions::Standard",
                       "conditions": [],
                       "actions": [
-                        {
-                          "type": {
-                            "value": "Jump3D::Jump3D::SetPropertyPreviousFallSpeed"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Behavior",
-                            "=",
-                            "CurrentFallSpeed"
-                          ]
-                        },
                         {
                           "type": {
                             "value": "Jump3D::Jump3D::SetPropertyCurrentFallSpeed"
@@ -1025,7 +1036,7 @@
                       "parameters": [
                         "Object",
                         "<",
-                        "Jump3D::BottomZ(Platform) + Object.Behavior::CurrentVerticalSpeed() * TimeDelta()",
+                        "Jump3D::BottomZ(Platform) + Object.Behavior::VerticalSpeed() * TimeDelta()",
                         "Object",
                         ""
                       ]
@@ -1034,7 +1045,7 @@
                   "actions": [
                     {
                       "type": {
-                        "value": "Jump3D::Jump3D::Fall"
+                        "value": "Jump3D::Jump3D::AbortJump"
                       },
                       "parameters": [
                         "Object",
@@ -1079,7 +1090,7 @@
                       "parameters": [
                         "Object",
                         ">",
-                        "Jump3D::TopZ(Platform) + Object.Behavior::CurrentVerticalSpeed() * TimeDelta()",
+                        "Jump3D::TopZ(Platform) + Object.Behavior::VerticalSpeed() * TimeDelta()",
                         "Object",
                         ""
                       ]
@@ -1328,6 +1339,47 @@
                     "=",
                     "0"
                   ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Jump3D::Jump3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Abort the current jump and stop the object vertically. This action doesn't have any effect when the character is not jumping.",
+          "fullName": "Abort jump",
+          "functionType": "Action",
+          "group": "3D jump state",
+          "name": "AbortJump",
+          "sentence": "Abort the current jump of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Jump3D::Jump3D::SetPropertyCurrentJumpSpeed"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "0"
+                  ]
                 },
                 {
                   "type": {
@@ -1556,11 +1608,23 @@
           "sentence": "_PARAM0_ is on floor",
           "events": [
             {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Return the state from the previous frame because the actual state may change during the current frame according to collision."
+            },
+            {
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
                   "type": {
-                    "value": "Jump3D::Jump3D::PropertyState"
+                    "value": "Jump3D::Jump3D::PropertyPreviousState"
                   },
                   "parameters": [
                     "Object",
@@ -1606,6 +1670,18 @@
           "sentence": "the current jump speed",
           "events": [
             {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Return the speed from the previous frame because the actual speed may change during the current frame according to collision."
+            },
+            {
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [],
               "actions": [
@@ -1614,7 +1690,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "CurrentJumpSpeed"
+                    "PreviousJumpSpeed"
                   ]
                 }
               ]
@@ -1699,6 +1775,18 @@
           "sentence": "the current falling speed",
           "events": [
             {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Return the speed from the previous frame because the actual speed may change during the current frame according to collision."
+            },
+            {
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [],
               "actions": [
@@ -1707,7 +1795,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "CurrentFallSpeed"
+                    "PreviousFallSpeed"
                   ]
                 }
               ]
@@ -1790,6 +1878,59 @@
           "group": "3D jump state",
           "name": "CurrentVerticalSpeed",
           "sentence": "the current vertical speed",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Return the speed from the previous frame because the actual speed may change during the current frame according to collision."
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PreviousJumpSpeed - PreviousFallSpeed"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Jump3D::Jump3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the current speed of the object on Z axis. Its value is negative when the object falls.",
+          "fullName": "Actual current vertical speed",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D jump state",
+          "name": "VerticalSpeed",
+          "sentence": "the actual current vertical speed",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -2351,6 +2492,16 @@
           "extraInformation": [],
           "hidden": false,
           "name": "ShouldStopAtZero"
+        },
+        {
+          "value": "Idle",
+          "type": "String",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "PreviousState"
         }
       ],
       "sharedPropertyDescriptors": []
