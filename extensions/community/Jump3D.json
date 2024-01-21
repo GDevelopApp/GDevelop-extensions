@@ -25,25 +25,25 @@
     {
       "description": "the top of the object on Z axis",
       "fullName": "Top on Z axis",
-      "functionType": "Expression",
+      "functionType": "ExpressionAndCondition",
       "group": "Position",
       "name": "TopZ",
       "private": true,
       "sentence": "The top on Z axis of _PARAM1_",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": [
-            {
-              "type": {
-                "value": "SetReturnNumber"
-              },
-              "parameters": [
-                "Object.Object3D::Z() + Object.Object3D::Depth()"
-              ]
-            }
-          ]
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (objects.length === 0) {",
+            "    return;",
+            "}",
+            "const object = objects[0];",
+            "eventsFunctionContext.returnValue = object.getDrawableZ ? object.getDrawableZ() + object.getDepth() : 0;",
+            ""
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": false
         }
       ],
       "expressionType": {
@@ -53,7 +53,43 @@
         {
           "description": "Object",
           "name": "Object",
-          "supplementaryInformation": "Scene3D::Cube3DObject",
+          "type": "objectList"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "ActionWithOperator",
+      "getterName": "TopZ",
+      "name": "SetTopZ",
+      "private": true,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (objects.length === 0) {",
+            "    return;",
+            "}",
+            "const object = objects[0];",
+            "if (!object.getDrawableZ) {",
+            "    return;",
+            "}",
+            "const newTop = eventsFunctionContext.getArgument(\"Value\");",
+            "const oldTop = object.getDrawableZ() + object.getDepth();",
+            "object.setZ(object.getZ() - oldTop + newTop);",
+            ""
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object",
+          "name": "Object",
           "type": "objectList"
         }
       ],
@@ -62,25 +98,25 @@
     {
       "description": "the bottom of the object on Z axis",
       "fullName": "Bottom on Z axis",
-      "functionType": "Expression",
+      "functionType": "ExpressionAndCondition",
       "group": "Position",
       "name": "BottomZ",
       "private": true,
       "sentence": "The bottom on Z axis of _PARAM1_",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": [
-            {
-              "type": {
-                "value": "SetReturnNumber"
-              },
-              "parameters": [
-                "Object.Object3D::Z()"
-              ]
-            }
-          ]
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (objects.length === 0) {",
+            "    return;",
+            "}",
+            "const object = objects[0];",
+            "eventsFunctionContext.returnValue = object.getDrawableZ ? object.getDrawableZ() : 0;",
+            ""
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": false
         }
       ],
       "expressionType": {
@@ -90,7 +126,43 @@
         {
           "description": "Object",
           "name": "Object",
-          "supplementaryInformation": "Scene3D::Cube3DObject",
+          "type": "objectList"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "ActionWithOperator",
+      "getterName": "BottomZ",
+      "name": "SetBottomZ",
+      "private": true,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (objects.length === 0) {",
+            "    return;",
+            "}",
+            "const object = objects[0];",
+            "if (!object.getDrawableZ) {",
+            "    return;",
+            "}",
+            "const newBottom = eventsFunctionContext.getArgument(\"Value\");",
+            "const oldBottom = object.getDrawableZ();",
+            "object.setZ(object.getZ() - oldBottom + newBottom);",
+            ""
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object",
+          "name": "Object",
           "type": "objectList"
         }
       ],
@@ -103,7 +175,7 @@
       "group": "Collision",
       "name": "IsWithinZ",
       "private": true,
-      "sentence": "_PARAM1_ overlap the range from _PARAM2_ to _PARAM3_",
+      "sentence": "_PARAM1_ overlap the range from _PARAM3_ to _PARAM4_",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -140,8 +212,13 @@
         {
           "description": "Object",
           "name": "Object",
-          "supplementaryInformation": "Scene3D::Cube3DObject",
           "type": "objectList"
+        },
+        {
+          "description": "3D capability",
+          "name": "Object3D",
+          "supplementaryInformation": "Scene3D::Base3DBehavior",
+          "type": "behavior"
         },
         {
           "description": "Bottom Z",
@@ -634,13 +711,14 @@
                     },
                     {
                       "type": {
-                        "value": "Scene3D::Base3DBehavior::Z"
+                        "value": "Jump3D::BottomZ"
                       },
                       "parameters": [
                         "Object",
-                        "Object3D",
                         "<",
-                        "0"
+                        "0",
+                        "Object",
+                        ""
                       ]
                     }
                   ],
@@ -657,13 +735,14 @@
                     },
                     {
                       "type": {
-                        "value": "Scene3D::Base3DBehavior::SetZ"
+                        "value": "Jump3D::SetBottomZ"
                       },
                       "parameters": [
                         "Object",
-                        "Object3D",
                         "=",
-                        "0"
+                        "0",
+                        "Object",
+                        ""
                       ]
                     }
                   ]
@@ -941,24 +1020,80 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "Scene3D::Base3DBehavior::Z"
+                        "value": "Jump3D::TopZ"
                       },
                       "parameters": [
                         "Object",
-                        "Object3D",
-                        "<",
-                        "Jump3D::TopZ(Platform)"
+                        ">",
+                        "Jump3D::BottomZ(Platform)",
+                        "Object",
+                        ""
                       ]
                     },
                     {
                       "type": {
-                        "value": "Scene3D::Base3DBehavior::Z"
+                        "value": "Jump3D::TopZ"
                       },
                       "parameters": [
                         "Object",
-                        "Object3D",
+                        "<",
+                        "Jump3D::BottomZ(Platform) + Object.Behavior::CurrentVerticalSpeed() * TimeDelta()",
+                        "Object",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "Jump3D::Jump3D::Fall"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "Jump3D::SetTopZ"
+                      },
+                      "parameters": [
+                        "Object",
+                        "=",
+                        "Jump3D::BottomZ(Platform)",
+                        "Object",
+                        ""
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::ForEach",
+                  "object": "Platform",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "Jump3D::BottomZ"
+                      },
+                      "parameters": [
+                        "Object",
+                        "<",
+                        "Jump3D::TopZ(Platform)",
+                        "Object",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "Jump3D::BottomZ"
+                      },
+                      "parameters": [
+                        "Object",
                         ">",
-                        "Jump3D::TopZ(Platform) + Object.Behavior::CurrentVerticalSpeed() * TimeDelta()"
+                        "Jump3D::TopZ(Platform) + Object.Behavior::CurrentVerticalSpeed() * TimeDelta()",
+                        "Object",
+                        ""
                       ]
                     }
                   ],
@@ -975,13 +1110,14 @@
                     },
                     {
                       "type": {
-                        "value": "Scene3D::Base3DBehavior::SetZ"
+                        "value": "Jump3D::SetBottomZ"
                       },
                       "parameters": [
                         "Object",
-                        "Object3D",
                         "=",
-                        "Jump3D::TopZ(Platform)"
+                        "Jump3D::TopZ(Platform)",
+                        "Object",
+                        ""
                       ]
                     }
                   ]
@@ -1010,6 +1146,7 @@
                   "parameters": [
                     "",
                     "Platform",
+                    "Object3D",
                     "Jump3D::BottomZ(Object)",
                     "Jump3D::TopZ(Object)",
                     ""
@@ -1045,8 +1182,13 @@
             {
               "description": "Platform",
               "name": "Platform",
-              "supplementaryInformation": "Scene3D::Cube3DObject",
               "type": "objectList"
+            },
+            {
+              "description": "3D capability",
+              "name": "Object3D",
+              "supplementaryInformation": "Scene3D::Base3DBehavior",
+              "type": "behavior"
             }
           ],
           "objectGroups": []
