@@ -241,6 +241,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Jump3D: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['object'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     LinkTools: {
       gdjsAllowedProperties: ['LinksManager'],
       gdjsEvtToolsAllowedProperties: ['object'],
