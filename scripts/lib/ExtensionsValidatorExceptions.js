@@ -235,12 +235,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
-	InkJS: {
+    InkJS: {
       gdjsAllowedProperties: ['_InkJS', 'GDStory'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
-	},
+    },
     JointConnector: {
       gdjsAllowedProperties: ['LinksManager', 'Physics2RuntimeBehavior'],
       gdjsEvtToolsAllowedProperties: [],
