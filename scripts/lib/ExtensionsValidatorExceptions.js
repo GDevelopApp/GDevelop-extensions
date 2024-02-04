@@ -177,6 +177,17 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Collision3D: {
+      gdjsAllowedProperties: [
+        '_collision3DExtension',
+        'ObjectList',
+        'AABB',
+        'Polygon',
+      ],
+      gdjsEvtToolsAllowedProperties: ['object'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     Compressor: {
       gdjsAllowedProperties: ['_pakoTools'],
       gdjsEvtToolsAllowedProperties: [],
