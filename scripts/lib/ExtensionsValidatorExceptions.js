@@ -236,7 +236,7 @@ const extensionsAllowedProperties = {
       javaScriptObjectAllowedProperties: [],
     },
 	InkJS: {
-		gdjsAllowedProperties: ['_InkJS', 'GDStory'],
+      gdjsAllowedProperties: ['_InkJS', 'GDStory'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
