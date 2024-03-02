@@ -673,8 +673,8 @@
             "}",
             "",
             "gdjs._shakeObjectExtension = {",
-            "    noiseManager = new NoiseManager(),",
-            "}",
+            "    noiseManager: new NoiseManager(),",
+            "};",
             ""
           ],
           "parameterObjects": "",
@@ -1381,17 +1381,6 @@
                     "+",
                     "TimeDelta()"
                   ]
-                },
-                {
-                  "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyNoiseTime"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "+",
-                    "TimeDelta() * Frequency"
-                  ]
                 }
               ]
             },
@@ -1412,104 +1401,28 @@
               "actions": [
                 {
                   "type": {
+                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyNoiseTime"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "+",
+                    "TimeDelta() * Frequency"
+                  ]
+                },
+                {
+                  "type": {
                     "value": "ShakeObject3D::ShakeModel3D::SetSharedPropertyEasingFactor"
                   },
                   "parameters": [
                     "Object",
                     "Behavior",
                     "=",
-                    "1"
+                    "min(Object.Behavior::StartEasingFactor(), Object.Behavior::StopEasingFactor())"
                   ]
                 }
               ],
               "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyTime"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "<",
-                        "StartEasingDuration"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyTime"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "<",
-                        "Duration - StopEasingDuration"
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::SetSharedPropertyEasingFactor"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "=",
-                        "clamp(0, 1, Time / StartEasingDuration)"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyTime"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        ">",
-                        "Duration - StopEasingDuration"
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::SetSharedPropertyEasingFactor"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "=",
-                        "clamp(0, 1, (Duration - Time) / StopEasingDuration)"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "disabled": true,
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "ShakeObject3D::SetFrequency"
-                      },
-                      "parameters": [
-                        "",
-                        "Frequency",
-                        "\"\"",
-                        ""
-                      ]
-                    }
-                  ]
-                },
                 {
                   "type": "BuiltinCommonInstructions::Comment",
                   "color": {
@@ -1520,7 +1433,7 @@
                     "textG": 0,
                     "textR": 0
                   },
-                  "comment": "Shake the layer camera.\nSave the camera displacement to revert it in onScenePostEvents."
+                  "comment": "Shake the object.\nSave the object displacement to revert it in onScenePostEvents."
                 },
                 {
                   "type": "BuiltinCommonInstructions::Standard",
@@ -2314,6 +2227,17 @@
                     "<",
                     "Duration"
                   ]
+                },
+                {
+                  "type": {
+                    "value": "ShakeObject3D::ShakeModel3D::PropertyTime"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ">",
+                    "0"
+                  ]
                 }
               ],
               "actions": [
@@ -2332,6 +2256,67 @@
             {
               "description": "Object",
               "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "ShakeObject3D::ShakeModel3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if the object is stopping to shake.",
+          "fullName": "Is stopping to shake",
+          "functionType": "Condition",
+          "name": "IsStopping",
+          "sentence": "_PARAM0_ is stopping to shake",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "ShakeObject3D::ShakeModel3D::IsShaking"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ShakeObject3D::ShakeModel3D::StopEasingFactor"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "<",
+                    "1",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
               "type": "object"
             },
             {
@@ -2413,6 +2398,210 @@
             {
               "description": "Object",
               "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "ShakeObject3D::ShakeModel3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return the easing factor according to start properties.",
+          "fullName": "Start easing factor",
+          "functionType": "Expression",
+          "name": "StartEasingFactor",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "ShakeObject3D::ShakeModel3D::PropertyStartEasingDuration"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "<=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "ShakeObject3D::ShakeModel3D::PropertyStartEasingDuration"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ">",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "clamp(Time / StartEasingDuration, 0, 1)"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "ShakeObject3D::ShakeModel3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return the easing factor according to stop properties.",
+          "fullName": "Stop easing factor",
+          "functionType": "ExpressionAndCondition",
+          "name": "StopEasingFactor",
+          "private": true,
+          "sentence": "stop easing factor",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "ShakeObject3D::ShakeModel3D::PropertyStopEasingDuration"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "<=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "ShakeObject3D::ShakeModel3D::PropertyTime"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "<",
+                        "Duration"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetReturnNumber"
+                      },
+                      "parameters": [
+                        "1"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "ShakeObject3D::ShakeModel3D::PropertyTime"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ">=",
+                        "Duration"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetReturnNumber"
+                      },
+                      "parameters": [
+                        "0"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "ShakeObject3D::ShakeModel3D::PropertyStopEasingDuration"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ">",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "clamp((Duration - Time) / StopEasingDuration, 0, 1)"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Scene3D::Model3DObject",
               "type": "object"
             },
             {
