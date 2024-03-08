@@ -1,0 +1,188 @@
+{
+  "author": "",
+  "category": "General",
+  "extensionNamespace": "",
+  "fullName": "Offline Time",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWNsb2NrLXRpbWUtZWlnaHQtb3V0bGluZSIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xMiAyMEMxNi40IDIwIDIwIDE2LjQgMjAgMTJTMTYuNCA0IDEyIDQgNCA3LjYgNCAxMiA3LjYgMjAgMTIgMjBNMTIgMkMxNy41IDIgMjIgNi41IDIyIDEyUzE3LjUgMjIgMTIgMjJDNi41IDIyIDIgMTcuNSAyIDEyQzIgNi41IDYuNSAyIDEyIDJNMTIuNSAxMi44TDcuNyAxNS42TDcgMTQuMkwxMSAxMS45VjdIMTIuNVYxMi44WiIgLz48L3N2Zz4=",
+  "name": "OfflineTime",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/8502706f2dfb1674309af84b6d69a658189e2a15d2e80e3375cf59a9d0a3770b_clock-time-eight-outline.svg",
+  "shortDescription": "Calculate the game offline time.",
+  "version": "1.0.0",
+  "description": [
+    "Returns the time the time the game was offline.",
+    "",
+    "Note:",
+    "- Use the \"Save offline time\" action at the end of the game to save the time.",
+    "- it's best to clear the previous offline time with the \"Delete offline time\" action.",
+    "",
+    "You need the extension to be used in the game, either by having at least one action, condition or expression used, or a behavior of the extension added to an object. Otherwise, the extension won't be included in the game."
+  ],
+  "tags": [
+    "offline",
+    "time",
+    "clock"
+  ],
+  "authorIds": [
+    "jy7FXnGX0ZZcWfrAI9YuQaeIphi1"
+  ],
+  "dependencies": [],
+  "eventsFunctions": [
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onFirstSceneLoaded",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "var date = new Date();",
+            "var dateString = date.toISOString().slice(0, 19);",
+            "var timeIn = runtimeScene.getVariables().get(\"__timeIn\")",
+            "",
+            "if (gdjs.evtTools.storage.elementExistsInJSONFile(\"__game\", \"__deviceTime\")) {",
+            "    gdjs.evtTools.storage.readStringFromJSONFile(\"__game\", \"__deviceTime\", null, timeIn)",
+            "",
+            "    function calculateTimeDifference(startTime, endTime) {",
+            "        var startDate = new Date(startTime);",
+            "        var endDate = new Date(endTime);",
+            "",
+            "        var difference = endDate.getTime() - startDate.getTime();",
+            "",
+            "        var days = Math.floor(difference / (1000 * 60 * 60 * 24));",
+            "        var hours = Math.floor(difference / 3600000);",
+            "        var minutes = Math.floor((difference % 3600000) / 60000);",
+            "        var seconds = Math.floor((difference % 60000) / 1000);",
+            "",
+            "        return {",
+            "            days: days,",
+            "            hours: hours,",
+            "            minutes: minutes,",
+            "            seconds: seconds,",
+            "            miliseconds: difference",
+            "        };",
+            "    }",
+            "",
+            "    var timeDifference = calculateTimeDifference(timeIn._str, dateString)",
+            "",
+            "    gdjs.timeDifference = timeDifference",
+            "} else {",
+            "    return",
+            "}",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Compare the current time with the previously saved time.",
+      "fullName": "Read Offline Time",
+      "functionType": "Expression",
+      "name": "DeviceTimeIn",
+      "sentence": "Read the ",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "var time = eventsFunctionContext.getArgument(\"time\")",
+            "var timeDifference = gdjs.timeDifference",
+            "",
+            "if (time == \"hours\") {",
+            "    eventsFunctionContext.returnValue = timeDifference.hours",
+            "} else if (time == \"minutes\") {",
+            "    eventsFunctionContext.returnValue = timeDifference.minutes",
+            "} else if (time == \"seconds\") {",
+            "    eventsFunctionContext.returnValue = timeDifference.seconds",
+            "} else if (time == \"days\") {",
+            "    eventsFunctionContext.returnValue = timeDifference.days",
+            "} else if (time == \"miliseconds\") {",
+            "    eventsFunctionContext.returnValue = timeDifference.miliseconds",
+            "}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": []
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "\"days\", \"hours\", \"minutes\", \"seconds\" ",
+          "name": "time",
+          "supplementaryInformation": "[\"hours\",\"minutes\",\"seconds\",\"days\",\"miliseconds\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Saves the currnt device time to be compared when next the game is opened,  Use this at the end of the game.",
+      "fullName": "Save offline time",
+      "functionType": "Action",
+      "name": "DeviceTimeOut",
+      "sentence": "Save offline time",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "var date = new Date();",
+            "var dateString = date.toISOString().slice(0, 19);",
+            "",
+            "gdjs.evtTools.storage.writeStringInJSONFile(\"__game\", \"__deviceTime\", dateString)"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": []
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Deletes the offline time.",
+      "fullName": "Delete offline time",
+      "functionType": "Action",
+      "name": "ClearTime",
+      "sentence": "Delete offline time",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (gdjs.evtTools.storage.elementExistsInJSONFile(\"__game\", \"__deviceTime\")) {",
+            "    gdjs.evtTools.storage.clearJSONFile(\"__game\")",
+            "}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
+}
