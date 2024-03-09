@@ -177,6 +177,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    CameraShake: {
+      gdjsAllowedProperties: ['_cameraShake3DExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     Collision3D: {
       gdjsAllowedProperties: [
         '_collision3DExtension',
