@@ -180,7 +180,7 @@ const extensionsAllowedProperties = {
     CameraShake3D: {
       gdjsAllowedProperties: ['_cameraShake3DExtension'],
       gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getAllLayerNames'],
       javaScriptObjectAllowedProperties: [],
     },
     Collision3D: {
