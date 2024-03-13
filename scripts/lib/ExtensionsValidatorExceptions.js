@@ -330,6 +330,8 @@ const extensionsAllowedProperties = {
         '__particleEmmiter3DExtension',
         'CustomRuntimeObject',
         'CustomRuntimeObjectInstanceContainer',
+        'CustomRuntimeObject3DRenderer',
+        'CustomRuntimeObject3D',
       ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: ['__particleEmmiter3DExtension'],
