@@ -1,0 +1,164 @@
+{
+  "author": "",
+  "category": "",
+  "extensionNamespace": "",
+  "fullName": "Convert 3D position to screen position",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyMy4wLjMsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iSWNvbnMiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4Ig0KCSB2aWV3Qm94PSIwIDAgMzIgMzIiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDMyIDMyOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDpub25lO3N0cm9rZTojMDAwMDAwO3N0cm9rZS13aWR0aDoyO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDt9DQo8L3N0eWxlPg0KPHBhdGggY2xhc3M9InN0MCIgZD0iTTI0LDEwLjljMCw3LTgsMTMuMS04LDEzLjFzLTgtNi4xLTgtMTMuMUM4LDYuNSwxMS42LDMsMTYsM1MyNCw2LjUsMjQsMTAuOXoiLz4NCjxjaXJjbGUgY2xhc3M9InN0MCIgY3g9IjE2IiBjeT0iMTEiIHI9IjIiLz4NCjxwb2x5bGluZSBjbGFzcz0ic3QwIiBwb2ludHM9IjE5LjIsMjEgMjUsMjEgMjksMjkgMywyOSA3LDIxIDEyLjgsMjEgIi8+DQo8L3N2Zz4NCg==",
+  "name": "Convert3dToScreenPosition",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/Line Hero Pack/Master/SVG/Maps and Navigation/5f308b28df69a05ce442f41f469dbeeae407726098ae481cbc58efb4f3514fe6_Maps and Navigation_location_pin_map.svg",
+  "shortDescription": "This extension provides functionality to convert 3D position to screen position.",
+  "version": "0.1.1",
+  "description": [
+    "This extension provides functionality to convert 3D position to screen position.  ",
+    "",
+    "The following actions are added to the object:",
+    "- \"Overlap\" action: Overlaps objects with a 3D object."
+  ],
+  "tags": [
+    "3D"
+  ],
+  "authorIds": [
+    "Zu55H5hcb9YmZTltIVOTAFDJQyB2"
+  ],
+  "dependencies": [],
+  "eventsFunctions": [
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onSceneLoaded",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (gdjs.__Convert3dToScreenPosition) {",
+            "    return;",
+            "}",
+            "if (!runtimeScene.getLayer(\"\").getRenderer().getThreeCamera()) {",
+            "    return;",
+            "}",
+            "gdjs.__Convert3dToScreenPosition = new Map();",
+            "gdjs.__Convert3dToScreenPosition.set(\"convert\", (Layer, X, Y, Z)=>{",
+            "    const Camera3D = runtimeScene.getLayer(Layer).getRenderer().getThreeCamera();",
+            "    const Position3D = new THREE.Vector3(X, -Y, Z);",
+            "    const Project = Position3D.clone().project(Camera3D);",
+            "    const GameResolutionWidth = runtimeScene.getGame().getGameResolutionWidth();",
+            "    const GameResolutionHeight = runtimeScene.getGame().getGameResolutionHeight();",
+            "    const PointX = (GameResolutionWidth / 2) * (Project.x + 1.0);",
+            "    const PointY = (GameResolutionHeight / 2) * ((Project.y * -1) + 1.0);",
+            "    //",
+            "    const Frustum = new THREE.Frustum();",
+            "    const CloneCamera = Camera3D.clone();",
+            "    CloneCamera.rotateZ(gdjs.toRad(180));",
+            "    Frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(CloneCamera.projectionMatrix, CloneCamera.matrixWorldInverse));",
+            "    const Within = Frustum.containsPoint(Position3D);",
+            "    return [PointX, PointY, Within];",
+            "});"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Overlaps objects with a 3D object.\n⚠️ For objects to overlap correctly, they must be on a different layer than the 3D object.",
+      "fullName": "Overlap",
+      "functionType": "Action",
+      "group": "Position",
+      "name": "Overlap",
+      "sentence": "Overlap _PARAM1_ (Hide: _PARAM2_) and _PARAM3_ (Offset: _PARAM5_, _PARAM6_, _PARAM7_) objects.",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__Convert3dToScreenPosition) {",
+            "    return;",
+            "}",
+            "const Object2Ds = eventsFunctionContext.getObjects(\"Object2D\");",
+            "const Hide = eventsFunctionContext.getArgument(\"Hide\");",
+            "const Object3D = eventsFunctionContext.getObjects(\"Object3D\")[0];",
+            "const OffsetX = eventsFunctionContext.getArgument(\"OffsetX\");",
+            "const OffsetY = eventsFunctionContext.getArgument(\"OffsetY\");",
+            "const OffsetZ = eventsFunctionContext.getArgument(\"OffsetZ\");",
+            "const Offset3D = new THREE.Vector3(OffsetX, OffsetY, OffsetZ);",
+            "if (!Object3D) {",
+            "    return;",
+            "}",
+            "const Layer3D = Object3D.layer;",
+            "const RendererObject3D = Object3D.get3DRendererObject();",
+            "if (!runtimeScene.getLayer(Layer3D).getRenderer().getThreeCamera()) {",
+            "    return;",
+            "}",
+            "//",
+            "let Position3D;",
+            "if (RendererObject3D) {",
+            "    // 3D",
+            "    Position3D = RendererObject3D.position.clone();",
+            "} else {",
+            "    // 2D",
+            "    Position3D = new THREE.Vector3(Object3D.getX(), Object3D.getY(), 0);",
+            "}",
+            "Position3D.add(Offset3D);",
+            "for (const Object2D of Object2Ds) {",
+            "    const Result = gdjs.__Convert3dToScreenPosition.get(\"convert\")(Layer3D, Position3D.x, Position3D.y, Position3D.z);",
+            "    Object2D.setPosition(Result[0], Result[1]);",
+            "    Object2D.hide(!Result[2]);",
+            "}",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "2D Object",
+          "name": "Object2D",
+          "type": "objectList"
+        },
+        {
+          "defaultValue": "yes",
+          "description": "Hide when behind the 3D camera",
+          "longDescription": "Hide 2D objects when 3D objects are behind the 3D camera.",
+          "name": "Hide",
+          "optional": true,
+          "type": "yesorno"
+        },
+        {
+          "description": "Target 3D Object",
+          "name": "Object3D",
+          "type": "objectList"
+        },
+        {
+          "description": "3D Capability",
+          "name": "Capability3D",
+          "supplementaryInformation": "Scene3D::Base3DBehavior",
+          "type": "behavior"
+        },
+        {
+          "description": "X Offset",
+          "name": "OffsetX",
+          "type": "expression"
+        },
+        {
+          "description": "Y Offset",
+          "name": "OffsetY",
+          "type": "expression"
+        },
+        {
+          "description": "Z Offset",
+          "name": "OffsetZ",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
+}
