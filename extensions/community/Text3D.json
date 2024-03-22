@@ -31,6 +31,25 @@
             "    return;",
             "}",
             "",
+            "class Text3DRenderer extends gdjs.CustomRuntimeObject3DRenderer {",
+            "    constructor(",
+            "      object,",
+            "      instanceContainer,",
+            "      parent",
+            "    ) {",
+            "        super(object, instanceContainer, parent);",
+            "    }",
+            "",
+            "    _updateThreeGroup() {",
+            "      this._object.setScaleX(1);",
+            "      this._object.setScaleY(1);",
+            "      this._object.setScaleZ(1);",
+            "",
+            "      super._updateThreeGroup();",
+            "    }",
+            "}",
+            "",
+            "",
             "// troika-THREE-text 0.49.0",
             "// https://github.com/protectwise/troika/tree/main/packages/troika-THREE-text",
             "",
@@ -6235,6 +6254,7 @@
             "  }",
             "",
             "gdjs.__text3DExtension = {",
+            "    Text3DRenderer,",
             "    Text",
             "};",
             ""
@@ -6277,6 +6297,78 @@
           "name": "Object",
           "supplementaryInformation": "TextObject::Text",
           "type": "objectList"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "The text font.",
+      "fullName": "Font",
+      "functionType": "StringExpression",
+      "name": "Font",
+      "private": true,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "/** @type {gdjs.TextRuntimeObject} */\r",
+            "const object = objects[0];\r",
+            "\r",
+            "eventsFunctionContext.returnValue = object._fontName;"
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "string"
+      },
+      "parameters": [
+        {
+          "description": "Object",
+          "name": "Object",
+          "supplementaryInformation": "TextObject::Text",
+          "type": "objectList"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Change the text font.",
+      "fullName": "Font",
+      "functionType": "Action",
+      "name": "SetFont",
+      "private": true,
+      "sentence": "Change the font of _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "/** @type {gdjs.TextRuntimeObject} */\r",
+            "const object = objects[0];\r",
+            "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+            "\r",
+            "object.setFontName(value);\r",
+            ""
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object",
+          "name": "Object",
+          "supplementaryInformation": "TextObject::Text",
+          "type": "objectList"
+        },
+        {
+          "description": "Font name",
+          "name": "Value",
+          "type": "string"
         }
       ],
       "objectGroups": []
@@ -6329,6 +6421,39 @@
             "const object = objects[0];\r",
             "\r",
             "eventsFunctionContext.returnValue = object.getOutlineThickness();"
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Object",
+          "name": "Object",
+          "supplementaryInformation": "TextObject::Text",
+          "type": "objectList"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Wrapping width",
+      "functionType": "Expression",
+      "name": "WrappingWidth",
+      "private": true,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "/** @type {gdjs.TextRuntimeObject} */\r",
+            "const object = objects[0];\r",
+            "\r",
+            "eventsFunctionContext.returnValue = object.getWrappingWidth();"
           ],
           "parameterObjects": "Object",
           "useStrict": true,
@@ -6412,19 +6537,37 @@
             {
               "type": "BuiltinCommonInstructions::JsCode",
               "inlineCode": [
-                "const Text = gdjs.__text3DExtension.Text;",
+                "const { Text, Text3DRenderer } = gdjs.__text3DExtension;",
                 "",
                 "/** @type {gdjs.CustomRuntimeObject3D} */",
                 "const object = objects[0];",
+                "/** @type {gdjs.TextRuntimeObject} */",
+                "const textObject = eventsFunctionContext.getObjects(\"Text\")[0];",
                 "",
+                "// Here runtimeScene is the gdjs.CustomRuntimeObjectInstanceContainer inside the custom object.",
+                "const gameScene = object.getRuntimeScene();",
                 "",
-                "const group = object.getRenderer()._threeGroup;",
+                "const superExtraInitializationFromInitialInstance = object.extraInitializationFromInitialInstance.bind(object);",
+                "object.extraInitializationFromInitialInstance = initialInstanceData => {",
+                "    superExtraInitializationFromInitialInstance(initialInstanceData);",
+                "    if (initialInstanceData.customSize) {",
+                "        textObject.setWrappingWidth(initialInstanceData.width);",
+                "        textObject.setWrapping(true);",
+                "        object.__text3DExtension.threeText.maxWidth = initialInstanceData.width;",
+                "    }",
+                "};",
+                "",
+                "// This is a hack that may break in future releases.",
+                "const layer = gameScene.getLayer(object.getLayer());",
+                "layer.getRenderer().remove3DRendererObject(object._renderer._threeGroup);",
+                "const text3DRenderer = new Text3DRenderer(object, object._instanceContainer, object.getInstanceContainer());",
+                "object._renderer = text3DRenderer;",
+                "layer.getRenderer().add3DRendererObject(text3DRenderer._threeGroup);",
                 "",
                 "const threeText = new Text()",
                 "object.__text3DExtension = { threeText };",
-                "group.add(threeText)",
-                "",
-                "threeText.scale.y = -1",
+                "text3DRenderer._threeGroup.add(threeText);",
+                "threeText.scale.y = -1;",
                 ""
               ],
               "parameterObjects": "Object",
@@ -6490,7 +6633,24 @@
               ],
               "parameterObjects": "Object",
               "useStrict": true,
-              "eventsSheetExpanded": true
+              "eventsSheetExpanded": false
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetRotationCenter"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Object.TextWidth() / 2",
+                    "Object.TextHeight() / 2",
+                    "0"
+                  ]
+                }
+              ]
             }
           ],
           "parameters": [
@@ -6609,6 +6769,17 @@
                 },
                 {
                   "type": {
+                    "value": "Text3D::Text3D::SetFont"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Object.Font()",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
                     "value": "Text3D::Text3D::SetColor"
                   },
                   "parameters": [
@@ -6648,6 +6819,17 @@
                     "Object",
                     "=",
                     "Object.OutlineColor()",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetWrappingWidth"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Object.WrappingWidth()",
                     ""
                   ]
                 }
@@ -6705,6 +6887,59 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Text3D::Text3D::IsWrapping"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetWrapping"
+                  },
+                  "parameters": [
+                    "Object",
+                    "",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::IsWrapping"
+                  },
+                  "parameters": [
+                    "Object",
+                    "="
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetWrapping"
+                  },
+                  "parameters": [
+                    "Object",
+                    "yes",
+                    ""
+                  ]
+                }
+              ]
             }
           ],
           "parameters": [
@@ -6712,6 +6947,76 @@
               "description": "Object",
               "name": "Object",
               "supplementaryInformation": "Text3D::Text3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Text width",
+          "functionType": "Expression",
+          "name": "TextWidth",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "/** @type {gdjs.CustomRuntimeObject3D} */",
+                "const object = objects[0];",
+                "",
+                "const boundingBox = object.__text3DExtension.threeText.geometry.boundingBox;",
+                "eventsFunctionContext.returnValue = boundingBox.max.x - boundingBox.min.x;",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Text width",
+          "functionType": "Expression",
+          "name": "TextHeight",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "/** @type {gdjs.CustomRuntimeObject3D} */",
+                "const object = objects[0];",
+                "",
+                "const boundingBox = object.__text3DExtension.threeText.geometry.boundingBox;",
+                "eventsFunctionContext.returnValue = boundingBox.max.y - boundingBox.min.y;",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
               "type": "object"
             }
           ],
@@ -6801,6 +7106,275 @@
           "objectGroups": []
         },
         {
+          "description": "Check if the word wrapping style of an object is set.",
+          "fullName": "Wrapping",
+          "functionType": "Condition",
+          "group": "Style",
+          "name": "IsWrapping",
+          "sentence": "_PARAM0_ word wrapping style is activated",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "TextObject::IsWrapping"
+                  },
+                  "parameters": [
+                    "Text"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Text3D::Text3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "De/activate word wrapping. Note that word wrapping is a graphical option, you can't get the number of lines displayed.",
+          "fullName": "Wrapping",
+          "functionType": "Action",
+          "group": "Style",
+          "name": "SetWrapping",
+          "sentence": "Activate wrapping style of _PARAM0_: _PARAM1_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"Value\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "TextObject::SetWrapping"
+                  },
+                  "parameters": [
+                    "Text",
+                    "no"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::UpdateWrappingWidth"
+                  },
+                  "parameters": [
+                    "Object",
+                    "0",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"Value\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "TextObject::SetWrapping"
+                  },
+                  "parameters": [
+                    "Text",
+                    "yes"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::UpdateWrappingWidth"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Object.WrappingWidth()",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Text3D::Text3D",
+              "type": "object"
+            },
+            {
+              "description": "Enable outline",
+              "name": "Value",
+              "type": "yesorno"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the word wrapping width of a Text object.",
+          "fullName": "Wrapping width",
+          "functionType": "ExpressionAndCondition",
+          "group": "Style",
+          "name": "WrappingWidth",
+          "sentence": "the wrapping width",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Text3D::WrappingWidth(Text)"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Text3D::Text3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "WrappingWidth",
+          "name": "SetWrappingWidth",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "TextObject::WrappingWidth"
+                  },
+                  "parameters": [
+                    "Text",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::IsWrapping"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::UpdateWrappingWidth"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Object.WrappingWidth()",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Text3D::Text3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Update wrapping width",
+          "functionType": "Action",
+          "getterName": "OutlineThickness",
+          "name": "UpdateWrappingWidth",
+          "private": true,
+          "sentence": "Update wrapping width of _PARAM0_ to _PARAM1_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "/** @type {gdjs.CustomRuntimeObject3D} */",
+                "const object = objects[0];",
+                "const value = eventsFunctionContext.getArgument(\"Value\");",
+                "",
+                "object.__text3DExtension.threeText.maxWidth = value || Number.POSITIVE_INFINITY;",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Text3D::Text3D",
+              "type": "object"
+            },
+            {
+              "description": "Value",
+              "name": "Value",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "the color of the text.",
           "fullName": "Color",
           "functionType": "ExpressionAndCondition",
@@ -6865,6 +7439,91 @@
                 "const value = eventsFunctionContext.getArgument(\"Value\");",
                 "",
                 "object.__text3DExtension.threeText.color = gdjs.rgbOrHexStringToNumber(value);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Text3D::Text3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the font of the text.",
+          "fullName": "Font",
+          "functionType": "ExpressionAndCondition",
+          "name": "Font",
+          "sentence": "the font",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnString"
+                  },
+                  "parameters": [
+                    "Text3D::Font(Text)"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "string"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Text3D::Text3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Font",
+          "name": "SetFont",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Text3D::SetFont"
+                  },
+                  "parameters": [
+                    "Text",
+                    "Text",
+                    "Value",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "/** @type {gdjs.CustomRuntimeObject3D} */",
+                "const object = objects[0];",
+                "const value = eventsFunctionContext.getArgument(\"Value\");",
+                "",
+                "object.__text3DExtension.threeText.font =",
+                "    runtimeScene.getGame().getFontManager().getFontFile(value);",
                 ""
               ],
               "parameterObjects": "Object",
@@ -7648,7 +8307,30 @@
           "objectGroups": []
         }
       ],
-      "propertyDescriptors": [],
+      "propertyDescriptors": [
+        {
+          "value": "Top",
+          "type": "String",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [
+            "Text"
+          ],
+          "hidden": true,
+          "name": "TextVerticalAnchorOrigin"
+        },
+        {
+          "value": "Top",
+          "type": "String",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "TextVerticalAnchorTarget"
+        }
+      ],
       "objects": [
         {
           "assetStoreId": "",
