@@ -6744,8 +6744,6 @@
                 "object.__text3DExtension = { threeText };",
                 "text3DRenderer._threeGroup.add(threeText);",
                 "threeText.scale.y = -1;",
-                "",
-                "text3DRenderer._isContainerDirty = true;",
                 ""
               ],
               "parameterObjects": "Object",
@@ -6797,6 +6795,16 @@
                     "Object.Text::Value()",
                     ""
                   ]
+                },
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::UpdateGeometry"
+                  },
+                  "parameters": [
+                    "Object",
+                    "",
+                    ""
+                  ]
                 }
               ]
             },
@@ -6806,10 +6814,11 @@
                 "/** @type {gdjs.CustomRuntimeObject3D} */",
                 "const object = objects[0];",
                 "",
-                "object.__text3DExtension.threeText.sync();",
-                "",
-                "// TODO Find why it doesn't update at creation.",
-                "object._renderer._isContainerDirty = true;"
+                "if (object.__text3DExtension.hasSync) {",
+                "    object.__text3DExtension.hasSync = false;",
+                "    object._renderer._isContainerDirty = true;",
+                "}",
+                ""
               ],
               "parameterObjects": "Object",
               "useStrict": true,
@@ -6852,16 +6861,81 @@
           "sentence": "Update text of _PARAM0_ to _PARAM1_",
           "events": [
             {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Text3D::Text3D::IsTextUpToDate"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Value",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetPropertyIsGeometryUpToDate"
+                  },
+                  "parameters": [
+                    "Object",
+                    "no"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::JsCode",
+                  "inlineCode": [
+                    "/** @type {gdjs.CustomRuntimeObject3D} */",
+                    "const object = objects[0];",
+                    "const value = eventsFunctionContext.getArgument(\"Value\");",
+                    "",
+                    "object.__text3DExtension.threeText.text = value;",
+                    "object._renderer._isContainerDirty = true;",
+                    ""
+                  ],
+                  "parameterObjects": "Object",
+                  "useStrict": true,
+                  "eventsSheetExpanded": true
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Text3D::Text3D",
+              "type": "object"
+            },
+            {
+              "description": "Value",
+              "name": "Value",
+              "type": "string"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Displayed text",
+          "functionType": "Condition",
+          "getterName": "OutlineThickness",
+          "name": "IsTextUpToDate",
+          "private": true,
+          "sentence": "_PARAM0_ display text _PARAM1_",
+          "events": [
+            {
               "type": "BuiltinCommonInstructions::JsCode",
               "inlineCode": [
                 "/** @type {gdjs.CustomRuntimeObject3D} */",
                 "const object = objects[0];",
                 "const value = eventsFunctionContext.getArgument(\"Value\");",
                 "",
-                "if (object.__text3DExtension.threeText.text !== value) {",
-                "    object.__text3DExtension.threeText.text = value;",
-                "    object._renderer._isContainerDirty = true;",
-                "}",
+                "eventsFunctionContext.returnValue = object.__text3DExtension.threeText.text === value;",
                 ""
               ],
               "parameterObjects": "Object",
@@ -6880,6 +6954,64 @@
               "description": "Value",
               "name": "Value",
               "type": "string"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Update geometry",
+          "functionType": "Action",
+          "getterName": "OutlineThickness",
+          "name": "UpdateGeometry",
+          "private": true,
+          "sentence": "Update geometry of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Text3D::Text3D::PropertyIsGeometryUpToDate"
+                  },
+                  "parameters": [
+                    "Object"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetPropertyIsGeometryUpToDate"
+                  },
+                  "parameters": [
+                    "Object",
+                    "yes"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "/** @type {gdjs.CustomRuntimeObject3D} */",
+                "const object = objects[0];",
+                "",
+                "object.__text3DExtension.threeText.sync(() => {",
+                "    object.__text3DExtension.hasSync = true;",
+                "});"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Text3D::Text3D",
+              "type": "object"
             }
           ],
           "objectGroups": []
@@ -7369,7 +7501,20 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Text3D::Text3D::FontSize"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Value",
+                    ""
+                  ]
+                }
+              ],
               "actions": [
                 {
                   "type": {
@@ -7379,6 +7524,15 @@
                     "Text",
                     "=",
                     "Value"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetPropertyIsGeometryUpToDate"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
                   ]
                 }
               ]
@@ -7588,7 +7742,20 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Text3D::Text3D::WrappingWidth"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Value",
+                    ""
+                  ]
+                }
+              ],
               "actions": [
                 {
                   "type": {
@@ -7647,6 +7814,34 @@
           "private": true,
           "sentence": "Update wrapping width of _PARAM0_ to _PARAM1_",
           "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Text3D::Text3D::WrappingWidth"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Value",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetPropertyIsGeometryUpToDate"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            },
             {
               "type": "BuiltinCommonInstructions::JsCode",
               "inlineCode": [
@@ -7805,7 +8000,20 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Text3D::Text3D::Font"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Value",
+                    ""
+                  ]
+                }
+              ],
               "actions": [
                 {
                   "type": {
@@ -7815,6 +8023,15 @@
                     "Text",
                     "Text",
                     "Value",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetPropertyIsGeometryUpToDate"
+                  },
+                  "parameters": [
+                    "Object",
                     ""
                   ]
                 }
@@ -7891,7 +8108,20 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Text3D::Text3D::LineSpacing"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Value",
+                    ""
+                  ]
+                }
+              ],
               "actions": [
                 {
                   "type": {
@@ -7901,6 +8131,15 @@
                     "Object",
                     "=",
                     "Value"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetPropertyIsGeometryUpToDate"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
                   ]
                 }
               ]
@@ -8170,6 +8409,34 @@
           "sentence": "Update outline thickness of _PARAM0_ to _PARAM1_",
           "events": [
             {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Text3D::Text3D::OutlineThickness"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Value",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetPropertyIsGeometryUpToDate"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
               "type": "BuiltinCommonInstructions::JsCode",
               "inlineCode": [
                 "/** @type {gdjs.CustomRuntimeObject3D} */",
@@ -8365,15 +8632,6 @@
               "actions": [
                 {
                   "type": {
-                    "value": "TextObject::ShowShadow"
-                  },
-                  "parameters": [
-                    "Text",
-                    "no"
-                  ]
-                },
-                {
-                  "type": {
                     "value": "Text3D::Text3D::UpdateShadowOffset"
                   },
                   "parameters": [
@@ -8402,6 +8660,15 @@
                     "255",
                     ""
                   ]
+                },
+                {
+                  "type": {
+                    "value": "TextObject::ShowShadow"
+                  },
+                  "parameters": [
+                    "Text",
+                    "no"
+                  ]
                 }
               ]
             },
@@ -8418,15 +8685,6 @@
                 }
               ],
               "actions": [
-                {
-                  "type": {
-                    "value": "TextObject::ShowShadow"
-                  },
-                  "parameters": [
-                    "Text",
-                    "yes"
-                  ]
-                },
                 {
                   "type": {
                     "value": "Text3D::Text3D::UpdateShadowOffset"
@@ -8456,6 +8714,15 @@
                     "Object",
                     "Object.ShadowOpacity()",
                     ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "TextObject::ShowShadow"
+                  },
+                  "parameters": [
+                    "Text",
+                    "yes"
                   ]
                 }
               ]
@@ -8621,22 +8888,6 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "value": "TextObject::Text::SetShadowDistance"
-                  },
-                  "parameters": [
-                    "Text",
-                    "=",
-                    "Value"
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
                   "type": {
@@ -8658,6 +8909,22 @@
                     "Object.ShadowAngle()",
                     "Value",
                     ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "TextObject::Text::SetShadowDistance"
+                  },
+                  "parameters": [
+                    "Text",
+                    "=",
+                    "Value"
                   ]
                 }
               ]
@@ -8718,22 +8985,6 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "value": "TextObject::Text::SetShadowAngle"
-                  },
-                  "parameters": [
-                    "Text",
-                    "=",
-                    "Value"
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
                   "type": {
@@ -8758,6 +9009,22 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "TextObject::Text::SetShadowAngle"
+                  },
+                  "parameters": [
+                    "Text",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
             }
           ],
           "parameters": [
@@ -8778,6 +9045,54 @@
           "private": true,
           "sentence": "Update shadow offset of _PARAM0_ to angle: _PARAM1_ and distance: _PARAM2_",
           "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::Or"
+                  },
+                  "parameters": [],
+                  "subInstructions": [
+                    {
+                      "type": {
+                        "inverted": true,
+                        "value": "Text3D::Text3D::ShadowAngle"
+                      },
+                      "parameters": [
+                        "Object",
+                        "=",
+                        "Angle",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "inverted": true,
+                        "value": "Text3D::Text3D::ShadowDistance"
+                      },
+                      "parameters": [
+                        "Object",
+                        "=",
+                        "Distance",
+                        ""
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetPropertyIsGeometryUpToDate"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            },
             {
               "type": "BuiltinCommonInstructions::JsCode",
               "inlineCode": [
@@ -8859,22 +9174,6 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "value": "TextObject::Text::SetShadowBlurRadius"
-                  },
-                  "parameters": [
-                    "Text",
-                    "=",
-                    "Value"
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
                   "type": {
@@ -8898,6 +9197,22 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "TextObject::Text::SetShadowBlurRadius"
+                  },
+                  "parameters": [
+                    "Text",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
             }
           ],
           "parameters": [
@@ -8918,6 +9233,34 @@
           "private": true,
           "sentence": "Update shadow blur radius of _PARAM0_ to _PARAM1_",
           "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Text3D::Text3D::ShadowBlurRadius"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Value",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetPropertyIsGeometryUpToDate"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            },
             {
               "type": "BuiltinCommonInstructions::JsCode",
               "inlineCode": [
@@ -8994,22 +9337,6 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "value": "TextObject::Text::SetShadowOpacity"
-                  },
-                  "parameters": [
-                    "Text",
-                    "=",
-                    "Value"
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
                   "type": {
@@ -9033,6 +9360,22 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "TextObject::Text::SetShadowOpacity"
+                  },
+                  "parameters": [
+                    "Text",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
             }
           ],
           "parameters": [
@@ -9053,6 +9396,34 @@
           "private": true,
           "sentence": "Update shadow opacity of _PARAM0_ to _PARAM1_",
           "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Text3D::Text3D::ShadowOpacity"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Value",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetPropertyIsGeometryUpToDate"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            },
             {
               "type": "BuiltinCommonInstructions::JsCode",
               "inlineCode": [
@@ -9448,7 +9819,20 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Text3D::Text3D::TextAlignment"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Value",
+                    ""
+                  ]
+                }
+              ],
               "actions": [
                 {
                   "type": {
@@ -9457,6 +9841,15 @@
                   "parameters": [
                     "Text",
                     "Value"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Text3D::Text3D::SetPropertyIsGeometryUpToDate"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
                   ]
                 }
               ]
@@ -9519,6 +9912,16 @@
           "group": "",
           "extraInformation": [],
           "name": "LineSpacing"
+        },
+        {
+          "value": "false",
+          "type": "Boolean",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "IsGeometryUpToDate"
         }
       ],
       "objects": [
