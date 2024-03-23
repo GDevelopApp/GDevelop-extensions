@@ -443,6 +443,20 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: ['_stickerExtension'],
       javaScriptObjectAllowedProperties: [],
     },
+    Text3D: {
+      gdjsAllowedProperties: [
+        '__text3DExtension',
+        'TextRuntimeObject',
+        'CustomRuntimeObject3D',
+        'CustomRuntimeObjectInstanceContainer',
+        'CustomRuntimeObject3DRenderer',
+        'rgbOrHexStringToNumber',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [
+        'freeze'],
+    },
     TextEntryVirtualKeyboard: {
       gdjsAllowedProperties: ['_extensionMobileKeyboard'],
       gdjsEvtToolsAllowedProperties: [],
