@@ -454,8 +454,7 @@ const extensionsAllowedProperties = {
       ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [
-        'freeze'],
+      javaScriptObjectAllowedProperties: ['freeze'],
     },
     TextEntryVirtualKeyboard: {
       gdjsAllowedProperties: ['_extensionMobileKeyboard'],
