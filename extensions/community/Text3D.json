@@ -10,7 +10,9 @@
   "shortDescription": "Display texts in 3D scenes.",
   "version": "0.1.0",
   "description": "Display texts with 3D position and rotation.",
-  "tags": [],
+  "tags": [
+    "3d"
+  ],
   "authorIds": [
     "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
   ],
@@ -6653,7 +6655,7 @@
   "eventsBasedBehaviors": [],
   "eventsBasedObjects": [
     {
-      "defaultName": "",
+      "defaultName": "Text",
       "description": "A text in 3D.",
       "fullName": "3D text",
       "is3D": true,
@@ -6698,14 +6700,23 @@
                   "parameters": [
                     "Text"
                   ]
-                },
+                }
+              ],
+              "events": [
                 {
-                  "type": {
-                    "value": "SetIncludedInParentCollisionMask"
-                  },
-                  "parameters": [
-                    "Text",
-                    "no"
+                  "disabled": true,
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetIncludedInParentCollisionMask"
+                      },
+                      "parameters": [
+                        "Text",
+                        "no"
+                      ]
+                    }
                   ]
                 }
               ]
@@ -6814,8 +6825,12 @@
                 "/** @type {gdjs.CustomRuntimeObject3D} */",
                 "const object = objects[0];",
                 "",
+                "// Ensure it stays true at least a whole frame for events.",
+                "object.__text3DExtension.hasGeometryUpdated = false;",
+                "",
                 "if (object.__text3DExtension.hasSync) {",
                 "    object.__text3DExtension.hasSync = false;",
+                "    object.__text3DExtension.hasGeometryUpdated = true;",
                 "    object._renderer._isContainerDirty = true;",
                 "}",
                 ""
@@ -6989,17 +7004,53 @@
                     "yes"
                   ]
                 }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::JsCode",
+                  "inlineCode": [
+                    "/** @type {gdjs.CustomRuntimeObject3D} */",
+                    "const object = objects[0];",
+                    "",
+                    "object.__text3DExtension.threeText.sync(() => {",
+                    "    object.__text3DExtension.hasSync = true;",
+                    "});"
+                  ],
+                  "parameterObjects": "Object",
+                  "useStrict": true,
+                  "eventsSheetExpanded": true
+                }
               ]
-            },
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Text3D::Text3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if the text has just been updated on screen.",
+          "fullName": "Has updated on sceen",
+          "functionType": "Condition",
+          "getterName": "OutlineThickness",
+          "name": "HasGeometryUpdated",
+          "private": true,
+          "sentence": "_PARAM0_ has updated on screen",
+          "events": [
             {
               "type": "BuiltinCommonInstructions::JsCode",
               "inlineCode": [
                 "/** @type {gdjs.CustomRuntimeObject3D} */",
                 "const object = objects[0];",
                 "",
-                "object.__text3DExtension.threeText.sync(() => {",
-                "    object.__text3DExtension.hasSync = true;",
-                "});"
+                "eventsFunctionContext.returnValue =",
+                "    object.__text3DExtension.hasGeometryUpdated;",
+                ""
               ],
               "parameterObjects": "Object",
               "useStrict": true,
