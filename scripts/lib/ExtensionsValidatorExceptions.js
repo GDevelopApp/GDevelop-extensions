@@ -444,7 +444,7 @@ const extensionsAllowedProperties = {
     },
     SpriteRope: {
       gdjsAllowedProperties: [
-        '_spriteRopeExtension',
+        '__spriteRopeExtension',
         'CustomRuntimeObject',
         'CustomRuntimeObject2D',
         'PixiImageManager',
