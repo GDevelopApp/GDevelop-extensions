@@ -8,7 +8,7 @@
   "name": "FireBullet",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/bullet.svg",
   "shortDescription": "Fire bullets, manage ammo, reloading and overheating.",
-  "version": "0.6.4",
+  "version": "0.7.0",
   "description": [
     "This extension allows objects to fire bullets.",
     "",
@@ -225,8 +225,8 @@
                               "parameters": [
                                 "Object",
                                 "Behavior",
-                                "-",
-                                "1"
+                                "=",
+                                "max(0,Object.Behavior::AmmoQuantity() - 1)"
                               ]
                             }
                           ]
@@ -1032,9 +1032,9 @@
                               },
                               "parameters": [
                                 "Object",
-                                "__FireBullet.CurrentBulletAngle",
+                                "__FireBullet.BatchOrderID",
                                 "=",
-                                "GetArgumentAsNumber(\"Angle\") - Object.Behavior::PropertyFiringArc()/2"
+                                "0"
                               ]
                             },
                             {
@@ -1043,9 +1043,9 @@
                               },
                               "parameters": [
                                 "Object",
-                                "__FireBullet.BatchOrderID",
+                                "__FireBullet.CurrentBulletAngle",
                                 "=",
-                                "0"
+                                "GetArgumentAsNumber(\"Angle\") - Object.Behavior::PropertyFiringArc()/2"
                               ]
                             }
                           ],
@@ -1082,11 +1082,54 @@
                                     "textG": 0,
                                     "textR": 0
                                   },
-                                  "comment": "Move temp variable to the next angle a bullet will be sent"
+                                  "comment": "When firing in a full circle, prevent first and last bullet from using the same angle"
                                 },
                                 {
                                   "type": "BuiltinCommonInstructions::Standard",
-                                  "conditions": [],
+                                  "conditions": [
+                                    {
+                                      "type": {
+                                        "value": "FireBullet::FireBullet::FiringArc"
+                                      },
+                                      "parameters": [
+                                        "Object",
+                                        "Behavior",
+                                        "=",
+                                        "360",
+                                        ""
+                                      ]
+                                    }
+                                  ],
+                                  "actions": [
+                                    {
+                                      "type": {
+                                        "value": "ModVarObjet"
+                                      },
+                                      "parameters": [
+                                        "Object",
+                                        "__FireBullet.CurrentBulletAngle",
+                                        "+",
+                                        "Object.Behavior::PropertyFiringArc() / (Object.Behavior::PropertyBulletQuantity())"
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "BuiltinCommonInstructions::Standard",
+                                  "conditions": [
+                                    {
+                                      "type": {
+                                        "value": "FireBullet::FireBullet::FiringArc"
+                                      },
+                                      "parameters": [
+                                        "Object",
+                                        "Behavior",
+                                        "!=",
+                                        "360",
+                                        ""
+                                      ]
+                                    }
+                                  ],
                                   "actions": [
                                     {
                                       "type": {
@@ -1098,7 +1141,13 @@
                                         "+",
                                         "Object.Behavior::PropertyFiringArc() / (Object.Behavior::PropertyBulletQuantity() - 1)"
                                       ]
-                                    },
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "BuiltinCommonInstructions::Standard",
+                                  "conditions": [],
+                                  "actions": [
                                     {
                                       "type": {
                                         "value": "ModVarObjet"
@@ -2795,7 +2844,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "max(0,Value)"
                   ]
                 }
               ]
@@ -2842,7 +2891,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")",
+                    "max(0,Value)",
                     ""
                   ]
                 }
@@ -4257,6 +4306,59 @@
           "objectGroups": []
         },
         {
+          "description": "the remaining duration before the reload finishes, in seconds.",
+          "fullName": "Duration before the reload finishes",
+          "functionType": "ExpressionAndCondition",
+          "group": "Reload",
+          "name": "ReloadTimeLeft",
+          "sentence": "the remaining duration before the reload finishes",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "CompareObjectTimer"
+                  },
+                  "parameters": [
+                    "Object",
+                    "\"__FireBullet.ReloadingTimer\"",
+                    ">",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "max(0, Object.Behavior::PropertyReloadDuration() - Object.ObjectTimerElapsedTime(\"__FireBullet.ReloadingTimer\"))"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "Check if object is currently performing an ammo reload.",
           "fullName": "Is ammo reloading in progress",
           "functionType": "Condition",
@@ -4627,7 +4729,7 @@
                   "parameters": [
                     "Object",
                     "Behavior",
-                    "=",
+                    "<=",
                     "0"
                   ]
                 }
