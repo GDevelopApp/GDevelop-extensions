@@ -7,15 +7,15 @@
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWFycm93LWJvdHRvbS1yaWdodC1ib2xkLW91dGxpbmUiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNOS44OCwxNS41NEw0LjIyLDkuODhMOS44OCw0LjIyTDE1LjU0LDkuODhMMTkuNzgsNS42NFYxOS43OEg1LjY0TDkuODgsMTUuNTRNMTcuNjYsMTAuNTlMMTUuNTQsMTIuNzFMOS44OCw3LjA1TDcuMDUsOS44OEwxMi43MSwxNS41NEwxMC41OSwxNy42NkgxNy42NlYxMC41OVoiIC8+PC9zdmc+",
   "name": "PointAndOrbit",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/arrow-bottom-right-bold-outline.svg",
-  "shortDescription": "Point an object toward a position or angle while orbiting that object around a position.",
+  "shortDescription": "Point and orbit an object toward a position or angle.",
   "version": "1.1.0",
   "description": [
-    "# User can",
-    "- Use the extension action multi times.",
-    "- Point object toward position or angle",
-    "- Orbit object around position.",
-    "- Set the distance to orbit around.",
-    "- Set the pointing speed.",
+    "Move an object in a circle around a specific point while pointing the moving object away from the center of the circle.",
+    "This feature is useful in games for weapons or targeting indicators that move around a player character.",
+    "Orbit distance and rotation speed can be changed easily.",
+    "",
+    "The target position action can be used to follow the direction of the cursor.",
+    "The target angle action can be used to follow hte direction of a gamepad stick",
     "",
     "# Example",
     "![](https://i.imgur.com/N2KtaMT.png)"
@@ -31,7 +31,8 @@
     "around"
   ],
   "authorIds": [
-    "IRIhkkTTl2UHhfjrLTTH5GYwkYu1"
+    "IRIhkkTTl2UHhfjrLTTH5GYwkYu1",
+    "gqDaZjCfevOOxBYkK6zlhtZnXCg1"
   ],
   "dependencies": [],
   "eventsFunctions": [
@@ -48,23 +49,25 @@
           "actions": [
             {
               "type": {
-                "value": "MettreAutourPos"
+                "value": "ModVarScene"
               },
               "parameters": [
-                "Gun",
-                "OrbitXpos",
-                "OrbitYpos",
-                "OrbitDistance",
+                "__PointAndOrbit.TargetAngle",
+                "=",
                 "AngleBetweenPositions(OrbitXpos, OrbitYpos, PointXpos, PointYpos)"
               ]
             },
             {
               "type": {
-                "value": "RotateTowardAngle"
+                "value": "PointAndOrbit::PointAndOrbitAngle"
               },
               "parameters": [
+                "",
                 "Gun",
-                "AngleBetweenPositions(OrbitXpos, OrbitYpos, PointXpos, PointYpos)",
+                "OrbitXpos",
+                "OrbitYpos",
+                "OrbitDistance",
+                "Variable(__PointAndOrbit.TargetAngle)",
                 "PointSpeed",
                 ""
               ]
@@ -126,6 +129,72 @@
       "sentence": "Point _PARAM1_ towards _PARAM5_ degrees at _PARAM6_ pointing speed, and orbit around _PARAM2_ Xpos, _PARAM3_ Ypos, at _PARAM4_ distance",
       "events": [
         {
+          "colorB": 228,
+          "colorG": 176,
+          "colorR": 74,
+          "creationTime": 0,
+          "name": "Determine the orbit angle for the next frame (using the shortest path)",
+          "source": "",
+          "type": "BuiltinCommonInstructions::Group",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::CompareNumbers"
+                  },
+                  "parameters": [
+                    "mod(180 + TargetAngle - Gun.Angle(), 360)",
+                    "<",
+                    "180"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__PointAndOrbit.NextFrameAngle",
+                    "=",
+                    "Gun.Angle() - (PointSpeed * TimeDelta())"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::CompareNumbers"
+                  },
+                  "parameters": [
+                    "mod(180 + Gun.Angle() - TargetAngle, 360)",
+                    "<",
+                    "180"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__PointAndOrbit.NextFrameAngle",
+                    "=",
+                    "Gun.Angle() + (PointSpeed * TimeDelta())"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": []
+        },
+        {
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [],
           "actions": [
@@ -138,7 +207,7 @@
                 "OrbitXpos",
                 "OrbitYpos",
                 "OrbitDistance",
-                "TargetAngle"
+                "Variable(__PointAndOrbit.NextFrameAngle)"
               ]
             },
             {
