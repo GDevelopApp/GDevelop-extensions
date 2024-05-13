@@ -7,14 +7,13 @@
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWNsb2NrLXRpbWUtZWlnaHQtb3V0bGluZSIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xMiAyMEMxNi40IDIwIDIwIDE2LjQgMjAgMTJTMTYuNCA0IDEyIDQgNCA3LjYgNCAxMiA3LjYgMjAgMTIgMjBNMTIgMkMxNy41IDIgMjIgNi41IDIyIDEyUzE3LjUgMjIgMTIgMjJDNi41IDIyIDIgMTcuNSAyIDEyQzIgNi41IDYuNSAyIDEyIDJNMTIuNSAxMi44TDcuNyAxNS42TDcgMTQuMkwxMSAxMS45VjdIMTIuNVYxMi44WiIgLz48L3N2Zz4=",
   "name": "OfflineTime",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/8502706f2dfb1674309af84b6d69a658189e2a15d2e80e3375cf59a9d0a3770b_clock-time-eight-outline.svg",
-  "shortDescription": "Calculate the game offline time.",
-  "version": "1.0.0",
+  "shortDescription": "Calculate the time the game was offline.",
+  "version": "1.0.1",
   "description": [
-    "Returns the time the time the game was offline.",
+    "Returns the time the game was offline.",
     "",
     "Note:",
-    "- Use the \"Save offline time\" action at the end of the game to save the time.",
-    "- it's best to clear the previous offline time with the \"Delete offline time\" action.",
+    "- Use the \"Save offline time\" action at the end of the game to save the time or enable auto save in \"config\" and set a save interval.",
     "",
     "You need the extension to be used in the game, either by having at least one action, condition or expression used, or a behavior of the extension added to an object. Otherwise, the extension won't be included in the game."
   ],
@@ -35,88 +34,339 @@
       "sentence": "",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": [
-            "var date = new Date();",
-            "var dateString = date.toISOString().slice(0, 19);",
-            "var timeIn = runtimeScene.getVariables().get(\"__timeIn\")",
-            "",
-            "if (gdjs.evtTools.storage.elementExistsInJSONFile(\"__game\", \"__deviceTime\")) {",
-            "    gdjs.evtTools.storage.readStringFromJSONFile(\"__game\", \"__deviceTime\", null, timeIn)",
-            "",
-            "    function calculateTimeDifference(startTime, endTime) {",
-            "        var startDate = new Date(startTime);",
-            "        var endDate = new Date(endTime);",
-            "",
-            "        var difference = endDate.getTime() - startDate.getTime();",
-            "",
-            "        var days = Math.floor(difference / (1000 * 60 * 60 * 24));",
-            "        var hours = Math.floor(difference / 3600000);",
-            "        var minutes = Math.floor((difference % 3600000) / 60000);",
-            "        var seconds = Math.floor((difference % 60000) / 1000);",
-            "",
-            "        return {",
-            "            days: days,",
-            "            hours: hours,",
-            "            minutes: minutes,",
-            "            seconds: seconds,",
-            "            miliseconds: difference",
-            "        };",
-            "    }",
-            "",
-            "    var timeDifference = calculateTimeDifference(timeIn._str, dateString)",
-            "",
-            "    gdjs.evtTools.timeDifference = timeDifference",
-            "} else {",
-            "    return",
-            "}",
-            "",
-            "",
-            "",
-            "",
-            ""
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "GroupExists"
+              },
+              "parameters": [
+                "\"__game\"",
+                "\"__deviceTime\""
+              ]
+            }
           ],
-          "parameterObjects": "",
-          "useStrict": true,
-          "eventsSheetExpanded": true
+          "actions": [
+            {
+              "type": {
+                "value": "LireFichierExp"
+              },
+              "parameters": [
+                "\"__game\"",
+                "\"__deviceTime\"",
+                "Time(\"timestamp\")",
+                "__OfflineTime_timeIn"
+              ]
+            }
+          ],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "__OfflineTime_Difference",
+                    "=",
+                    "Time(\"timestamp\") - Variable(__OfflineTime_timeIn)"
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ],
       "parameters": [],
       "objectGroups": []
     },
     {
-      "description": "Compare the current time with the previously saved time.",
+      "description": "Enable autosave. ",
+      "fullName": "Enable Autosave",
+      "functionType": "Action",
+      "name": "SetAutosave",
+      "sentence": "Enable autosave _PARAM1_ with an interval of _PARAM2_ seconds",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "CompareArgumentAsString"
+              },
+              "parameters": [
+                "\"autoSave\"",
+                "=",
+                "\"true\""
+              ]
+            },
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Once"
+              },
+              "parameters": []
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetSceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__OfflineTime_autosave.bool",
+                "True"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "CompareArgumentAsString"
+              },
+              "parameters": [
+                "\"autoSave\"",
+                "=",
+                "\"false\""
+              ]
+            },
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Once"
+              },
+              "parameters": []
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetSceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__OfflineTime_autosave.bool",
+                "False"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Once"
+              },
+              "parameters": []
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__OfflineTime_autosave.duration",
+                "=",
+                "duration"
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "defaultValue": "yes",
+          "description": "Autosave",
+          "name": "autoSave",
+          "optional": true,
+          "type": "yesorno"
+        },
+        {
+          "description": "Save interval (in seconds)",
+          "name": "duration",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onScenePreEvents",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "DepartScene"
+              },
+              "parameters": [
+                ""
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "ResetTimer"
+              },
+              "parameters": [
+                "",
+                "\"__OfflineTime_autosave_timer\""
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "SceneVariableAsBoolean"
+              },
+              "parameters": [
+                "__OfflineTime_autosave.bool",
+                "True"
+              ]
+            },
+            {
+              "type": {
+                "value": "CompareTimer"
+              },
+              "parameters": [
+                "",
+                "\"__OfflineTime_autosave_timer\"",
+                ">=",
+                "Variable(__OfflineTime_autosave.duration)"
+              ]
+            },
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Once"
+              },
+              "parameters": []
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "EcrireFichierExp"
+              },
+              "parameters": [
+                "\"__game\"",
+                "\"__deviceTime\"",
+                "Time(\"timestamp\")"
+              ]
+            },
+            {
+              "type": {
+                "value": "ResetTimer"
+              },
+              "parameters": [
+                "",
+                "\"__OfflineTime_autosave_timer\""
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Returns the difference between the current time with the previously saved time ( in miliseconds ).",
       "fullName": "Read Offline Time",
       "functionType": "Expression",
-      "name": "DeviceTimeIn",
+      "name": "GetTime",
       "sentence": "Read the ",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": [
-            "var time = eventsFunctionContext.getArgument(\"time\")",
-            "var timeDifference = gdjs.evtTools.timeDifference",
-            "",
-            "if (time == \"hours\") {",
-            "    eventsFunctionContext.returnValue = timeDifference.hours",
-            "} else if (time == \"minutes\") {",
-            "    eventsFunctionContext.returnValue = timeDifference.minutes",
-            "} else if (time == \"seconds\") {",
-            "    eventsFunctionContext.returnValue = timeDifference.seconds",
-            "} else if (time == \"days\") {",
-            "    eventsFunctionContext.returnValue = timeDifference.days",
-            "} else if (time == \"miliseconds\") {",
-            "    eventsFunctionContext.returnValue = timeDifference.miliseconds",
-            "}"
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Once"
+              },
+              "parameters": []
+            }
           ],
-          "parameterObjects": "",
-          "useStrict": true,
-          "eventsSheetExpanded": true
+          "actions": [
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__OfflineTime_Convert.miliseconds",
+                "=",
+                "Variable(__OfflineTime_Difference)"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__OfflineTime_Convert.days",
+                "=",
+                "Variable(__OfflineTime_Difference)/86400000"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__OfflineTime_Convert.seconds",
+                "=",
+                "Variable(__OfflineTime_Difference)/1000"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__OfflineTime_Convert.minutes",
+                "=",
+                "Variable(__OfflineTime_Difference)/60000"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__OfflineTime_Convert.hours",
+                "=",
+                "Variable(__OfflineTime_Difference)/3600000"
+              ]
+            }
+          ]
         },
         {
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [],
           "actions": []
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "Variable(__OfflineTime_Convert[time])"
+              ]
+            }
+          ]
         }
       ],
       "expressionType": {
@@ -124,7 +374,7 @@
       },
       "parameters": [
         {
-          "description": "\"days\", \"hours\", \"minutes\", \"seconds\" ",
+          "description": "\"days\", \"hours\", \"minutes\", \"seconds\", \"miliseconds\"",
           "name": "time",
           "supplementaryInformation": "[\"hours\",\"minutes\",\"seconds\",\"days\",\"miliseconds\"]",
           "type": "stringWithSelector"
@@ -133,28 +383,137 @@
       "objectGroups": []
     },
     {
-      "description": "Saves the currnt device time to be compared when next the game is opened,  Use this at the end of the game.",
+      "description": "Saves the current device time to be compared on next game launch,  Use this before the exit action or enable auto save in the configuration action.",
       "fullName": "Save offline time",
       "functionType": "Action",
-      "name": "DeviceTimeOut",
-      "sentence": "Save offline time",
+      "name": "SaveTime",
+      "sentence": "Save offline time then quit the game _PARAM1_",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": [
-            "var date = new Date();",
-            "var dateString = date.toISOString().slice(0, 19);",
-            "",
-            "gdjs.evtTools.storage.writeStringInJSONFile(\"__game\", \"__deviceTime\", dateString)"
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Once"
+              },
+              "parameters": []
+            }
           ],
-          "parameterObjects": "",
-          "useStrict": true,
-          "eventsSheetExpanded": true
+          "actions": [
+            {
+              "type": {
+                "value": "EcrireFichierExp"
+              },
+              "parameters": [
+                "\"__game\"",
+                "\"__deviceTime\"",
+                "Time(\"timestamp\")"
+              ]
+            }
+          ]
         },
         {
           "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": []
+          "conditions": [
+            {
+              "type": {
+                "value": "CompareArgumentAsString"
+              },
+              "parameters": [
+                "\"quit\"",
+                "=",
+                "\"true\""
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "Quit"
+              },
+              "parameters": [
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Quit on save",
+          "name": "quit",
+          "type": "yesorno"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Check if an offline time save exists.",
+      "fullName": "Offline Time Save Exists",
+      "functionType": "Condition",
+      "name": "TimeSaveExists",
+      "sentence": "Offline time save exists",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "GroupExists"
+              },
+              "parameters": [
+                "\"__game\"",
+                "\"__deviceTime\""
+              ]
+            },
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Once"
+              },
+              "parameters": []
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "inverted": true,
+                "value": "GroupExists"
+              },
+              "parameters": [
+                "\"__game\"",
+                "\"__deviceTime\""
+              ]
+            },
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Once"
+              },
+              "parameters": []
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "False"
+              ]
+            }
+          ]
         }
       ],
       "parameters": [],
@@ -168,15 +527,34 @@
       "sentence": "Delete offline time",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": [
-            "if (gdjs.evtTools.storage.elementExistsInJSONFile(\"__game\", \"__deviceTime\")) {",
-            "    gdjs.evtTools.storage.clearJSONFile(\"__game\")",
-            "}"
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "GroupExists"
+              },
+              "parameters": [
+                "\"__game\"",
+                "\"__deviceTime\""
+              ]
+            },
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Once"
+              },
+              "parameters": []
+            }
           ],
-          "parameterObjects": "",
-          "useStrict": true,
-          "eventsSheetExpanded": false
+          "actions": [
+            {
+              "type": {
+                "value": "DeleteFichier"
+              },
+              "parameters": [
+                "\"__game\""
+              ]
+            }
+          ]
         }
       ],
       "parameters": [],
