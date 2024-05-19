@@ -8,7 +8,7 @@
   "name": "FireBullet",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/bullet.svg",
   "shortDescription": "Fire bullets, manage ammo, reloading and overheating.",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "description": [
     "This extension allows objects to fire bullets.",
     "",
@@ -225,8 +225,8 @@
                               "parameters": [
                                 "Object",
                                 "Behavior",
-                                "-",
-                                "1"
+                                "=",
+                                "max(0,Object.Behavior::AmmoQuantity() - 1)"
                               ]
                             }
                           ]
@@ -1032,9 +1032,9 @@
                               },
                               "parameters": [
                                 "Object",
-                                "__FireBullet.CurrentBulletAngle",
+                                "__FireBullet.BatchOrderID",
                                 "=",
-                                "GetArgumentAsNumber(\"Angle\") - Object.Behavior::PropertyFiringArc()/2"
+                                "0"
                               ]
                             },
                             {
@@ -1043,9 +1043,9 @@
                               },
                               "parameters": [
                                 "Object",
-                                "__FireBullet.BatchOrderID",
+                                "__FireBullet.CurrentBulletAngle",
                                 "=",
-                                "0"
+                                "GetArgumentAsNumber(\"Angle\") - Object.Behavior::PropertyFiringArc()/2"
                               ]
                             }
                           ],
@@ -1082,11 +1082,54 @@
                                     "textG": 0,
                                     "textR": 0
                                   },
-                                  "comment": "Move temp variable to the next angle a bullet will be sent"
+                                  "comment": "When firing in a full circle, prevent first and last bullet from using the same angle"
                                 },
                                 {
                                   "type": "BuiltinCommonInstructions::Standard",
-                                  "conditions": [],
+                                  "conditions": [
+                                    {
+                                      "type": {
+                                        "value": "FireBullet::FireBullet::FiringArc"
+                                      },
+                                      "parameters": [
+                                        "Object",
+                                        "Behavior",
+                                        "=",
+                                        "360",
+                                        ""
+                                      ]
+                                    }
+                                  ],
+                                  "actions": [
+                                    {
+                                      "type": {
+                                        "value": "ModVarObjet"
+                                      },
+                                      "parameters": [
+                                        "Object",
+                                        "__FireBullet.CurrentBulletAngle",
+                                        "+",
+                                        "Object.Behavior::PropertyFiringArc() / (Object.Behavior::PropertyBulletQuantity())"
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "BuiltinCommonInstructions::Standard",
+                                  "conditions": [
+                                    {
+                                      "type": {
+                                        "value": "FireBullet::FireBullet::FiringArc"
+                                      },
+                                      "parameters": [
+                                        "Object",
+                                        "Behavior",
+                                        "!=",
+                                        "360",
+                                        ""
+                                      ]
+                                    }
+                                  ],
                                   "actions": [
                                     {
                                       "type": {
@@ -1098,7 +1141,13 @@
                                         "+",
                                         "Object.Behavior::PropertyFiringArc() / (Object.Behavior::PropertyBulletQuantity() - 1)"
                                       ]
-                                    },
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "BuiltinCommonInstructions::Standard",
+                                  "conditions": [],
+                                  "actions": [
                                     {
                                       "type": {
                                         "value": "ModVarObjet"
@@ -2795,7 +2844,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "max(0,Value)"
                   ]
                 }
               ]
@@ -2842,7 +2891,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")",
+                    "max(0,Value)",
                     ""
                   ]
                 }
@@ -4257,6 +4306,59 @@
           "objectGroups": []
         },
         {
+          "description": "the remaining duration before the reload finishes, in seconds.",
+          "fullName": "Duration before the reload finishes",
+          "functionType": "ExpressionAndCondition",
+          "group": "Reload",
+          "name": "ReloadTimeLeft",
+          "sentence": "the remaining duration before the reload finishes",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "CompareObjectTimer"
+                  },
+                  "parameters": [
+                    "Object",
+                    "\"__FireBullet.ReloadingTimer\"",
+                    ">",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "max(0, Object.Behavior::PropertyReloadDuration() - Object.ObjectTimerElapsedTime(\"__FireBullet.ReloadingTimer\"))"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "Check if object is currently performing an ammo reload.",
           "fullName": "Is ammo reloading in progress",
           "functionType": "Condition",
@@ -4627,7 +4729,7 @@
                   "parameters": [
                     "Object",
                     "Behavior",
-                    "=",
+                    "<=",
                     "0"
                   ]
                 }
@@ -4898,10 +5000,9 @@
           "type": "Number",
           "unit": "Second",
           "label": "Firing cooldown",
-          "description": "Objects cannot shoot while firing cooldown is active",
+          "description": "Objects cannot shoot while firing cooldown is active.",
           "group": "",
           "extraInformation": [],
-          "hidden": false,
           "name": "FireCooldown"
         },
         {
@@ -4915,6 +5016,15 @@
           "name": "HasJustFired"
         },
         {
+          "value": "true",
+          "type": "Boolean",
+          "label": "Rotate bullets to match their trajectory",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "name": "RotateBullet"
+        },
+        {
           "value": "45",
           "type": "Number",
           "unit": "DegreeAngle",
@@ -4922,17 +5032,15 @@
           "description": "Multi-Fire bullets will be evenly spaced inside the firing arc",
           "group": "Multi-Fire",
           "extraInformation": [],
-          "hidden": false,
           "name": "FiringArc"
         },
         {
           "value": "1",
           "type": "Number",
-          "label": "Number of bullets created at once (Multi-Fire)",
+          "label": "Number of bullets created at once",
           "description": "Multi-Fire bullets will be evenly spaced inside the firing arc",
           "group": "Multi-Fire",
           "extraInformation": [],
-          "hidden": false,
           "name": "BulletQuantity"
         },
         {
@@ -4940,21 +5048,22 @@
           "type": "Number",
           "unit": "DegreeAngle",
           "label": "Angle variance",
-          "description": "Make imperfect aim (Range: 0 to 180 degrees)",
+          "description": "Make imperfect aim (between 0 and 180 degrees).",
           "group": "Firing variance",
           "extraInformation": [],
-          "hidden": false,
+          "advanced": true,
           "name": "AngleVariance"
         },
         {
-          "value": "true",
-          "type": "Boolean",
-          "label": "Rotate bullets to match their trajectory",
-          "description": "",
-          "group": "",
+          "value": "0",
+          "type": "Number",
+          "unit": "PixelSpeed",
+          "label": "Bullet speed variance",
+          "description": "Bullet speed will be adjusted by a random value within this range.",
+          "group": "Firing variance",
           "extraInformation": [],
-          "hidden": false,
-          "name": "RotateBullet"
+          "advanced": true,
+          "name": "BulletSpeedVariance"
         },
         {
           "value": "0",
@@ -4970,10 +5079,10 @@
           "value": "0",
           "type": "Number",
           "label": "Shots per reload ",
-          "description": "Use 0 to disable reloading",
+          "description": "Use 0 to disable reloading.",
           "group": "Reload",
           "extraInformation": [],
-          "hidden": false,
+          "advanced": true,
           "name": "ShotsPerReload"
         },
         {
@@ -4981,10 +5090,10 @@
           "type": "Number",
           "unit": "Second",
           "label": "Reloading duration",
-          "description": "Objects cannot shoot while reloading is in progress",
+          "description": "Objects cannot shoot while reloading is in progress.",
           "group": "Reload",
           "extraInformation": [],
-          "hidden": false,
+          "advanced": true,
           "name": "ReloadDuration"
         },
         {
@@ -4994,7 +5103,7 @@
           "description": "",
           "group": "Ammo",
           "extraInformation": [],
-          "hidden": false,
+          "advanced": true,
           "name": "MaxAmmo"
         },
         {
@@ -5034,7 +5143,7 @@
           "description": "",
           "group": "Ammo",
           "extraInformation": [],
-          "hidden": false,
+          "advanced": true,
           "name": "StartingAmmo"
         },
         {
@@ -5054,7 +5163,7 @@
           "description": "",
           "group": "Ammo",
           "extraInformation": [],
-          "hidden": false,
+          "advanced": true,
           "name": "UnlimitedAmmo"
         },
         {
@@ -5070,11 +5179,11 @@
         {
           "value": "0",
           "type": "Number",
-          "label": "Heat increase per shot (Range: 0 to 1)",
-          "description": " Object is overheated when Heat reaches 1",
+          "label": "Heat increase per shot (between 0 and 1)",
+          "description": " Object is overheated when Heat reaches 1.",
           "group": "Overheat",
           "extraInformation": [],
-          "hidden": false,
+          "advanced": true,
           "name": "HeatIncreasePerShot"
         },
         {
@@ -5094,7 +5203,7 @@
           "description": "",
           "group": "Reload",
           "extraInformation": [],
-          "hidden": false,
+          "advanced": true,
           "name": "AutomaticReloading"
         },
         {
@@ -5102,10 +5211,10 @@
           "type": "Number",
           "unit": "Second",
           "label": "Overheat duration",
-          "description": "Object cannot shoot while overheat duration is active",
+          "description": "Object cannot shoot while overheat duration is active.",
           "group": "Overheat",
           "extraInformation": [],
-          "hidden": false,
+          "advanced": true,
           "name": "OverheatDuration"
         },
         {
@@ -5115,27 +5224,27 @@
           "description": "",
           "group": "Overheat",
           "extraInformation": [],
-          "hidden": false,
+          "advanced": true,
           "name": "LinearCoolingRate"
         },
         {
           "value": "0.3",
           "type": "Number",
           "label": "Exponential cooling rate (per second)",
-          "description": "Happens faster when heat is high and slower when heat is low",
+          "description": "Happens faster when heat is high and slower when heat is low.",
           "group": "Overheat",
           "extraInformation": [
             "Linear",
             "Exponential"
           ],
-          "hidden": false,
+          "advanced": true,
           "name": "ExponentialCoolingRate"
         },
         {
           "value": "",
           "type": "String",
           "label": "Layer the bullets are created on",
-          "description": "Base layer by default",
+          "description": "Base layer by default.",
           "group": "Shooting configuration",
           "extraInformation": [],
           "hidden": true,
@@ -5150,17 +5259,6 @@
           "extraInformation": [],
           "hidden": true,
           "name": "RandomizedAngle"
-        },
-        {
-          "value": "0",
-          "type": "Number",
-          "unit": "PixelSpeed",
-          "label": "Bullet speed variance",
-          "description": "Bullet speed will be adjusted by a random value within this range",
-          "group": "Firing variance",
-          "extraInformation": [],
-          "hidden": false,
-          "name": "BulletSpeedVariance"
         }
       ],
       "sharedPropertyDescriptors": []

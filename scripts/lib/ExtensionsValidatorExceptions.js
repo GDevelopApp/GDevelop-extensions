@@ -177,6 +177,23 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    CameraShake3D: {
+      gdjsAllowedProperties: ['_cameraShake3DExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getAllLayerNames'],
+      javaScriptObjectAllowedProperties: [],
+    },
+    Collision3D: {
+      gdjsAllowedProperties: [
+        '_collision3DExtension',
+        'ObjectList',
+        'AABB',
+        'Polygon',
+      ],
+      gdjsEvtToolsAllowedProperties: ['object'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     Compressor: {
       gdjsAllowedProperties: ['_pakoTools'],
       gdjsEvtToolsAllowedProperties: [],
@@ -325,6 +342,8 @@ const extensionsAllowedProperties = {
         '__particleEmmiter3DExtension',
         'CustomRuntimeObject',
         'CustomRuntimeObjectInstanceContainer',
+        'CustomRuntimeObject3DRenderer',
+        'CustomRuntimeObject3D',
       ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: ['__particleEmmiter3DExtension'],
@@ -419,6 +438,16 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Sprite3D: {
+      gdjsAllowedProperties: [
+        '__sprite3DExtension',
+        'CustomRuntimeObject',
+        'Polygon',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     Sticker: {
       gdjsAllowedProperties: [
         '_stickerExtension',
@@ -429,6 +458,19 @@ const extensionsAllowedProperties = {
       gdjsEvtToolsAllowedProperties: ['object'],
       runtimeSceneAllowedProperties: ['_stickerExtension'],
       javaScriptObjectAllowedProperties: [],
+    },
+    Text3D: {
+      gdjsAllowedProperties: [
+        '__text3DExtension',
+        'TextRuntimeObject',
+        'CustomRuntimeObject3D',
+        'CustomRuntimeObjectInstanceContainer',
+        'CustomRuntimeObject3DRenderer',
+        'rgbOrHexStringToNumber',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: ['freeze'],
     },
     TextEntryVirtualKeyboard: {
       gdjsAllowedProperties: ['_extensionMobileKeyboard'],
