@@ -8,12 +8,8 @@
   "name": "ThreeDFlip",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/flip-horizontal.svg",
   "shortDescription": "Flip sprites with a 3D rotation effect.",
-  "version": "1.0.1",
-  "description": [
-    "Flip sprites with a 3D rotation effect.",
-    "",
-    "Note that the X origin point must be at the center for the best results."
-  ],
+  "version": "1.1.0",
+  "description": "Flip sprites with a 3D rotation effect.",
   "origin": {
     "identifier": "ThreeDFlip",
     "name": "gdevelop-extension-store"
@@ -26,6 +22,8 @@
     "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
   ],
   "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
   "eventsFunctions": [],
   "eventsBasedBehaviors": [
     {
@@ -67,17 +65,18 @@
                         "Object",
                         "Behavior",
                         "+",
-                        "TimeDelta() * 1000"
+                        "TimeDelta()"
                       ]
                     },
                     {
                       "type": {
-                        "value": "ChangeWidth"
+                        "value": "ResizableCapability::ResizableBehavior::SetWidth"
                       },
                       "parameters": [
                         "Object",
+                        "Resizable",
                         "=",
-                        "Object.Behavior::PropertyWidth() * abs(cos(3.141592 * Object.Behavior::PropertyElapsedTime() / Object.Behavior::PropertyDuration()))"
+                        "Width * abs(cos(Pi() * ElapsedTime / Duration))"
                       ]
                     }
                   ]
@@ -87,12 +86,13 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "Egal"
+                        "value": "ThreeDFlip::ThreeDFlip::PropertyElapsedTime"
                       },
                       "parameters": [
-                        "Object.Behavior::PropertyElapsedTime()",
+                        "Object",
+                        "Behavior",
                         ">=",
-                        "Object.Behavior::PropertyDuration() / 2"
+                        "Duration / 2"
                       ]
                     }
                   ],
@@ -114,10 +114,11 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "FlipX"
+                            "value": "FlippableCapability::FlippableBehavior::FlipX"
                           },
                           "parameters": [
                             "Object",
+                            "Flippable",
                             "no"
                           ]
                         }
@@ -140,10 +141,11 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "FlipX"
+                            "value": "FlippableCapability::FlippableBehavior::FlipX"
                           },
                           "parameters": [
                             "Object",
+                            "Flippable",
                             "yes"
                           ]
                         }
@@ -156,24 +158,26 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "Egal"
+                        "value": "ThreeDFlip::ThreeDFlip::PropertyElapsedTime"
                       },
                       "parameters": [
-                        "Object.Behavior::PropertyElapsedTime()",
+                        "Object",
+                        "Behavior",
                         ">=",
-                        "Object.Behavior::PropertyDuration()"
+                        "Duration"
                       ]
                     }
                   ],
                   "actions": [
                     {
                       "type": {
-                        "value": "ChangeWidth"
+                        "value": "ResizableCapability::ResizableBehavior::SetWidth"
                       },
                       "parameters": [
                         "Object",
+                        "Resizable",
                         "=",
-                        "Object.Behavior::PropertyWidth()"
+                        "Width"
                       ]
                     },
                     {
@@ -193,10 +197,11 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "FlippedX"
+                            "value": "FlippableCapability::FlippableBehavior::FlippedX"
                           },
                           "parameters": [
-                            "Object"
+                            "Object",
+                            "Flippable"
                           ]
                         }
                       ],
@@ -219,10 +224,11 @@
                         {
                           "type": {
                             "inverted": true,
-                            "value": "FlippedX"
+                            "value": "FlippableCapability::FlippableBehavior::FlippedX"
                           },
                           "parameters": [
-                            "Object"
+                            "Object",
+                            "Flippable"
                           ]
                         }
                       ],
@@ -262,10 +268,56 @@
         },
         {
           "description": "Start a flipping animation on the object.",
-          "fullName": "Flip the object",
+          "fullName": "Flip the object (in milliseconds)",
           "functionType": "Action",
           "name": "Flip",
           "sentence": "Flip _PARAM0_ over _PARAM2_ms",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ThreeDFlip::ThreeDFlip::FlipSecond"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "NewDuration / 1000",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "ThreeDFlip::ThreeDFlip",
+              "type": "behavior"
+            },
+            {
+              "description": "Duration (in milliseconds)",
+              "name": "NewDuration",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Start a flipping animation on the object. The X origin point must be set at the object center.",
+          "fullName": "Flip the object",
+          "functionType": "Action",
+          "name": "FlipSecond",
+          "sentence": "Flip _PARAM0_ over _PARAM2_ seconds",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Comment",
@@ -277,8 +329,7 @@
                 "textG": 0,
                 "textR": 0
               },
-              "comment": "The previous animation is not yet finished, flip the other way around starting from there.",
-              "comment2": ""
+              "comment": "The previous animation is not yet finished, flip the other way around starting from there."
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -303,7 +354,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "Object.Behavior::PropertyDuration() - Object.Behavior::PropertyElapsedTime() * GetArgumentAsNumber(\"Duration\") / Object.Behavior::PropertyDuration()"
+                    "Duration - ElapsedTime * NewDuration / Duration"
                   ]
                 }
               ],
@@ -318,8 +369,7 @@
                     "textG": 0,
                     "textR": 0
                   },
-                  "comment": "Set the flipped property as if the previous animation has finished.",
-                  "comment2": ""
+                  "comment": "Set the flipped property as if the previous animation has finished."
                 },
                 {
                   "type": "BuiltinCommonInstructions::Standard",
@@ -444,8 +494,7 @@
                 "textG": 0,
                 "textR": 0
               },
-              "comment": "Start a new flipping animation.",
-              "comment2": ""
+              "comment": "Start a new flipping animation."
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -509,7 +558,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Duration\")"
+                    "NewDuration"
                   ]
                 }
               ]
@@ -529,8 +578,8 @@
               "type": "behavior"
             },
             {
-              "description": "Duration (in milliseconds)",
-              "name": "Duration",
+              "description": "Duration (in seconds)",
+              "name": "NewDuration",
               "type": "expression"
             }
           ],
@@ -559,12 +608,13 @@
                 },
                 {
                   "type": {
-                    "value": "ChangeWidth"
+                    "value": "ResizableCapability::ResizableBehavior::SetWidth"
                   },
                   "parameters": [
                     "Object",
+                    "Resizable",
                     "=",
-                    "Object.Behavior::PropertyWidth()"
+                    "Width"
                   ]
                 }
               ]
@@ -574,10 +624,11 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "FlippedX"
+                    "value": "FlippableCapability::FlippableBehavior::FlippedX"
                   },
                   "parameters": [
-                    "Object"
+                    "Object",
+                    "Flippable"
                   ]
                 }
               ],
@@ -600,10 +651,11 @@
                 {
                   "type": {
                     "inverted": true,
-                    "value": "FlippedX"
+                    "value": "FlippableCapability::FlippableBehavior::FlippedX"
                   },
                   "parameters": [
-                    "Object"
+                    "Object",
+                    "Flippable"
                   ]
                 }
               ],
@@ -735,10 +787,100 @@
         },
         {
           "description": "Flips the object to one specific side.",
-          "fullName": "Flip to a side",
+          "fullName": "Flip to a side (in milliseconds)",
           "functionType": "Action",
           "name": "FlipTo",
-          "sentence": "Flip _PARAM0_ reverse side: _PARAM2_ over _PARAM3_ms",
+          "sentence": "Flip _PARAM0_ to the reverse side: _PARAM2_ over _PARAM3_ms",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"Flip\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ThreeDFlip::ThreeDFlip::FlipToSecond"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "",
+                    "NewDuration / 1000",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"Flip\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ThreeDFlip::ThreeDFlip::FlipToSecond"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "yes",
+                    "NewDuration / 1000",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "ThreeDFlip::ThreeDFlip",
+              "type": "behavior"
+            },
+            {
+              "description": "Reverse side",
+              "name": "Flip",
+              "supplementaryInformation": "[\"Flipped\",\"Unflipped\"]",
+              "type": "yesorno"
+            },
+            {
+              "description": "Duration (in milliseconds)",
+              "name": "NewDuration",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Flips the object to one specific side. The X origin point must be set at the object center.",
+          "fullName": "Flip to a side",
+          "functionType": "Action",
+          "name": "FlipToSecond",
+          "sentence": "Flip _PARAM0_ to the reverse side: _PARAM2_ over _PARAM3_ seconds",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Comment",
@@ -750,8 +892,7 @@
                 "textG": 0,
                 "textR": 0
               },
-              "comment": "When the object is flipping, the \"is flipped\" parameter is not yet set,\nso it's value is the opposite of the animation goal.",
-              "comment2": ""
+              "comment": "When the object is flipping, the \"is flipped\" parameter is not yet set,\nso it's value is the opposite of the animation goal."
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -923,7 +1064,7 @@
                   "parameters": [
                     "Object",
                     "Behavior",
-                    "GetArgumentAsNumber(\"Duration\")",
+                    "NewDuration",
                     ""
                   ]
                 }
@@ -950,8 +1091,8 @@
               "type": "yesorno"
             },
             {
-              "description": "Duration (in milliseconds)",
-              "name": "Duration",
+              "description": "Duration (in seconds)",
+              "name": "NewDuration",
               "type": "expression"
             }
           ],
@@ -962,7 +1103,7 @@
         {
           "value": "500",
           "type": "Number",
-          "label": "Rotation duration (in milliseconds)",
+          "label": "",
           "description": "",
           "group": "",
           "extraInformation": [],
@@ -1002,7 +1143,7 @@
         {
           "value": "",
           "type": "Number",
-          "label": "Elapse time",
+          "label": "",
           "description": "",
           "group": "",
           "extraInformation": [],
