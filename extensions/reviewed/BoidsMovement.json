@@ -8,11 +8,14 @@
   "name": "BoidsMovement",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Glyphster Pack/Master/SVG/Restaurant/Restaurant_restaurant_seafood_animal_fish.svg",
   "shortDescription": "Simulates flocks movement.",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": [
     "Simulates swarms or flocks movement following the separation, alignment, cohesion principles. The flock can be attracted to a location or avoid some obstacles.",
     "",
-    "The [Fish School example](https://editor.gdevelop.io/?project=example://fish-school) shows how properties impact on the movement."
+    "The [Fish School example](https://editor.gdevelop.io/?project=example://fish-school) shows how properties impact on the movement.",
+    "",
+    "Update 0.2.3:",
+    "- fix activate/deactivate behavior not working."
   ],
   "origin": {
     "identifier": "BoidsMovement",
@@ -202,6 +205,9 @@
             "    this.behavior = behavior;",
             "  }",
             "",
+            "  isActivated() {",
+            "    return this.behavior.activated;",
+            "  }",
             "  /**",
             "   * Add a custom intent.",
             "   * @param {Boid} boid",
@@ -456,8 +462,12 @@
             "   * Move all instances.",
             "   */",
             "  moveAll() {",
-            "    this.boids.forEach(boid => boid.flock());",
             "    this.boids.forEach(boid => {",
+            "      if(!boid.isActivated()) return;",
+            "      boid.flock();",
+            "    });",
+            "    this.boids.forEach(boid => {",
+            "      if(!boid.isActivated()) return;",
             "      boid.move();",
             "      this.removeFromRBush(boid);",
             "      this.addToRBush(boid);",
@@ -709,7 +719,7 @@
                 "const object = objects[0];",
                 "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
                 "const behavior = object.getBehavior(behaviorName);",
-                "runtimeScene.__boidsExtension.boidsManager.add(behavior);"
+                "behavior.activated = 1;"
               ],
               "parameterObjects": "Object",
               "useStrict": true,
@@ -743,7 +753,7 @@
                 "const object = objects[0];",
                 "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
                 "const behavior = object.getBehavior(behaviorName);",
-                "runtimeScene.__boidsExtension.boidsManager.remove(behavior);"
+                "behavior.activated = 0;"
               ],
               "parameterObjects": "Object",
               "useStrict": true,
