@@ -8,7 +8,7 @@
   "name": "CameraShake",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/vector-difference-ab.svg",
   "shortDescription": "Shake layer cameras.",
-  "version": "3.0.3",
+  "version": "4.0.0",
   "description": [
     "Shake layer cameras with translation, rotation and zoom.",
     "",
@@ -17,6 +17,10 @@
     "- Low frequency shaking allows to simulate slow moving objects (ship rocking back and forth)",
     "",
     "Release notes:",
+    "- Version 4.0.0",
+    "    - The shaking is enabled for all layers by default.",
+    "    - Use the \"shakable layer\" action to disable the shaking for some layers.",
+    "",
     "- Version 3.0.0",
     "    - No adaptation of the game events is needed.",
     "    - It fixes an issue when used with scrolling, the amplitude will feel bigger in this case.",
@@ -53,15 +57,48 @@
           "actions": [
             {
               "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__CameraShake.Index",
+                "=",
+                "0"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Repeat",
+          "repeatExpression": "CameraShake3D::LayerCount()",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
                 "value": "CameraShake::SetLayerShakable"
               },
               "parameters": [
                 "",
                 "",
-                "\"\"",
+                "CameraShake3D::LayerName(Variable(__CameraShake.Index))",
                 ""
               ]
             },
+            {
+              "type": {
+                "value": "ModVarScene"
+              },
+              "parameters": [
+                "__CameraShake.Index",
+                "+",
+                "1"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
             {
               "type": {
                 "value": "CameraShake::SetDefaultShakingFrequency"
@@ -107,6 +144,74 @@
         }
       ],
       "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the number of layers the current scene has. ",
+      "fullName": "Layer count",
+      "functionType": "Expression",
+      "name": "LayerCount",
+      "private": true,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "gdjs.__CameraShake3D = gdjs.__CameraShake3D || {};\r",
+            "gdjs.__CameraShake3D.layerNames = gdjs.__CameraShake3D.layerNames || [];\r",
+            "const layerNames = gdjs.__CameraShake3D.layerNames;\r",
+            "runtimeScene.getAllLayerNames(layerNames);\r",
+            "\r",
+            "eventsFunctionContext.returnValue = layerNames.length;\r",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the number of layers the current scene has. ",
+      "fullName": "Layer name",
+      "functionType": "StringExpression",
+      "name": "LayerName",
+      "private": true,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const layerIndex = eventsFunctionContext.getArgument(\"LayerIndex\");\r",
+            "\r",
+            "gdjs.__CameraShake3D = gdjs.__CameraShake3D || {};\r",
+            "gdjs.__CameraShake3D.layerNames = gdjs.__CameraShake3D.layerNames || [];\r",
+            "const layerNames = gdjs.__CameraShake3D.layerNames;\r",
+            "runtimeScene.getAllLayerNames(layerNames);\r",
+            "\r",
+            "eventsFunctionContext.returnValue = layerNames[layerIndex];\r",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "string"
+      },
+      "parameters": [
+        {
+          "description": "Layer index",
+          "name": "LayerIndex",
+          "type": "expression"
+        }
+      ],
       "objectGroups": []
     },
     {
