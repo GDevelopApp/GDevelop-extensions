@@ -26,7 +26,7 @@
     "- Manipulable \"Time scale\" of physics via action.",
     "",
     "For documentation and usage visit: https://sites.google.com/view/hedgd/home",
-    "Update: 11:29pm 22/6/2024"
+    "Update: 01:02am 23/6/2024"
   ],
   "tags": [
     "Platformer",
@@ -494,7 +494,7 @@
                     {
                       "type": {
                         "inverted": true,
-                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyUseForces"
+                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyFrameIndependent"
                       },
                       "parameters": [
                         "Object",
@@ -505,14 +505,24 @@
                   "actions": [
                     {
                       "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "deltaValue",
+                        "=",
+                        "1"
+                      ]
+                    },
+                    {
+                      "type": {
                         "value": "SetCenter"
                       },
                       "parameters": [
                         "Object",
                         "+",
-                        "((OldSpeedX + SpeedX) / 2) * TimeScale",
+                        "SpeedX * TimeScale",
                         "+",
-                        "((OldSpeedY + SpeedY) / 2) * TimeScale"
+                        "SpeedY * TimeScale"
                       ]
                     }
                   ]
@@ -522,7 +532,7 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyUseForces"
+                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyFrameIndependent"
                       },
                       "parameters": [
                         "Object",
@@ -533,13 +543,24 @@
                   "actions": [
                     {
                       "type": {
-                        "value": "AddForceXY"
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "deltaValue",
+                        "=",
+                        "60 * TimeDelta()"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetCenter"
                       },
                       "parameters": [
                         "Object",
-                        "((OldSpeedX + SpeedX) / 2) * TimeScale",
-                        "((OldSpeedY + SpeedY) / 2) * TimeScale",
-                        "0"
+                        "+",
+                        "(((OldSpeedX + SpeedX) / 2)) * deltaValue * TimeScale",
+                        "+",
+                        "(((OldSpeedY + SpeedY) / 2)) * deltaValue * TimeScale"
                       ]
                     }
                   ]
@@ -548,6 +569,26 @@
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [],
                   "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "finalAcceleration",
+                        "=",
+                        "Acceleration * deltaValue"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "finalFriction",
+                        "=",
+                        "Acceleration * deltaValue"
+                      ]
+                    },
                     {
                       "type": {
                         "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOldSpeedX"
@@ -909,7 +950,7 @@
                                 {
                                   "type": {
                                     "inverted": true,
-                                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyUseForces"
+                                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyFrameIndependent"
                                   },
                                   "parameters": [
                                     "Object",
@@ -937,7 +978,7 @@
                               "conditions": [
                                 {
                                   "type": {
-                                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyUseForces"
+                                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyFrameIndependent"
                                   },
                                   "parameters": [
                                     "Object",
@@ -948,13 +989,14 @@
                               "actions": [
                                 {
                                   "type": {
-                                    "value": "AddForceXY"
+                                    "value": "SetCenter"
                                   },
                                   "parameters": [
                                     "Object",
-                                    "SpeedX * TimeScale",
-                                    "SpeedY * TimeScale",
-                                    "0"
+                                    "+",
+                                    "(((OldSpeedX + SpeedX) / 2)) * deltaValue * TimeScale",
+                                    "+",
+                                    "(((OldSpeedY + SpeedY) / 2)) * deltaValue * TimeScale"
                                   ]
                                 }
                               ]
@@ -1235,7 +1277,7 @@
                                 "Object",
                                 "Behavior",
                                 "=",
-                                "max(-TopSpeed, Speed - (Acceleration * TimeScale))"
+                                "max(-TopSpeed, Speed - (finalAcceleration * TimeScale))"
                               ]
                             },
                             {
@@ -1246,7 +1288,7 @@
                                 "Object",
                                 "Behavior",
                                 "-",
-                                "(Acceleration * (1 - sign(abs(Speed)))) * TimeScale"
+                                "(finalAcceleration * (1 - sign(abs(Speed)))) * TimeScale"
                               ]
                             }
                           ]
@@ -1286,7 +1328,7 @@
                                 "Object",
                                 "Behavior",
                                 "=",
-                                "min(TopSpeed, Speed + (Acceleration * TimeScale))"
+                                "min(TopSpeed, Speed + (finalAcceleration * TimeScale))"
                               ]
                             },
                             {
@@ -1297,7 +1339,7 @@
                                 "Object",
                                 "Behavior",
                                 "+",
-                                "(Acceleration * (1 - sign(abs(Speed)))) * TimeScale"
+                                "(finalAcceleration * (1 - sign(abs(Speed)))) * TimeScale"
                               ]
                             }
                           ]
@@ -1367,7 +1409,7 @@
                                 "Object",
                                 "Behavior",
                                 "=",
-                                "max(-TopXspeed, SpeedX - (Acceleration * TimeScale))"
+                                "max(-TopXspeed, SpeedX - (finalAcceleration * TimeScale))"
                               ]
                             },
                             {
@@ -1378,7 +1420,7 @@
                                 "Object",
                                 "Behavior",
                                 "-",
-                                "(Acceleration * (1 - sign(abs(SpeedX)))) * TimeScale"
+                                "(finalAcceleration * (1 - sign(abs(SpeedX)))) * TimeScale"
                               ]
                             }
                           ]
@@ -1418,7 +1460,7 @@
                                 "Object",
                                 "Behavior",
                                 "=",
-                                "min(TopXspeed, SpeedX + (Acceleration * TimeScale))"
+                                "min(TopXspeed, SpeedX + (finalAcceleration * TimeScale))"
                               ]
                             },
                             {
@@ -1429,7 +1471,7 @@
                                 "Object",
                                 "Behavior",
                                 "+",
-                                "(Acceleration * (1 - sign(abs(SpeedX)))) * TimeScale"
+                                "(finalAcceleration * (1 - sign(abs(SpeedX)))) * TimeScale"
                               ]
                             }
                           ]
@@ -1520,7 +1562,7 @@
                                 "Object",
                                 "Behavior",
                                 "=",
-                                "Speed - ((Friction * sign(Speed)) * TimeScale)"
+                                "Speed - ((finalFriction * sign(Speed)) * TimeScale)"
                               ]
                             }
                           ],
@@ -1535,7 +1577,7 @@
                                   "parameters": [
                                     "abs(Speed)",
                                     "<",
-                                    "Friction"
+                                    "finalFriction"
                                   ]
                                 }
                               ],
@@ -1599,7 +1641,7 @@
                                 "Object",
                                 "Behavior",
                                 "=",
-                                "SpeedX - ((Friction * sign(SpeedX)) * TimeScale)"
+                                "SpeedX - ((finalFriction * sign(SpeedX)) * TimeScale)"
                               ]
                             }
                           ],
@@ -1614,7 +1656,7 @@
                                   "parameters": [
                                     "abs(SpeedX)",
                                     "<",
-                                    "Friction"
+                                    "finalFriction"
                                   ]
                                 }
                               ],
@@ -2885,7 +2927,7 @@
                             "Object",
                             "Behavior",
                             "+",
-                            "Gravity * TimeScale"
+                            "(Gravity * deltaValue) * TimeScale"
                           ]
                         },
                         {
@@ -4784,7 +4826,7 @@
                                     "Object",
                                     "Behavior",
                                     "+",
-                                    "(DownSlopeFactor*sin(ToRad(FloorAngle))) * TimeScale()"
+                                    "((DownSlopeFactor*deltaValue)*sin(ToRad(FloorAngle))) * TimeScale()"
                                   ]
                                 }
                               ],
@@ -4813,7 +4855,7 @@
                                         "Object",
                                         "Behavior",
                                         "+",
-                                        "(DownSlopeFactor*sin(ToRad(FloorAngle))) * TimeScale()"
+                                        "((DownSlopeFactor*deltaValue)*sin(ToRad(FloorAngle))) * TimeScale()"
                                       ]
                                     }
                                   ]
@@ -4860,7 +4902,7 @@
                                     "Object",
                                     "Behavior",
                                     "+",
-                                    "(UpSlopeFactor*sin(ToRad(FloorAngle))) * TimeScale()"
+                                    "((UpSlopeFactor*deltaValue)*sin(ToRad(FloorAngle))) * TimeScale()"
                                   ]
                                 }
                               ],
@@ -4889,7 +4931,7 @@
                                         "Object",
                                         "Behavior",
                                         "+",
-                                        "(UpSlopeFactor*sin(ToRad(FloorAngle))) * TimeScale()"
+                                        "((UpSlopeFactor*deltaValue)*sin(ToRad(FloorAngle))) * TimeScale()"
                                       ]
                                     }
                                   ]
@@ -5826,9 +5868,9 @@
                                 "value": "BuiltinCommonInstructions::CompareNumbers"
                               },
                               "parameters": [
-                                "abs(Speed)",
+                                "abs(Speed * deltaValue)",
                                 "<=",
-                                "UnattachMinimumSpeed"
+                                "UnattachMinimumSpeed * deltaValue"
                               ]
                             }
                           ],
@@ -5863,9 +5905,9 @@
                                 "value": "BuiltinCommonInstructions::CompareNumbers"
                               },
                               "parameters": [
-                                "abs(Speed)",
+                                "abs(Speed * deltaValue)",
                                 ">",
-                                "abs(UnattachMinimumSpeed)"
+                                "abs(UnattachMinimumSpeed * deltaValue)"
                               ]
                             }
                           ],
@@ -7422,6 +7464,26 @@
                       ]
                     }
                   ]
+                }
+              ],
+              "variables": [
+                {
+                  "folded": true,
+                  "name": "deltaValue",
+                  "type": "number",
+                  "value": 0
+                },
+                {
+                  "folded": true,
+                  "name": "finalAcceleration",
+                  "type": "number",
+                  "value": 0
+                },
+                {
+                  "folded": true,
+                  "name": "finalFriction",
+                  "type": "number",
+                  "value": 0
                 }
               ]
             }
@@ -12602,6 +12664,138 @@
             }
           ],
           "objectGroups": []
+        },
+        {
+          "description": "Check if frame-indepentent movement is on. uses the verlet integration + time delta formula for frame-independent movement, keep in mind this may lead to unexpected results on the hedgehog physics as the framerate varies.",
+          "fullName": "Frame-indepentent movement",
+          "functionType": "Condition",
+          "group": "Advanced",
+          "name": "FrameIndependent",
+          "sentence": "Activate frame-indepentent movement for _PARAM0_? _PARAM1_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyFrameIndependent"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "HedgehogPlatformer::Hed_PlatformerCharacter",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Activate frame-indepentent movement. uses the verlet integration + time delta formula for frame-independent movement, keep in mind this may lead to unexpected results on the hedgehog physics as the framerate varies.",
+          "fullName": "Frame-indepentent movement",
+          "functionType": "Action",
+          "group": "Advanced",
+          "name": "SetFrameIndependent",
+          "sentence": "Activate frame-indepentent movement for _PARAM0_? _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"Value\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyFrameIndependent"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "no"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "GetArgumentAsBoolean"
+                  },
+                  "parameters": [
+                    "\"Value\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyFrameIndependent"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "yes"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "HedgehogPlatformer::Hed_PlatformerCharacter",
+              "type": "behavior"
+            },
+            {
+              "defaultValue": "yes",
+              "description": "Activate?",
+              "name": "Value",
+              "optional": true,
+              "type": "yesorno"
+            }
+          ],
+          "objectGroups": []
         }
       ],
       "propertyDescriptors": [
@@ -12851,11 +13045,11 @@
         {
           "value": "",
           "type": "Boolean",
-          "label": "Use forces",
-          "description": "Use trajectory based on forces, instead of pixels.",
+          "label": "Frame-indepentent movement",
+          "description": "Use verlet integration + time delta formula for frame-independent movement.",
           "group": "Speed",
           "extraInformation": [],
-          "name": "UseForces"
+          "name": "FrameIndependent"
         },
         {
           "value": "9.5",
