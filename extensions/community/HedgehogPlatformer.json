@@ -8,7 +8,7 @@
   "name": "HedgehogPlatformer",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/Glyphster Pack/Master/SVG/Space/9ea467d2404c1736b87d763c884e9b9dfb13a401360f69c6a17afc8f5d583d58_Space_warp_galaxy.svg",
   "shortDescription": "This is an extension for 360° movement platformer akin to the Sonic The Hedgehog games.",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": [
     "An advanced platformer extension with unique physics made using events that replicate physics from games like Sonic The Hedgehog.",
     "",
@@ -26,7 +26,7 @@
     "- Manipulable \"Time scale\" of physics via action.",
     "",
     "For documentation and usage visit: https://sites.google.com/view/hedgd/home",
-    "Update: 01:02am 23/6/2024"
+    "Update: 04:36pm 23/6/2024"
   ],
   "tags": [
     "Platformer",
@@ -208,6 +208,28 @@
                     "Behavior",
                     "="
                   ]
+                },
+                {
+                  "type": {
+                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOldX"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Object.CenterX()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOldY"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Object.CenterY()"
+                  ]
                 }
               ]
             }
@@ -274,7 +296,7 @@
                 },
                 {
                   "type": {
-                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertySavedAngle"
+                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOriginalAngle"
                   },
                   "parameters": [
                     "Object",
@@ -494,6 +516,33 @@
                     {
                       "type": {
                         "inverted": true,
+                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyUsePixelPerFrame"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "speedUnit",
+                        "=",
+                        "60"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "inverted": true,
                         "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyFrameIndependent"
                       },
                       "parameters": [
@@ -508,9 +557,9 @@
                         "value": "SetNumberVariable"
                       },
                       "parameters": [
-                        "deltaValue",
+                        "deltaTimeScale",
                         "=",
-                        "1"
+                        "TimeScale / speedUnit"
                       ]
                     },
                     {
@@ -546,9 +595,9 @@
                         "value": "SetNumberVariable"
                       },
                       "parameters": [
-                        "deltaValue",
+                        "deltaTimeScale",
                         "=",
-                        "60 * TimeDelta()"
+                        "(TimeScale * (60 * TimeDelta())) / speedUnit"
                       ]
                     },
                     {
@@ -558,9 +607,9 @@
                       "parameters": [
                         "Object",
                         "+",
-                        "(((OldSpeedX + SpeedX) / 2)) * deltaValue * TimeScale",
+                        "((OldSpeedX + SpeedX) / 2) * deltaTimeScale",
                         "+",
-                        "(((OldSpeedY + SpeedY) / 2)) * deltaValue * TimeScale"
+                        "((OldSpeedY + SpeedY) / 2) * deltaTimeScale"
                       ]
                     }
                   ]
@@ -569,26 +618,6 @@
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [],
                   "actions": [
-                    {
-                      "type": {
-                        "value": "SetNumberVariable"
-                      },
-                      "parameters": [
-                        "finalAcceleration",
-                        "=",
-                        "Acceleration * deltaValue"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "SetNumberVariable"
-                      },
-                      "parameters": [
-                        "finalFriction",
-                        "=",
-                        "Acceleration * deltaValue"
-                      ]
-                    },
                     {
                       "type": {
                         "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOldSpeedX"
@@ -994,9 +1023,9 @@
                                   "parameters": [
                                     "Object",
                                     "+",
-                                    "(((OldSpeedX + SpeedX) / 2)) * deltaValue * TimeScale",
+                                    "((OldSpeedX + SpeedX) / 2) * deltaTimeScale",
                                     "+",
-                                    "(((OldSpeedY + SpeedY) / 2)) * deltaValue * TimeScale"
+                                    "((OldSpeedY + SpeedY) / 2) * deltaTimeScale"
                                   ]
                                 }
                               ]
@@ -1162,7 +1191,7 @@
                         "textG": 0,
                         "textR": 0
                       },
-                      "comment": "Left + right input reset"
+                      "comment": "Ignore contradictory inputs"
                     },
                     {
                       "type": "BuiltinCommonInstructions::Standard",
@@ -1228,6 +1257,18 @@
                       "comment": "Left and right input on ground (speed capped to top speed)"
                     },
                     {
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
+                      },
+                      "comment": "When the character is already running at a higher speed than he can possibly achieve on his own, his speed must not be capped."
+                    },
+                    {
                       "type": "BuiltinCommonInstructions::Standard",
                       "conditions": [
                         {
@@ -1277,7 +1318,7 @@
                                 "Object",
                                 "Behavior",
                                 "=",
-                                "max(-TopSpeed, Speed - (finalAcceleration * TimeScale))"
+                                "max(-TopSpeed, Speed - (Acceleration * deltaTimeScale))"
                               ]
                             },
                             {
@@ -1288,7 +1329,7 @@
                                 "Object",
                                 "Behavior",
                                 "-",
-                                "(finalAcceleration * (1 - sign(abs(Speed)))) * TimeScale"
+                                "(Acceleration * (1 - sign(abs(Speed)))) * deltaTimeScale"
                               ]
                             }
                           ]
@@ -1328,7 +1369,7 @@
                                 "Object",
                                 "Behavior",
                                 "=",
-                                "min(TopSpeed, Speed + (finalAcceleration * TimeScale))"
+                                "min(TopSpeed, Speed + (Acceleration * deltaTimeScale))"
                               ]
                             },
                             {
@@ -1339,7 +1380,7 @@
                                 "Object",
                                 "Behavior",
                                 "+",
-                                "(finalAcceleration * (1 - sign(abs(Speed)))) * TimeScale"
+                                "(Acceleration * (1 - sign(abs(Speed)))) * deltaTimeScale"
                               ]
                             }
                           ]
@@ -1357,6 +1398,18 @@
                         "textR": 0
                       },
                       "comment": "Left and right input on air (horizontal speed capped to top horizontal speed)"
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
+                      },
+                      "comment": "Same applies for horizontal speed on air"
                     },
                     {
                       "type": "BuiltinCommonInstructions::Standard",
@@ -1409,7 +1462,7 @@
                                 "Object",
                                 "Behavior",
                                 "=",
-                                "max(-TopXspeed, SpeedX - (finalAcceleration * TimeScale))"
+                                "max(-TopXspeed, SpeedX - (Acceleration * deltaTimeScale))"
                               ]
                             },
                             {
@@ -1420,7 +1473,7 @@
                                 "Object",
                                 "Behavior",
                                 "-",
-                                "(finalAcceleration * (1 - sign(abs(SpeedX)))) * TimeScale"
+                                "(Acceleration * (1 - sign(abs(SpeedX)))) * deltaTimeScale"
                               ]
                             }
                           ]
@@ -1460,7 +1513,7 @@
                                 "Object",
                                 "Behavior",
                                 "=",
-                                "min(TopXspeed, SpeedX + (finalAcceleration * TimeScale))"
+                                "min(TopXspeed, SpeedX + (Acceleration * deltaTimeScale))"
                               ]
                             },
                             {
@@ -1471,7 +1524,7 @@
                                 "Object",
                                 "Behavior",
                                 "+",
-                                "(finalAcceleration * (1 - sign(abs(SpeedX)))) * TimeScale"
+                                "(Acceleration * (1 - sign(abs(SpeedX)))) * deltaTimeScale"
                               ]
                             }
                           ]
@@ -1562,7 +1615,7 @@
                                 "Object",
                                 "Behavior",
                                 "=",
-                                "Speed - ((finalFriction * sign(Speed)) * TimeScale)"
+                                "Speed - ((Friction * sign(Speed)) * deltaTimeScale)"
                               ]
                             }
                           ],
@@ -1577,7 +1630,7 @@
                                   "parameters": [
                                     "abs(Speed)",
                                     "<",
-                                    "finalFriction"
+                                    "Friction * deltaTimeScale"
                                   ]
                                 }
                               ],
@@ -1641,7 +1694,7 @@
                                 "Object",
                                 "Behavior",
                                 "=",
-                                "SpeedX - ((finalFriction * sign(SpeedX)) * TimeScale)"
+                                "SpeedX - ((Friction * sign(SpeedX)) * deltaTimeScale)"
                               ]
                             }
                           ],
@@ -1656,7 +1709,7 @@
                                   "parameters": [
                                     "abs(SpeedX)",
                                     "<",
-                                    "finalFriction"
+                                    "Friction * deltaTimeScale"
                                   ]
                                 }
                               ],
@@ -2927,7 +2980,7 @@
                             "Object",
                             "Behavior",
                             "+",
-                            "(Gravity * deltaValue) * TimeScale"
+                            "Gravity * deltaTimeScale"
                           ]
                         },
                         {
@@ -4826,7 +4879,7 @@
                                     "Object",
                                     "Behavior",
                                     "+",
-                                    "((DownSlopeFactor*deltaValue)*sin(ToRad(FloorAngle))) * TimeScale()"
+                                    "(DownSlopeFactor*sin(ToRad(FloorAngle))) * deltaTimeScale"
                                   ]
                                 }
                               ],
@@ -4855,7 +4908,7 @@
                                         "Object",
                                         "Behavior",
                                         "+",
-                                        "((DownSlopeFactor*deltaValue)*sin(ToRad(FloorAngle))) * TimeScale()"
+                                        "(DownSlopeFactor*sin(ToRad(FloorAngle))) * deltaTimeScale"
                                       ]
                                     }
                                   ]
@@ -4902,7 +4955,7 @@
                                     "Object",
                                     "Behavior",
                                     "+",
-                                    "((UpSlopeFactor*deltaValue)*sin(ToRad(FloorAngle))) * TimeScale()"
+                                    "(UpSlopeFactor*sin(ToRad(FloorAngle))) * deltaTimeScale"
                                   ]
                                 }
                               ],
@@ -4931,7 +4984,7 @@
                                         "Object",
                                         "Behavior",
                                         "+",
-                                        "((UpSlopeFactor*deltaValue)*sin(ToRad(FloorAngle))) * TimeScale()"
+                                        "(UpSlopeFactor*sin(ToRad(FloorAngle))) * deltaTimeScale"
                                       ]
                                     }
                                   ]
@@ -5868,9 +5921,9 @@
                                 "value": "BuiltinCommonInstructions::CompareNumbers"
                               },
                               "parameters": [
-                                "abs(Speed * deltaValue)",
+                                "abs(Speed)",
                                 "<=",
-                                "UnattachMinimumSpeed * deltaValue"
+                                "UnattachMinimumSpeed"
                               ]
                             }
                           ],
@@ -5905,9 +5958,9 @@
                                 "value": "BuiltinCommonInstructions::CompareNumbers"
                               },
                               "parameters": [
-                                "abs(Speed * deltaValue)",
+                                "abs(Speed)",
                                 ">",
-                                "abs(UnattachMinimumSpeed * deltaValue)"
+                                "abs(UnattachMinimumSpeed)"
                               ]
                             }
                           ],
@@ -7394,7 +7447,7 @@
                       "parameters": [
                         "Object",
                         "=",
-                        "SavedAngle"
+                        "OriginalAngle"
                       ]
                     }
                   ]
@@ -7469,21 +7522,15 @@
               "variables": [
                 {
                   "folded": true,
-                  "name": "deltaValue",
+                  "name": "deltaTimeScale",
                   "type": "number",
-                  "value": 0
+                  "value": 1
                 },
                 {
                   "folded": true,
-                  "name": "finalAcceleration",
+                  "name": "speedUnit",
                   "type": "number",
-                  "value": 0
-                },
-                {
-                  "folded": true,
-                  "name": "finalFriction",
-                  "type": "number",
-                  "value": 0
+                  "value": 1
                 }
               ]
             }
@@ -11509,6 +11556,153 @@
           "objectGroups": []
         },
         {
+          "description": "Checks if the object is moving.",
+          "fullName": "Is moving",
+          "functionType": "Condition",
+          "group": "Speed",
+          "name": "IsMoving",
+          "sentence": "_PARAM0_ is moving",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::CompareNumbers"
+                  },
+                  "parameters": [
+                    "abs(OldX - Object.CenterX()) + abs(OldY - Object.CenterY())",
+                    "!=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertySpeedX"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "!=",
+                        "0"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetReturnBoolean"
+                      },
+                      "parameters": [
+                        "True"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertySpeedY"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "!=",
+                        "0"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetReturnBoolean"
+                      },
+                      "parameters": [
+                        "True"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyKeyRightPress"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ">",
+                        "0"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetReturnBoolean"
+                      },
+                      "parameters": [
+                        "True"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyKeyLeftPress"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ">",
+                        "0"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetReturnBoolean"
+                      },
+                      "parameters": [
+                        "True"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "HedgehogPlatformer::Hed_PlatformerCharacter",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "Sets the object platformer in airborne state.",
           "fullName": "Set airborne mode",
           "functionType": "Action",
@@ -12820,7 +13014,7 @@
           "name": "DefaultControls"
         },
         {
-          "value": "12",
+          "value": "480",
           "type": "Number",
           "unit": "PixelSpeed",
           "label": "Jump speed",
@@ -12848,7 +13042,7 @@
           "name": "JumpFrames"
         },
         {
-          "value": "13",
+          "value": "780",
           "type": "Number",
           "unit": "PixelSpeed",
           "label": "Max speed (affects X and Y speed on ground)",
@@ -12858,7 +13052,7 @@
           "name": "MaxSpeed"
         },
         {
-          "value": "13",
+          "value": "780",
           "type": "Number",
           "unit": "PixelSpeed",
           "label": "Max horizontal speed (airborne)",
@@ -12868,7 +13062,7 @@
           "name": "MaxXSpeed"
         },
         {
-          "value": "13",
+          "value": "780",
           "type": "Number",
           "unit": "PixelSpeed",
           "label": "Max vertical speed (airborne)",
@@ -12878,7 +13072,7 @@
           "name": "MaxYSpeed"
         },
         {
-          "value": "0.25",
+          "value": "720",
           "type": "Number",
           "unit": "PixelAcceleration",
           "label": "Gravity",
@@ -12888,7 +13082,7 @@
           "name": "Gravity"
         },
         {
-          "value": "0.75",
+          "value": "2160",
           "type": "Number",
           "unit": "PixelAcceleration",
           "label": "Downwards slope factor",
@@ -12898,7 +13092,7 @@
           "name": "DownSlopeFactor"
         },
         {
-          "value": "0.6",
+          "value": "2160",
           "type": "Number",
           "unit": "PixelAcceleration",
           "label": "Upwards slope factor",
@@ -12918,7 +13112,7 @@
           "name": "SlopeFactorAngle"
         },
         {
-          "value": "0.3",
+          "value": "2160",
           "type": "Number",
           "unit": "PixelAcceleration",
           "label": "Acceleration",
@@ -12928,7 +13122,7 @@
           "name": "Acceleration"
         },
         {
-          "value": "0.6",
+          "value": "2160",
           "type": "Number",
           "unit": "PixelAcceleration",
           "label": "Friction",
@@ -13004,7 +13198,7 @@
           "name": "UnattachMinimumAngle"
         },
         {
-          "value": "2",
+          "value": "120",
           "type": "Number",
           "unit": "Pixel",
           "label": "Minimum speed for ground unattach",
@@ -13036,7 +13230,7 @@
           "value": "1",
           "type": "Number",
           "label": "Time scale",
-          "description": "",
+          "description": "The time scale of the hedgehog physics.",
           "group": "",
           "extraInformation": [],
           "hidden": true,
@@ -13045,14 +13239,25 @@
         {
           "value": "",
           "type": "Boolean",
-          "label": "Frame-indepentent movement",
+          "label": "Pixel per frame unit",
+          "description": "Uses pixels per frame on behavior speed properties instead of pixels per second.",
+          "group": "Speed",
+          "extraInformation": [],
+          "advanced": true,
+          "name": "UsePixelPerFrame"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "Frame-independent movement",
           "description": "Use verlet integration + time delta formula for frame-independent movement.",
           "group": "Speed",
           "extraInformation": [],
+          "advanced": true,
           "name": "FrameIndependent"
         },
         {
-          "value": "9.5",
+          "value": "570",
           "type": "Number",
           "unit": "PixelSpeed",
           "label": "Top horizontal speed (airborne)",
@@ -13062,7 +13267,7 @@
           "name": "TopXspeed"
         },
         {
-          "value": "9.5",
+          "value": "570",
           "type": "Number",
           "unit": "PixelSpeed",
           "label": "Top speed",
@@ -13549,6 +13754,36 @@
           "extraInformation": [],
           "hidden": true,
           "name": "OriginalHeight"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Old x position of the platformer",
+          "description": "Used in the \"IsMoving\" condition",
+          "group": "Extension",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "OldX"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Old y position of the platformer",
+          "description": "Used in the \"IsMoving\" condition",
+          "group": "Extension",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "OldY"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "DegreeAngle",
+          "label": "Original angle of the object",
+          "description": "Used for \"Rotate\" function in hedgehog movement.",
+          "group": "Extension",
+          "extraInformation": [],
+          "name": "OriginalAngle"
         }
       ],
       "sharedPropertyDescriptors": []
