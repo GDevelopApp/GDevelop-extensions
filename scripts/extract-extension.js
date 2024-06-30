@@ -8,13 +8,13 @@ const pipeline = require('util').promisify(require('stream').pipeline);
 /**
  * Extracts exactly one extension into the community extensions folder from a zip file.
  * @param {string} zipPath The path to the zip file to extract.
- * @param {string} [extensionsFolder] The folder with the extensions.
+ * @param {{extensionsFolder?: string, reviewed?: boolean}} [options]
  * @returns {Promise<{error: "too-many-files" | "no-json-found"| "invalid-file-name" | "zip-error", details?: any} | {error?: undefined,extensionName: string}>} the name of the extracted extension if successful, else a generic error code.
  */
-exports.extractExtension = async function (
-  zipPath,
-  extensionsFolder = `${__dirname}/../extensions`
-) {
+exports.extractExtension = async function (zipPath, options) {
+  const { extensionsFolder = `${__dirname}/../extensions`, reviewed = false } =
+    options || {};
+
   // Load in the archive with JSZip
   const zip = await JSZip.loadAsync(await readFile(zipPath)).catch((e) => {
     console.warn(`JSZip loading error caught: `, e);
@@ -43,7 +43,11 @@ exports.extractExtension = async function (
     // Write the extension to the community extensions folder
     await pipeline(
       file.nodeStream(),
-      createWriteStream(`${extensionsFolder}/community/${file.name}`)
+      createWriteStream(
+        `${extensionsFolder}/${reviewed ? 'reviewed' : 'community'}/${
+          file.name
+        }`
+      )
     );
   } catch (e) {
     console.warn(`JSZip extraction error caught: `, e);
