@@ -8,7 +8,7 @@
   "name": "ParticleEmitter3D",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/f2e5a34bf465f781866677762d385d6c8e9e8d203383f2df9a3b7e0fad6a2cb5_fire.svg",
   "shortDescription": "Display a large number of particles to create visual effects.",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": [
     "Particle emitters can be used to display:",
     "- Fire",
@@ -39,6 +39,8 @@
     "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
   ],
   "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
   "eventsFunctions": [
     {
       "description": "Define helper classes JavaScript code.",
@@ -6983,7 +6985,20 @@
                 "object.__particleSystem.dispose();",
                 "",
                 "// See doStepPostEvents",
-                "gameScene.__particleEmmiter3DExtension.emittersCount--;"
+                "gameScene.__particleEmmiter3DExtension.emittersCount--;",
+                "",
+                "if (gameScene.__particleEmmiter3DExtension.emittersCount === 0) {",
+                "    // Update batch system now because doStepPostEvents won't be called.",
+                "    gameScene.__particleEmmiter3DExtension.layerNames = gameScene.__particleEmmiter3DExtension.layerNames || [];",
+                "    const layerNames = gameScene.__particleEmmiter3DExtension.layerNames;",
+                "    gameScene.getAllLayerNames(layerNames);",
+                "    for (const layerName of layerNames) {",
+                "        const layer = gameScene.getLayer(layerName);",
+                "        if (layer.__particleEmmiter3DExtension) {",
+                "            layer.__particleEmmiter3DExtension.batchSystem.update(object.getElapsedTime() / 1000);",
+                "        }",
+                "    }",
+                "}"
               ],
               "parameterObjects": "Object",
               "useStrict": true,
