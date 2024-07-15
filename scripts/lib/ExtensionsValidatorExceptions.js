@@ -246,6 +246,19 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: ['getElapsedTime'],
       javaScriptObjectAllowedProperties: [],
     },
+    HedgehogPlatformer: {
+      gdjsAllowedProperties: [
+        '__hedgehogPlatformerExtension',
+        'RuntimeInstanceContainer',
+        'BehaviorRBushAABB',
+        'RuntimeBehavior',
+        'RaycastTestResult',
+        'Polygon',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [''],
+      javaScriptObjectAllowedProperties: [],
+    },
     Geolocation: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: ['geolocation'],
