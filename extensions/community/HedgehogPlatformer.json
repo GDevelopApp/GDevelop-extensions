@@ -27,7 +27,7 @@
     "",
     "## For documentation and usage visit: https://sites.google.com/view/hedgd/home",
     "",
-    "Update: 10:44pm 15/7/2024"
+    "Update: 10:05pm 16/7/2024"
   ],
   "tags": [
     "Platformer",
@@ -253,7 +253,7 @@
             "        searchArea.minY = y - oh / 2 - maxMovementLength;",
             "        searchArea.maxX = x + ow / 2 + maxMovementLength;",
             "        searchArea.maxY = y + oh / 2 + maxMovementLength;",
-            "        ",
+            "",
             "        result.length = 0;",
             "",
             "        const collisionLayerRBush = this._collisionLayerRBushes[collisionLayerIndex];",
@@ -280,6 +280,83 @@
             "            if (platformIsStillAround) {",
             "                result.push(platform);",
             "            }",
+            "        }",
+            "    }",
+            "",
+            "    /**",
+            "     * @param {number} x",
+            "     * @param {number} y",
+            "     */",
+            "    isInsidePotentialCollidingObjects(x, y) {",
+            "        for (const platformBehavior of this._potentialCollidingObjects) {",
+            "            const object = platformBehavior.owner;",
+            "            if (object.isCollidingWithPoint(x, y)) {",
+            "                return true;",
+            "            }",
+            "        }",
+            "        return false;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param {number} sourceX",
+            "     * @param {number} sourceY",
+            "     * @param {number} targetX",
+            "     * @param {number} targetY",
+            "     */",
+            "    raycastBothWayPotentialCollidingObjects(",
+            "        sourceX,",
+            "        sourceY,",
+            "        targetX,",
+            "        targetY,",
+            "    ) {",
+            "        if (this.isInsidePotentialCollidingObjects(sourceX, sourceY)) {",
+            "            // Cast the other way",
+            "            const rayX = -(targetX - sourceX);",
+            "            const rayY = -(targetY - sourceY);",
+            "            const rayLength = Math.hypot(rayX, rayY);",
+            "            const halfUnitX = rayX / (2 * rayLength);",
+            "            const halfUnitY = rayY / (2 * rayLength);",
+            "            let stepSourceX = sourceX;",
+            "            let stepSourceY = sourceY;",
+            "            let stepTargetX = sourceX + rayX;",
+            "            let stepTargetY = sourceY + rayY;",
+            "            let iteration = 0;",
+            "            do {",
+            "                const isIntersectionFound = this.raycastPotentialCollidingObjects(",
+            "                    stepSourceX,",
+            "                    stepSourceY,",
+            "                    stepTargetX,",
+            "                    stepTargetY,",
+            "                );",
+            "                if (!isIntersectionFound) {",
+            "                    return false;",
+            "                }",
+            "                stepSourceX = this.lastRaycastResult.intersectionX + halfUnitX;",
+            "                stepSourceY = this.lastRaycastResult.intersectionY + halfUnitY;",
+            "                iteration++;",
+            "            }",
+            "            // It needs to loop as the intersection may be on an inner edge.",
+            "            while (iteration < 100",
+            "            && this.isInsidePotentialCollidingObjects(stepSourceX, stepSourceY)",
+            "            // Ensure the source doesn't go passed the target.",
+            "            && Math.sign(rayX) === Math.sign(stepTargetX - stepSourceX)",
+            "                && Math.sign(rayY) === Math.sign(stepTargetY - stepSourceY));",
+            "            // Replace the last raycast step distance with the whole distance.",
+            "            this.lastRaycastResult.distance = -Math.hypot(",
+            "                this.lastRaycastResult.intersectionX - sourceX,",
+            "                this.lastRaycastResult.intersectionY - sourceY",
+            "            );",
+            "            this.lastRaycastResult.normalX = -this.lastRaycastResult.normalX;",
+            "            this.lastRaycastResult.normalY = -this.lastRaycastResult.normalY;",
+            "            return true;",
+            "        }",
+            "        else {",
+            "            return this.raycastPotentialCollidingObjects(",
+            "                sourceX,",
+            "                sourceY,",
+            "                targetX,",
+            "                targetY,",
+            "            );",
             "        }",
             "    }",
             "",
@@ -667,13 +744,13 @@
             "    return Math.pow(radiusX, 2) + Math.pow(radiusY, 2);",
             "};",
             "",
-            "  /**",
-            "   * Data structure that are (re)used by",
-            "   * {@link RuntimeObject.raycastTest} to avoid any allocation.",
-            "   */",
-            "  const raycastObjectTestStatics = {",
+            "/**",
+            " * Data structure that are (re)used by",
+            " * {@link RuntimeObject.raycastTest} to avoid any allocation.",
+            " */",
+            "const raycastObjectTestStatics = {",
             "    result: makeNewRaycastTestResult(),",
-            "  };",
+            "};",
             "",
             "/**",
             " * @param object {gdjs.RuntimeObject}",
@@ -757,8 +834,7 @@
             "    getManager,",
             "    PlatformObjectsManager,",
             "    PlatformRuntimeBehavior,",
-            "};",
-            ""
+            "};"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -967,6 +1043,17 @@
                     "=",
                     "Object.CenterY()"
                   ]
+                },
+                {
+                  "type": {
+                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::HedgehogMovement"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "",
+                    ""
+                  ]
                 }
               ]
             }
@@ -1001,6 +1088,7 @@
               "colorG": 176,
               "colorR": 74,
               "creationTime": 0,
+              "folded": true,
               "name": "Slope factor",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
@@ -1110,6 +1198,7 @@
               "colorG": 176,
               "colorR": 74,
               "creationTime": 0,
+              "folded": true,
               "name": "Input",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
@@ -1822,6 +1911,7 @@
               "colorG": 176,
               "colorR": 74,
               "creationTime": 0,
+              "folded": true,
               "name": "Wall collision",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
@@ -1915,24 +2005,11 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "platformOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "CollisionNP"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "",
-                            "",
+                            "Behavior",
                             ""
                           ]
                         }
@@ -1940,11 +2017,11 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "SeparateFromObjects"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SeparateFromPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
+                            "Behavior",
                             ""
                           ]
                         },
@@ -2124,25 +2201,12 @@
                         },
                         {
                           "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "wallOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "CollisionNP"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "",
-                            "",
-                            "yes"
+                            "Behavior",
+                            ""
                           ]
                         }
                       ],
@@ -2182,12 +2246,12 @@
                         },
                         {
                           "type": {
-                            "value": "SeparateFromObjects"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SeparateFromPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "no"
+                            "Behavior",
+                            ""
                           ]
                         },
                         {
@@ -2258,25 +2322,12 @@
                         },
                         {
                           "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "wallOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "CollisionNP"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "",
-                            "",
-                            "yes"
+                            "Behavior",
+                            ""
                           ]
                         }
                       ],
@@ -2316,12 +2367,12 @@
                         },
                         {
                           "type": {
-                            "value": "SeparateFromObjects"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SeparateFromPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "no"
+                            "Behavior",
+                            ""
                           ]
                         },
                         {
@@ -2419,6 +2470,7 @@
               "colorG": 176,
               "colorR": 74,
               "creationTime": 0,
+              "folded": true,
               "name": "Speed",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
@@ -2718,24 +2770,11 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "platformOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "CollisionNP"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "",
-                            "",
+                            "Behavior",
                             ""
                           ]
                         }
@@ -2743,11 +2782,11 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "SeparateFromObjects"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SeparateFromPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
+                            "Behavior",
                             ""
                           ]
                         },
@@ -2858,6 +2897,23 @@
                     },
                     {
                       "type": {
+                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyIsOnFloor"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "="
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "disabled": true,
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
                         "value": "SetCenter"
                       },
                       "parameters": [
@@ -2867,15 +2923,199 @@
                         "+",
                         "FloorDetectRange * sin(ToRad(Object.Angle() + 90))"
                       ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "ModVarScene"
+                      },
+                      "parameters": [
+                        "HedgehogExtension.pointx1",
+                        "=",
+                        "0"
+                      ]
                     },
                     {
                       "type": {
-                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyIsOnFloor"
+                        "value": "ModVarScene"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
-                        "="
+                        "HedgehogExtension.pointy1",
+                        "=",
+                        "0"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "folded": true,
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "Raycast"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Object.CenterX() + (Object.Height() *cos(ToRad(Object.Angle() + 90)))",
+                            "Object.CenterY() + (Object.Height() *sin(ToRad(Object.Angle() + 90)))",
+                            "Object.Angle() - 90",
+                            "Object.Height()",
+                            "HedgehogExtension.pointx1",
+                            "HedgehogExtension.pointy1",
+                            ""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersect.X",
+                            "=",
+                            "Variable(HedgehogExtension.pointx1) + (FloorDetectRange * cos(ToRad(Object.Angle() + 90)))"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersect.Y",
+                            "=",
+                            "Variable(HedgehogExtension.pointy1) + (FloorDetectRange * sin(ToRad(Object.Angle() + 90)))"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.X",
+                            "=",
+                            "Intersect.X"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.Y",
+                            "=",
+                            "Intersect.Y"
+                          ]
+                        }
+                      ],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "HedgehogPlatformer::Hed_PlatformerCharacter::RaycastClosePlatforms"
+                              },
+                              "parameters": [
+                                "Object",
+                                "Behavior",
+                                "Object.CenterX()",
+                                "Object.CenterY()",
+                                "Intersect.X",
+                                "Intersect.Y",
+                                ""
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetNumberVariable"
+                              },
+                              "parameters": [
+                                "Intersection.X",
+                                "=",
+                                "Object.Behavior::RaycastIntersectionX()"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "SetNumberVariable"
+                              },
+                              "parameters": [
+                                "Intersection.Y",
+                                "=",
+                                "Object.Behavior::RaycastIntersectionY()"
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetCenter"
+                              },
+                              "parameters": [
+                                "Object",
+                                "+",
+                                "Intersect.X - Intersection.X",
+                                "+",
+                                "Intersect.Y - Intersection.Y"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "variables": [
+                        {
+                          "name": "Intersection",
+                          "type": "structure",
+                          "children": [
+                            {
+                              "folded": true,
+                              "name": "X",
+                              "type": "number",
+                              "value": 0
+                            },
+                            {
+                              "name": "Y",
+                              "type": "number",
+                              "value": 0
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Intersect",
+                          "type": "structure",
+                          "children": [
+                            {
+                              "folded": true,
+                              "name": "Angle",
+                              "type": "number",
+                              "value": 0
+                            },
+                            {
+                              "folded": true,
+                              "name": "X",
+                              "type": "number",
+                              "value": 0
+                            },
+                            {
+                              "name": "Y",
+                              "type": "number",
+                              "value": 0
+                            }
+                          ]
+                        }
                       ]
                     }
                   ]
@@ -2896,25 +3136,12 @@
                     },
                     {
                       "type": {
-                        "value": "VarObjet"
-                      },
-                      "parameters": [
-                        "Platform",
-                        "floorOn[ToString(CollisionLayer)]",
-                        ">",
-                        "0"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "CollisionNP"
+                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                       },
                       "parameters": [
                         "Object",
-                        "Platform",
-                        "",
-                        "",
-                        "no"
+                        "Behavior",
+                        ""
                       ]
                     }
                   ],
@@ -2937,16 +3164,6 @@
                         "Object",
                         "Behavior",
                         "="
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "SetObjectVariableAsBoolean"
-                      },
-                      "parameters": [
-                        "Platform",
-                        "platformersOnTop[ToString(Id)]",
-                        "True"
                       ]
                     }
                   ]
@@ -3031,6 +3248,7 @@
                   "comment": "Reset position by floor detect range"
                 },
                 {
+                  "disabled": true,
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [],
                   "actions": [
@@ -3218,37 +3436,24 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "platformOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "CollisionNP"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "",
-                            "",
-                            "yes"
+                            "Behavior",
+                            ""
                           ]
                         }
                       ],
                       "actions": [
                         {
                           "type": {
-                            "value": "SeparateFromObjects"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SeparateFromPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "yes"
+                            "Behavior",
+                            ""
                           ]
                         },
                         {
@@ -3696,24 +3901,11 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "platformOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "CollisionNP"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "",
-                            "",
+                            "Behavior",
                             ""
                           ]
                         }
@@ -3721,11 +3913,11 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "SeparateFromObjects"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SeparateFromPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
+                            "Behavior",
                             ""
                           ]
                         },
@@ -4282,17 +4474,6 @@
               "name": "Behavior",
               "supplementaryInformation": "HedgehogPlatformer::Hed_PlatformerCharacter",
               "type": "behavior"
-            },
-            {
-              "description": "Platform object",
-              "name": "Platform",
-              "type": "objectList"
-            },
-            {
-              "description": "Platform behavior",
-              "name": "PlatformBehavior",
-              "supplementaryInformation": "HedgehogPlatformer::Hed_Platform",
-              "type": "behavior"
             }
           ],
           "objectGroups": []
@@ -4311,6 +4492,7 @@
               "colorG": 176,
               "colorR": 74,
               "creationTime": 0,
+              "folded": true,
               "name": "Input",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
@@ -5010,6 +5192,7 @@
               "colorG": 176,
               "colorR": 74,
               "creationTime": 0,
+              "folded": true,
               "name": "Speed",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
@@ -5095,6 +5278,7 @@
               "colorG": 176,
               "colorR": 74,
               "creationTime": 0,
+              "folded": true,
               "name": "Wall collision",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
@@ -5188,24 +5372,11 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "platformOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "CollisionNP"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "",
-                            "",
+                            "Behavior",
                             ""
                           ]
                         }
@@ -5213,11 +5384,11 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "SeparateFromObjects"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SeparateFromPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
+                            "Behavior",
                             ""
                           ]
                         },
@@ -5386,24 +5557,11 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "platformOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "CollisionNP"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "",
-                            "",
+                            "Behavior",
                             ""
                           ]
                         }
@@ -5411,11 +5569,11 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "SeparateFromObjects"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SeparateFromPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
+                            "Behavior",
                             ""
                           ]
                         },
@@ -5466,17 +5624,6 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "wallOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
                             "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertySpeedX"
                           },
                           "parameters": [
@@ -5488,13 +5635,11 @@
                         },
                         {
                           "type": {
-                            "value": "CollisionNP"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "",
-                            "",
+                            "Behavior",
                             ""
                           ]
                         }
@@ -5502,11 +5647,11 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "SeparateFromObjects"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SeparateFromPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
+                            "Behavior",
                             ""
                           ]
                         },
@@ -5576,17 +5721,6 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "wallOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
                             "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertySpeedX"
                           },
                           "parameters": [
@@ -5598,13 +5732,11 @@
                         },
                         {
                           "type": {
-                            "value": "CollisionNP"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "",
-                            "",
+                            "Behavior",
                             ""
                           ]
                         }
@@ -5612,11 +5744,11 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "SeparateFromObjects"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SeparateFromPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
+                            "Behavior",
                             ""
                           ]
                         },
@@ -5830,24 +5962,11 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "platformOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "CollisionNP"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "",
-                            "",
+                            "Behavior",
                             ""
                           ]
                         }
@@ -5855,11 +5974,11 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "SeparateFromObjects"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SeparateFromPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
+                            "Behavior",
                             ""
                           ]
                         },
@@ -5970,6 +6089,23 @@
                     },
                     {
                       "type": {
+                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyIsOnFloor"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "="
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "disabled": true,
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
                         "value": "SetCenter"
                       },
                       "parameters": [
@@ -5979,15 +6115,199 @@
                         "+",
                         "FloorDetectRange * sin(ToRad(Object.Angle() + 90))"
                       ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "ModVarScene"
+                      },
+                      "parameters": [
+                        "HedgehogExtension.pointx1",
+                        "=",
+                        "0"
+                      ]
                     },
                     {
                       "type": {
-                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyIsOnFloor"
+                        "value": "ModVarScene"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
-                        "="
+                        "HedgehogExtension.pointy1",
+                        "=",
+                        "0"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "folded": true,
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "Raycast"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Object.CenterX() + (Object.Height() *cos(ToRad(Object.Angle() + 90)))",
+                            "Object.CenterY() + (Object.Height() *sin(ToRad(Object.Angle() + 90)))",
+                            "Object.Angle() - 90",
+                            "Object.Height()",
+                            "HedgehogExtension.pointx1",
+                            "HedgehogExtension.pointy1",
+                            ""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersect.X",
+                            "=",
+                            "Variable(HedgehogExtension.pointx1) + (FloorDetectRange * cos(ToRad(Object.Angle() + 90)))"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersect.Y",
+                            "=",
+                            "Variable(HedgehogExtension.pointy1) + (FloorDetectRange * sin(ToRad(Object.Angle() + 90)))"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.X",
+                            "=",
+                            "Intersect.X"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.Y",
+                            "=",
+                            "Intersect.Y"
+                          ]
+                        }
+                      ],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "HedgehogPlatformer::Hed_PlatformerCharacter::RaycastClosePlatforms"
+                              },
+                              "parameters": [
+                                "Object",
+                                "Behavior",
+                                "Object.CenterX()",
+                                "Object.CenterY()",
+                                "Intersect.X",
+                                "Intersect.Y",
+                                ""
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetNumberVariable"
+                              },
+                              "parameters": [
+                                "Intersection.X",
+                                "=",
+                                "Object.Behavior::RaycastIntersectionX()"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "SetNumberVariable"
+                              },
+                              "parameters": [
+                                "Intersection.Y",
+                                "=",
+                                "Object.Behavior::RaycastIntersectionY()"
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetCenter"
+                              },
+                              "parameters": [
+                                "Object",
+                                "+",
+                                "Intersect.X - Intersection.X",
+                                "+",
+                                "Intersect.Y - Intersection.Y"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "variables": [
+                        {
+                          "name": "Intersection",
+                          "type": "structure",
+                          "children": [
+                            {
+                              "folded": true,
+                              "name": "X",
+                              "type": "number",
+                              "value": 0
+                            },
+                            {
+                              "name": "Y",
+                              "type": "number",
+                              "value": 0
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Intersect",
+                          "type": "structure",
+                          "children": [
+                            {
+                              "folded": true,
+                              "name": "Angle",
+                              "type": "number",
+                              "value": 0
+                            },
+                            {
+                              "folded": true,
+                              "name": "X",
+                              "type": "number",
+                              "value": 0
+                            },
+                            {
+                              "name": "Y",
+                              "type": "number",
+                              "value": 0
+                            }
+                          ]
+                        }
                       ]
                     }
                   ]
@@ -6008,25 +6328,12 @@
                     },
                     {
                       "type": {
-                        "value": "VarObjet"
-                      },
-                      "parameters": [
-                        "Platform",
-                        "floorOn[ToString(CollisionLayer)]",
-                        ">",
-                        "0"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "CollisionNP"
+                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                       },
                       "parameters": [
                         "Object",
-                        "Platform",
-                        "",
-                        "",
-                        "no"
+                        "Behavior",
+                        ""
                       ]
                     }
                   ],
@@ -6049,16 +6356,6 @@
                         "Object",
                         "Behavior",
                         "="
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "SetObjectVariableAsBoolean"
-                      },
-                      "parameters": [
-                        "Platform",
-                        "platformersOnTop[ToString(Id)]",
-                        "True"
                       ]
                     }
                   ]
@@ -6143,6 +6440,7 @@
                   "comment": "Reset position by floor detect range"
                 },
                 {
+                  "disabled": true,
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [],
                   "actions": [
@@ -6380,37 +6678,24 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "platformOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "CollisionNP"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "",
-                            "",
-                            "yes"
+                            "Behavior",
+                            ""
                           ]
                         }
                       ],
                       "actions": [
                         {
                           "type": {
-                            "value": "SeparateFromObjects"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SeparateFromPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "yes"
+                            "Behavior",
+                            ""
                           ]
                         },
                         {
@@ -7189,25 +7474,12 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "ceilOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "CollisionNP"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "",
-                            "",
-                            "no"
+                            "Behavior",
+                            ""
                           ]
                         }
                       ],
@@ -7431,12 +7703,12 @@
                           "actions": [
                             {
                               "type": {
-                                "value": "SeparateFromObjects"
+                                "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SeparateFromPlatforms"
                               },
                               "parameters": [
                                 "Object",
-                                "Platform",
-                                "no"
+                                "Behavior",
+                                ""
                               ]
                             },
                             {
@@ -7545,17 +7817,6 @@
               "name": "Behavior",
               "supplementaryInformation": "HedgehogPlatformer::Hed_PlatformerCharacter",
               "type": "behavior"
-            },
-            {
-              "description": "Platform object",
-              "name": "Platform",
-              "type": "objectList"
-            },
-            {
-              "description": "Platform behavior",
-              "name": "PlatformBehavior",
-              "supplementaryInformation": "HedgehogPlatformer::Hed_Platform",
-              "type": "behavior"
             }
           ],
           "objectGroups": []
@@ -7582,6 +7843,7 @@
               "comment": "Save current position to evade jitter"
             },
             {
+              "folded": true,
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
@@ -7710,6 +7972,46 @@
                 "textG": 0,
                 "textR": 0
               },
+              "comment": "Fast collision helper"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOldX"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Object.CenterX()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOldY"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Object.CenterY()"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
               "comment": "Movement by pixels // Movement by forces"
             },
             {
@@ -7817,6 +8119,129 @@
               ]
             },
             {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Fast collision set"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::RaycastClosePlatforms"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "OldX",
+                    "OldY",
+                    "Object.CenterX()",
+                    "Object.CenterY()",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetCenter"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Object.Behavior::RaycastIntersectionX()",
+                    "=",
+                    "Object.Behavior::RaycastIntersectionY()"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "inverted": true,
+                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyFrameIndependent"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetCenter"
+                      },
+                      "parameters": [
+                        "Object",
+                        "-",
+                        "SpeedX * deltaTimeScale",
+                        "-",
+                        "SpeedY * deltaTimeScale"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyFrameIndependent"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetCenter"
+                      },
+                      "parameters": [
+                        "Object",
+                        "-",
+                        "((OldSpeedX + SpeedX) / 2) * deltaTimeScale",
+                        "-",
+                        "((OldSpeedY + SpeedY) / 2) * deltaTimeScale"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "variables": [
+                {
+                  "name": "intersection",
+                  "type": "structure",
+                  "children": [
+                    {
+                      "name": "x",
+                      "type": "number",
+                      "value": 0
+                    },
+                    {
+                      "folded": true,
+                      "name": "y",
+                      "type": "number",
+                      "value": 0
+                    }
+                  ]
+                }
+              ]
+            },
+            {
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [],
               "actions": [
@@ -7879,192 +8304,6 @@
                 "textG": 0,
                 "textR": 0
               },
-              "comment": "Interact with touched objects"
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "value": "AjoutObjConcern"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Platform"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "SetObjectVariableAsBoolean"
-                  },
-                  "parameters": [
-                    "Platform",
-                    "onInteraction",
-                    "False"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOriginalX"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "=",
-                    "Object.CenterX()"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOriginalY"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "=",
-                    "Object.CenterY()"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOriginalHeight"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "=",
-                    "Object.Height()"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "ResizableCapability::ResizableBehavior::SetWidth"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Resizable",
-                    "+",
-                    "FloorDetectRange * 2"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "ResizableCapability::ResizableBehavior::SetHeight"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Resizable",
-                    "+",
-                    "FloorDetectRange * 2"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "SetCenter"
-                  },
-                  "parameters": [
-                    "Object",
-                    "=",
-                    "OriginalX",
-                    "=",
-                    "OriginalY"
-                  ]
-                }
-              ],
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "VarObjet"
-                      },
-                      "parameters": [
-                        "Platform",
-                        "platformOn[ToString(CollisionLayer)]",
-                        ">",
-                        "0"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "CollisionNP"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Platform",
-                        "",
-                        "",
-                        ""
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "SetObjectVariableAsBoolean"
-                      },
-                      "parameters": [
-                        "Platform",
-                        "onInteraction",
-                        "True"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "ResizableCapability::ResizableBehavior::SetWidth"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Resizable",
-                        "-",
-                        "FloorDetectRange * 2"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "ResizableCapability::ResizableBehavior::SetHeight"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Resizable",
-                        "-",
-                        "FloorDetectRange * 2"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "SetCenter"
-                      },
-                      "parameters": [
-                        "Object",
-                        "=",
-                        "OriginalX",
-                        "=",
-                        "OriginalY"
-                      ]
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Comment",
-              "color": {
-                "b": 109,
-                "g": 230,
-                "r": 255,
-                "textB": 0,
-                "textG": 0,
-                "textR": 0
-              },
               "comment": "Ground angle calculation obtained by angle raycasts results"
             },
             {
@@ -8078,9 +8317,7 @@
                   "parameters": [
                     "Object",
                     "Behavior",
-                    "Platform",
-                    "PlatformBehavior",
-                    ""
+                    "Platform"
                   ]
                 },
                 {
@@ -8103,44 +8340,6 @@
                     "Behavior",
                     "=",
                     "round(AngleBetweenPositions(rayA1x, rayA1y, rayA2x, rayA2y)) * IsOnFloor"
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyUseAlternatePhysics"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior"
-                  ]
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyFloorAngle"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "=",
-                    "90 + AngleBetweenPositions(Object.Variable(scanX), Object.Variable(scanY), Object.Variable(scanNewX), Object.Variable(scanNewY))"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyFloorAngle"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "=",
-                    "AngleBetweenPositions(0, 0, cos(ToRad(FloorAngle)), sin(ToRad(FloorAngle)))"
                   ]
                 }
               ]
@@ -8224,17 +8423,6 @@
               "name": "Behavior",
               "supplementaryInformation": "HedgehogPlatformer::Hed_PlatformerCharacter",
               "type": "behavior"
-            },
-            {
-              "description": "Platform object",
-              "name": "Platform",
-              "type": "objectList"
-            },
-            {
-              "description": "Platform behavior",
-              "name": "PlatformBehavior",
-              "supplementaryInformation": "HedgehogPlatformer::Hed_Platform",
-              "type": "behavior"
             }
           ],
           "objectGroups": []
@@ -8247,571 +8435,6 @@
           "private": true,
           "sentence": "Get ground angle of _PARAM2_ for _PARAM0_",
           "events": [
-            {
-              "type": "BuiltinCommonInstructions::Comment",
-              "color": {
-                "b": 109,
-                "g": 230,
-                "r": 255,
-                "textB": 0,
-                "textG": 0,
-                "textR": 0
-              },
-              "comment": "Ground angle by collision"
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyUseAlternatePhysics"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior"
-                  ]
-                }
-              ],
-              "actions": [],
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Comment",
-                  "color": {
-                    "b": 109,
-                    "g": 230,
-                    "r": 255,
-                    "textB": 0,
-                    "textG": 0,
-                    "textR": 0
-                  },
-                  "comment": "Basic collision separation"
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOriginalX"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "=",
-                        "Object.CenterX()"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOriginalY"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "=",
-                        "Object.CenterY()"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOriginalHeight"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "=",
-                        "Object.Height()"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "ResizableCapability::ResizableBehavior::SetWidth"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Resizable",
-                        "-",
-                        "2"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "ResizableCapability::ResizableBehavior::SetHeight"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Resizable",
-                        "*",
-                        "2 / 3"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "SetCenter"
-                      },
-                      "parameters": [
-                        "Object",
-                        "=",
-                        "OriginalX",
-                        "=",
-                        "OriginalY"
-                      ]
-                    }
-                  ],
-                  "events": [
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "platformOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "CollisionNP"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Platform",
-                            "",
-                            "",
-                            ""
-                          ]
-                        }
-                      ],
-                      "actions": [
-                        {
-                          "type": {
-                            "value": "SeparateFromObjects"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Platform",
-                            ""
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOriginalX"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Behavior",
-                            "=",
-                            "Object.CenterX()"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOriginalY"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Behavior",
-                            "=",
-                            "Object.CenterY()"
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Comment",
-                  "color": {
-                    "b": 109,
-                    "g": 230,
-                    "r": 255,
-                    "textB": 0,
-                    "textG": 0,
-                    "textR": 0
-                  },
-                  "comment": "Collision formula to obtain angle\n-This compares the angle between the position of the platformer while overlapping the platform, with the position of the platformer after separating from the platform."
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertyIsOnFloor"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior"
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "SetNumberVariable"
-                      },
-                      "parameters": [
-                        "floorMagnetism",
-                        "*",
-                        "abs(Speed) / MaxSpeed"
-                      ]
-                    }
-                  ],
-                  "events": [
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertySpeedBasedMagnet"
-                          },
-                          "parameters": [
-                            "Object",
-                            "Behavior"
-                          ]
-                        }
-                      ],
-                      "actions": [
-                        {
-                          "type": {
-                            "value": "SetNumberVariable"
-                          },
-                          "parameters": [
-                            "floorMagnetism",
-                            "*",
-                            "abs(Speed) / MaxSpeed"
-                          ]
-                        }
-                      ],
-                      "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [
-                            {
-                              "type": {
-                                "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertySpeed"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                "=",
-                                "0"
-                              ]
-                            }
-                          ],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "SetNumberVariable"
-                              },
-                              "parameters": [
-                                "floorMagnetism",
-                                "=",
-                                "FloorMagnet * 0.05"
-                              ]
-                            }
-                          ],
-                          "events": [
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [
-                                {
-                                  "type": {
-                                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertySavedY"
-                                  },
-                                  "parameters": [
-                                    "Object",
-                                    "Behavior",
-                                    "!=",
-                                    "0"
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::PropertySavedX"
-                                  },
-                                  "parameters": [
-                                    "Object",
-                                    "Behavior",
-                                    "!=",
-                                    "0"
-                                  ]
-                                }
-                              ],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertySavedX"
-                                  },
-                                  "parameters": [
-                                    "Object",
-                                    "Behavior",
-                                    "+",
-                                    "floorMagnetism * cos(ToRad(Object.Angle() + 90))"
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertySavedY"
-                                  },
-                                  "parameters": [
-                                    "Object",
-                                    "Behavior",
-                                    "+",
-                                    "floorMagnetism * sin(ToRad(Object.Angle() + 90))"
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "ResizableCapability::ResizableBehavior::SetHeight"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Resizable",
-                        "=",
-                        "OriginalHeight"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "SetCenter"
-                      },
-                      "parameters": [
-                        "Object",
-                        "=",
-                        "OriginalX",
-                        "=",
-                        "OriginalY"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOriginalX"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "=",
-                        "Object.CenterX()"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyOriginalY"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "=",
-                        "Object.CenterY()"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "SetCenter"
-                      },
-                      "parameters": [
-                        "Object",
-                        "=",
-                        "OriginalX",
-                        "=",
-                        "OriginalY"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "SetCenter"
-                      },
-                      "parameters": [
-                        "Object",
-                        "+",
-                        "(FloorDetectRange + floorMagnetism) * cos(ToRad(Object.Angle() + 90))",
-                        "+",
-                        "(FloorDetectRange + floorMagnetism) * sin(ToRad(Object.Angle()  + 90))"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "ModVarObjet"
-                      },
-                      "parameters": [
-                        "Object",
-                        "scanX",
-                        "=",
-                        "Object.CenterX()"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "ModVarObjet"
-                      },
-                      "parameters": [
-                        "Object",
-                        "scanY",
-                        "=",
-                        "Object.CenterY()"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "ModVarObjet"
-                      },
-                      "parameters": [
-                        "Object",
-                        "scanNewX",
-                        "=",
-                        "Object.CenterX()"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "ModVarObjet"
-                      },
-                      "parameters": [
-                        "Object",
-                        "scanNewY",
-                        "=",
-                        "Object.CenterY() - 1"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "VarObjet"
-                      },
-                      "parameters": [
-                        "Platform",
-                        "floorOn[ToString(CollisionLayer)]",
-                        ">",
-                        "0"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "CollisionNP"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Platform",
-                        "",
-                        "",
-                        "yes"
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "SeparateFromObjects"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Platform",
-                        ""
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "ModVarObjet"
-                      },
-                      "parameters": [
-                        "Object",
-                        "scanNewX",
-                        "=",
-                        "Object.CenterX()"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "ModVarObjet"
-                      },
-                      "parameters": [
-                        "Object",
-                        "scanNewY",
-                        "=",
-                        "Object.CenterY()"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyLeftGroundRay"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "yes"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyRightGroundRay"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "yes"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "ResizableCapability::ResizableBehavior::SetWidth"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Resizable",
-                        "+",
-                        "2"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "SetCenter"
-                      },
-                      "parameters": [
-                        "Object",
-                        "=",
-                        "OriginalX",
-                        "=",
-                        "OriginalY"
-                      ]
-                    }
-                  ]
-                }
-              ],
-              "variables": [
-                {
-                  "folded": true,
-                  "name": "floorMagnetism",
-                  "type": "number",
-                  "value": 0
-                }
-              ]
-            },
             {
               "type": "BuiltinCommonInstructions::Comment",
               "color": {
@@ -8955,6 +8578,7 @@
                   "colorG": 176,
                   "colorR": 74,
                   "creationTime": 0,
+                  "folded": true,
                   "name": "Auto point",
                   "source": "",
                   "type": "BuiltinCommonInstructions::Group",
@@ -9396,7 +9020,7 @@
                       "parameters": [
                         "rayA1x",
                         "=",
-                        "Object.Behavior::RaycastIntersectionX()"
+                        "0"
                       ]
                     },
                     {
@@ -9406,7 +9030,7 @@
                       "parameters": [
                         "rayA1y",
                         "=",
-                        "Object.Behavior::RaycastIntersectionY()"
+                        "0"
                       ]
                     }
                   ]
@@ -9437,7 +9061,7 @@
                       "parameters": [
                         "rayA2x",
                         "=",
-                        "Object.Behavior::RaycastIntersectionX()"
+                        "-Object.Behavior::RaycastNormalY()"
                       ]
                     },
                     {
@@ -9447,10 +9071,372 @@
                       "parameters": [
                         "rayA2y",
                         "=",
-                        "Object.Behavior::RaycastIntersectionY()"
+                        "Object.Behavior::RaycastNormalX()"
                       ]
                     }
                   ]
+                },
+                {
+                  "colorB": 228,
+                  "colorG": 176,
+                  "colorR": 74,
+                  "creationTime": 0,
+                  "name": "Grouped events",
+                  "source": "",
+                  "type": "BuiltinCommonInstructions::Group",
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "old.x",
+                            "=",
+                            "Object.CenterX()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "old.y",
+                            "=",
+                            "Object.CenterY()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "ResizableCapability::ResizableBehavior::SetWidth"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Resizable",
+                            "+",
+                            "2"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "ResizableCapability::ResizableBehavior::SetHeight"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Resizable",
+                            "+",
+                            "2"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetCenter"
+                          },
+                          "parameters": [
+                            "Object",
+                            "=",
+                            "old.x",
+                            "=",
+                            "old.y"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "ModVarScene"
+                          },
+                          "parameters": [
+                            "HedgehogExtension.pointx1",
+                            "=",
+                            "0"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "ModVarScene"
+                          },
+                          "parameters": [
+                            "HedgehogExtension.pointy1",
+                            "=",
+                            "0"
+                          ]
+                        }
+                      ],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "Raycast"
+                              },
+                              "parameters": [
+                                "Object",
+                                "Object.CenterX() + (Object.Height() *cos(ToRad(Object.Angle() + 90)))",
+                                "Object.CenterY() + (Object.Height() *sin(ToRad(Object.Angle() + 90)))",
+                                "Object.Angle() - 90",
+                                "Object.Height()",
+                                "HedgehogExtension.pointx1",
+                                "HedgehogExtension.pointy1",
+                                ""
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetNumberVariable"
+                              },
+                              "parameters": [
+                                "Intersect.X",
+                                "=",
+                                "Variable(HedgehogExtension.pointx1)"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "SetNumberVariable"
+                              },
+                              "parameters": [
+                                "Intersect.Y",
+                                "=",
+                                "Variable(HedgehogExtension.pointy1)"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "SetNumberVariable"
+                              },
+                              "parameters": [
+                                "Intersection.X",
+                                "=",
+                                "Intersect.X"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "SetNumberVariable"
+                              },
+                              "parameters": [
+                                "Intersection.Y",
+                                "=",
+                                "Intersect.Y"
+                              ]
+                            }
+                          ],
+                          "events": [
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [
+                                {
+                                  "type": {
+                                    "value": "HedgehogPlatformer::Hed_PlatformerCharacter::RaycastClosePlatforms"
+                                  },
+                                  "parameters": [
+                                    "Object",
+                                    "Behavior",
+                                    "Object.CenterX()",
+                                    "Object.CenterY()",
+                                    "Intersect.X",
+                                    "Intersect.Y",
+                                    ""
+                                  ]
+                                }
+                              ],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "SetNumberVariable"
+                                  },
+                                  "parameters": [
+                                    "Intersection.X",
+                                    "=",
+                                    "Object.Behavior::RaycastIntersectionX()"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "SetNumberVariable"
+                                  },
+                                  "parameters": [
+                                    "Intersection.Y",
+                                    "=",
+                                    "Object.Behavior::RaycastIntersectionY()"
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "SetNumberVariable"
+                                  },
+                                  "parameters": [
+                                    "override",
+                                    "=",
+                                    "abs(Intersection.X - Intersect.X) + abs(Intersection.Y - Intersect.Y) * (sin(ToRad(Object.Angle())))"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "SetNumberVariable"
+                                  },
+                                  "parameters": [
+                                    "rayA1x",
+                                    "=",
+                                    "0"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "SetNumberVariable"
+                                  },
+                                  "parameters": [
+                                    "rayA1y",
+                                    "=",
+                                    "0"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "SetNumberVariable"
+                                  },
+                                  "parameters": [
+                                    "rayA2x",
+                                    "=",
+                                    "-Object.Behavior::RaycastNormalY()"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "SetNumberVariable"
+                                  },
+                                  "parameters": [
+                                    "rayA2y",
+                                    "=",
+                                    "Object.Behavior::RaycastNormalX()"
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "variables": [
+                            {
+                              "name": "Intersection",
+                              "type": "structure",
+                              "children": [
+                                {
+                                  "folded": true,
+                                  "name": "X",
+                                  "type": "number",
+                                  "value": 0
+                                },
+                                {
+                                  "name": "Y",
+                                  "type": "number",
+                                  "value": 0
+                                }
+                              ]
+                            },
+                            {
+                              "name": "Intersect",
+                              "type": "structure",
+                              "children": [
+                                {
+                                  "folded": true,
+                                  "name": "Angle",
+                                  "type": "number",
+                                  "value": 0
+                                },
+                                {
+                                  "folded": true,
+                                  "name": "X",
+                                  "type": "number",
+                                  "value": 0
+                                },
+                                {
+                                  "name": "Y",
+                                  "type": "number",
+                                  "value": 0
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "ResizableCapability::ResizableBehavior::SetWidth"
+                              },
+                              "parameters": [
+                                "Object",
+                                "Resizable",
+                                "-",
+                                "2"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "ResizableCapability::ResizableBehavior::SetHeight"
+                              },
+                              "parameters": [
+                                "Object",
+                                "Resizable",
+                                "-",
+                                "2"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "SetCenter"
+                              },
+                              "parameters": [
+                                "Object",
+                                "=",
+                                "old.x",
+                                "=",
+                                "old.y"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "variables": [
+                        {
+                          "name": "override",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "old",
+                          "type": "structure",
+                          "children": [
+                            {
+                              "folded": true,
+                              "name": "x",
+                              "type": "number",
+                              "value": 0
+                            },
+                            {
+                              "folded": true,
+                              "name": "y",
+                              "type": "number",
+                              "value": 0
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "parameters": []
                 },
                 {
                   "type": "BuiltinCommonInstructions::Comment",
@@ -9465,6 +9451,7 @@
                   "comment": "Draw raycast values"
                 },
                 {
+                  "disabled": true,
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [],
                   "actions": [
@@ -9971,17 +9958,6 @@
               "description": "Behavior",
               "name": "Behavior",
               "supplementaryInformation": "HedgehogPlatformer::Hed_PlatformerCharacter",
-              "type": "behavior"
-            },
-            {
-              "description": "The solid obstacle for the hedgehog platformer",
-              "name": "Platform",
-              "type": "objectList"
-            },
-            {
-              "description": "The hedgehog platform behavior attached to the previous object",
-              "name": "PlatformBehavior",
-              "supplementaryInformation": "HedgehogPlatformer::Hed_Platform",
               "type": "behavior"
             }
           ],
@@ -10925,6 +10901,1873 @@
           "objectGroups": []
         },
         {
+          "description": "Separates the hedgehog platformer from the platforms.",
+          "fullName": "Separate object from platforms",
+          "functionType": "Action",
+          "name": "SeparateFromPlatforms",
+          "sentence": "Separate _PARAM0_ from platforms",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Floor"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointx1",
+                    "=",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointy1",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "Raycast"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Object.CenterX() + (Object.Height() *cos(ToRad(Object.Angle() + 90)))",
+                        "Object.CenterY() + (Object.Height() *sin(ToRad(Object.Angle() + 90)))",
+                        "Object.Angle() - 90",
+                        "Object.Height()",
+                        "HedgehogExtension.pointx1",
+                        "HedgehogExtension.pointy1",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.X",
+                        "=",
+                        "Variable(HedgehogExtension.pointx1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.Y",
+                        "=",
+                        "Variable(HedgehogExtension.pointy1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.X",
+                        "=",
+                        "Intersect.X"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.Y",
+                        "=",
+                        "Intersect.Y"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::RaycastClosePlatforms"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "Object.CenterX()",
+                            "Object.CenterY()",
+                            "Intersect.X",
+                            "Intersect.Y",
+                            ""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.X",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionX()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.Y",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionY()"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCenter"
+                          },
+                          "parameters": [
+                            "Object",
+                            "+",
+                            "Intersection.X - Intersect.X",
+                            "+",
+                            "Intersection.Y - (Intersect.Y)"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "variables": [
+                    {
+                      "name": "Intersection",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Intersect",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "Angle",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Left floor"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Right floor"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Ceil"
+            },
+            {
+              "folded": true,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointx1",
+                    "=",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointy1",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "Raycast"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Object.CenterX() + (Object.Height() *cos(ToRad(Object.Angle() - 90)))",
+                        "Object.CenterY() + (Object.Height() *sin(ToRad(Object.Angle() - 90)))",
+                        "Object.Angle() + 90",
+                        "Object.Height()",
+                        "HedgehogExtension.pointx1",
+                        "HedgehogExtension.pointy1",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.X",
+                        "=",
+                        "Variable(HedgehogExtension.pointx1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.Y",
+                        "=",
+                        "Variable(HedgehogExtension.pointy1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.X",
+                        "=",
+                        "Intersect.X"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.Y",
+                        "=",
+                        "Intersect.Y"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::RaycastClosePlatforms"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "Object.CenterX()",
+                            "Object.CenterY()",
+                            "Intersect.X",
+                            "Intersect.Y",
+                            ""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.X",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionX()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.Y",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionY()"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCenter"
+                          },
+                          "parameters": [
+                            "Object",
+                            "+",
+                            "Intersection.X - Intersect.X",
+                            "+",
+                            "Intersection.Y - (Intersect.Y)"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "variables": [
+                    {
+                      "name": "Intersection",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Intersect",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "Angle",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Left ceil"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Right ceil"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Left wall"
+            },
+            {
+              "folded": true,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointx1",
+                    "=",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointy1",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "Raycast"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Object.CenterX() + (Object.Width() *cos(ToRad(Object.Angle() + 180)))",
+                        "Object.CenterY() + (Object.Width() *sin(ToRad(Object.Angle() + 180)))",
+                        "Object.Angle()",
+                        "Object.Width()",
+                        "HedgehogExtension.pointx1",
+                        "HedgehogExtension.pointy1",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.X",
+                        "=",
+                        "Variable(HedgehogExtension.pointx1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.Y",
+                        "=",
+                        "Variable(HedgehogExtension.pointy1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.X",
+                        "=",
+                        "Intersect.X"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.Y",
+                        "=",
+                        "Intersect.Y"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::RaycastClosePlatforms"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "Object.CenterX()",
+                            "Object.CenterY()",
+                            "Intersect.X",
+                            "Intersect.Y",
+                            ""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.X",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionX()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.Y",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionY()"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCenter"
+                          },
+                          "parameters": [
+                            "Object",
+                            "+",
+                            "Intersection.X - Intersect.X",
+                            "+",
+                            "Intersection.Y - (Intersect.Y)"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "variables": [
+                    {
+                      "name": "Intersection",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Intersect",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "Angle",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Right wall"
+            },
+            {
+              "folded": true,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointx1",
+                    "=",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointy1",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "Raycast"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Object.CenterX() + (Object.Width() *cos(ToRad(Object.Angle())))",
+                        "Object.CenterY() + (Object.Width() *sin(ToRad(Object.Angle())))",
+                        "Object.Angle() + 180",
+                        "Object.Width()",
+                        "HedgehogExtension.pointx1",
+                        "HedgehogExtension.pointy1",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.X",
+                        "=",
+                        "Variable(HedgehogExtension.pointx1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.Y",
+                        "=",
+                        "Variable(HedgehogExtension.pointy1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.X",
+                        "=",
+                        "Intersect.X"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.Y",
+                        "=",
+                        "Intersect.Y"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::RaycastClosePlatforms"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "Object.CenterX()",
+                            "Object.CenterY()",
+                            "Intersect.X",
+                            "Intersect.Y",
+                            ""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.X",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionX()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.Y",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionY()"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetCenter"
+                          },
+                          "parameters": [
+                            "Object",
+                            "+",
+                            "Intersection.X - Intersect.X",
+                            "+",
+                            "Intersection.Y - (Intersect.Y)"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "variables": [
+                    {
+                      "name": "Intersection",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Intersect",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "Angle",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "HedgehogPlatformer::Hed_PlatformerCharacter",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if the object is in contact with platforms.",
+          "fullName": "Is colliding with platforms",
+          "functionType": "Condition",
+          "name": "IsCollidingWithPlatforms",
+          "sentence": "Is _PARAM0_ in contact with platforms",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Floor"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointx1",
+                    "=",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointy1",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "Raycast"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Object.CenterX() + (Object.Height() *cos(ToRad(Object.Angle() + 90)))",
+                        "Object.CenterY() + (Object.Height() *sin(ToRad(Object.Angle() + 90)))",
+                        "Object.Angle() - 90",
+                        "Object.Height()",
+                        "HedgehogExtension.pointx1",
+                        "HedgehogExtension.pointy1",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.X",
+                        "=",
+                        "Variable(HedgehogExtension.pointx1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.Y",
+                        "=",
+                        "Variable(HedgehogExtension.pointy1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.X",
+                        "=",
+                        "Intersect.X"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.Y",
+                        "=",
+                        "Intersect.Y"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::RaycastClosePlatforms"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "Object.CenterX()",
+                            "Object.CenterY()",
+                            "Intersect.X",
+                            "Intersect.Y",
+                            ""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.X",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionX()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.Y",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionY()"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                          },
+                          "parameters": [
+                            "abs(Intersection.X - Intersect.X)",
+                            ">",
+                            "0"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetReturnBoolean"
+                          },
+                          "parameters": [
+                            "True"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                          },
+                          "parameters": [
+                            "abs(Intersection.Y - Intersect.Y)",
+                            ">",
+                            "0"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetReturnBoolean"
+                          },
+                          "parameters": [
+                            "True"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "variables": [
+                    {
+                      "name": "Intersection",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Intersect",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "Angle",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Ceil"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointx1",
+                    "=",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointy1",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "Raycast"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Object.CenterX() + (Object.Height() *cos(ToRad(Object.Angle() - 90)))",
+                        "Object.CenterY() + (Object.Height() *sin(ToRad(Object.Angle() - 90)))",
+                        "Object.Angle() + 90",
+                        "Object.Height()",
+                        "HedgehogExtension.pointx1",
+                        "HedgehogExtension.pointy1",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.X",
+                        "=",
+                        "Variable(HedgehogExtension.pointx1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.Y",
+                        "=",
+                        "Variable(HedgehogExtension.pointy1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.X",
+                        "=",
+                        "Intersect.X"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.Y",
+                        "=",
+                        "Intersect.Y"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::RaycastClosePlatforms"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "Object.CenterX()",
+                            "Object.CenterY()",
+                            "Intersect.X",
+                            "Intersect.Y",
+                            ""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.X",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionX()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.Y",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionY()"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                          },
+                          "parameters": [
+                            "abs(Intersection.X - Intersect.X)",
+                            ">",
+                            "0"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetReturnBoolean"
+                          },
+                          "parameters": [
+                            "True"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                          },
+                          "parameters": [
+                            "abs(Intersection.Y - Intersect.Y)",
+                            ">",
+                            "0"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetReturnBoolean"
+                          },
+                          "parameters": [
+                            "True"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "variables": [
+                    {
+                      "name": "Intersection",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Intersect",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "Angle",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Left wall"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointx1",
+                    "=",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointy1",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "Raycast"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Object.CenterX() + (Object.Width() *cos(ToRad(Object.Angle() + 180)))",
+                        "Object.CenterY() + (Object.Width() *sin(ToRad(Object.Angle() + 180)))",
+                        "Object.Angle()",
+                        "Object.Width()",
+                        "HedgehogExtension.pointx1",
+                        "HedgehogExtension.pointy1",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.X",
+                        "=",
+                        "Variable(HedgehogExtension.pointx1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.Y",
+                        "=",
+                        "Variable(HedgehogExtension.pointy1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.X",
+                        "=",
+                        "Intersect.X"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.Y",
+                        "=",
+                        "Intersect.Y"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::RaycastClosePlatforms"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "Object.CenterX()",
+                            "Object.CenterY()",
+                            "Intersect.X",
+                            "Intersect.Y",
+                            ""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.X",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionX()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.Y",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionY()"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                          },
+                          "parameters": [
+                            "abs(Intersection.X - Intersect.X)",
+                            ">",
+                            "0"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetReturnBoolean"
+                          },
+                          "parameters": [
+                            "True"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                          },
+                          "parameters": [
+                            "abs(Intersection.Y - Intersect.Y)",
+                            ">",
+                            "0"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetReturnBoolean"
+                          },
+                          "parameters": [
+                            "True"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "variables": [
+                    {
+                      "name": "Intersection",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Intersect",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "Angle",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Right wall"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointx1",
+                    "=",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ModVarScene"
+                  },
+                  "parameters": [
+                    "HedgehogExtension.pointy1",
+                    "=",
+                    "0"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "Raycast"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Object.CenterX() + (Object.Width() *cos(ToRad(Object.Angle())))",
+                        "Object.CenterY() + (Object.Width() *sin(ToRad(Object.Angle())))",
+                        "Object.Angle() + 180",
+                        "Object.Width()",
+                        "HedgehogExtension.pointx1",
+                        "HedgehogExtension.pointy1",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.X",
+                        "=",
+                        "Variable(HedgehogExtension.pointx1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersect.Y",
+                        "=",
+                        "Variable(HedgehogExtension.pointy1)"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.X",
+                        "=",
+                        "Intersect.X"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "Intersection.Y",
+                        "=",
+                        "Intersect.Y"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::RaycastClosePlatforms"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "Object.CenterX()",
+                            "Object.CenterY()",
+                            "Intersect.X",
+                            "Intersect.Y",
+                            ""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.X",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionX()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "Intersection.Y",
+                            "=",
+                            "Object.Behavior::RaycastIntersectionY()"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                          },
+                          "parameters": [
+                            "abs(Intersection.X - Intersect.X)",
+                            ">",
+                            "0"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetReturnBoolean"
+                          },
+                          "parameters": [
+                            "True"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                          },
+                          "parameters": [
+                            "abs(Intersection.Y - Intersect.Y)",
+                            ">",
+                            "0"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetReturnBoolean"
+                          },
+                          "parameters": [
+                            "True"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "variables": [
+                    {
+                      "name": "Intersection",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Intersect",
+                      "type": "structure",
+                      "children": [
+                        {
+                          "folded": true,
+                          "name": "Angle",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "folded": true,
+                          "name": "X",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "Y",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "HedgehogPlatformer::Hed_PlatformerCharacter",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "Do hedgehog physics on this current frame, call this action as many times you want for more speed.",
           "fullName": "Execute hedgehog movement",
           "functionType": "Action",
@@ -11169,19 +13012,8 @@
                   "comment": "Object rotation setting"
                 },
                 {
-                  "folded": true,
                   "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "inverted": true,
-                        "value": "GetArgumentAsBoolean"
-                      },
-                      "parameters": [
-                        "\"Rotate\""
-                      ]
-                    }
-                  ],
+                  "conditions": [],
                   "actions": [
                     {
                       "type": {
@@ -11202,33 +13034,6 @@
                         "Object",
                         "=",
                         "OriginalAngle"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "folded": true,
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "GetArgumentAsBoolean"
-                      },
-                      "parameters": [
-                        "\"Rotate\""
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SetPropertyHedgehogAngle"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "=",
-                        "Object.Angle()"
                       ]
                     }
                   ]
@@ -11308,22 +13113,6 @@
               "name": "Behavior",
               "supplementaryInformation": "HedgehogPlatformer::Hed_PlatformerCharacter",
               "type": "behavior"
-            },
-            {
-              "description": "The solid obstacle for the hedgehog platformer",
-              "name": "Platform",
-              "type": "objectList"
-            },
-            {
-              "description": "The hedgehog platform behavior attached to the previous object",
-              "name": "PlatformBehavior",
-              "supplementaryInformation": "HedgehogPlatformer::Hed_Platform",
-              "type": "behavior"
-            },
-            {
-              "description": "Rotate",
-              "name": "Rotate",
-              "type": "yesorno"
             }
           ],
           "objectGroups": []
@@ -11506,8 +13295,8 @@
                       "parameters": [
                         "Object",
                         "Resizable",
-                        "+",
-                        "4"
+                        "-",
+                        "0"
                       ]
                     },
                     {
@@ -11517,8 +13306,8 @@
                       "parameters": [
                         "Object",
                         "Resizable",
-                        "+",
-                        "4"
+                        "-",
+                        "0"
                       ]
                     },
                     {
@@ -11540,24 +13329,11 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "VarObjet"
-                          },
-                          "parameters": [
-                            "Platform",
-                            "floorOn[ToString(CollisionLayer)]",
-                            ">",
-                            "0"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "CollisionNP"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::IsCollidingWithPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
-                            "",
-                            "",
+                            "Behavior",
                             ""
                           ]
                         }
@@ -11565,11 +13341,11 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "SeparateFromObjects"
+                            "value": "HedgehogPlatformer::Hed_PlatformerCharacter::SeparateFromPlatforms"
                           },
                           "parameters": [
                             "Object",
-                            "Platform",
+                            "Behavior",
                             ""
                           ]
                         },
@@ -11606,8 +13382,8 @@
                           "parameters": [
                             "Object",
                             "Resizable",
-                            "-",
-                            "4"
+                            "+",
+                            "0"
                           ]
                         },
                         {
@@ -11617,8 +13393,8 @@
                           "parameters": [
                             "Object",
                             "Resizable",
-                            "-",
-                            "4"
+                            "+",
+                            "0"
                           ]
                         },
                         {
@@ -17566,6 +19342,78 @@
               "parameterObjects": "Object",
               "useStrict": true,
               "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Sprite",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "HedgehogPlatformer::Hed_PlatformerCharacter",
+              "type": "behavior"
+            },
+            {
+              "description": "Ray source position X",
+              "name": "SourceX",
+              "type": "expression"
+            },
+            {
+              "description": "Ray source position Y",
+              "name": "SourceY",
+              "type": "expression"
+            },
+            {
+              "description": "Ray target position X",
+              "name": "TargetX",
+              "type": "expression"
+            },
+            {
+              "description": "Ray target position Y",
+              "name": "TargetY",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Sends a ray from the given source position to the final point. When the source is inside the platforms, the ray is sent backward and returned distance is negative.",
+          "fullName": "Raycast close platforms (both ways)",
+          "functionType": "Condition",
+          "name": "RaycastClosePlatformsBothWay",
+          "private": true,
+          "sentence": "Cast a ray from _PARAM2_ ; _PARAM3_ to _PARAM4_ ; _PARAM5_ against platforms close to _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const { getManager } = gdjs.__hedgehogPlatformerExtension;",
+                "",
+                "const sourceX = eventsFunctionContext.getArgument(\"SourceX\");",
+                "const sourceY = eventsFunctionContext.getArgument(\"SourceY\");",
+                "const targetX = eventsFunctionContext.getArgument(\"TargetX\");",
+                "const targetY = eventsFunctionContext.getArgument(\"TargetY\");",
+                "",
+                "eventsFunctionContext.returnValue = getManager(runtimeScene).raycastBothWayPotentialCollidingObjects(",
+                "  sourceX,",
+                "  sourceY,",
+                "  targetX,",
+                "  targetY,",
+                ");",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": []
             }
           ],
           "parameters": [
