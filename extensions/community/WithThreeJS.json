@@ -8,7 +8,7 @@
   "name": "WithThreeJS",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/rotate-3d.svg",
   "shortDescription": "Create a simple 3D scene.",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": [
     "Extension for GDevelop to create simple 3D scenes.  ",
     "This extension is intended for easy and simple 3D rendering. It does not currently aim for realistic 3D rendering.  ",
@@ -36,6 +36,8 @@
     "Zu55H5hcb9YmZTltIVOTAFDJQyB2"
   ],
   "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
   "eventsFunctions": [
     {
       "fullName": "",
@@ -1716,7 +1718,18 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::CompareStrings"
+              },
+              "parameters": [
+                "CurrentSceneName()",
+                "=",
+                "WithThreeJS::CreatedSceneName()"
+              ]
+            }
+          ],
           "actions": [
             {
               "type": {
@@ -1727,33 +1740,35 @@
                 ""
               ]
             }
-          ]
-        },
-        {
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": [
-            "if (gdjs.__WithThreeJS.get(\"BuiltIn3D\")) {",
-            "    if (runtimeScene.getRenderer()._threeRenderer._render_WithThreeJS) {",
-            "        runtimeScene.getRenderer()._threeRenderer.render = runtimeScene.getRenderer()._threeRenderer._render_WithThreeJS;",
-            "        runtimeScene.getRenderer()._threeRenderer._render_WithThreeJS = null;",
-            "    };",
-            "    if (runtimeScene.getRenderer().getPIXIRenderer()._clear_WithThreeJS) {",
-            "        runtimeScene.getRenderer().getPIXIRenderer().clear = runtimeScene.getRenderer().getPIXIRenderer()._clear_WithThreeJS;",
-            "        runtimeScene.getRenderer().getPIXIRenderer()._clear_WithThreeJS = null;",
-            "    };",
-            "}",
-            "if (runtimeScene.getRenderer().getPIXIRenderer().background) {",
-            "    runtimeScene.getRenderer().getPIXIRenderer().background.alpha = 1;// For PixiJS 7",
-            "} else {",
-            "    runtimeScene.getRenderer().getPIXIRenderer().backgroundAlpha = 1;// For PixiJS 6",
-            "}",
-            "gdjs.__WithThreeJS.set(\"SceneIsReady\", false);",
-            "",
-            ""
           ],
-          "parameterObjects": "",
-          "useStrict": true,
-          "eventsSheetExpanded": true
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "if (gdjs.__WithThreeJS.get(\"BuiltIn3D\")) {",
+                "    if (runtimeScene.getRenderer()._threeRenderer._render_WithThreeJS) {",
+                "        runtimeScene.getRenderer()._threeRenderer.render = runtimeScene.getRenderer()._threeRenderer._render_WithThreeJS;",
+                "        runtimeScene.getRenderer()._threeRenderer._render_WithThreeJS = null;",
+                "    };",
+                "    if (runtimeScene.getRenderer().getPIXIRenderer()._clear_WithThreeJS) {",
+                "        runtimeScene.getRenderer().getPIXIRenderer().clear = runtimeScene.getRenderer().getPIXIRenderer()._clear_WithThreeJS;",
+                "        runtimeScene.getRenderer().getPIXIRenderer()._clear_WithThreeJS = null;",
+                "    };",
+                "}",
+                "if (runtimeScene.getRenderer().getPIXIRenderer().background) {",
+                "    runtimeScene.getRenderer().getPIXIRenderer().background.alpha = 1;// For PixiJS 7",
+                "} else {",
+                "    runtimeScene.getRenderer().getPIXIRenderer().backgroundAlpha = 1;// For PixiJS 6",
+                "}",
+                "gdjs.__WithThreeJS.set(\"SceneIsReady\", false);",
+                "",
+                ""
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ]
         }
       ],
       "parameters": [],
@@ -2143,7 +2158,9 @@
             "  gdjs.__WithThreeJS.set(\"Scene\", Scene);",
             "}",
             "Scene.name =\"Scene\";",
-            "gdjs.__WithThreeJS.set(\"SceneIsReady\", true);",
+            "if (!gdjs.__WithThreeJS.get(\"SceneIsReady\")) {",
+            "  gdjs.__WithThreeJS.set(\"SceneIsReady\", runtimeScene.getName());",
+            "}",
             "//",
             "const BG_RGB = eventsFunctionContext.getArgument(\"BackGroundColor\") || \"0;0;0\";",
             "const BG_Img = eventsFunctionContext.getArgument(\"BackGroundImage\");",
@@ -2372,6 +2389,27 @@
           "type": "stringWithSelector"
         }
       ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Created Scene Name (Private)",
+      "functionType": "StringExpression",
+      "name": "CreatedSceneName",
+      "private": true,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "eventsFunctionContext.returnValue = gdjs.__WithThreeJS.get(\"SceneIsReady\");",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "string"
+      },
+      "parameters": [],
       "objectGroups": []
     },
     {
@@ -2759,6 +2797,7 @@
             "const ScreenY = eventsFunctionContext.getArgument(\"ScreenY\");",
             "const ScreenPoint = new THREE.Vector2();",
             "//",
+            "Camera.updateWorldMatrix(false, false);//必要",
             "const T = Camera.userData.CameraStatus.T;",
             "const B = Camera.userData.CameraStatus.B;",
             "const L = Camera.userData.CameraStatus.L;",
@@ -3706,6 +3745,7 @@
       "objectGroups": []
     },
     {
+      "description": "The only valid object properties are \"3D model\" and \"Material modifier\".",
       "fullName": "💎Create 3D Model From Built-In 3D Model",
       "functionType": "Action",
       "group": "3D Object",
@@ -3732,6 +3772,7 @@
             "const ModelObject = eventsFunctionContext.getObjectsLists(\"ModelObject\");",
             "const ModelObjectName = ModelObject.firstKey();",
             "const ModelResourceName = runtimeScene._objects.get(ModelObjectName).content.modelResourceName;",
+            "const MaterialType = runtimeScene._objects.get(ModelObjectName).content.materialType;//\"Basic\", \"StandardWithoutMetalness\", \"KeepOriginal\"",
             "const Id = eventsFunctionContext.getArgument(\"Id\");",
             "const X = eventsFunctionContext.getArgument(\"X\");",
             "const Y = eventsFunctionContext.getArgument(\"Y\");",
@@ -3745,32 +3786,42 @@
             "    const ResourceModel = runtimeScene.getGame().getModel3DManager().getModel(ModelResourceName).scene;",
             "    const ResourceAnimations = runtimeScene.getGame().getModel3DManager().getModel(ModelResourceName).animations;",
             "    ResourceModel.animations = ResourceAnimations;",
-            "    const Mats = new Map();",
-            "    gdjs.__WithThreeJS.get(\"GetAllMaterials\")(ResourceModel, Mats);",
-            "    // MeshStandardMaterial から指定のマテリアルへ変換",
-            "    for (const [K, V] of Mats) {",
-            "        // const BasicMaterial = new THREE.MeshBasicMaterial();",
-            "        const LambertMaterial = new THREE.MeshLambertMaterial();",
-            "        for(const KK of Object.keys(V)) {",
-            "            if (KK === \"isMaterial\") {",
-            "                continue;",
+            "    //",
+            "    if (MaterialType != \"KeepOriginal\") {",
+            "        // MeshStandardMaterial から指定のマテリアルへ変換",
+            "        const Mats = new Map();",
+            "        gdjs.__WithThreeJS.get(\"GetAllMaterials\")(ResourceModel, Mats);",
+            "        for (const [K, V] of Mats) {",
+            "            let NewMaterial;",
+            "            if (MaterialType == \"Basic\") {",
+            "                NewMaterial = new THREE.MeshBasicMaterial();",
+            "            } else {",
+            "                NewMaterial = new THREE.MeshLambertMaterial();",
             "            }",
-            "            if (KK === \"uuid\") {",
-            "                continue;",
+            "            for(const KK of Object.keys(V)) {",
+            "                // console.log(`V.${KK} = ${V[KK]}`);",
+            "                if (KK === \"isMaterial\") {",
+            "                    continue;",
+            "                }",
+            "                if (KK === \"uuid\") {",
+            "                    continue;",
+            "                }",
+            "                if (KK === \"id\") {",
+            "                    continue;",
+            "                }",
+            "                if (KK === \"type\") {",
+            "                    continue;",
+            "                }",
+            "                if (NewMaterial[KK] !== undefined) {",
+            "                    NewMaterial[KK] = V[KK];",
+            "                }",
             "            }",
-            "            if (KK === \"type\") {",
-            "                continue;",
-            "            }",
-            "            if (LambertMaterial[KK] !== undefined) {",
-            "                LambertMaterial[KK] = V[KK];",
-            "            }",
-            "            //console.log(`V.${KK} = ${V[KK]}`);",
+            "            NewMaterial.side = THREE.FrontSide;",
+            "            V.dispose();// ここで実行して意味ある？",
+            "            Mats.set(K, NewMaterial);",
             "        }",
-            "        LambertMaterial.side = THREE.FrontSide;",
-            "        V.dispose();// ここで実行して意味ある？",
-            "        Mats.set(K, LambertMaterial);",
+            "        gdjs.__WithThreeJS.get(\"ReplaceMaterial\")(ResourceModel, Mats);",
             "    }",
-            "    gdjs.__WithThreeJS.get(\"ReplaceMaterial\")(ResourceModel, Mats);",
             "    Models.set(ModelResourceName, ResourceModel);",
             "    // console.log(ResourceModel, ResourceAnimations);",
             "}",
@@ -6969,11 +7020,11 @@
     },
     {
       "description": "Set 3D Object ID of all children to scene variable as array.",
-      "fullName": "👥Set 3D Object ID Of Children To Scene Variable",
+      "fullName": "👥Set 3D Object ID Of Children To Scene Variable (Deprecated)",
       "functionType": "Action",
       "group": "3D Object",
       "name": "SetChildrenIdToSceneVariable",
-      "sentence": "👥Set 3D Object ID Of Children To Scene Variable (ID: _PARAM1_, Variable: _PARAM2_)",
+      "sentence": "⚠️Set 3D Object ID Of Children To Scene Variable (ID: _PARAM1_, Variable: _PARAM2_)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -7016,6 +7067,59 @@
           "description": "Scene Variable",
           "name": "Variable",
           "type": "scenevar"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Set 3D Object ID of all children to variable (Global, Scene or Local) as array.",
+      "fullName": "👥Set 3D Object ID Of Children To Variable",
+      "functionType": "Action",
+      "group": "3D Object",
+      "name": "SetChildrenIdToVariable",
+      "sentence": "👥Set 3D Object ID Of Children To Variable (ID: _PARAM1_, Variable: _PARAM2_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const GeneralVariable = eventsFunctionContext.getArgument(\"Variable\");",
+            "//",
+            "const Obj = gdjs.__WithThreeJS.get(\"SearchObject\")(Id);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + Id);",
+            "    return;",
+            "}",
+            "//",
+            "let Children = [];",
+            "for (const V of Obj.children) {",
+            "    Children.push(V.name);",
+            "}",
+            "GeneralVariable.fromJSObject(Children);",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Parent 3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "Variable",
+          "name": "Variable",
+          "type": "variable"
         }
       ],
       "objectGroups": []
@@ -7862,6 +7966,7 @@
       "objectGroups": []
     },
     {
+      "description": "Returns the opacity of the 3D Object, or the first opacity found among its children.",
       "fullName": "3D Object Opacity",
       "functionType": "Expression",
       "group": "3D Object",
@@ -7877,6 +7982,7 @@
             "}",
             "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
             "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "let Opacity = null;",
             "//",
             "const Obj = gdjs.__WithThreeJS.get(\"SearchObject\")(Id);",
             "if (!Obj) {",
@@ -7884,11 +7990,18 @@
             "    return;",
             "}",
             "//",
-            "if (Array.isArray(Obj.material)) {",
-            "    eventsFunctionContext.returnValue = Obj.material[0].opacity;",
-            "} else {",
-            "    eventsFunctionContext.returnValue = Obj.material.opacity;",
-            "}",
+            "Obj.traverse((Child) => {",
+            "    if (Opacity === null) {",
+            "        if (Child.material) {",
+            "            if (Array.isArray(Child.material)) {",
+            "                Opacity = Child.material[0].opacity;",
+            "            } else {",
+            "                Opacity = Child.material.opacity;",
+            "            }",
+            "        }",
+            "    }",
+            "});",
+            "eventsFunctionContext.returnValue = (Opacity === null)? 1 : Opacity;",
             "",
             ""
           ],
@@ -9613,6 +9726,10 @@
                 "const ViewMode = gdjs.__WithThreeJS.get(\"ViewMode\");\r",
                 "//\r",
                 "const Sprite = gdjs.__WithThreeJS.get(\"SearchObject\")(Id);\r",
+                "if (!Sprite) {\r",
+                "    console.warn(\"3D Object not found: \" + Id);\r",
+                "    return;\r",
+                "}\r",
                 "objects[0]._updateAnimationFrame();//v5.3.198 からのアニメ更新が不規則になる問題への対応\r",
                 "let TextureId = \"_\" + objects[0].getRendererObject().texture.baseTexture.resource.url;\r",
                 "// Flip\r",
@@ -10468,6 +10585,10 @@
                 "const Orientation = Behavior.Orientation();\r",
                 "//\r",
                 "const Obj = gdjs.__WithThreeJS.get(\"SearchObject\")(Id);\r",
+                "if (!Obj) {\r",
+                "    console.warn(\"3D Object not found: \" + Id);\r",
+                "    return;\r",
+                "}\r",
                 "objects[0]._updateAnimationFrame();//v5.3.198 からのアニメ更新が不規則になる問題への対応\r",
                 "let TextureId = \"_\" + objects[0].getRendererObject().texture.baseTexture.resource.url;\r",
                 "// Flip\r",
@@ -11427,6 +11548,10 @@
                 "const Rotate90 = Behavior.Rotate90();\r",
                 "//\r",
                 "const Obj = gdjs.__WithThreeJS.get(\"SearchObject\")(Id);\r",
+                "if (!Obj) {\r",
+                "    console.warn(\"3D Object not found: \" + Id);\r",
+                "    return;\r",
+                "}\r",
                 "// Move & Rotate\r",
                 "const Angle = objects[0].angle;\r",
                 "if (ViewMode == \"Top Down\") {\r",
@@ -12583,6 +12708,10 @@
                 "const IsCube = Behavior.IsCube();\r",
                 "//\r",
                 "const Obj = gdjs.__WithThreeJS.get(\"SearchObject\")(Id);\r",
+                "if (!Obj) {\r",
+                "    console.warn(\"3D Object not found: \" + Id);\r",
+                "    return;\r",
+                "}\r",
                 "// Move & Rotate\r",
                 "const Angle = objects[0].angle;\r",
                 "if (ViewMode == \"Top Down\") {\r",
@@ -14536,6 +14665,10 @@
                 "const ViewMode = gdjs.__WithThreeJS.get(\"ViewMode\");\r",
                 "//\r",
                 "const Obj = gdjs.__WithThreeJS.get(\"SearchObject\")(Id);\r",
+                "if (!Obj) {\r",
+                "    console.warn(\"3D Object not found: \" + Id);\r",
+                "    return;\r",
+                "}\r",
                 "// Move & Rotate\r",
                 "const Angle = objects[0].angle;\r",
                 "if (ViewMode == \"Top Down\") {\r",
@@ -15269,7 +15402,7 @@
                 "//\r",
                 "const Obj3D = gdjs.__WithThreeJS.get(\"SearchObject\")(Id);\r",
                 "if (!Obj3D) {\r",
-                "    console.warn(\"3D Object not found.\");\r",
+                "    console.warn(\"3D Object not found: \" + Id);\r",
                 "    return;\r",
                 "}\r",
                 "// Move & Rotate\r",
