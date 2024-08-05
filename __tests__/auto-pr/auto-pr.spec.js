@@ -1,18 +1,19 @@
 const { mkdir, rm } = require('fs/promises');
 const { verifyExtension } = require('../../scripts/check-single-extension');
 const { extractExtension } = require('../../scripts/extract-extension');
+const { readdirSync } = require('fs');
 
 const TEMPORARY_MOCK_EXTENSIONS_FOLDER = __dirname + '/mock_extensions_folder';
 const TEST_ZIPS_FOLDER = __dirname + '/test-zips';
 const TEST_EXTENSIONS_FOLDER = __dirname + '/test-extensions';
 
 /** @param {string} zipName */
-const wrappedExtractExtension = async (zipName) =>
+const wrappedExtractExtension = async (zipName, reviewed = false) =>
   (
-    await extractExtension(
-      `${TEST_ZIPS_FOLDER}/${zipName}.zip`,
-      TEMPORARY_MOCK_EXTENSIONS_FOLDER
-    )
+    await extractExtension(`${TEST_ZIPS_FOLDER}/${zipName}.zip`, {
+      extensionsFolder: TEMPORARY_MOCK_EXTENSIONS_FOLDER,
+      reviewed,
+    })
   ).error;
 
 /** @param {string} extensionName */
@@ -45,7 +46,19 @@ describe('Auto-pr pipeline', () => {
       'too-many-files'
     );
 
+    // As community extension
     expect(await wrappedExtractExtension(`valid-extension`)).toBeUndefined();
+    expect(
+      readdirSync(TEMPORARY_MOCK_EXTENSIONS_FOLDER + '/community')
+    ).toContain('UUID.json');
+
+    // As reviewed extension
+    expect(
+      await wrappedExtractExtension(`valid-extension`, true)
+    ).toBeUndefined();
+    expect(
+      readdirSync(TEMPORARY_MOCK_EXTENSIONS_FOLDER + '/reviewed')
+    ).toContain('UUID.json');
   });
 
   test(`verifyExtension()`, async () => {
@@ -57,6 +70,8 @@ describe('Auto-pr pipeline', () => {
     expect(await wrappedVerifyExtension(`cri.png`)).toBe('invalid-file-name');
     expect(await wrappedVerifyExtension(`RealExtension`)).toBe('invalid-json');
     expect(await wrappedVerifyExtension(`Share`)).toBe('rule-break');
+    expect(await wrappedVerifyExtension(`Fake`)).toBe('unknown-json-contents');
+    expect(await wrappedVerifyExtension(`ArrayTools`)).toBe('gdevelop-project-file');
 
     expect(await wrappedVerifyExtension(`UUID`)).toBe('success');
     expect(await wrappedVerifyExtension(`Clipboard`)).toBe('success');
