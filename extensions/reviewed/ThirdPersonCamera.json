@@ -8,7 +8,7 @@
   "name": "ThirdPersonCamera",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/Line Hero Pack/Master/SVG/Virtual Reality/94e95d2c318e1f3dc7151a351024e13c574e1e44669c6696aa107d60230073f6_Virtual Reality_3d_vision_eye_vr.svg",
   "shortDescription": "Move the camera  to look at an object from a given distance.",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": [
     "Move the camera  to look at an object from a given distance with a rotation and an elevation angles.",
     "",
@@ -29,6 +29,8 @@
     "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
   ],
   "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
   "eventsFunctions": [
     {
       "description": "Move the camera to look at a position from a distance.",
@@ -378,6 +380,164 @@
         }
       ],
       "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "Expression",
+      "name": "RotatedX",
+      "private": true,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "Cos",
+                "=",
+                "cos(ToRad(RotationAngle))"
+              ]
+            },
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "Sin",
+                "=",
+                "sin(ToRad(RotationAngle))"
+              ]
+            },
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "Cos * X - Sin * Y"
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "folded": true,
+              "name": "Cos",
+              "type": "number",
+              "value": 0
+            },
+            {
+              "folded": true,
+              "name": "Sin",
+              "type": "number",
+              "value": 0
+            }
+          ]
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Rotation angle",
+          "name": "RotationAngle",
+          "supplementaryInformation": "Tank::Tank",
+          "type": "expression"
+        },
+        {
+          "description": "",
+          "name": "X",
+          "type": "expression"
+        },
+        {
+          "description": "",
+          "name": "Y",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "Expression",
+      "name": "RotatedY",
+      "private": true,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "Cos",
+                "=",
+                "cos(ToRad(RotationAngle))"
+              ]
+            },
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "Sin",
+                "=",
+                "sin(ToRad(RotationAngle))"
+              ]
+            },
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "Sin * X + Cos * Y"
+              ]
+            }
+          ],
+          "variables": [
+            {
+              "folded": true,
+              "name": "Cos",
+              "type": "number",
+              "value": 0
+            },
+            {
+              "folded": true,
+              "name": "Sin",
+              "type": "number",
+              "value": 0
+            }
+          ]
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Rotation angle",
+          "name": "RotationAngle",
+          "supplementaryInformation": "Tank::Tank",
+          "type": "expression"
+        },
+        {
+          "description": "",
+          "name": "X",
+          "type": "expression"
+        },
+        {
+          "description": "",
+          "name": "Y",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
     }
   ],
   "eventsBasedBehaviors": [
@@ -457,6 +617,55 @@
           "name": "doStepPreEvents",
           "sentence": "",
           "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "ThirdPersonCamera::ThirdPersonCamera::PropertyHasJustBeenCreated"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ThirdPersonCamera::ThirdPersonCamera::SetPropertyHasJustBeenCreated"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetCameraAngle"
+                  },
+                  "parameters": [
+                    "",
+                    "=",
+                    "Object.Angle() + 90",
+                    "Object.Layer()",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ThirdPersonCamera::ThirdPersonCamera::SetPropertyCameraZ"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Object.Object3D::CenterZ()"
+                  ]
+                }
+              ]
+            },
             {
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
@@ -673,19 +882,37 @@
                   "actions": [
                     {
                       "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "CameraAngle",
+                        "=",
+                        "Object.Angle() + 90 + (AngleDifference(CameraAngle(Object.Layer(), 0), (Object.Angle() + 90))) * exp(TimeDelta() * Object.Behavior::PropertyRotationLogSpeed()) + RotationAngleOffset"
+                      ]
+                    },
+                    {
+                      "type": {
                         "value": "ThirdPersonCamera::LookFromDistanceAtPosition3D"
                       },
                       "parameters": [
                         "",
-                        "Object.X() + OffsetX",
-                        "Object.Y() + OffsetY",
+                        "Object.X() + ThirdPersonCamera::RotatedX(CameraAngle, OffsetX, -OffsetY)",
+                        "Object.Y() + ThirdPersonCamera::RotatedY(CameraAngle, OffsetX, -OffsetY)",
                         "CameraZ + OffsetZ",
                         "Distance",
-                        "Object.Angle() + 90 + (AngleDifference(CameraAngle(Object.Layer(), 0), (Object.Angle() + 90))) * exp(TimeDelta() * Object.Behavior::PropertyRotationLogSpeed()) + RotationAngleOffset",
+                        "CameraAngle",
                         "Object.Object3D::RotationY() + ElevationAngleOffset",
                         "",
                         ""
                       ]
+                    }
+                  ],
+                  "variables": [
+                    {
+                      "folded": true,
+                      "name": "CameraAngle",
+                      "type": "number",
+                      "value": 0
                     }
                   ]
                 }
@@ -1695,7 +1922,7 @@
           "value": "0",
           "type": "Number",
           "unit": "Pixel",
-          "label": "X offset",
+          "label": "Lateral distance offset",
           "description": "",
           "group": "Position",
           "extraInformation": [],
@@ -1705,7 +1932,7 @@
           "value": "0",
           "type": "Number",
           "unit": "Pixel",
-          "label": "Y offset",
+          "label": "Ahead distance offset",
           "description": "",
           "group": "Position",
           "extraInformation": [],
@@ -1803,6 +2030,16 @@
           "extraInformation": [],
           "hidden": true,
           "name": "CameraZ"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "HasJustBeenCreated"
         }
       ],
       "sharedPropertyDescriptors": []
