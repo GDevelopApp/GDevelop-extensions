@@ -2,13 +2,13 @@
   "author": "",
   "category": "Visual effect",
   "extensionNamespace": "",
-  "fullName": "Advanced 3D tween (experimental)",
+  "fullName": "Advanced 3D tween",
   "helpPath": "",
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLXRlbm5pcy1iYWxsIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyLDJDMTQuNSwyIDE2Ljc1LDIuOSAxOC41LDQuNEMxNi4zNiw2LjIzIDE1LDguOTYgMTUsMTJDMTUsMTUuMDQgMTYuMzYsMTcuNzcgMTguNSwxOS42QzE2Ljc1LDIxLjEgMTQuNSwyMiAxMiwyMkM5LjUsMjIgNy4yNSwyMS4xIDUuNSwxOS42QzcuNjQsMTcuNzcgOSwxNS4wNCA5LDEyQzksOC45NiA3LjY0LDYuMjMgNS41LDQuNEM3LjI1LDIuOSA5LjUsMiAxMiwyTTIyLDEyQzIyLDE0LjMyIDIxLjIxLDE2LjQ1IDE5Ljg4LDE4LjE1QzE4LjEyLDE2LjY4IDE3LDE0LjQ3IDE3LDEyQzE3LDkuNTMgMTguMTIsNy4zMiAxOS44OCw1Ljg1QzIxLjIxLDcuNTUgMjIsOS42OCAyMiwxMk0yLDEyQzIsOS42OCAyLjc5LDcuNTUgNC4xMiw1Ljg1QzUuODgsNy4zMiA3LDkuNTMgNywxMkM3LDE0LjQ3IDUuODgsMTYuNjggNC4xMiwxOC4xNUMyLjc5LDE2LjQ1IDIsMTQuMzIgMiwxMloiIC8+PC9zdmc+",
   "name": "Tween3D",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/30bc03f9cf5f2f42960246a605352a6937ae6b603f0177396a83193849a4724a_tennis-ball.svg",
-  "shortDescription": "Smoothly squash, strentch and wobble 3D models.",
-  "version": "0.1.0",
+  "shortDescription": "Smoothly squash, strentch, tint and wobble 3D models.",
+  "version": "0.2.0",
   "description": [
     "Change 3D models proportions over time to make smooth animations like wobbling.",
     "",
@@ -27,13 +27,518 @@
     "tween",
     "smooth",
     "interpolation",
-    "wobble"
+    "wobble",
+    "color"
   ],
   "authorIds": [
-    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
+    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2",
+    "dt0tRnf2kHWJnjkrpnzTzNj9Yc63"
   ],
   "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
   "eventsFunctions": [
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onFirstSceneLoaded",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "Tween3D::DefineHelperClasses"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Define helper classes JavaScript code.",
+      "fullName": "Define helper classes",
+      "functionType": "Action",
+      "name": "DefineHelperClasses",
+      "private": true,
+      "sentence": "Define helper classes JavaScript code",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (gdjs.__tween3DExtension) {",
+            "  return;",
+            "}",
+            "",
+            "class Tint {",
+            "  /**",
+            "   * Materials by material `id`.",
+            "   * @type {Map<number, THREE.Material>}",
+            "   */",
+            "  materials;",
+            "  usageCount = 0;",
+            "",
+            "  /**",
+            "   * @param materials {Map<number, THREE.Material>}",
+            "   */",
+            "  constructor(materials) {",
+            "    this.materials = materials;",
+            "  }",
+            "",
+            "  /**",
+            "   * @param object {gdjs.RuntimeObject3D}",
+            "   */",
+            "  applyTo(object) {",
+            "    object.get3DRendererObject().traverse((mesh) => {",
+            "      if (mesh.material) {",
+            "        const material = mesh.material;",
+            "        const originalId = material.originalId || material.id;",
+            "        const tintedMaterial = this.materials.get(originalId);",
+            "        if (tintedMaterial) {",
+            "          mesh.material = tintedMaterial;",
+            "        }",
+            "      }",
+            "    });",
+            "  }",
+            "",
+            "  /**",
+            "   * @param tintColor {number}",
+            "   * @param originalTint {Tint}",
+            "   */",
+            "  setColor(tintColor, originalTint) {",
+            "    const originalMaterials = originalTint.materials;",
+            "    for (const [materialId, material] of this.materials) {",
+            "       const originalColor = originalMaterials.get(materialId).color;",
+            "       const color = material.color;",
+            "       color.setHex(tintColor);",
+            "       color.r *= originalColor.r;",
+            "       color.g *= originalColor.g;",
+            "       color.b *= originalColor.b;",
+            "    }",
+            "  }",
+            "",
+            "  dispose() {",
+            "    for (const material of this.materials.values()) {",
+            "      material.dispose();",
+            "    }",
+            "  }",
+            "}",
+            "",
+            "class TintManager {",
+            "  /**",
+            "   * Tints by color hex.",
+            "   * @type {Map<integer, Tint>}",
+            "   */",
+            "  tints = new Map();",
+            "  /**",
+            "   * Materials by material `id`.",
+            "   * @type {Map<number, THREE.Material>}",
+            "   */",
+            "  originalTint;",
+            "  /**",
+            "   * @type {Array<THREE.Material>}",
+            "   */",
+            "  recycledTints = [];",
+            "",
+            "  /**",
+            "   * @param {gdjs.RuntimeObject3D} object",
+            "   */",
+            "  constructor(object) {",
+            "    const materials = new Map();",
+            "    object.get3DRendererObject().traverse((mesh) => {",
+            "      if (mesh.material && mesh.material.color) {",
+            "        const material = mesh.material;",
+            "        materials.set(material.id, material);",
+            "      }",
+            "    });",
+            "    this.originalTint = new Tint(materials);",
+            "  }",
+            "",
+            "  /**",
+            "   * @param {gdjs.RuntimeObject3D} object",
+            "   * @param {number} color",
+            "   */",
+            "  applyTint(object, color) {",
+            "    const previousColor = this.getTint(object);",
+            "    if (color === previousColor) {",
+            "      return;",
+            "    }",
+            "    if (previousColor !== 0xffffff) {",
+            "      const previousTint = this.tints.get(previousColor);",
+            "      previousTint.usageCount--;",
+            "      if (previousTint.usageCount === 0) {",
+            "        this.tints.delete(previousColor);",
+            "        this.recycledTints.push(previousTint);",
+            "      }",
+            "    }",
+            "    let tint = color === 0xffffff ? this.originalTint : this.tints.get(color);",
+            "    if (!tint) {",
+            "      tint = this.createTint(object, color);",
+            "      this.tints.set(color, tint);",
+            "    }",
+            "    tint.applyTo(object);",
+            "    tint.usageCount++;",
+            "    object.__tint3DExtension_tint = color;",
+            "  }",
+            "",
+            "  /**",
+            "   * @param {gdjs.RuntimeObject3D} object",
+            "   * @return {number}",
+            "   */",
+            "  getTint(object) {",
+            "    return object.__tint3DExtension_tint === undefined ? 0xffffff : object.__tint3DExtension_tint;",
+            "  }",
+            "",
+            "  /**",
+            "   * @param {gdjs.RuntimeObject3D} object",
+            "   * @param {number} color",
+            "   */",
+            "  createTint(object, color) {",
+            "    let tint;",
+            "    if (this.recycledTints.length > 0) {",
+            "      tint = this.recycledTints.pop();",
+            "      tint.usageCount = 0;",
+            "    }",
+            "    else {",
+            "      const materials = new Map();",
+            "      object.get3DRendererObject().traverse((mesh) => {",
+            "        if (mesh.material && mesh.material.color) {",
+            "          const material = mesh.material;",
+            "          const originalId = material.id;",
+            "          if (materials.has(originalId)) {",
+            "            // Meshes can share the same material.",
+            "            return;",
+            "          }",
+            "          const tintedMaterial = mesh.material.clone();",
+            "          tintedMaterial.originalId = originalId;",
+            "          materials.set(originalId, tintedMaterial);",
+            "        }",
+            "      });",
+            "      tint = new Tint(materials);",
+            "    }",
+            "    tint.setColor(color, this.originalTint);",
+            "    return tint;",
+            "  }",
+            "",
+            "  dispose() {",
+            "    for (const tint of this.tints.values()) {",
+            "      tint.dispose();",
+            "    }",
+            "    tints.clear();",
+            "    for (const tint of this.recycledTints) {",
+            "      tint.dispose();",
+            "    }",
+            "    recycledTints.length = 0;",
+            "  }",
+            "}",
+            "",
+            "gdjs.registerObjectDeletedFromSceneCallback(function (runtimeScene, deletedObject) {",
+            "    const extension = runtimeScene.__tween3DExtension;",
+            "    if (!extension) {",
+            "        return;",
+            "    }",
+            "    const managers = extension.tintManagers;",
+            "    const manager = managers.get(deletedObject.getName());",
+            "    if (manager) {",
+            "      manager.applyTint(deletedObject, 0xffffff);",
+            "    }",
+            "});",
+            "",
+            "",
+            "/**",
+            " * @param {number} r",
+            " * @param {number} g",
+            " * @param {number} b",
+            " * @return {number[]}",
+            " */",
+            "const rgbToHsl = (r, g, b) => {",
+            "  r /= 255;",
+            "  g /= 255;",
+            "  b /= 255;",
+            "  let v = Math.max(r, g, b),",
+            "    c = v - Math.min(r, g, b),",
+            "    f = 1 - Math.abs(v + v - c - 1);",
+            "  let h =",
+            "    c &&",
+            "    (v === r ? (g - b) / c : v === g ? 2 + (b - r) / c : 4 + (r - g) / c);",
+            "  return [",
+            "    Math.round(60 * (h < 0 ? h + 6 : h)),",
+            "    Math.round((f ? c / f : 0) * 100),",
+            "    Math.round(((v + v - c) / 2) * 100),",
+            "  ];",
+            "};",
+            "",
+            "/**",
+            " * @param {number} h",
+            " * @param {number} s",
+            " * @param {number} l",
+            " * @return {number[]}",
+            " */",
+            "const hslToRgb = (h, s, l) => {",
+            "  h = h %= 360;",
+            "  if (h < 0) {",
+            "    h += 360;",
+            "  }",
+            "  s = s / 100;",
+            "  l = l / 100;",
+            "  const a = s * Math.min(l, 1 - l);",
+            "  const f = (n = 0, k = (n + h / 30) % 12) =>",
+            "    l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);",
+            "  return [",
+            "    Math.round(f(0) * 255),",
+            "    Math.round(f(8) * 255),",
+            "    Math.round(f(4) * 255),",
+            "  ];",
+            "};",
+            "",
+            "gdjs.__tween3DExtension = {",
+            "  TintManager,",
+            "  rgbToHsl,",
+            "  hslToRgb,",
+            "};",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Change the tint of an object. The default color is white.",
+      "fullName": "Tint color",
+      "functionType": "Action",
+      "group": "Color",
+      "name": "SetTint",
+      "sentence": "Change tint of _PARAM1_ to _PARAM3_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const color = gdjs.rgbOrHexStringToNumber(eventsFunctionContext.getArgument(\"Color\") || \"255; 255;255\");",
+            "",
+            "if (!runtimeScene.__tween3DExtension) {",
+            "  runtimeScene.__tween3DExtension = {",
+            "    tintManagers: new Map()",
+            "  };",
+            "}",
+            "const { tintManagers } = runtimeScene.__tween3DExtension;",
+            "for (const object of objects) {",
+            "  let manager = tintManagers.get(object.getName());",
+            "  if (!manager) {",
+            "    const { TintManager } = gdjs.__tween3DExtension;",
+            "    manager = new TintManager(object);",
+            "    tintManagers.set(object.getName(), manager);",
+            "  }",
+            "  manager.applyTint(object, color);",
+            "}",
+            ""
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object",
+          "name": "Object",
+          "type": "objectList"
+        },
+        {
+          "description": "Object capability",
+          "name": "Object3D",
+          "supplementaryInformation": "Scene3D::Base3DBehavior",
+          "type": "behavior"
+        },
+        {
+          "description": "Color",
+          "name": "Color",
+          "type": "color"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Change the tint of an object.",
+      "fullName": "Tint color (by number)",
+      "functionType": "Action",
+      "group": "Color",
+      "name": "SetTintNumber",
+      "private": true,
+      "sentence": "Change tint of _PARAM1_ to _PARAM3_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const color = eventsFunctionContext.getArgument(\"Color\");",
+            "",
+            "if (!runtimeScene.__tween3DExtension) {",
+            "  runtimeScene.__tween3DExtension = {",
+            "    tintManagers: new Map()",
+            "  };",
+            "}",
+            "const { tintManagers } = runtimeScene.__tween3DExtension;",
+            "for (const object of objects) {",
+            "  let manager = tintManagers.get(object.getName());",
+            "  if (!manager) {",
+            "    const { TintManager } = gdjs.__tween3DExtension;",
+            "    manager = new TintManager(object);",
+            "    tintManagers.set(object.getName(), manager);",
+            "  }",
+            "  manager.applyTint(object, color);",
+            "}",
+            ""
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object",
+          "name": "Object",
+          "type": "objectList"
+        },
+        {
+          "description": "Object capability",
+          "name": "Object3D",
+          "supplementaryInformation": "Scene3D::Base3DBehavior",
+          "type": "behavior"
+        },
+        {
+          "description": "Color",
+          "name": "Color",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Blend two RGB colors by applying a weighted mean.",
+      "fullName": "Blend RGB colors",
+      "functionType": "Expression",
+      "name": "RgbMean",
+      "private": true,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const { rgbToHsl, hslToRgb } = gdjs.__tween3DExtension;",
+            "",
+            "const [r1, g1, b1] = gdjs.hexNumberToRGBArray(eventsFunctionContext.getArgument(\"Color1\"));",
+            "const [r2, g2, b2] = gdjs.hexNumberToRGBArray(eventsFunctionContext.getArgument(\"Color2\"));",
+            "const ratio = eventsFunctionContext.getArgument(\"Ratio\");",
+            "",
+            "const [h1, s1, l1] = rgbToHsl(r1, g1, b1);",
+            "const [h2, s2, l2] = rgbToHsl(r2, g2, b2);",
+            "",
+            "const h = h1 + ratio * (h2 - h1);",
+            "const s = s1 + ratio * (s2 - s1);",
+            "const l = l1 + ratio * (l2 - l1);",
+            "",
+            "const [r, g, b] = hslToRgb(h, s, l);",
+            "",
+            "eventsFunctionContext.returnValue = gdjs.rgbToHexNumber(r, g, b);",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "First RGB color",
+          "name": "Color1",
+          "type": "expression"
+        },
+        {
+          "description": "Second RGB color",
+          "name": "Color2",
+          "type": "expression"
+        },
+        {
+          "description": "Ratio",
+          "longDescription": "Range: 0 to 1, where 0 gives the first color and 1 gives the second color",
+          "name": "Ratio",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "RGB to number",
+      "functionType": "Expression",
+      "name": "RgbToNumber",
+      "private": true,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "eventsFunctionContext.returnValue = gdjs.rgbOrHexStringToNumber(eventsFunctionContext.getArgument(\"Color\"));",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Color",
+          "name": "Color",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onSceneUnloading",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!runtimeScene.__tween3DExtension) {",
+            "    return;",
+            "}",
+            "const { tintManagers } = runtimeScene.__tween3DExtension;",
+            "",
+            "for (const manager of tintManagers.values()) {",
+            "    manager.dispose();",
+            "}",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
     {
       "description": "the stretch on Z axis. The object volume is conserved. A stretch of 2 makes the object appear 2 times longer on Z in proportion to the dimensions on X and Y.",
       "fullName": "Stretch on Z axis",
@@ -285,11 +790,48 @@
   ],
   "eventsBasedBehaviors": [
     {
-      "description": "Smoothly animate scale and rotation of 3d models.",
-      "fullName": "3D tween (experimental)",
+      "description": "Smoothly squash, strentch and tint 3D models.",
+      "fullName": "Advanced 3D tween",
       "name": "Tween3D",
       "objectType": "",
       "eventsFunctions": [
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onCreated",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Tween3D::DefineHelperClasses"
+                  },
+                  "parameters": [
+                    "",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Tween3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
         {
           "description": "the stretch on Z axis. The object volume is conserved. A stretch of 2 makes the object appear 2 times longer on Z in proportion to the dimensions on X and Y.",
           "fullName": "Stretch on Z axis",
@@ -716,12 +1258,68 @@
           "objectGroups": []
         },
         {
+          "description": "Return the color of a 3d object.",
+          "fullName": "Color of a 3d object",
+          "functionType": "Expression",
+          "group": "Color",
+          "name": "Tint",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "if (!runtimeScene.__tween3DExtension) {",
+                "  runtimeScene.__tween3DExtension = {",
+                "    tintManagers: new Map()",
+                "  };",
+                "}",
+                "const { tintManagers } = runtimeScene.__tween3DExtension;",
+                "if (objects.length === 0) {",
+                "  eventsFunctionContext.returnValue = 0xffffff;",
+                "}",
+                "else {",
+                "  const object = objects[0];",
+                "  let manager = tintManagers.get(object.getName());",
+                "  if (!manager) {",
+                "    const { TintManager } = gdjs.__tween3DExtension;",
+                "    manager = new TintManager(object);",
+                "    tintManagers.set(object.getName(), manager);",
+                "  }",
+                "  eventsFunctionContext.returnValue = manager.getTint(object);",
+                "}",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Tween3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "Tweens an object stretch Z from its current value to a new one. The stretch can never be 0 or less.",
           "fullName": "Tween stretch Z",
           "functionType": "Action",
           "group": "Size",
           "name": "TweenStretchZ",
-          "sentence": "Tween the stretch Z of object _PARAM0_ to _PARAM3_ over _PARAM4_ seconds with easing _PARAM5_ as _PARAM2_",
+          "sentence": "Tween the stretch Z of _PARAM0_ to _PARAM3_ over _PARAM4_ seconds with easing _PARAM5_ as _PARAM2_",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -788,7 +1386,7 @@
           "functionType": "Action",
           "group": "Size",
           "name": "TweenStretchY",
-          "sentence": "Tween the stretch Y of object _PARAM0_ to _PARAM3_ over _PARAM4_ seconds with easing _PARAM5_ as _PARAM2_",
+          "sentence": "Tween the stretch Y of _PARAM0_ to _PARAM3_ over _PARAM4_ seconds with easing _PARAM5_ as _PARAM2_",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -855,7 +1453,7 @@
           "functionType": "Action",
           "group": "Size",
           "name": "TweenScaleVolume",
-          "sentence": "Tween the scale volume of object _PARAM0_ to _PARAM3_ over _PARAM4_ seconds with easing _PARAM5_ as _PARAM2_",
+          "sentence": "Tween the scale volume of _PARAM0_ to _PARAM3_ over _PARAM4_ seconds with easing _PARAM5_ as _PARAM2_",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -901,6 +1499,73 @@
               "description": "Scale volume",
               "name": "TargetedValue",
               "type": "expression"
+            },
+            {
+              "description": "Duration (in seconds)",
+              "name": "Duration",
+              "type": "expression"
+            },
+            {
+              "description": "Easing",
+              "name": "Easing",
+              "supplementaryInformation": "[\"linear\",\"easeInQuad\",\"easeOutQuad\",\"easeInOutQuad\",\"easeInCubic\",\"easeOutCubic\",\"easeInOutCubic\",\"easeInQuart\",\"easeOutQuart\",\"easeInOutQuart\",\"easeInQuint\",\"easeOutQuint\",\"easeInOutQuint\",\"easeInOutSine\",\"easeInExpo\",\"easeOutExpo\",\"easeInOutExpo\",\"easeInCirc\",\"easeOutCirc\",\"easeInOutCirc\",\"easeOutBounce\",\"easeInBack\",\"easeOutBack\",\"easeInOutBack\",\"elastic\",\"swingFromTo\",\"swingFrom\",\"swingTo\",\"bounce\",\"bouncePast\",\"easeFromTo\",\"easeFrom\",\"easeTo\"]",
+              "type": "stringWithSelector"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Tweens the object color from its current value to a new one.",
+          "fullName": "Tween object color",
+          "functionType": "Action",
+          "group": "Color",
+          "name": "TweenTint",
+          "sentence": "Tween the color of _PARAM0_ to _PARAM3_ over _PARAM4_ seconds with easing _PARAM5_ as _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Tween3D::Tween3D::StartTween"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "TweenIdentifier",
+                    "Tween3D::RgbToNumber(TargetedValue)",
+                    "Duration",
+                    "Easing",
+                    "\"Tint\"",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Tween3D",
+              "type": "behavior"
+            },
+            {
+              "description": "Tween identifier",
+              "name": "TweenIdentifier",
+              "supplementaryInformation": "objectTween3D",
+              "type": "identifier"
+            },
+            {
+              "description": "Color",
+              "name": "TargetedValue",
+              "type": "color"
             },
             {
               "description": "Duration (in seconds)",
@@ -1353,6 +2018,38 @@
                           ]
                         }
                       ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "Tween3D::Tween3D::Type"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "=",
+                            "\"Tint\"",
+                            "VariableString(_Tween3D.Identifier)",
+                            ""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "Tween3D::SetTintNumber"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Object",
+                            "Object3D",
+                            "Object.Behavior::TweenedColor(VariableString(_Tween3D.Identifier))",
+                            ""
+                          ]
+                        }
+                      ]
                     }
                   ]
                 },
@@ -1408,6 +2105,53 @@
                   },
                   "parameters": [
                     "Tween::Ease(Object.Behavior::Easing(VariableString(_Tween3D.Identifier)), Object.Behavior::InitialValue(VariableString(_Tween3D.Identifier)), Object.Behavior::TargetedValue(VariableString(_Tween3D.Identifier)), Object.Behavior::Progress(VariableString(_Tween3D.Identifier)))"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Tween3D",
+              "type": "behavior"
+            },
+            {
+              "description": "Tween identifier",
+              "name": "TweenIdentifier",
+              "supplementaryInformation": "objectTween3D",
+              "type": "identifier"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the tweened color",
+          "fullName": "Tweened color",
+          "functionType": "ExpressionAndCondition",
+          "name": "TweenedColor",
+          "private": true,
+          "sentence": "the color value of tween _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Tween3D::RgbMean(Object.Behavior::InitialValue(VariableString(_Tween3D.Identifier)), Object.Behavior::TargetedValue(VariableString(_Tween3D.Identifier)), \nTween::Ease(Object.Behavior::Easing(VariableString(_Tween3D.Identifier)), 0, 1, Object.Behavior::Progress(VariableString(_Tween3D.Identifier))))\n\n"
                   ]
                 }
               ]
@@ -1502,7 +2246,7 @@
                   "parameters": [
                     "Object",
                     "Behavior",
-                    "GetArgumentAsString(\"TweenIdentifier\")",
+                    "TweenIdentifier",
                     ""
                   ]
                 }
@@ -1533,7 +2277,7 @@
                     "Behavior",
                     "=",
                     "0",
-                    "GetArgumentAsString(\"TweenIdentifier\")",
+                    "TweenIdentifier",
                     ""
                   ]
                 },
@@ -1545,8 +2289,8 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsString(\"Type\")",
-                    "GetArgumentAsString(\"TweenIdentifier\")",
+                    "Type",
+                    "TweenIdentifier",
                     ""
                   ]
                 },
@@ -1558,8 +2302,8 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Duration\")",
-                    "GetArgumentAsString(\"TweenIdentifier\")",
+                    "Duration",
+                    "TweenIdentifier",
                     ""
                   ]
                 },
@@ -1571,8 +2315,8 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsString(\"Easing\")",
-                    "GetArgumentAsString(\"TweenIdentifier\")",
+                    "Easing",
+                    "TweenIdentifier",
                     ""
                   ]
                 },
@@ -1584,8 +2328,8 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"TargetedValue\")",
-                    "GetArgumentAsString(\"TweenIdentifier\")",
+                    "TargetedValue",
+                    "TweenIdentifier",
                     ""
                   ]
                 }
@@ -1615,7 +2359,7 @@
                     "Behavior",
                     "=",
                     "Object.Behavior::StretchZ()",
-                    "GetArgumentAsString(\"TweenIdentifier\")",
+                    "TweenIdentifier",
                     ""
                   ]
                 }
@@ -1645,7 +2389,7 @@
                     "Behavior",
                     "=",
                     "Object.Behavior::StretchY()",
-                    "GetArgumentAsString(\"TweenIdentifier\")",
+                    "TweenIdentifier",
                     ""
                   ]
                 }
@@ -1675,7 +2419,7 @@
                     "Behavior",
                     "=",
                     "Object.Behavior::ScaleVolume()",
-                    "GetArgumentAsString(\"TweenIdentifier\")",
+                    "TweenIdentifier",
                     ""
                   ]
                 }
@@ -1691,7 +2435,7 @@
                   "parameters": [
                     "\"Type\"",
                     "=",
-                    "\"PositionZ\""
+                    "\"Tint\""
                   ]
                 }
               ],
@@ -1704,68 +2448,8 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "Object.Object3D::Z()",
-                    "GetArgumentAsString(\"TweenIdentifier\")",
-                    ""
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "CompareArgumentAsString"
-                  },
-                  "parameters": [
-                    "\"Type\"",
-                    "=",
-                    "\"RotationX\""
-                  ]
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "value": "Tween3D::Tween3D::SetInitialValue"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "=",
-                    "Object.Object3D::RotationX()",
-                    "GetArgumentAsString(\"TweenIdentifier\")",
-                    ""
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "CompareArgumentAsString"
-                  },
-                  "parameters": [
-                    "\"Type\"",
-                    "=",
-                    "\"RotationY\""
-                  ]
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "value": "Tween3D::Tween3D::SetInitialValue"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "=",
-                    "Object.Object3D::RotationY()",
-                    "GetArgumentAsString(\"TweenIdentifier\")",
+                    "Object.Behavior::Tint()",
+                    "TweenIdentifier",
                     ""
                   ]
                 }
@@ -2207,7 +2891,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Variable(_Tween3D.Tweens[GetArgumentAsString(\"TweenIdentifier\")].InitialValue)"
+                    "Object.Variable(_Tween3D.Tweens[TweenIdentifier].InitialValue)"
                   ]
                 }
               ]
@@ -2255,9 +2939,9 @@
                   },
                   "parameters": [
                     "Object",
-                    "_Tween3D.Tweens[GetArgumentAsString(\"TweenIdentifier\")].InitialValue",
+                    "_Tween3D.Tweens[TweenIdentifier].InitialValue",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
@@ -2301,7 +2985,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Variable(_Tween3D.Tweens[GetArgumentAsString(\"TweenIdentifier\")].TargetedValue)"
+                    "Object.Variable(_Tween3D.Tweens[TweenIdentifier].TargetedValue)"
                   ]
                 }
               ]
@@ -2310,6 +2994,53 @@
           "expressionType": {
             "type": "expression"
           },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Tween3D::Tween3D",
+              "type": "behavior"
+            },
+            {
+              "description": "Tween identifier",
+              "name": "TweenIdentifier",
+              "supplementaryInformation": "objectTween3D",
+              "type": "identifier"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "TargetedValue",
+          "name": "SetTargetedValue",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ModVarObjet"
+                  },
+                  "parameters": [
+                    "Object",
+                    "_Tween3D.Tweens[TweenIdentifier].TargetedValue",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
           "parameters": [
             {
               "description": "Object",
@@ -2468,53 +3199,6 @@
               "description": "Paused",
               "name": "IsPaused",
               "type": "yesorno"
-            }
-          ],
-          "objectGroups": []
-        },
-        {
-          "fullName": "",
-          "functionType": "ActionWithOperator",
-          "getterName": "TargetedValue",
-          "name": "SetTargetedValue",
-          "private": true,
-          "sentence": "",
-          "events": [
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "value": "ModVarObjet"
-                  },
-                  "parameters": [
-                    "Object",
-                    "_Tween3D.Tweens[GetArgumentAsString(\"TweenIdentifier\")].TargetedValue",
-                    "=",
-                    "GetArgumentAsNumber(\"Value\")"
-                  ]
-                }
-              ]
-            }
-          ],
-          "parameters": [
-            {
-              "description": "Object",
-              "name": "Object",
-              "type": "object"
-            },
-            {
-              "description": "Behavior",
-              "name": "Behavior",
-              "supplementaryInformation": "Tween3D::Tween3D",
-              "type": "behavior"
-            },
-            {
-              "description": "Tween identifier",
-              "name": "TweenIdentifier",
-              "supplementaryInformation": "objectTween3D",
-              "type": "identifier"
             }
           ],
           "objectGroups": []

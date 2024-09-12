@@ -502,6 +502,18 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Tween3D: {
+      gdjsAllowedProperties: [
+        '__tween3DExtension',
+        'RuntimeObject3D',
+        'registerObjectDeletedFromSceneCallback',
+        'rgbOrHexStringToNumber',
+        'hexNumberToRGBArray',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['__tween3DExtension'],
+      javaScriptObjectAllowedProperties: [],
+    },
     VoiceRecognition: {
       gdjsAllowedProperties: ['_extensionVoiceRecognition'],
       gdjsEvtToolsAllowedProperties: [],
