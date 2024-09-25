@@ -8,7 +8,7 @@
   "name": "MousePointerLock",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Line Hero Pack/Master/SVG/Virtual Reality/Virtual Reality_360_rotate_vr_movement.svg",
   "shortDescription": "This behavior removes the limit on the distance the mouse can move and hides the cursor.",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": [
     "This behavior removes the limit on the distance the mouse can move and hides the cursor.",
     "",
@@ -35,6 +35,8 @@
     "Zu55H5hcb9YmZTltIVOTAFDJQyB2"
   ],
   "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
   "eventsFunctions": [
     {
       "fullName": "",
@@ -49,11 +51,19 @@
             "",
             "gdjs._MousePointerLockExtension = {};",
             "gdjs._MousePointerLockExtension.movement = { x: 0, y: 0 };",
+            "gdjs._MousePointerLockExtension.retried = false;",
             "",
             "canvas.addEventListener(\"pointermove\", (e) => {",
             "    gdjs._MousePointerLockExtension.movement.x += e.movementX || 0;",
             "    gdjs._MousePointerLockExtension.movement.y += e.movementY || 0;",
-            "}, false);"
+            "}, false);",
+            "",
+            "document.addEventListener(\"pointerlockerror\", (e) => {",
+            "    if (!gdjs._MousePointerLockExtension.retried) {",
+            "        canvas.requestPointerLock();",
+            "        gdjs._MousePointerLockExtension.retried = true;",
+            "    } ",
+            "});"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -133,13 +143,14 @@
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
             "const canvas = runtimeScene.getGame().getRenderer().getCanvas();\r",
-            "if (canvas.requestPointerLock) {\r",
+            "if (canvas.requestPointerLock && !document.pointerLockElement) {\r",
             "    canvas.requestPointerLock({ unadjustedMovement: true });\r",
+            "    gdjs._MousePointerLockExtension.retried = false;\r",
             "}"
           ],
           "parameterObjects": "",
           "useStrict": true,
-          "eventsSheetExpanded": false
+          "eventsSheetExpanded": true
         }
       ],
       "parameters": [],
