@@ -2,7 +2,7 @@
 
 GDevelop is a **full-featured, no-code, open-source** game development software. You can build **2D, 3D and multiplayer games** for mobile (iOS, Android), desktop and the web. GDevelop is fast and easy to use: the game logic is built up using an intuitive and powerful event-based system and reusable behaviors.
 
-# GDevelop Community Extensions
+# GDevelop Official and Community Extensions
 
 This repository hosts community made extensions for GDevelop. Extensions can provide new behaviors for objects, actions, conditions or expressions.
 
