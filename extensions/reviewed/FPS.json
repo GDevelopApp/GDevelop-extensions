@@ -8,7 +8,7 @@
   "name": "FPS",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Glyphster Pack/Master/SVG/SEO/SEO_board_performance_profit.svg",
   "shortDescription": "Calculate and display the frames per second (FPS) of the game.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": [
     "Provides an expression to get the current FPS and a text object behavior to display the current FPS.",
     "",
@@ -34,6 +34,21 @@
     "gqDaZjCfevOOxBYkK6zlhtZnXCg1"
   ],
   "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [
+    {
+      "folded": true,
+      "name": "FrameTimestamps",
+      "type": "array",
+      "children": []
+    },
+    {
+      "folded": true,
+      "name": "TimeElapsed",
+      "type": "number",
+      "value": 0
+    }
+  ],
   "eventsFunctions": [
     {
       "fullName": "",
@@ -47,10 +62,10 @@
           "actions": [
             {
               "type": {
-                "value": "SceneVariablePushNumber"
+                "value": "PushNumber"
               },
               "parameters": [
-                "__FPS.FrameTimestamps",
+                "FrameTimestamps",
                 "Time(\"timestamp\")"
               ]
             }
@@ -93,10 +108,10 @@
               "actions": [
                 {
                   "type": {
-                    "value": "ModVarScene"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "__FPS.TimeElapsed",
+                    "TimeElapsed",
                     "=",
                     "Time(\"timestamp\") - Variable(__FPS.FrameTimestamps[0])"
                   ]
@@ -121,20 +136,20 @@
               "whileConditions": [
                 {
                   "type": {
-                    "value": "SceneVariableChildCount"
+                    "value": "VariableChildCount"
                   },
                   "parameters": [
-                    "__FPS.FrameTimestamps",
+                    "FrameTimestamps",
                     ">",
                     "0"
                   ]
                 },
                 {
                   "type": {
-                    "value": "VarScene"
+                    "value": "NumberVariable"
                   },
                   "parameters": [
-                    "__FPS.FrameTimestamps[0]",
+                    "FrameTimestamps[0]",
                     "<",
                     "Time(\"timestamp\") - 1000"
                   ]
@@ -144,10 +159,10 @@
               "actions": [
                 {
                   "type": {
-                    "value": "SceneVariableRemoveAt"
+                    "value": "RemoveVariableAt"
                   },
                   "parameters": [
-                    "__FPS.FrameTimestamps",
+                    "FrameTimestamps",
                     "0"
                   ]
                 }
@@ -171,10 +186,10 @@
               "actions": [
                 {
                   "type": {
-                    "value": "SceneVariablePushNumber"
+                    "value": "PushNumber"
                   },
                   "parameters": [
-                    "__FPS.FrameTimestamps",
+                    "FrameTimestamps",
                     "Time(\"timestamp\")"
                   ]
                 }
@@ -203,7 +218,7 @@
                 "value": "SetReturnNumber"
               },
               "parameters": [
-                "VariableChildCount(__FPS.FrameTimestamps) / (Variable(__FPS.TimeElapsed) / 1000)"
+                "VariableChildCount(FrameTimestamps) / (TimeElapsed / 1000)"
               ]
             }
           ]
@@ -257,7 +272,7 @@
       "description": "Makes a text object display the current FPS.",
       "fullName": "FPS Displayer",
       "name": "FPSDisplayer",
-      "objectType": "TextObject::Text",
+      "objectType": "",
       "eventsFunctions": [
         {
           "fullName": "",
@@ -283,114 +298,125 @@
               "actions": [
                 {
                   "type": {
-                    "value": "ModVarSceneTxt"
+                    "value": "SetStringVariable"
                   },
                   "parameters": [
-                    "__FPS.UnformattedFPS",
+                    "UnformattedFPS",
                     "=",
-                    "ToString(roundTo(FPS::FPS(), Object.Behavior::PropertyDecimalDigits()))"
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Comment",
-              "color": {
-                "b": 109,
-                "g": 230,
-                "r": 255,
-                "textB": 0,
-                "textG": 0,
-                "textR": 0
-              },
-              "comment": "Add trailing zeroes, if needed"
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "BuiltinCommonInstructions::CompareNumbers"
-                  },
-                  "parameters": [
-                    "Object.Behavior::PropertyDecimalDigits()",
-                    ">",
-                    "0"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "BuiltinCommonInstructions::CompareNumbers"
-                  },
-                  "parameters": [
-                    "StrFind(VariableString(__FPS.UnformattedFPS),\".\")",
-                    "=",
-                    "-1"
+                    "ToString(roundTo(FPS::FPS(), DecimalDigits))"
                   ]
                 }
               ],
-              "actions": [],
               "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Comment",
+                  "color": {
+                    "b": 109,
+                    "g": 230,
+                    "r": 255,
+                    "textB": 0,
+                    "textG": 0,
+                    "textR": 0
+                  },
+                  "comment": "Add trailing zeroes, if needed"
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                      },
+                      "parameters": [
+                        "DecimalDigits",
+                        ">",
+                        "0"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                      },
+                      "parameters": [
+                        "StrFind(UnformattedFPS, \".\")",
+                        "=",
+                        "-1"
+                      ]
+                    }
+                  ],
+                  "actions": [],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetStringVariable"
+                          },
+                          "parameters": [
+                            "UnformattedFPS",
+                            "+",
+                            "\".\""
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Repeat",
+                      "repeatExpression": "DecimalDigits",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetStringVariable"
+                          },
+                          "parameters": [
+                            "UnformattedFPS",
+                            "+",
+                            "\"0\""
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Comment",
+                  "color": {
+                    "b": 109,
+                    "g": 230,
+                    "r": 255,
+                    "textB": 0,
+                    "textG": 0,
+                    "textR": 0
+                  },
+                  "comment": "Show the formatted FPS text including the prefix"
+                },
                 {
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [],
                   "actions": [
                     {
                       "type": {
-                        "value": "ModVarSceneTxt"
+                        "value": "TextContainerCapability::TextContainerBehavior::SetValue"
                       },
                       "parameters": [
-                        "__FPS.UnformattedFPS",
-                        "+",
-                        "\".\""
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Repeat",
-                  "repeatExpression": "Object.Behavior::PropertyDecimalDigits()",
-                  "conditions": [],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "ModVarSceneTxt"
-                      },
-                      "parameters": [
-                        "__FPS.UnformattedFPS",
-                        "+",
-                        "\"0\""
+                        "Object",
+                        "Text",
+                        "=",
+                        "prefix + UnformattedFPS"
                       ]
                     }
                   ]
                 }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Comment",
-              "color": {
-                "b": 109,
-                "g": 230,
-                "r": 255,
-                "textB": 0,
-                "textG": 0,
-                "textR": 0
-              },
-              "comment": "Show the formatted FPS text including the prefix"
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
+              ],
+              "variables": [
                 {
-                  "type": {
-                    "value": "TextObject::String"
-                  },
-                  "parameters": [
-                    "Object",
-                    "=",
-                    "Object.Behavior::Propertyprefix() + VariableString(__FPS.UnformattedFPS)"
-                  ]
+                  "folded": true,
+                  "name": "UnformattedFPS",
+                  "type": "string",
+                  "value": ""
                 }
               ]
             }
@@ -399,7 +425,6 @@
             {
               "description": "Object",
               "name": "Object",
-              "supplementaryInformation": "TextObject::Text",
               "type": "object"
             },
             {
@@ -414,24 +439,33 @@
       ],
       "propertyDescriptors": [
         {
+          "value": "",
+          "type": "Behavior",
+          "label": "Text capability",
+          "description": "",
+          "group": "",
+          "extraInformation": [
+            "TextContainerCapability::TextContainerBehavior"
+          ],
+          "name": "Text"
+        },
+        {
           "value": "FPS: ",
           "type": "String",
-          "label": "The prefix before the FPS count",
+          "label": "FPS counter prefix",
           "description": "",
           "group": "",
           "extraInformation": [],
-          "hidden": false,
           "name": "prefix"
         },
         {
           "value": "0",
           "type": "Number",
           "unit": "Dimensionless",
-          "label": "Number of decimal digits to display",
+          "label": "Number of decimal digits",
           "description": "",
           "group": "",
           "extraInformation": [],
-          "hidden": false,
           "name": "DecimalDigits"
         }
       ],
