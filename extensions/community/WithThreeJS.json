@@ -8,7 +8,7 @@
   "name": "WithThreeJS",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/rotate-3d.svg",
   "shortDescription": "Create a simple 3D scene.",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": [
     "Extension for GDevelop to create simple 3D scenes.  ",
     "This extension is intended for easy and simple 3D rendering. It does not currently aim for realistic 3D rendering.  ",
@@ -2242,6 +2242,8 @@
             "  V.position.set(0, 0, 0);",
             "  V.rotation.set(0, 0, 0);",
             "  V.zoom = 1;",
+            "  V.layers.enable(0);",
+            "  V.layers.enable(1);",
             "  V.updateProjectionMatrix();//必須",
             "  V.userData.CameraStatus = {};",
             "  V.userData.CameraStatus.Active = false;",
@@ -2725,6 +2727,8 @@
             "Raycaster.camera = Camera;",
             "Raycaster.set(From, Direction);",
             "Raycaster.far = Distance;",
+            "Raycaster.layers.enable(0);",
+            "Raycaster.layers.enable(2);",
             "gdjs.__WithThreeJS.set(\"RaycastResult\", Raycaster.intersectObjects(Scene.children, true));",
             "",
             ""
@@ -2814,6 +2818,8 @@
             "//",
             "Raycaster.setFromCamera(ScreenPoint, Camera);",
             "Raycaster.far = Camera.far;",
+            "Raycaster.layers.enable(0);",
+            "Raycaster.layers.enable(2);",
             "gdjs.__WithThreeJS.set(\"RaycastResult\", Raycaster.intersectObjects(Scene.children, true));",
             "",
             ""
@@ -2881,6 +2887,8 @@
             "Raycaster.camera = Camera;",
             "Raycaster.set(WorldPosition, WorldDirection);",
             "Raycaster.far = Distance;",
+            "Raycaster.layers.enable(0);",
+            "Raycaster.layers.enable(2);",
             "gdjs.__WithThreeJS.set(\"RaycastResult\", Raycaster.intersectObjects(Scene.children, true));",
             "",
             ""
@@ -6849,6 +6857,65 @@
       "objectGroups": []
     },
     {
+      "description": "Determines whether the 3D Object can be detected by Raycast.\nDefault is detectable (Yes).",
+      "fullName": "🔎Change 3D Object Raycast Detection",
+      "functionType": "Action",
+      "group": "3D Object",
+      "name": "ChangeRaycastDetection",
+      "sentence": "🔎Change 3D Object Raycast Detection (ID: _PARAM1_, Raycast Detection: _PARAM2_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "//",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "const Detection = eventsFunctionContext.getArgument(\"Detection\");",
+            "//",
+            "const Obj = gdjs.__WithThreeJS.get(\"SearchObject\")(Id);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + Id);",
+            "    return;",
+            "}",
+            "//",
+            "Obj.traverse((Child) => {",
+            "    if (Child.layers) {",
+            "        if (Detection) {",
+            "            Child.layers.set(0);",
+            "        } else {",
+            "            Child.layers.set(1);",
+            "        }",
+            "    }",
+            "});",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        },
+        {
+          "description": "Raycast Detection (Default: Yes)",
+          "name": "Detection",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "yesorno"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
       "description": "Resolve collisions between Bounding Boxes.\nIt is not necessary to use the \"Check Bounding Box Collision\" condition beforehand. (It will do almost the same processing)\nNote that the 3D Objects are still in contact after resolution. (\"Check Bounding Box Collision\" condition will not be false.)\n3D Object thickness too thin for the amount of movement will not resolve correctly.\nThis action updates the \"Bounding Box Collision Result\".\n\"Bounding Box Collision Result\" stores the value when the Target 3D Object is unmoved.",
       "fullName": "💥Resolve Bounding Box Collision",
       "functionType": "Action",
@@ -8917,6 +8984,63 @@
       "objectGroups": []
     },
     {
+      "description": "Check if the position of the 3D Object is within the field of view of the 3D camera.",
+      "fullName": "🎥Check 3D Object Is Within 3D Camera FOV",
+      "functionType": "Condition",
+      "group": "3D Object",
+      "name": "Check3DObjectWithinFOV",
+      "sentence": "🎥Check 3D Object Is Within 3D Camera FOV (Camera ID: _PARAM1_, Object ID: _PARAM2_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (!gdjs.__WithThreeJS.has(\"Renderer\")) {",
+            "    console.warn(\"!\");",
+            "    return;",
+            "}",
+            "const Scene = gdjs.__WithThreeJS.get(\"Scene\");",
+            "const CameraId = eventsFunctionContext.getArgument(\"CameraId\");",
+            "const Id = eventsFunctionContext.getArgument(\"Id\");",
+            "eventsFunctionContext.returnValue = false;",
+            "//",
+            "const Obj = gdjs.__WithThreeJS.get(\"SearchObject\")(Id);",
+            "if (!Obj) {",
+            "    console.warn(\"3D Object not found: \" + Id);",
+            "    return;",
+            "}",
+            "const Camera = gdjs.__WithThreeJS.get(\"GetCamera\")(CameraId);",
+            "const Frustum = new THREE.Frustum();",
+            "const CloneCamera = Camera.clone();",
+            "CloneCamera.rotateZ(gdjs.toRad(180));",
+            "Frustum.setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(CloneCamera.projectionMatrix, CloneCamera.matrixWorldInverse));",
+            "const WPos = new THREE.Vector3();",
+            "Obj.getWorldPosition(WPos);",
+            "eventsFunctionContext.returnValue = Frustum.containsPoint(WPos);",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "3D Camera ID (1 to 4)",
+          "name": "CameraId",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "expression"
+        },
+        {
+          "description": "3D Object ID",
+          "name": "Id",
+          "supplementaryInformation": "scene3D Object ID",
+          "type": "identifier"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
       "description": "Play a 3D Positional Sound.\nThis action is deprecated but is still available. This is because the new action has issues with the editor and is difficult to use.",
       "fullName": "Play 3D Sound V1 (Deprecated)",
       "functionType": "Action",
@@ -9348,6 +9472,7 @@
             "//",
             "const AxesHelper = new THREE.AxesHelper(Size);",
             "AxesHelper.name = ParentId + \"_AxesHelper\";",
+            "AxesHelper.layers.set(1);",
             "Parent.add(AxesHelper);"
           ],
           "parameterObjects": "",
@@ -9411,6 +9536,7 @@
             "    Box3.copy(Obj.geometry.boundingBox).applyMatrix4(Obj.matrixWorld);",
             "    Box3Helper = new THREE.Box3Helper(Box3, `rgb(${RGB[0]}, ${RGB[1]}, ${RGB[2]})`);",
             "    Box3Helper.name = Id + \"_Box3Helper\";",
+            "    Box3Helper.layers.set(1);",
             "    Scene.add(Box3Helper);",
             "}",
             "",
@@ -15096,10 +15222,17 @@
   ],
   "eventsBasedObjects": [
     {
+      "areaMaxX": 64,
+      "areaMaxY": 64,
+      "areaMaxZ": 64,
+      "areaMinX": 0,
+      "areaMinY": 0,
+      "areaMinZ": 0,
       "defaultName": "My3DBox",
       "description": "This 3D Box can have different textures on 6 faces.\n⚠️ This object is high load.",
       "fullName": "3D Box",
       "is3D": true,
+      "isUsingLegacyInstancesRenderer": true,
       "name": "Box3D",
       "eventsFunctions": [
         {
@@ -15860,20 +15993,91 @@
             "objectName": "Right"
           }
         ]
-      }
+      },
+      "objectsGroups": [],
+      "layers": [
+        {
+          "ambientLightColorB": 200,
+          "ambientLightColorG": 200,
+          "ambientLightColorR": 200,
+          "camera3DFarPlaneDistance": 10000,
+          "camera3DFieldOfView": 45,
+          "camera3DNearPlaneDistance": 3,
+          "cameraType": "",
+          "followBaseLayerCamera": false,
+          "isLightingLayer": false,
+          "isLocked": false,
+          "name": "",
+          "renderingType": "",
+          "visibility": true,
+          "cameras": [
+            {
+              "defaultSize": true,
+              "defaultViewport": true,
+              "height": 0,
+              "viewportBottom": 1,
+              "viewportLeft": 0,
+              "viewportRight": 1,
+              "viewportTop": 0,
+              "width": 0
+            }
+          ],
+          "effects": []
+        }
+      ],
+      "instances": []
     },
     {
+      "areaMaxX": 64,
+      "areaMaxY": 64,
+      "areaMaxZ": 64,
+      "areaMinX": 0,
+      "areaMinY": 0,
+      "areaMinZ": 0,
       "defaultName": "Enable_WithThreeJS",
       "description": "Adding this object to your project will enable WithThreeJS in all scenes.\nThere is no need to place this in the scene.",
       "fullName": "Enable WithThreeJS",
       "is3D": true,
+      "isUsingLegacyInstancesRenderer": true,
       "name": "EnableWithThreeJS",
       "eventsFunctions": [],
       "propertyDescriptors": [],
       "objects": [],
       "objectsFolderStructure": {
         "folderName": "__ROOT"
-      }
+      },
+      "objectsGroups": [],
+      "layers": [
+        {
+          "ambientLightColorB": 200,
+          "ambientLightColorG": 200,
+          "ambientLightColorR": 200,
+          "camera3DFarPlaneDistance": 10000,
+          "camera3DFieldOfView": 45,
+          "camera3DNearPlaneDistance": 3,
+          "cameraType": "",
+          "followBaseLayerCamera": false,
+          "isLightingLayer": false,
+          "isLocked": false,
+          "name": "",
+          "renderingType": "",
+          "visibility": true,
+          "cameras": [
+            {
+              "defaultSize": true,
+              "defaultViewport": true,
+              "height": 0,
+              "viewportBottom": 1,
+              "viewportLeft": 0,
+              "viewportRight": 1,
+              "viewportTop": 0,
+              "width": 0
+            }
+          ],
+          "effects": []
+        }
+      ],
+      "instances": []
     }
   ]
 }
