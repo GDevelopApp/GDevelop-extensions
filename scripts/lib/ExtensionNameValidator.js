@@ -1,5 +1,8 @@
 /** @param {string} extensionName */
 exports.isValidExtensionName = (extensionName) => {
+  // Ensure extensionName is a string to prevent runtime errors
+  if (typeof extensionName !== 'string') return false;
+
   if (extensionName.length === 0) return false;
 
   // Ensure that the first character is an uppercase character

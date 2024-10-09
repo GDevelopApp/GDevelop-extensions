@@ -124,8 +124,8 @@ async function validate({ extension, publicEventsFunctions, onError }) {
         func.functionType === 'ExpressionAndCondition'
         ? 'INSTRUCTION'
         : func.functionType === 'ActionWithOperator'
-        ? 'ACTION_WITH_OPERATOR'
-        : 'EXPRESSION',
+          ? 'ACTION_WITH_OPERATOR'
+          : 'EXPRESSION',
       `the function '${func.name}'`,
       onError
     );

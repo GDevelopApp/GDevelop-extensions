@@ -70,8 +70,8 @@ async function validate({ extension, publicEventsFunctions, onError }) {
         func.functionType === 'ExpressionAndCondition'
         ? NECESSARY_FIELDS.INSTRUCTION
         : func.functionType === 'ActionWithOperator'
-        ? NECESSARY_FIELDS.ACTION_WITH_OPERATOR
-        : NECESSARY_FIELDS.EXPRESSION,
+          ? NECESSARY_FIELDS.ACTION_WITH_OPERATOR
+          : NECESSARY_FIELDS.EXPRESSION,
       `the function '${func.name}'`,
       onError
     );
