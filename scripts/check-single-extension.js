@@ -20,7 +20,7 @@ exports.verifyExtension = async function (extensionName, options) {
 
   try {
     const [community, reviewed] = await Promise.all([
-      // Added try-catch block for better async error handling 
+      // Added try-catch block for better async error handling
       readFile(`${extensionsFolder}/community/${extensionName}.json`).catch(
         () => null
       ),
@@ -56,10 +56,9 @@ exports.verifyExtension = async function (extensionName, options) {
         errors: validationDetails.map(({ message }) => message),
       };
     return { code: 'success' };
-    
   } catch (error) {
     // General error catch for any unhandled async errors in the process
     console.error(`Error verifying extension: ${extensionName}`, error);
-    return { code: 'not-found' };  // Return a default error code, you could also return something more specific based on the context
+    return { code: 'not-found' }; // Return a default error code, you could also return something more specific based on the context
   }
 };

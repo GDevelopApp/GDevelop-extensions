@@ -29,6 +29,12 @@ async function validate({
   publicEventsFunctions,
   onError,
 }) {
+  // Check if extension name is a valid string
+  if (typeof name !== 'string') {
+    onError('Invalid extension name. Expected a string.');
+    return;
+  }
+
   if (legacyCamelCaseExtensions.has(name)) return;
 
   // Combine both loops into one to reduce duplication
