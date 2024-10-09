@@ -15,40 +15,30 @@ exports.extractExtension = async function (
   zipPath,
   extensionsFolder = `${__dirname}/../extensions`
 ) {
-  // Load in the archive with JSZip
-  const zip = await JSZip.loadAsync(await readFile(zipPath)).catch((e) => {
-    console.warn(`JSZip loading error caught: `, e);
-    return null;
-  });
-  if (zip === null) return { error: 'zip-error' };
-
-  // Find JSON files in the zip top level folder
-  const jsonFiles = zip.file(/.*\.json$/);
-
-  // Ensure there is exactly 1 file
-  if (jsonFiles.length === 0) return { error: 'no-json-found' };
-  if (jsonFiles.length > 1) return { error: 'too-many-files' };
-  const [file] = jsonFiles;
-
-  const { name: extensionName, dir, ext } = parsePath(file.name);
-  if (ext !== '.json') return { error: 'invalid-file-name' };
-
-  // Ensure no special characters are in the extension name to prevent relative path
-  // name shenanigans with dots that could put the extension in the reviewed folder.
-  if (dir) return { error: 'invalid-file-name' };
-  if (!isValidExtensionName(extensionName))
-    return { error: 'invalid-file-name' };
-
   try {
+    // Load in the archive with JSZip
+    const zip = await JSZip.loadAsync(await readFile(zipPath));
+    if (!zip) return { error: 'zip-error' };
+    // Find JSON files in the zip top level folder
+    const jsonFiles = zip.file(/.*\.json$/);
+    // Ensure there is exactly 1 file
+    if (jsonFiles.length === 0) return { error: 'no-json-found' };
+    if (jsonFiles.length > 1) return { error: 'too-many-files' };
+    const [file] = jsonFiles;
+    const { name: extensionName, dir, ext } = parsePath(file.name);
+    if (ext !== '.json') return { error: 'invalid-file-name' };
+    // Ensure no special characters are in the extension name to prevent relative path
+    // name shenanigans with dots that could put the extension in the reviewed folder.
+    if (dir) return { error: 'invalid-file-name' };
+    if (!isValidExtensionName(extensionName)) return { error: 'invalid-file-name' };
     // Write the extension to the community extensions folder
     await pipeline(
       file.nodeStream(),
       createWriteStream(`${extensionsFolder}/community/${file.name}`)
     );
+    return { extensionName };
   } catch (e) {
-    console.warn(`JSZip extraction error caught: `, e);
-    return { error: 'zip-error' };
+    console.warn(`JSZip loading or extraction error caught: `, e);
+    return { error: 'zip-error', details: e.message };
   }
-
-  return { extensionName };
 };
