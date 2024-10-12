@@ -8,7 +8,7 @@
   "name": "AutoTyping",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/typewriter.svg",
   "shortDescription": "Reveal a text one letter after the other.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": [
     "Reveal a text one letter after the other (a \"typewriter\" effect).",
     "",
@@ -185,28 +185,6 @@
                 },
                 {
                   "type": {
-                    "value": "AutoTyping::AutoTyping::SetPropertyTypedText"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "+",
-                    "StrAt(FullText, StrLength(TypedText))"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "TextContainerCapability::TextContainerBehavior::SetValue"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Text",
-                    "=",
-                    "TypedText"
-                  ]
-                },
-                {
-                  "type": {
                     "value": "ResetObjectTimer"
                   },
                   "parameters": [
@@ -216,6 +194,116 @@
                 }
               ],
               "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetStringVariable"
+                      },
+                      "parameters": [
+                        "NextCharacter",
+                        "=",
+                        "StrAt(FullText, StrLength(TypedText))"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "StringVariable"
+                          },
+                          "parameters": [
+                            "NextCharacter",
+                            "=",
+                            "\" \""
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "AutoTyping::AutoTyping::ClearForcedLineBreak"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            ""
+                          ]
+                        }
+                      ],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "AutoTyping::AutoTyping::IsNextWordWrapped"
+                              },
+                              "parameters": [
+                                "Object",
+                                "Behavior",
+                                ""
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetStringVariable"
+                              },
+                              "parameters": [
+                                "NextCharacter",
+                                "=",
+                                "NewLine()"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "AutoTyping::AutoTyping::SetPropertyTypedText"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "+",
+                            "NextCharacter"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "TextContainerCapability::TextContainerBehavior::SetValue"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Text",
+                            "=",
+                            "TypedText"
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "variables": [
+                    {
+                      "folded": true,
+                      "name": "NextCharacter",
+                      "type": "string",
+                      "value": ""
+                    }
+                  ]
+                },
                 {
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [
@@ -239,7 +327,183 @@
                         "",
                         "\"__AutoTyping.WriteTimer\""
                       ]
+                    },
+                    {
+                      "type": {
+                        "value": "AutoTyping::AutoTyping::SetPropertyTypedText"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        "=",
+                        "FullText"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "TextContainerCapability::TextContainerBehavior::SetValue"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Text",
+                        "=",
+                        "TypedText"
+                      ]
                     }
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "AutoTyping::AutoTyping",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Is next word wrapped",
+          "functionType": "Condition",
+          "name": "IsNextWordWrapped",
+          "private": true,
+          "sentence": "_PARAM0_ next word is wrapped",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Temporary add the next word and check if it's adding a new line."
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Height",
+                    "=",
+                    "Object.Height()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "TextContainerCapability::TextContainerBehavior::SetValue"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Text",
+                    "=",
+                    "SubStr(FullText, 0, StrFindFrom(FullText, \" \", StrLength(TypedText) + 1))"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "NumberVariable"
+                      },
+                      "parameters": [
+                        "Height",
+                        "<",
+                        "Object.Height()"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetReturnBoolean"
+                      },
+                      "parameters": [
+                        "True"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "TextContainerCapability::TextContainerBehavior::SetValue"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Text",
+                        "=",
+                        "TypedText"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "variables": [
+                {
+                  "folded": true,
+                  "name": "Height",
+                  "type": "number",
+                  "value": 0
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "AutoTyping::AutoTyping",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Clear forced line breaks",
+          "functionType": "Action",
+          "name": "ClearForcedLineBreak",
+          "private": true,
+          "sentence": "Clear forced line breaks in _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "AutoTyping::AutoTyping::SetPropertyTypedText"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "SubStr(FullText, 0, StrLength(TypedText))"
                   ]
                 }
               ]
