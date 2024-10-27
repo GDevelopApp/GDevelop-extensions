@@ -252,6 +252,20 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    HedgehogPlatformer: {
+      gdjsAllowedProperties: [
+        '__hedgehogPlatformerExtension',
+        'RuntimeInstanceContainer',
+        'BehaviorRBushAABB',
+        'RuntimeBehavior',
+        'RaycastTestResult',
+        'Polygon',
+        'SpriteRuntimeObject',
+      ],
+      gdjsEvtToolsAllowedProperties: ['object'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     InkJS: {
       gdjsAllowedProperties: ['_InkJS', 'GDStory'],
       gdjsEvtToolsAllowedProperties: [],
