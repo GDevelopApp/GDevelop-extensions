@@ -1,7 +1,6 @@
 {
   "author": "Silver-Streak",
   "category": "Input",
-  "description": "Allow you to check for double-clicks with the left, middle, or right button of a mouse. It will also allow you to detect double-taps on touchscreens. \n\nPlease note: Touch devices do not have alternatives for middle/right clicks. Taps on a touch device will get counted for _any_ use of these conditions, so you should either design your controls accordingly, or build out separate events if the device has a touch screen.",
   "extensionNamespace": "",
   "fullName": "Double-click",
   "helpPath": "",
@@ -9,7 +8,16 @@
   "name": "DoubleClick",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Line Hero Pack/Master/SVG/Computers and Hardware/Computers and Hardware_mouse_wireless_pc.svg",
   "shortDescription": "Check for a double-click with a mouse, or a double-tap on a touchscreen.",
-  "version": "1.0.3",
+  "version": "1.1.0",
+  "description": [
+    "Check for a double-click with a mouse, or a double-tap on a touchscreen.",
+    "",
+    "Please note: Touch devices do not have alternatives for middle/right clicks. Taps on a touch device will get counted for _any_ use of these conditions, so you should either design your controls accordingly, or build out separate events if the device has a touch screen."
+  ],
+  "origin": {
+    "identifier": "DoubleClick",
+    "name": "gdevelop-extension-store"
+  },
   "tags": [
     "mouse",
     "cursor",
@@ -21,856 +29,229 @@
     "8Ih1aa8f5gWUp4UB2BdhQ2iXWxJ3"
   ],
   "dependencies": [],
+  "globalVariables": [
+    {
+      "name": "MaxDelay",
+      "type": "number",
+      "value": 0.5
+    },
+    {
+      "name": "LeftCount",
+      "type": "number",
+      "value": 0
+    },
+    {
+      "name": "LeftReleased",
+      "type": "number",
+      "value": 0
+    },
+    {
+      "name": "LastPressTime",
+      "type": "structure",
+      "children": [
+        {
+          "name": "Left",
+          "type": "number",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "IsReleased",
+      "type": "structure",
+      "children": [
+        {
+          "name": "Left",
+          "type": "boolean",
+          "value": false
+        }
+      ]
+    }
+  ],
+  "sceneVariables": [
+    {
+      "name": "Variable",
+      "type": "number",
+      "value": 0
+    }
+  ],
   "eventsFunctions": [
     {
       "description": "Check if the specified mouse button is clicked twice in a short amount of time.",
       "fullName": "Double-clicked (or double-tapped)",
       "functionType": "Condition",
       "name": "HasDoubleClicked",
-      "private": false,
-      "sentence": "_PARAM1_ mouse button is double-clicked (or double-tap on a touchscreen)",
+      "sentence": "_PARAM1_ mouse button is double-clicked",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "Trigger once must never be used in functions as every call would share the same one."
+        },
+        {
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [
             {
               "type": {
-                "inverted": false,
-                "value": "StrEqual"
+                "inverted": true,
+                "value": "MouseButtonFromTextPressed"
               },
               "parameters": [
-                "MouseButton",
-                "=",
-                "\"Left\""
-              ],
-              "subInstructions": []
+                "",
+                "MouseButton"
+              ]
             }
           ],
-          "actions": [],
-          "events": [
+          "actions": [
             {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "Timer"
-                  },
-                  "parameters": [
-                    "",
-                    "GlobalVariable(__DoubleClick_MaxDelay)",
-                    "\"__DoubleClick_LeftClickTimer\""
-                  ],
-                  "subInstructions": []
-                },
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "BuiltinCommonInstructions::Once"
-                  },
-                  "parameters": [],
-                  "subInstructions": []
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "RemoveTimer"
-                  },
-                  "parameters": [
-                    "",
-                    "\"__DoubleClick_LeftClickTimer\""
-                  ],
-                  "subInstructions": []
-                },
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "ModVarScene"
-                  },
-                  "parameters": [
-                    "__DoubleClick_LeftCount",
-                    "=",
-                    "0"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "events": []
-            },
-            {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "MouseButtonReleased"
-                  },
-                  "parameters": [
-                    "",
-                    "Left"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "ModVarScene"
-                  },
-                  "parameters": [
-                    "__DoubleClick_LeftReleased",
-                    "=",
-                    "0"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "events": []
-            },
-            {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "inverted": true,
-                    "value": "Timer"
-                  },
-                  "parameters": [
-                    "",
-                    "GlobalVariable(__DoubleClick_MaxDelay)",
-                    "\"__DoubleClick_LeftClickTimer\""
-                  ],
-                  "subInstructions": []
-                },
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "SourisBouton"
-                  },
-                  "parameters": [
-                    "",
-                    "Left"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "actions": [],
-              "events": [
-                {
-                  "disabled": false,
-                  "folded": false,
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "VarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_LeftCount",
-                        "=",
-                        "0"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "VarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_LeftReleased",
-                        "=",
-                        "0"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "BuiltinCommonInstructions::Once"
-                      },
-                      "parameters": [],
-                      "subInstructions": []
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "ResetTimer"
-                      },
-                      "parameters": [
-                        "",
-                        "\"__DoubleClick_LeftClickTimer\""
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "ModVarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_LeftCount",
-                        "+",
-                        "1"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "ModVarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_LeftReleased",
-                        "=",
-                        "1"
-                      ],
-                      "subInstructions": []
-                    }
-                  ],
-                  "events": []
-                },
-                {
-                  "disabled": false,
-                  "folded": false,
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "VarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_LeftCount",
-                        "=",
-                        "1"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "VarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_LeftReleased",
-                        "=",
-                        "0"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "BuiltinCommonInstructions::Once"
-                      },
-                      "parameters": [],
-                      "subInstructions": []
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "SetReturnBoolean"
-                      },
-                      "parameters": [
-                        "True"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "ModVarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_LeftReleased",
-                        "=",
-                        "1"
-                      ],
-                      "subInstructions": []
-                    }
-                  ],
-                  "events": []
-                }
+              "type": {
+                "value": "SetBooleanVariable"
+              },
+              "parameters": [
+                "IsReleased[MouseButton]",
+                "True",
+                "1"
               ]
             }
           ]
         },
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [
             {
               "type": {
-                "inverted": false,
-                "value": "StrEqual"
+                "value": "MouseButtonFromTextPressed"
               },
               "parameters": [
-                "MouseButton",
-                "=",
-                "\"Middle\""
-              ],
-              "subInstructions": []
-            }
-          ],
-          "actions": [],
-          "events": [
-            {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "Timer"
-                  },
-                  "parameters": [
-                    "",
-                    "GlobalVariable(__DoubleClick_MaxDelay)",
-                    "\"__DoubleClick_MiddleClickTimer\""
-                  ],
-                  "subInstructions": []
-                },
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "BuiltinCommonInstructions::Once"
-                  },
-                  "parameters": [],
-                  "subInstructions": []
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "RemoveTimer"
-                  },
-                  "parameters": [
-                    "",
-                    "\"__DoubleClick_MiddleClickTimer\""
-                  ],
-                  "subInstructions": []
-                },
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "ModVarScene"
-                  },
-                  "parameters": [
-                    "__DoubleClick_MiddleCount",
-                    "=",
-                    "0"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "events": []
+                "",
+                "MouseButton"
+              ]
             },
             {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "MouseButtonReleased"
-                  },
-                  "parameters": [
-                    "",
-                    "Middle"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "ModVarScene"
-                  },
-                  "parameters": [
-                    "__DoubleClick_MiddleReleased",
-                    "=",
-                    "0"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "events": []
+              "type": {
+                "value": "BooleanVariable"
+              },
+              "parameters": [
+                "IsReleased[MouseButton]",
+                "True",
+                "1"
+              ]
             },
             {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "inverted": true,
-                    "value": "Timer"
-                  },
-                  "parameters": [
-                    "",
-                    "GlobalVariable(__DoubleClick_MaxDelay)",
-                    "\"__DoubleClick_MiddleClickTimer\""
-                  ],
-                  "subInstructions": []
-                },
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "SourisBouton"
-                  },
-                  "parameters": [
-                    "",
-                    "Middle"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "actions": [],
-              "events": [
-                {
-                  "disabled": false,
-                  "folded": false,
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "VarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_MiddleCount",
-                        "=",
-                        "0"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "VarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_MiddleReleased",
-                        "=",
-                        "0"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "BuiltinCommonInstructions::Once"
-                      },
-                      "parameters": [],
-                      "subInstructions": []
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "ResetTimer"
-                      },
-                      "parameters": [
-                        "",
-                        "\"__DoubleClick_MiddleClickTimer\""
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "ModVarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_MiddleCount",
-                        "+",
-                        "1"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "ModVarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_MiddleReleased",
-                        "=",
-                        "1"
-                      ],
-                      "subInstructions": []
-                    }
-                  ],
-                  "events": []
-                },
-                {
-                  "disabled": false,
-                  "folded": false,
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "VarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_MiddleCount",
-                        "=",
-                        "1"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "VarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_MiddleReleased",
-                        "=",
-                        "0"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "BuiltinCommonInstructions::Once"
-                      },
-                      "parameters": [],
-                      "subInstructions": []
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "SetReturnBoolean"
-                      },
-                      "parameters": [
-                        "True"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "ModVarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_MiddleReleased",
-                        "=",
-                        "1"
-                      ],
-                      "subInstructions": []
-                    }
-                  ],
-                  "events": []
-                }
+              "type": {
+                "value": "BuiltinCommonInstructions::CompareNumbers"
+              },
+              "parameters": [
+                "TimeFromStart()",
+                ">=",
+                "MaxDelay"
               ]
             }
-          ]
-        },
-        {
-          "disabled": false,
-          "folded": false,
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [
+          ],
+          "actions": [
             {
               "type": {
-                "inverted": false,
-                "value": "StrEqual"
+                "value": "SetBooleanVariable"
               },
               "parameters": [
-                "MouseButton",
-                "=",
-                "\"Right\""
-              ],
-              "subInstructions": []
+                "IsReleased[MouseButton]",
+                "False",
+                "1"
+              ]
             }
           ],
-          "actions": [],
           "events": [
             {
-              "disabled": false,
-              "folded": false,
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "Timer"
-                  },
-                  "parameters": [
-                    "",
-                    "GlobalVariable(__DoubleClick_MaxDelay)",
-                    "\"__DoubleClick_RightClickTimer\""
-                  ],
-                  "subInstructions": []
-                },
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "BuiltinCommonInstructions::Once"
-                  },
-                  "parameters": [],
-                  "subInstructions": []
-                }
-              ],
+              "conditions": [],
               "actions": [
                 {
                   "type": {
-                    "inverted": false,
-                    "value": "RemoveTimer"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "",
-                    "\"__DoubleClick_RightClickTimer\""
-                  ],
-                  "subInstructions": []
-                },
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "ModVarScene"
-                  },
-                  "parameters": [
-                    "__DoubleClick_RightCount",
+                    "Delay",
                     "=",
-                    "0"
-                  ],
-                  "subInstructions": []
+                    "TimeFromStart() - LastPressTime[MouseButton]"
+                  ]
                 }
               ],
-              "events": []
-            },
-            {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "MouseButtonReleased"
-                  },
-                  "parameters": [
-                    "",
-                    "Right"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "ModVarScene"
-                  },
-                  "parameters": [
-                    "__DoubleClick_RightReleased",
-                    "=",
-                    "0"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "events": []
-            },
-            {
-              "disabled": false,
-              "folded": false,
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "inverted": true,
-                    "value": "Timer"
-                  },
-                  "parameters": [
-                    "",
-                    "GlobalVariable(__DoubleClick_MaxDelay)",
-                    "\"__DoubleClick_RightClickTimer\""
-                  ],
-                  "subInstructions": []
-                },
-                {
-                  "type": {
-                    "inverted": false,
-                    "value": "SourisBouton"
-                  },
-                  "parameters": [
-                    "",
-                    "Right"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "actions": [],
               "events": [
                 {
-                  "disabled": false,
-                  "folded": false,
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [
                     {
                       "type": {
-                        "inverted": false,
-                        "value": "VarScene"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "__DoubleClick_RightCount",
-                        "=",
-                        "0"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "VarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_RightReleased",
-                        "=",
-                        "0"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "BuiltinCommonInstructions::Once"
-                      },
-                      "parameters": [],
-                      "subInstructions": []
+                        "Delay",
+                        "<=",
+                        "MaxDelay"
+                      ]
                     }
                   ],
                   "actions": [
                     {
                       "type": {
-                        "inverted": false,
-                        "value": "ResetTimer"
+                        "value": "SetNumberVariable"
                       },
                       "parameters": [
-                        "",
-                        "\"__DoubleClick_RightClickTimer\""
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "ModVarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_RightCount",
-                        "+",
-                        "1"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "ModVarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_RightReleased",
-                        "=",
-                        "1"
-                      ],
-                      "subInstructions": []
-                    }
-                  ],
-                  "events": []
-                },
-                {
-                  "disabled": false,
-                  "folded": false,
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "VarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_RightCount",
-                        "=",
-                        "1"
-                      ],
-                      "subInstructions": []
-                    },
-                    {
-                      "type": {
-                        "inverted": false,
-                        "value": "VarScene"
-                      },
-                      "parameters": [
-                        "__DoubleClick_RightReleased",
+                        "LastPressTime[MouseButton]",
                         "=",
                         "0"
-                      ],
-                      "subInstructions": []
+                      ]
                     },
                     {
                       "type": {
-                        "inverted": false,
-                        "value": "BuiltinCommonInstructions::Once"
-                      },
-                      "parameters": [],
-                      "subInstructions": []
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "inverted": false,
                         "value": "SetReturnBoolean"
                       },
                       "parameters": [
                         "True"
-                      ],
-                      "subInstructions": []
-                    },
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
                     {
                       "type": {
-                        "inverted": false,
-                        "value": "ModVarScene"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "__DoubleClick_RightReleased",
-                        "=",
-                        "1"
-                      ],
-                      "subInstructions": []
+                        "Delay",
+                        ">",
+                        "MaxDelay"
+                      ]
                     }
                   ],
-                  "events": []
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "LastPressTime[MouseButton]",
+                        "=",
+                        "TimeFromStart()"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "variables": [
+                {
+                  "name": "Delay",
+                  "type": "number",
+                  "value": 0
                 }
               ]
             }
@@ -879,13 +260,9 @@
       ],
       "parameters": [
         {
-          "codeOnly": false,
-          "defaultValue": "",
           "description": "Mouse button to track",
           "longDescription": "As touch devices do not have middle/right tap equivalents, you will need to account for this within your events if you're not using the left mouse button and building for touch devices.",
           "name": "MouseButton",
-          "optional": false,
-          "supplementaryInformation": "",
           "type": "mouse"
         }
       ],
@@ -896,78 +273,36 @@
       "fullName": "Set the double click delay",
       "functionType": "Action",
       "name": "SetMaxDelay",
-      "private": false,
       "sentence": "Set the double-click maximum delay between two clicks (or two taps) to _PARAM1_s",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [],
           "actions": [
             {
               "type": {
-                "inverted": false,
-                "value": "ModVarGlobal"
+                "value": "SetNumberVariable"
               },
               "parameters": [
-                "__DoubleClick_MaxDelay",
+                "MaxDelay",
                 "=",
-                "MaxDelay"
-              ],
-              "subInstructions": []
+                "Value"
+              ]
             }
-          ],
-          "events": []
+          ]
         }
       ],
       "parameters": [
         {
-          "codeOnly": false,
-          "defaultValue": "",
           "description": "Maximum delay (in seconds)",
           "longDescription": "By default, this value is 0.5 seconds.",
-          "name": "MaxDelay",
-          "optional": false,
-          "supplementaryInformation": "",
+          "name": "Value",
           "type": "expression"
         }
       ],
       "objectGroups": []
-    },
-    {
-      "description": "",
-      "fullName": "",
-      "functionType": "Action",
-      "name": "onFirstSceneLoaded",
-      "private": false,
-      "sentence": "",
-      "events": [
-        {
-          "disabled": false,
-          "folded": false,
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": [
-            {
-              "type": {
-                "inverted": false,
-                "value": "ModVarGlobal"
-              },
-              "parameters": [
-                "__DoubleClick_MaxDelay",
-                "=",
-                "0.5"
-              ],
-              "subInstructions": []
-            }
-          ],
-          "events": []
-        }
-      ],
-      "parameters": [],
-      "objectGroups": []
     }
   ],
-  "eventsBasedBehaviors": []
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
 }
