@@ -1,7 +1,6 @@
 {
   "author": "@Bouh, @arthuro555",
   "category": "User interface",
-  "description": "Provides an action to change the type of the cursor, and a behavior to change the cursor when an object is hovered.\n\nFind the list of cursors here: https://developer.mozilla.org/en-US/docs/Web/CSS/cursor",
   "extensionNamespace": "",
   "fullName": "Cursor type",
   "helpPath": "",
@@ -9,7 +8,12 @@
   "name": "CursorType",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/cursor-default-outline.svg",
   "shortDescription": "Provides an action to change the type of the cursor, and a behavior to change the cursor when an object is hovered.",
-  "version": "0.0.7",
+  "version": "0.0.8",
+  "description": [
+    "Provides an action to change the type of the cursor, and a behavior to change the cursor when an object is hovered.",
+    "",
+    "Find the list of cursors here: https://developer.mozilla.org/en-US/docs/Web/CSS/cursor"
+  ],
   "origin": {
     "identifier": "CursorType",
     "name": "gdevelop-extension-store"
@@ -26,19 +30,29 @@
     "2OwwM8ToR9dx9RJ2sAKTcrLmCB92"
   ],
   "dependencies": [],
+  "globalVariables": [
+    {
+      "name": "ZOrderSorting",
+      "type": "number",
+      "value": 0
+    }
+  ],
+  "sceneVariables": [
+    {
+      "name": "DefaultCursor",
+      "type": "string",
+      "value": "default"
+    }
+  ],
   "eventsFunctions": [
     {
       "description": "Change the type of the cursor.",
       "fullName": "Cursor type",
       "functionType": "Action",
-      "group": "",
       "name": "ChangeCursorType",
-      "private": false,
       "sentence": "Change the cursor to _PARAM1_",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::Comment",
           "color": {
             "b": 109,
@@ -48,48 +62,41 @@
             "textG": 0,
             "textR": 0
           },
-          "comment": "Set as variable instead of directly setting as a CursorHover behavior can override it.\nBy using a variable, we ensure to be able to change it back to that \"default\" after the override is over.",
-          "comment2": ""
+          "comment": "Set as variable instead of directly setting as a CursorHover behavior can override it.\nBy using a variable, we ensure to be able to change it back to that \"default\" after the override is over."
         },
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [],
           "actions": [
             {
               "type": {
-                "inverted": false,
-                "value": "ModVarGlobalTxt"
+                "value": "SetStringVariable"
               },
               "parameters": [
-                "__CursorType.DefaultCursor",
+                "DefaultCursor",
                 "=",
-                "cursor_type"
-              ],
-              "subInstructions": []
+                "CursorType"
+              ]
+            },
+            {
+              "type": {
+                "value": "CursorType::DoChangeCursorType"
+              },
+              "parameters": [
+                "",
+                "CursorType",
+                ""
+              ]
             }
-          ],
-          "events": []
-        },
-        {
-          "disabled": true,
-          "folded": false,
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "// Reset to default cursor\nruntimeScene.getGame().getRenderer().getCanvas().style.cursor =\n    runtimeScene\n        .getGame()\n        .getVariables()\n        .get(\"__CursorType\").getChild(\"DefaultCursor\")\n        .getAsString();\n",
-          "parameterObjects": "",
-          "useStrict": true,
-          "eventsSheetExpanded": false
+          ]
         }
       ],
       "parameters": [
         {
-          "codeOnly": false,
           "defaultValue": "default",
           "description": "The new cursor type",
           "longDescription": "List of available cursors on https://developer.mozilla.org/en-US/docs/Web/CSS/cursor",
-          "name": "cursor_type",
-          "optional": false,
+          "name": "CursorType",
           "supplementaryInformation": "[\"auto\",\"default\",\"none\",\"context-menu\",\"help\",\"pointer\",\"progress\",\"wait\",\"cell\",\"crosshair\",\"text\",\"vertical-text\",\"alias\",\"copy\",\"move\",\"no-drop\",\"not-allowed\",\"grab\",\"grabbing\",\"all-scroll\",\"col-resize\",\"row-resize\",\"n-resize\",\"e-resize\",\"s-resize\",\"w-resize\",\"ne-resize\",\"nw-resize\",\"se-resize\",\"sw-resize\",\"ew-resize\",\"ns-resize\",\"nwse-resize\",\"zoom-in\",\"zoom-out\"]",
           "type": "stringWithSelector"
         }
@@ -97,17 +104,43 @@
       "objectGroups": []
     },
     {
-      "description": "",
+      "description": "Do change the type of the cursor.",
+      "fullName": "Do change cursor type",
+      "functionType": "Action",
+      "name": "DoChangeCursorType",
+      "private": true,
+      "sentence": "Do change the cursor to _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const cursorType = eventsFunctionContext.getArgument(\"CursorType\");",
+            "",
+            "runtimeScene.getGame().getRenderer().getCanvas().style.cursor = cursorType;",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "The new cursor type",
+          "name": "CursorType",
+          "supplementaryInformation": "[]",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
       "fullName": "",
       "functionType": "Action",
-      "group": "",
       "name": "onScenePreEvents",
-      "private": false,
       "sentence": "",
       "events": [
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::Comment",
           "color": {
             "b": 109,
@@ -117,87 +150,33 @@
             "textG": 0,
             "textR": 0
           },
-          "comment": "Reset ordering as the object with highest Z-Order might not exist anymore or be not be hovered anymore.",
-          "comment2": ""
+          "comment": "Reset ordering as the object with highest Z-Order might not exist anymore or be not be hovered anymore."
         },
         {
-          "disabled": false,
-          "folded": false,
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [],
           "actions": [
             {
               "type": {
-                "inverted": false,
-                "value": "ModVarGlobal"
+                "value": "SetNumberVariable"
               },
               "parameters": [
-                "__CursorType.ZOrderSorting",
+                "ZOrderSorting",
                 "=",
                 "0"
-              ],
-              "subInstructions": []
-            }
-          ],
-          "events": []
-        },
-        {
-          "disabled": false,
-          "folded": false,
-          "type": "BuiltinCommonInstructions::Comment",
-          "color": {
-            "b": 109,
-            "g": 230,
-            "r": 255,
-            "textB": 0,
-            "textG": 0,
-            "textR": 0
-          },
-          "comment": "Set default value of the default cursor if the variable has just been created",
-          "comment2": ""
-        },
-        {
-          "disabled": false,
-          "folded": false,
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [
+              ]
+            },
             {
               "type": {
-                "inverted": false,
-                "value": "VarSceneTxt"
+                "value": "CursorType::DoChangeCursorType"
               },
               "parameters": [
-                "__CursorType.DefaultCursor",
-                "=",
-                "\"\""
-              ],
-              "subInstructions": []
+                "",
+                "DefaultCursor",
+                ""
+              ]
             }
-          ],
-          "actions": [
-            {
-              "type": {
-                "inverted": false,
-                "value": "ModVarGlobalTxt"
-              },
-              "parameters": [
-                "__CursorType.DefaultCursor",
-                "=",
-                "\"default\""
-              ],
-              "subInstructions": []
-            }
-          ],
-          "events": []
-        },
-        {
-          "disabled": false,
-          "folded": false,
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "// Reset to default cursor\nruntimeScene.getGame().getRenderer().getCanvas().style.cursor =\n    runtimeScene\n        .getGame()\n        .getVariables()\n        .get(\"__CursorType\").getChild(\"DefaultCursor\")\n        .getAsString();\n",
-          "parameterObjects": "",
-          "useStrict": true,
-          "eventsSheetExpanded": true
+          ]
         }
       ],
       "parameters": [],
@@ -212,17 +191,12 @@
       "objectType": "",
       "eventsFunctions": [
         {
-          "description": "",
           "fullName": "",
           "functionType": "Action",
-          "group": "",
           "name": "doStepPostEvents",
-          "private": false,
           "sentence": "",
           "events": [
             {
-              "disabled": false,
-              "folded": false,
               "type": "BuiltinCommonInstructions::Comment",
               "color": {
                 "b": 109,
@@ -232,29 +206,23 @@
                 "textG": 0,
                 "textR": 0
               },
-              "comment": "Check the z Order to ensure the cursor shown is the one from the foremost object ",
-              "comment2": ""
+              "comment": "Check the z Order to ensure the cursor shown is the one from the foremost object "
             },
             {
-              "disabled": false,
-              "folded": false,
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
                   "type": {
-                    "inverted": false,
                     "value": "Plan"
                   },
                   "parameters": [
                     "Object",
                     ">",
-                    "GlobalVariable(__CursorType.ZOrderSorting)"
-                  ],
-                  "subInstructions": []
+                    "ZOrderSorting"
+                  ]
                 },
                 {
                   "type": {
-                    "inverted": false,
                     "value": "SourisSurObjet"
                   },
                   "parameters": [
@@ -262,55 +230,42 @@
                     "",
                     "",
                     ""
-                  ],
-                  "subInstructions": []
+                  ]
                 }
               ],
               "actions": [
                 {
                   "type": {
-                    "inverted": false,
-                    "value": "ModVarGlobal"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "__CursorType.ZOrderSorting",
+                    "ZOrderSorting",
                     "=",
                     "Object.ZOrder()"
-                  ],
-                  "subInstructions": []
-                }
-              ],
-              "events": [
+                  ]
+                },
                 {
-                  "disabled": false,
-                  "folded": false,
-                  "type": "BuiltinCommonInstructions::JsCode",
-                  "inlineCode": "// Set cursor to behavior property cursor_type\nobjects.forEach(object => {\n\n    runtimeScene\n        .getGame()\n        .getRenderer()\n        .getCanvas()\n        .style\n        .cursor = object\n            .getBehavior(\n                eventsFunctionContext.getBehaviorName(\"Behavior\")\n            )\n            ._getcursor_type();\n});",
-                  "parameterObjects": "Object",
-                  "useStrict": true,
-                  "eventsSheetExpanded": true
+                  "type": {
+                    "value": "CursorType::DoChangeCursorType"
+                  },
+                  "parameters": [
+                    "",
+                    "CursorType",
+                    ""
+                  ]
                 }
               ]
             }
           ],
           "parameters": [
             {
-              "codeOnly": false,
-              "defaultValue": "",
               "description": "Object",
-              "longDescription": "",
               "name": "Object",
-              "optional": false,
-              "supplementaryInformation": "",
               "type": "object"
             },
             {
-              "codeOnly": false,
-              "defaultValue": "",
               "description": "Behavior",
-              "longDescription": "",
               "name": "Behavior",
-              "optional": false,
               "supplementaryInformation": "CursorType::CursorHover",
               "type": "behavior"
             }
@@ -362,10 +317,11 @@
             "zoom-in",
             "zoom-out"
           ],
-          "hidden": false,
-          "name": "cursor_type"
+          "name": "CursorType"
         }
-      ]
+      ],
+      "sharedPropertyDescriptors": []
     }
-  ]
+  ],
+  "eventsBasedObjects": []
 }
