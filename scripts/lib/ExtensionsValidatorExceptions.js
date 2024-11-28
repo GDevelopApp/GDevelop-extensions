@@ -545,7 +545,7 @@ const extensionsAllowedProperties = {
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
-    },    
+    },
     YandexGamesSDK: {
       gdjsAllowedProperties: ['_YandexGamesSDK'],
       gdjsEvtToolsAllowedProperties: [],
