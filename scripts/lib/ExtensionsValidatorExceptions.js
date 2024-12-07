@@ -540,6 +540,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    WortalSDK: {
+      gdjsAllowedProperties: ['_wortalExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     YandexGamesSDK: {
       gdjsAllowedProperties: ['_YandexGamesSDK'],
       gdjsEvtToolsAllowedProperties: [],
