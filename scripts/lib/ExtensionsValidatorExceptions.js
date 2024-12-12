@@ -131,6 +131,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    AdvancedJump3D: {
+      gdjsAllowedProperties: ['PhysicsCharacter3DRuntimeBehavior'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     AdvancedP2PEventHandling: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: ['p2p'],
