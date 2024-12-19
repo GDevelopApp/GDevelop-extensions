@@ -192,7 +192,7 @@ const extensionsAllowedProperties = {
     Collision3D: {
       gdjsAllowedProperties: [
         '_collision3DExtension',
-        'ObjectList',
+        'RuntimeObject3D',
         'AABB',
         'Polygon',
       ],
