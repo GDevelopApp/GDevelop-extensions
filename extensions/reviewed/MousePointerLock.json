@@ -49,13 +49,15 @@
           "inlineCode": [
             "const canvas = runtimeScene.getGame().getRenderer().getCanvas();",
             "",
-            "gdjs._MousePointerLockExtension = {};",
-            "gdjs._MousePointerLockExtension.movement = { x: 0, y: 0 };",
-            "gdjs._MousePointerLockExtension.retried = false;",
+            "gdjs._MousePointerLockExtension = {",
+            "    movementX: 0,",
+            "    movementY: 0,",
+            "    retried: false,",
+            "};",
             "",
             "canvas.addEventListener(\"pointermove\", (e) => {",
-            "    gdjs._MousePointerLockExtension.movement.x += e.movementX || 0;",
-            "    gdjs._MousePointerLockExtension.movement.y += e.movementY || 0;",
+            "    gdjs._MousePointerLockExtension.movementX += e.movementX || 0;",
+            "    gdjs._MousePointerLockExtension.movementY += e.movementY || 0;",
             "}, false);",
             "",
             "document.addEventListener(\"pointerlockerror\", (e) => {",
@@ -81,54 +83,15 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "gdjs._MousePointerLockExtension.movement = { x: 0, y: 0 };",
+          "inlineCode": [
+            "gdjs._MousePointerLockExtension.movementX = 0;\r",
+            "gdjs._MousePointerLockExtension.movementY = 0;"
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
         }
       ],
-      "parameters": [],
-      "objectGroups": []
-    },
-    {
-      "description": "Get the movement of the pointer on the X-axis.",
-      "fullName": "Pointer X movement",
-      "functionType": "Expression",
-      "name": "MovementX",
-      "sentence": "",
-      "events": [
-        {
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = gdjs._MousePointerLockExtension.movement.x || 0;",
-          "parameterObjects": "",
-          "useStrict": true,
-          "eventsSheetExpanded": false
-        }
-      ],
-      "expressionType": {
-        "type": "expression"
-      },
-      "parameters": [],
-      "objectGroups": []
-    },
-    {
-      "description": "Get the movement of the pointer on the Y-axis.",
-      "fullName": "Pointer Y movement",
-      "functionType": "Expression",
-      "name": "MovementY",
-      "sentence": "",
-      "events": [
-        {
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = gdjs._MousePointerLockExtension.movement.y || 0;",
-          "parameterObjects": "",
-          "useStrict": true,
-          "eventsSheetExpanded": false
-        }
-      ],
-      "expressionType": {
-        "type": "expression"
-      },
       "parameters": [],
       "objectGroups": []
     },
@@ -195,8 +158,822 @@
       ],
       "parameters": [],
       "objectGroups": []
+    },
+    {
+      "description": "Check if the locked pointer is moving.",
+      "fullName": "Locked pointer is moving",
+      "functionType": "Condition",
+      "name": "IsMoving",
+      "sentence": "Locked pointer is moving",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Or"
+              },
+              "parameters": [],
+              "subInstructions": [
+                {
+                  "type": {
+                    "value": "MousePointerLock::MovementX"
+                  },
+                  "parameters": [
+                    "",
+                    "!=",
+                    "0",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "MousePointerLock::MovementY"
+                  },
+                  "parameters": [
+                    "",
+                    "!=",
+                    "0",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "the movement of the locked pointer on the X axis.",
+      "fullName": "Pointer X movement",
+      "functionType": "ExpressionAndCondition",
+      "name": "MovementX",
+      "private": true,
+      "sentence": "the movement of the locked pointer on the X axis",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "eventsFunctionContext.returnValue = gdjs._MousePointerLockExtension.movementX || 0;",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "the movement of the pointer on the Y axis.",
+      "fullName": "Pointer Y movement",
+      "functionType": "ExpressionAndCondition",
+      "name": "MovementY",
+      "private": true,
+      "sentence": "the movement of the pointer on the Y axis",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "eventsFunctionContext.returnValue = gdjs._MousePointerLockExtension.movementY || 0;",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
     }
   ],
-  "eventsBasedBehaviors": [],
+  "eventsBasedBehaviors": [
+    {
+      "description": "Control camera rotations with a mouse.",
+      "fullName": "First person camera mouse mapper",
+      "name": "FirstPersonPointerMapper",
+      "objectType": "",
+      "eventsFunctions": [
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "doStepPreEvents",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "TODO It's probably a bad idea to rotate the object around Y."
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "MousePointerLock::isPointerLocked"
+                  },
+                  "parameters": [
+                    "",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetAngle"
+                  },
+                  "parameters": [
+                    "Object",
+                    "+",
+                    "MousePointerLock::MovementX() * HorizontalSpeed / SceneWindowWidth()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Scene3D::Base3DBehavior::SetRotationY"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Object3D",
+                    "+",
+                    "MousePointerLock::MovementY() * VerticalSpeed / SceneWindowHeight()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Scene3D::Base3DBehavior::SetRotationY"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Object3D",
+                    "=",
+                    "clamp(Object.Object3D::RotationY(), VerticalAngleMin, VerticalAngleMax)"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "MousePointerLock::FirstPersonPointerMapper::LookFromObjectEyes"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "MouseButtonReleased"
+                  },
+                  "parameters": [
+                    "",
+                    "Left"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "MousePointerLock::FirstPersonPointerMapper::PropertyShouldLock"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior"
+                  ]
+                },
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "MousePointerLock::isPointerLocked"
+                  },
+                  "parameters": [
+                    "",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "MousePointerLock::RequestPointerLock"
+                  },
+                  "parameters": [
+                    "",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "MousePointerLock::FirstPersonPointerMapper",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Move the camera to look though _PARAM1_ eyes. The object must look to the right when all its angles are 0 and the top of its head be toward Z+.",
+          "fullName": "Look through object eyes",
+          "functionType": "Action",
+          "group": "Layers and cameras",
+          "name": "LookFromObjectEyes",
+          "private": true,
+          "sentence": "Move the camera to look though _PARAM0_ eyes",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "CentreCamera"
+                  },
+                  "parameters": [
+                    "",
+                    "Object",
+                    "",
+                    "Object.Layer()",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Scene3D::SetCameraZ"
+                  },
+                  "parameters": [
+                    "",
+                    "=",
+                    "Object.Object3D::Z() + Object.Object3D::Depth() + OffsetZ",
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Scene3D::SetCameraRotationX"
+                  },
+                  "parameters": [
+                    "",
+                    "=",
+                    "- Object.Object3D::RotationY() + 90",
+                    "GetArgumentAsString(\"Layer\")",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Scene3D::SetCameraRotationY"
+                  },
+                  "parameters": [
+                    "",
+                    "=",
+                    "Object.Object3D::RotationX()",
+                    "GetArgumentAsString(\"Layer\")",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetCameraAngle"
+                  },
+                  "parameters": [
+                    "",
+                    "=",
+                    "Object.Angle() + 90",
+                    "Object.Layer()",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "MousePointerLock::FirstPersonPointerMapper",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the horizontal rotation speed factor of the object.",
+          "fullName": "Horizontal rotation speed factor",
+          "functionType": "ExpressionAndCondition",
+          "group": "First person camera mouse mapper configuration",
+          "name": "HorizontalSpeed",
+          "sentence": "the horizontal rotation speed factor",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "HorizontalSpeed"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "MousePointerLock::FirstPersonPointerMapper",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "HorizontalSpeed",
+          "name": "SetHorizontalSpeed",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "MousePointerLock::FirstPersonPointerMapper::SetPropertyHorizontalSpeed"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "MousePointerLock::FirstPersonPointerMapper",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the vertical rotation speed factor of the object.",
+          "fullName": "Vertical rotation speed factor",
+          "functionType": "ExpressionAndCondition",
+          "group": "First person camera mouse mapper configuration",
+          "name": "VerticalSpeed",
+          "sentence": "the vertical rotation speed factor",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "VerticalSpeed"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "MousePointerLock::FirstPersonPointerMapper",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "VerticalSpeed",
+          "name": "SetVerticalSpeed",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "MousePointerLock::FirstPersonPointerMapper::SetPropertyVerticalSpeed"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "MousePointerLock::FirstPersonPointerMapper",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the minimum vertical camera angle of the object.",
+          "fullName": "Minimum vertical camera angle",
+          "functionType": "ExpressionAndCondition",
+          "group": "First person camera mouse mapper configuration",
+          "name": "VerticalAngleMin",
+          "sentence": "the minimum vertical camera angle",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "VerticalAngleMin"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "MousePointerLock::FirstPersonPointerMapper",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "VerticalAngleMin",
+          "name": "SetVerticalAngleMin",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "MousePointerLock::FirstPersonPointerMapper::SetPropertyVerticalAngleMin"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "MousePointerLock::FirstPersonPointerMapper",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the maximum vertical camera angle of the object.",
+          "fullName": "Maximum vertical camera angle",
+          "functionType": "ExpressionAndCondition",
+          "group": "First person camera mouse mapper configuration",
+          "name": "VerticalAngleMax",
+          "sentence": "the maximum vertical camera angle",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "VerticalAngleMax"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "MousePointerLock::FirstPersonPointerMapper",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "VerticalAngleMax",
+          "name": "SetVerticalAngleMax",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "MousePointerLock::FirstPersonPointerMapper::SetPropertyVerticalAngleMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "MousePointerLock::FirstPersonPointerMapper",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the z position offset of the object.",
+          "fullName": "Z position offset",
+          "functionType": "ExpressionAndCondition",
+          "group": "First person camera mouse mapper configuration",
+          "name": "OffsetZ",
+          "sentence": "the z position offset",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "OffsetZ"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "MousePointerLock::FirstPersonPointerMapper",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "OffsetZ",
+          "name": "SetOffsetZ",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "MousePointerLock::FirstPersonPointerMapper::SetPropertyOffsetZ"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "MousePointerLock::FirstPersonPointerMapper",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        }
+      ],
+      "propertyDescriptors": [
+        {
+          "value": "",
+          "type": "Behavior",
+          "label": "3D capability",
+          "description": "",
+          "group": "",
+          "extraInformation": [
+            "Scene3D::Base3DBehavior"
+          ],
+          "name": "Object3D"
+        },
+        {
+          "value": "200",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Horizontal rotation speed factor",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "name": "HorizontalSpeed"
+        },
+        {
+          "value": "100",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Vertical rotation speed factor",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "name": "VerticalSpeed"
+        },
+        {
+          "value": "-90",
+          "type": "Number",
+          "unit": "DegreeAngle",
+          "label": "Minimum vertical camera angle",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "name": "VerticalAngleMin"
+        },
+        {
+          "value": "90",
+          "type": "Number",
+          "unit": "DegreeAngle",
+          "label": "Maximum vertical camera angle",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "name": "VerticalAngleMax"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Pixel",
+          "label": "Z position offset",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "name": "OffsetZ"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "Lock the pointer on click",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "name": "ShouldLock"
+        }
+      ],
+      "sharedPropertyDescriptors": []
+    }
+  ],
   "eventsBasedObjects": []
 }

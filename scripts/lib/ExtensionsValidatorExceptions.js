@@ -131,6 +131,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    AdvancedJump3D: {
+      gdjsAllowedProperties: ['PhysicsCharacter3DRuntimeBehavior'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     AdvancedP2PEventHandling: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: ['p2p'],
@@ -186,7 +192,7 @@ const extensionsAllowedProperties = {
     Collision3D: {
       gdjsAllowedProperties: [
         '_collision3DExtension',
-        'ObjectList',
+        'RuntimeObject3D',
         'AABB',
         'Polygon',
       ],
