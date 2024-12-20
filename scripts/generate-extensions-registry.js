@@ -26,6 +26,12 @@ const distDatabasesPath = path.join(distBasePath, 'extensions-database');
 const distExtensionsPath = path.join(distBasePath, 'extensions');
 const extensionsBaseUrl = 'https://resources.gdevelop-app.com/extensions';
 const extensionsWithoutValidation = new Set(['WithThreeJS']);
+const extensionsRequiring3DPhysics = new Set([
+  'AdvancedJump3D',
+  'PhysicsCharacter3DAnimator',
+  'PhysicsCharacter3DKeyMapper',
+  'PhysicsEllipseMovement3D',
+]);
 
 /**
  * @param {string} path
@@ -227,6 +233,10 @@ const findAllRequiredBehaviorTypes = (
           category: extension.category || 'General',
           previewIconUrl: extension.previewIconUrl,
         };
+        if (extensionsRequiring3DPhysics.has(name)) {
+          registryItem.gdevelopVersion = '5.5.220';
+        }
+
         /** @type {ExtensionShortHeader} */
         const extensionShortHeader = {
           ...registryItem,
