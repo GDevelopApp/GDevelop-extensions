@@ -234,7 +234,7 @@ const findAllRequiredBehaviorTypes = (
           previewIconUrl: extension.previewIconUrl,
         };
         if (extensionsRequiring3DPhysics.has(name)) {
-          registryItem.gdevelopVersion = '5.5.220';
+          registryItem.gdevelopVersion = '>=5.5.220';
         }
 
         /** @type {ExtensionShortHeader} */
