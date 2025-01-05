@@ -468,6 +468,19 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    SpriteRope: {
+      gdjsAllowedProperties: [
+        '__spriteRopeExtension',
+        'CustomRuntimeObject',
+        'CustomRuntimeObject2D',
+        'PixiImageManager',
+        'CustomRuntimeObject2DRenderer',
+        'rgbOrHexStringToNumber',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     Sticker: {
       gdjsAllowedProperties: [
         '_stickerExtension',

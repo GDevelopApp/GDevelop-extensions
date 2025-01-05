@@ -1,0 +1,1041 @@
+{
+  "author": "",
+  "category": "Visual effect",
+  "extensionNamespace": "",
+  "fullName": "Sprite rope",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWJyaWRnZSIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik03LDE0VjEwLjkxQzYuMjgsMTAuNTggNS42MSwxMC4xOCA1LDkuNzFWMTRIN001LDE4SDNWMTZIMVYxNEgzVjdINVY4LjQzQzYuOCwxMCA5LjI3LDExIDEyLDExQzE0LjczLDExIDE3LjIsMTAgMTksOC40M1Y3SDIxVjE0SDIzVjE2SDIxVjE4SDE5VjE2SDVWMThNMTcsMTAuOTFWMTRIMTlWOS43MUMxOC4zOSwxMC4xOCAxNy43MiwxMC41OCAxNywxMC45MU0xNiwxNFYxMS4zMkMxNS4zNiwxMS41NSAxNC42OSwxMS43MiAxNCwxMS44NFYxNEgxNk0xMywxNFYxMS45NkwxMiwxMkwxMSwxMS45NlYxNEgxM00xMCwxNFYxMS44NEM5LjMxLDExLjcyIDguNjQsMTEuNTUgOCwxMS4zMlYxNEgxMFoiIC8+PC9zdmc+",
+  "name": "SpriteRope",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/daf3c1828ce1c9549b2243ab4787c827bd4dfea561321215e3c8d5545438f5fa_bridge.svg",
+  "shortDescription": "Bend an image to follow a rope.",
+  "version": "0.1.0",
+  "description": [
+    "Bend an image to follow the point of a rope.",
+    "",
+    "It allows to:",
+    "- draw a trail behind an object",
+    "- display on image over a chain of physical joins"
+  ],
+  "tags": [
+    "trail",
+    "mesh"
+  ],
+  "authorIds": [
+    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2",
+    "SEnxPnvGuQhQmTXJ3xwZa1lQFdr1"
+  ],
+  "dependencies": [],
+  "eventsFunctions": [
+    {
+      "description": "Define helper classes JavaScript code.",
+      "fullName": "Define helper classes",
+      "functionType": "Action",
+      "name": "DefineHelperClasses",
+      "private": true,
+      "sentence": "Define helper classes JavaScript code",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (gdjs.__spriteRopeExtension) {",
+            "    return;",
+            "}",
+            "",
+            "class SpriteRope {",
+            "    /** @type {gdjs.CustomRuntimeObject} */",
+            "    object;",
+            "    /** ",
+            "     * The head is at the end of the array",
+            "     * because users are used to have sprites facing right.",
+            "     * @type {Array<number>}",
+            "     */",
+            "    pointsX = [];",
+            "    /** @type {Array<number>} */",
+            "    pointsY = [];",
+            "    /** @type {Array<PIXI.Point>} */",
+            "    interpolatedPoints = [];",
+            "    /** @type {PIXI.SimpleRope} */",
+            "    rope;",
+            "    /** @type {number} */",
+            "    interpolationFactor;",
+            "",
+            "    /**",
+            "     * @param object {gdjs.CustomRuntimeObject2D}",
+            "     * @param pointCount {number}",
+            "     * @param interpolationFactor {number}",
+            "     */",
+            "    constructor(object, pointCount, interpolationFactor) {",
+            "        this.object = object;",
+            "        this.interpolationFactor = interpolationFactor;",
+            "        for (let i = 0; i < pointCount; i++) {",
+            "            this.pointsX.push(0);",
+            "            this.pointsY.push(0);",
+            "        }",
+            "        for (let i = 0; i < (pointCount - 1) * this.interpolationFactor + 1; i++) {",
+            "            this.interpolatedPoints.push(new PIXI.Point());",
+            "        }",
+            "        /** @type {gdjs.PixiImageManager} */",
+            "        const imageManager = object.getInstanceContainer().getGame().getImageManager();",
+            "        /** @type {SpriteObjectDataType} */",
+            "        const spriteData = object._instanceContainer._objects.get(\"Image\");",
+            "        const resourceName = spriteData.animations[0].directions[0].sprites[0].image;",
+            "        const rope = new PIXI.SimpleRope(imageManager.getPIXITexture(resourceName), this.interpolatedPoints);",
+            "        object.getRendererObject().addChild(rope);",
+            "        this.rope = rope;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param pointCount {number}",
+            "     */",
+            "    setPointCount(pointCount) {",
+            "        const oldPointCount = this.pointsX.length;",
+            "        if (pointCount < oldPointCount) {",
+            "            const removedCount = oldPointCount - pointCount;",
+            "            this.pointsX.splice(0, removedCount);",
+            "            this.pointsY.splice(0, removedCount);",
+            "        }",
+            "        else if (pointCount > oldPointCount) {",
+            "            const addedCount = pointCount - oldPointCount;",
+            "            duplicateFirst(this.pointsX, addedCount);",
+            "            duplicateFirst(this.pointsY, addedCount);",
+            "        }",
+            "        this.setInterpolationFactor(this.interpolationFactor);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param interpolationFactor {number}",
+            "     */",
+            "    setInterpolationFactor(interpolationFactor) {",
+            "        const pointCount = this.pointsX.length;",
+            "        const oldInterpolatedPointCount = this.interpolationFactor.length;",
+            "        const newInterpolatedPointCount = (pointCount - 1) * interpolationFactor + 1;",
+            "        this.interpolatedPoints.length = newInterpolatedPointCount;",
+            "        ",
+            "        for (let index = oldInterpolatedPointCount; index < newInterpolatedPointCount; index++) {",
+            "            this.interpolatedPoints[index] = new PIXI.Point(); ",
+            "        }",
+            "        this.interpolationFactor = interpolationFactor;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param index {number}",
+            "     * @param x {number}",
+            "     * @param y {number}",
+            "     */",
+            "    setPointPosition(index, x, y) {",
+            "        const last = this.pointsX.length - 1;",
+            "        this.pointsX[last - index] = x;",
+            "        this.pointsY[last - index] = y;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param index {number}",
+            "     * @param x {number}",
+            "     */",
+            "    setPointX(index, x) {",
+            "        const last = this.pointsX.length - 1;",
+            "        this.pointsX[last - index] = x;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param index {number}",
+            "     * @param y {number}",
+            "     */",
+            "    setPointY(index, y) {",
+            "        const last = this.pointsX.length - 1;",
+            "        this.pointsY[last - index] = y;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param index {number}",
+            "     * @return {number}",
+            "     */",
+            "    getPointX(index) {",
+            "        const last = this.pointsX.length - 1;",
+            "        return this.pointsX[last - index];",
+            "    }",
+            "",
+            "    /**",
+            "     * @param index {number}",
+            "     * @return {number}",
+            "     */",
+            "    getPointY(index) {",
+            "        const last = this.pointsX.length - 1;",
+            "        return this.pointsY[last - index];",
+            "    }",
+            "",
+            "    /**",
+            "     * @param x {number}",
+            "     * @param y {number}",
+            "     */",
+            "    pull(x, y) {",
+            "        this.pointsX.shift();",
+            "        this.pointsY.shift();",
+            "        this.pointsX.push(x);",
+            "        this.pointsY.push(y);",
+            "    }",
+            "",
+            "    updatePoints() {",
+            "        // Update the points to correspond with history.",
+            "        const interpolationStep = 1 / this.interpolationFactor;",
+            "        const interpolatedCount = this.interpolatedPoints.length;",
+            "        const pointsCount = this.pointsX.length;",
+            "        for (let pointIndex = 0; pointIndex < pointsCount - 1; pointIndex++)",
+            "        {",
+            "            const interpolatedPointIndex = this.interpolationFactor * pointIndex;",
+            "            const interpolatedPoint = this.interpolatedPoints[interpolatedPointIndex];",
+            "            interpolatedPoint.x = this.pointsX[pointIndex];",
+            "            interpolatedPoint.y = this.pointsY[pointIndex];",
+            "",
+            "            for (let i = 1; i < this.interpolationFactor; i++) {",
+            "                const interpolatedPoint = this.interpolatedPoints[interpolatedPointIndex + i];",
+            "",
+            "                // Smooth the curve with cubic interpolation to prevent sharp edges.",
+            "                const ix = cubicInterpolation(this.pointsX, pointIndex + i * interpolationStep);",
+            "                const iy = cubicInterpolation(this.pointsY, pointIndex + i * interpolationStep);",
+            "",
+            "                interpolatedPoint.x = ix;",
+            "                interpolatedPoint.y = iy;",
+            "            }",
+            "        }",
+            "        const interpolatedPoint = this.interpolatedPoints[interpolatedCount - 1];",
+            "        interpolatedPoint.x = this.pointsX[pointsCount - 1];",
+            "        interpolatedPoint.y = this.pointsY[pointsCount - 1];",
+            "    }",
+            "",
+            "    /**",
+            "     * @param color {number}",
+            "     */",
+            "    setTint(color) {",
+            "        this.rope.tint = color;",
+            "    }",
+            "}",
+            "",
+            "class SpriteRopeRenderer extends gdjs.CustomRuntimeObject2DRenderer {",
+            "    constructor(",
+            "      object,",
+            "      instanceContainer,",
+            "      parent",
+            "    ) {",
+            "        super(object, instanceContainer, parent);",
+            "    }",
+            "",
+            "    _updatePIXIContainer() {",
+            "      this._pixiContainer.visible = !this._object.hidden;",
+            "      this._pixiContainer.alpha = this._object.getOpacity() / 255;",
+            "",
+            "      this._isContainerDirty = false;",
+            "    }",
+            "",
+            "    updateX() {}",
+            "    updateY() {}",
+            "    updateAngle() {}",
+            "}",
+            "",
+            "/**",
+            " * @param array {Array<number>}",
+            " * @param addedCount {number}",
+            " */",
+            "function duplicateFirst(array, addedCount) {",
+            "    const first = array[0];",
+            "    array.length += addedCount;",
+            "    array.copyWithin(addedCount, 0, oldPointCount - 1);",
+            "    array.fill(first, 0, addedCount - 1);",
+            "}",
+            "",
+            "/**",
+            " * Cubic interpolation based on https://github.com/osuushi/Smooth.js",
+            " */",
+            "function clipInput(k, arr)",
+            "{",
+            "    if (k < 0) k = 0;",
+            "    if (k > arr.length - 1) k = arr.length - 1;",
+            "",
+            "    return arr[k];",
+            "}",
+            "",
+            "function getTangent(k, factor, array)",
+            "{",
+            "    return (factor * (clipInput(k + 1, array) - clipInput(k - 1, array))) / 2;",
+            "}",
+            "",
+            "function cubicInterpolation(array, t, tangentFactor = 1)",
+            "{",
+            "    const k = Math.floor(t);",
+            "    const m = [getTangent(k, tangentFactor, array), getTangent(k + 1, tangentFactor, array)];",
+            "    const p = [clipInput(k, array), clipInput(k + 1, array)];",
+            "",
+            "    t -= k;",
+            "    const t2 = t * t;",
+            "    const t3 = t * t2;",
+            "",
+            "    return (2 * t3 - 3 * t2 + 1) * p[0] + (t3 - 2 * t2 + t) * m[0] + (-2 * t3 + 3 * t2) * p[1] + (t3 - t2) * m[1];",
+            "}",
+            "",
+            "gdjs.__spriteRopeExtension = {",
+            "    SpriteRope,",
+            "    SpriteRopeRenderer",
+            "};",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": [
+    {
+      "defaultName": "Rope",
+      "description": "Bend an image to follow a rope.",
+      "fullName": "Sprite rope",
+      "name": "SpriteRope",
+      "eventsFunctions": [
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onCreated",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SpriteRope::DefineHelperClasses"
+                  },
+                  "parameters": [
+                    "",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const { SpriteRope, SpriteRopeRenderer } = gdjs.__spriteRopeExtension;\r",
+                "\r",
+                "/** @type {gdjs.CustomRuntimeObject2D} */\r",
+                "const object = objects[0];\r",
+                "\r",
+                "object._renderer = new SpriteRopeRenderer(object, object._instanceContainer, object.getInstanceContainer());\r",
+                "\r",
+                "const pointCount = object._getPointCount();\r",
+                "const interpolationFactor = object._getInterpolationFactor();\r",
+                "\r",
+                "object.__spriteRopeExtension = {};\r",
+                "object.__spriteRopeExtension.spriteRope = new SpriteRope(object, pointCount, interpolationFactor);\r",
+                "\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SpriteRope::SpriteRope::UpdateFromProperties"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onHotReloading",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SpriteRope::SpriteRope::UpdateFromProperties"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Update from properties.",
+          "fullName": "Update from properties",
+          "functionType": "Action",
+          "name": "UpdateFromProperties",
+          "private": true,
+          "sentence": "Update from properties of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SpriteRope::SpriteRope::SetPointCount"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "PointCount",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SpriteRope::SpriteRope::SetInterpolationFactor"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "InterpolationFactor",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "doStepPostEvents",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "/** @type {gdjs.CustomRuntimeObject2D} */",
+                "const object = objects[0];",
+                "",
+                "object.__spriteRopeExtension.spriteRope.updatePoints();"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Move a point of the rope.",
+          "fullName": "Point position",
+          "functionType": "Action",
+          "name": "SetPointPosition",
+          "sentence": "Move the point _PARAM1_ of _PARAM0_ to _PARAM2_ ; _PARAM3_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const index = eventsFunctionContext.getArgument(\"Index\");",
+                "const x = eventsFunctionContext.getArgument(\"PointX\");",
+                "const y = eventsFunctionContext.getArgument(\"PointY\");",
+                "",
+                "const spriteRope = object.__spriteRopeExtension.spriteRope;",
+                "spriteRope.setPointPosition(Math.round(index), x, y);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            },
+            {
+              "description": "Point index",
+              "name": "Index",
+              "type": "expression"
+            },
+            {
+              "description": "Position X",
+              "name": "PointX",
+              "type": "expression"
+            },
+            {
+              "description": "Position Y",
+              "name": "PointY",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the X position of rope point.",
+          "fullName": "Point X",
+          "functionType": "ExpressionAndCondition",
+          "name": "PointX",
+          "sentence": "the X position of rope point _PARAM1_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const index = Math.round(eventsFunctionContext.getArgument(\"Index\"));",
+                "",
+                "const spriteRope = object.__spriteRopeExtension.spriteRope;",
+                "eventsFunctionContext.returnValue = spriteRope.getPointX(index);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            },
+            {
+              "description": "Point index",
+              "name": "Index",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Point X",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointX",
+          "name": "SetPointX",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const index = Math.round(eventsFunctionContext.getArgument(\"Index\"));",
+                "const x = eventsFunctionContext.getArgument(\"Value\");",
+                "",
+                "const spriteRope = object.__spriteRopeExtension.spriteRope;",
+                "spriteRope.setPointX(index, x);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            },
+            {
+              "description": "Point index",
+              "name": "Index",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the Y position of rope point.",
+          "fullName": "Point Y",
+          "functionType": "ExpressionAndCondition",
+          "name": "PointY",
+          "sentence": "the Y position of rope point _PARAM1_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const index = Math.round(eventsFunctionContext.getArgument(\"Index\"));",
+                "",
+                "const spriteRope = object.__spriteRopeExtension.spriteRope;",
+                "eventsFunctionContext.returnValue = spriteRope.getPointY(index);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            },
+            {
+              "description": "Point index",
+              "name": "Index",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Point X",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointY",
+          "name": "SetPointY",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const index = Math.round(eventsFunctionContext.getArgument(\"Index\"));",
+                "const y = eventsFunctionContext.getArgument(\"Value\");",
+                "",
+                "const spriteRope = object.__spriteRopeExtension.spriteRope;",
+                "spriteRope.setPointY(index, y);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            },
+            {
+              "description": "Point index",
+              "name": "Index",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Pull the rope by adding a new point and removing the last one.",
+          "fullName": "Pull the rope",
+          "functionType": "Action",
+          "name": "Pull",
+          "sentence": "Pull the rope of _PARAM0_ to _PARAM1_ ; _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const x = eventsFunctionContext.getArgument(\"PointX\");",
+                "const y = eventsFunctionContext.getArgument(\"PointY\");",
+                "",
+                "const spriteRope = object.__spriteRopeExtension.spriteRope;",
+                "spriteRope.pull(x, y);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            },
+            {
+              "description": "Position X",
+              "name": "PointX",
+              "type": "expression"
+            },
+            {
+              "description": "Position Y",
+              "name": "PointY",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the point count of the object.",
+          "fullName": "Point count",
+          "functionType": "ExpressionAndCondition",
+          "group": "Sprite rope configuration",
+          "name": "PointCount",
+          "sentence": "the point count",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PointCount"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointCount",
+          "name": "SetPointCount",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SpriteRope::SpriteRope::SetPropertyPointCount"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const value = Math.round(eventsFunctionContext.getArgument(\"Value\"));",
+                "",
+                "const spriteRope = object.__spriteRopeExtension.spriteRope;",
+                "spriteRope.setPointCount(value);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the interpolation factor of the object.",
+          "fullName": "Interpolation factor",
+          "functionType": "ExpressionAndCondition",
+          "group": "Sprite rope configuration",
+          "name": "InterpolationFactor",
+          "sentence": "the interpolation factor",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "InterpolationFactor"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "InterpolationFactor",
+          "name": "SetInterpolationFactor",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SpriteRope::SpriteRope::SetPropertyInterpolationFactor"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const value = Math.round(Math.max(1, eventsFunctionContext.getArgument(\"Value\")));",
+                "",
+                "const spriteRope = object.__spriteRopeExtension.spriteRope;",
+                "spriteRope.setInterpolationFactor(value);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Distance between 2 point of the rope without following the rope.",
+          "fullName": "Distance between rope points",
+          "functionType": "ExpressionAndCondition",
+          "name": "DistanceBetweenPoint",
+          "sentence": "Distance between point _PARAM1_ and _PARAM2_ of the rope",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "DistanceBetweenPositions(Object.PointX(Index), Object.PointY(Index), Object.PointX(OtherIndex), Object.PointY(OtherIndex))"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            },
+            {
+              "description": "Point index",
+              "name": "Index",
+              "type": "expression"
+            },
+            {
+              "description": "Other point index",
+              "name": "OtherIndex",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the tint of the object. Default color is white.",
+          "fullName": "Tint color",
+          "functionType": "Action",
+          "name": "SetTint",
+          "sentence": "Change the tint of _PARAM0_ to _PARAM1_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const color = gdjs.rgbOrHexStringToNumber(eventsFunctionContext.getArgument(\"Color\"));",
+                "",
+                "const spriteRope = object.__spriteRopeExtension.spriteRope;",
+                "spriteRope.setTint(color);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "SpriteRope::SpriteRope",
+              "type": "object"
+            },
+            {
+              "description": "Color",
+              "name": "Color",
+              "type": "color"
+            }
+          ],
+          "objectGroups": []
+        }
+      ],
+      "propertyDescriptors": [
+        {
+          "value": "20",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Point count",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "name": "PointCount"
+        },
+        {
+          "value": "4",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Interpolation factor",
+          "description": "",
+          "group": "",
+          "extraInformation": [],
+          "name": "InterpolationFactor"
+        },
+        {
+          "value": "Center-Right",
+          "type": "String",
+          "label": "",
+          "description": "Only used by the scene editor.",
+          "group": "",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "ParentOrigin"
+        }
+      ],
+      "objects": [
+        {
+          "adaptCollisionMaskAutomatically": true,
+          "assetStoreId": "",
+          "name": "Image",
+          "type": "Sprite",
+          "updateIfNotVisible": false,
+          "variables": [],
+          "effects": [],
+          "behaviors": [],
+          "animations": [
+            {
+              "name": "",
+              "useMultipleDirections": false,
+              "directions": [
+                {
+                  "looping": false,
+                  "timeBetweenFrames": 0.08,
+                  "sprites": []
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "objectsFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "objectName": "Image"
+          }
+        ]
+      }
+    }
+  ]
+}
