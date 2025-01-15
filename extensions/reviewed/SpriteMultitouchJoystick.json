@@ -8,7 +8,7 @@
   "name": "SpriteMultitouchJoystick",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Line Hero Pack/Master/SVG/Videogames/Videogames_controller_joystick_arrows_direction.svg",
   "shortDescription": "Joysticks or buttons for touchscreens.",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": [
     "Multitouch joysticks can be used the same way as physical gamepads:",
     "- 4 or 8 directions",
@@ -1860,52 +1860,72 @@
     },
     {
       "description": "Check if the joystick can be used at a given position without touching the screen edges.",
-      "fullName": "Can be used at position",
+      "fullName": "Can be used at cursor position",
       "functionType": "Condition",
       "name": "IsValidJoystickPosition",
-      "sentence": "_PARAM1_  can be used with center at _PARAM2_ ; _PARAM3_",
+      "sentence": "_PARAM1_ can be used with center at the cursor position",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [
             {
               "type": {
-                "value": "CompareArgumentAsNumber"
+                "value": "HasAnyTouchOrMouseStarted"
               },
               "parameters": [
-                "\"PositionX\"",
+                ""
+              ]
+            },
+            {
+              "type": {
+                "value": "TouchX"
+              },
+              "parameters": [
+                "",
+                "StartedTouchOrMouseId(0)",
                 ">",
-                "CameraBorderLeft(Object.Layer()) + 0.75 * Object.Width()"
+                "CameraBorderLeft(Object.Layer()) + 0.6 * Object.Width()",
+                "Object.Layer()",
+                ""
               ]
             },
             {
               "type": {
-                "value": "CompareArgumentAsNumber"
+                "value": "TouchX"
               },
               "parameters": [
-                "\"PositionX\"",
+                "",
+                "StartedTouchOrMouseId(0)",
                 "<",
-                "CameraBorderRight(Object.Layer()) - 0.75 * Object.Width()"
+                "CameraBorderRight(Object.Layer()) - 0.6 * Object.Width()",
+                "Object.Layer()",
+                ""
               ]
             },
             {
               "type": {
-                "value": "CompareArgumentAsNumber"
+                "value": "TouchY"
               },
               "parameters": [
-                "\"PositionY\"",
+                "",
+                "StartedTouchOrMouseId(0)",
                 ">",
-                "CameraBorderTop(Object.Layer()) + 0.75 * Object.Width()"
+                "CameraBorderTop(Object.Layer()) + 0.6 * Object.Width()",
+                "Object.Layer()",
+                ""
               ]
             },
             {
               "type": {
-                "value": "CompareArgumentAsNumber"
+                "value": "TouchY"
               },
               "parameters": [
-                "\"PositionY\"",
+                "",
+                "StartedTouchOrMouseId(0)",
                 "<",
-                "CameraBorderBottom(Object.Layer()) - 0.75 * Object.Width()"
+                "CameraBorderBottom(Object.Layer()) - 0.6 * Object.Width()",
+                "Object.Layer()",
+                ""
               ]
             }
           ],
@@ -1927,16 +1947,60 @@
           "name": "Object",
           "supplementaryInformation": "SpriteMultitouchJoystick::SpriteMultitouchJoystick",
           "type": "objectList"
-        },
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Check if the cursor is on the left side of the screen.",
+      "fullName": "Cursor is on screen left side",
+      "functionType": "Condition",
+      "name": "IsOnLeftSide",
+      "sentence": "The cursor is at the left side of the screen for _PARAM1_",
+      "events": [
         {
-          "description": "Position X",
-          "name": "PositionX",
-          "type": "expression"
-        },
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "HasAnyTouchOrMouseStarted"
+              },
+              "parameters": [
+                ""
+              ]
+            },
+            {
+              "type": {
+                "value": "TouchX"
+              },
+              "parameters": [
+                "",
+                "StartedTouchOrMouseId(0)",
+                "<",
+                "CameraCenterX(Object.Layer())",
+                "Object.Layer()",
+                ""
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
         {
-          "description": "Position Y",
-          "name": "PositionY",
-          "type": "expression"
+          "description": "Multitouch joystick",
+          "name": "Object",
+          "supplementaryInformation": "SpriteMultitouchJoystick::SpriteMultitouchJoystick",
+          "type": "objectList"
         }
       ],
       "objectGroups": []
@@ -6020,11 +6084,20 @@
           "fullName": "Show and start pressing",
           "functionType": "Action",
           "name": "TeleportAndPress",
-          "sentence": "Show _PARAM0_ at _PARAM1_ ; _PARAM2_  and start pressing",
+          "sentence": "Show _PARAM0_ at the cursor position and start pressing",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
+              "conditions": [
+                {
+                  "type": {
+                    "value": "HasAnyTouchOrMouseStarted"
+                  },
+                  "parameters": [
+                    ""
+                  ]
+                }
+              ],
               "actions": [
                 {
                   "type": {
@@ -6032,10 +6105,10 @@
                   },
                   "parameters": [
                     "Object",
-                    "=",
-                    "PositionX",
-                    "=",
-                    "PositionY"
+                    "+",
+                    "TouchX(StartedTouchOrMouseId(0))",
+                    "+",
+                    "TouchY(StartedTouchOrMouseId(0))"
                   ]
                 },
                 {
@@ -6065,188 +6138,16 @@
                     "Object",
                     "yes"
                   ]
-                }
-              ],
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Comment",
-                  "color": {
-                    "b": 109,
-                    "g": 230,
-                    "r": 255,
-                    "textB": 0,
-                    "textG": 0,
-                    "textR": 0
-                  },
-                  "comment": "Find the touch that is the nearest to the given position because several touches can start at the same frame."
                 },
                 {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "HasAnyTouchOrMouseStarted"
-                      },
-                      "parameters": [
-                        ""
-                      ]
-                    }
-                  ],
-                  "actions": [],
-                  "events": [
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [],
-                      "actions": [],
-                      "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Repeat",
-                          "repeatExpression": "StartedTouchOrMouseCount()",
-                          "conditions": [],
-                          "actions": [],
-                          "events": [
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "SetNumberVariable"
-                                  },
-                                  "parameters": [
-                                    "DeltaX",
-                                    "=",
-                                    "TouchX(StartedTouchOrMouseId(TouchIndex))"
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "SetNumberVariable"
-                                  },
-                                  "parameters": [
-                                    "DeltaY",
-                                    "=",
-                                    "TouchY(StartedTouchOrMouseId(TouchIndex))"
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "SetNumberVariable"
-                                  },
-                                  "parameters": [
-                                    "DistanceSq",
-                                    "=",
-                                    "DeltaX * DeltaX + DeltaY * DeltaY"
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [
-                                {
-                                  "type": {
-                                    "value": "NumberVariable"
-                                  },
-                                  "parameters": [
-                                    "DistanceSq",
-                                    "<",
-                                    "DistanceSqMin"
-                                  ]
-                                }
-                              ],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "SetNumberVariable"
-                                  },
-                                  "parameters": [
-                                    "DistanceSqMin",
-                                    "=",
-                                    "DistanceSq"
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "SetNumberVariable"
-                                  },
-                                  "parameters": [
-                                    "TouchId",
-                                    "=",
-                                    "StartedTouchOrMouseId(TouchIndex)"
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "SetNumberVariable"
-                                  },
-                                  "parameters": [
-                                    "TouchIndex",
-                                    "+",
-                                    "1"
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "SpriteMultitouchJoystick::MultitouchJoystick::ForceStartPressing"
-                              },
-                              "parameters": [
-                                "Border",
-                                "MultitouchJoystick",
-                                "TouchId",
-                                ""
-                              ]
-                            }
-                          ]
-                        }
-                      ],
-                      "variables": [
-                        {
-                          "name": "TouchIndex",
-                          "type": "number",
-                          "value": 0
-                        },
-                        {
-                          "name": "TouchId",
-                          "type": "number",
-                          "value": 0
-                        },
-                        {
-                          "name": "DistanceSqMin",
-                          "type": "number",
-                          "value": 123456789
-                        },
-                        {
-                          "name": "DistanceSq",
-                          "type": "number",
-                          "value": 0
-                        },
-                        {
-                          "name": "DeltaX",
-                          "type": "number",
-                          "value": 0
-                        },
-                        {
-                          "name": "DeltaY",
-                          "type": "number",
-                          "value": 0
-                        }
-                      ]
-                    }
+                  "type": {
+                    "value": "SpriteMultitouchJoystick::MultitouchJoystick::ForceStartPressing"
+                  },
+                  "parameters": [
+                    "Border",
+                    "MultitouchJoystick",
+                    "StartedTouchOrMouseId(0)",
+                    ""
                   ]
                 }
               ]
@@ -6258,16 +6159,6 @@
               "name": "Object",
               "supplementaryInformation": "SpriteMultitouchJoystick::SpriteMultitouchJoystick",
               "type": "object"
-            },
-            {
-              "description": "Position X",
-              "name": "PositionX",
-              "type": "expression"
-            },
-            {
-              "description": "Position Y",
-              "name": "PositionY",
-              "type": "expression"
             }
           ],
           "objectGroups": []
