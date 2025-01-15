@@ -468,6 +468,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    SpriteMultitouchJoystick: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['input'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     Sticker: {
       gdjsAllowedProperties: [
         '_stickerExtension',
