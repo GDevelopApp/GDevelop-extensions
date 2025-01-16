@@ -51,6 +51,11 @@
       "name": "OldY",
       "type": "number",
       "value": 0
+    },
+    {
+      "name": "TouchSpeedFactor",
+      "type": "number",
+      "value": 4
     }
   ],
   "eventsFunctions": [
@@ -72,8 +77,10 @@
             "};",
             "",
             "canvas.addEventListener(\"pointermove\", (e) => {",
-            "    gdjs._MousePointerLockExtension.movementX += e.movementX || 0;",
-            "    gdjs._MousePointerLockExtension.movementY += e.movementY || 0;",
+            "    if (!!document.pointerLockElement) {",
+            "        gdjs._MousePointerLockExtension.movementX += e.movementX || 0;",
+            "        gdjs._MousePointerLockExtension.movementY += e.movementY || 0;",
+            "    }",
             "}, false);",
             "",
             "document.addEventListener(\"pointerlockerror\", (e) => {",
@@ -98,7 +105,84 @@
       "functionType": "Action",
       "name": "onScenePreEvents",
       "sentence": "",
+      "events": [],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onScenePostEvents",
+      "sentence": "",
       "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "gdjs._MousePointerLockExtension.movementX = 0;\r",
+            "gdjs._MousePointerLockExtension.movementY = 0;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "MousePointerLock::isEmulatingPointerLock"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "MousePointerLock::SetMovementX"
+              },
+              "parameters": [
+                "",
+                "=",
+                "(MousePointerLock::TouchX(TouchId) - OldX) * TouchSpeedFactor",
+                ""
+              ]
+            },
+            {
+              "type": {
+                "value": "MousePointerLock::SetMovementY"
+              },
+              "parameters": [
+                "",
+                "=",
+                "(MousePointerLock::TouchY(TouchId) - OldY) * TouchSpeedFactor",
+                ""
+              ]
+            },
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "OldX",
+                "=",
+                "MousePointerLock::TouchX(TouchId)"
+              ]
+            },
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "OldY",
+                "=",
+                "MousePointerLock::TouchY(TouchId)"
+              ]
+            }
+          ]
+        },
         {
           "type": "BuiltinCommonInstructions::Standard",
           "conditions": [
@@ -124,84 +208,6 @@
               ]
             }
           ]
-        },
-        {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [
-            {
-              "type": {
-                "value": "MousePointerLock::isEmulatingPointerLock"
-              },
-              "parameters": [
-                "",
-                ""
-              ]
-            }
-          ],
-          "actions": [
-            {
-              "type": {
-                "value": "MousePointerLock::SetMovementX"
-              },
-              "parameters": [
-                "",
-                "=",
-                "MousePointerLock::TouchX(TouchId) - OldX",
-                ""
-              ]
-            },
-            {
-              "type": {
-                "value": "MousePointerLock::SetMovementY"
-              },
-              "parameters": [
-                "",
-                "=",
-                "MousePointerLock::TouchY(TouchId) - OldY",
-                ""
-              ]
-            },
-            {
-              "type": {
-                "value": "SetNumberVariable"
-              },
-              "parameters": [
-                "OldX",
-                "=",
-                "MousePointerLock::TouchX(TouchId)"
-              ]
-            },
-            {
-              "type": {
-                "value": "SetNumberVariable"
-              },
-              "parameters": [
-                "OldY",
-                "=",
-                "MousePointerLock::TouchY(TouchId)"
-              ]
-            }
-          ]
-        }
-      ],
-      "parameters": [],
-      "objectGroups": []
-    },
-    {
-      "fullName": "",
-      "functionType": "Action",
-      "name": "onScenePostEvents",
-      "sentence": "",
-      "events": [
-        {
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": [
-            "gdjs._MousePointerLockExtension.movementX = 0;\r",
-            "gdjs._MousePointerLockExtension.movementY = 0;"
-          ],
-          "parameterObjects": "",
-          "useStrict": true,
-          "eventsSheetExpanded": false
         }
       ],
       "parameters": [],
@@ -670,6 +676,61 @@
           "type": "expression"
         }
       ],
+      "objectGroups": []
+    },
+    {
+      "description": "the speed factor for touch movement",
+      "fullName": "Speed factor for touch movement",
+      "functionType": "ExpressionAndCondition",
+      "name": "TouchSpeedFactor",
+      "sentence": "the speed factor for touch movement",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "TouchSpeedFactor"
+              ]
+            }
+          ]
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "ActionWithOperator",
+      "getterName": "TouchSpeedFactor",
+      "name": "SetTouchSpeedFactor",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "TouchSpeedFactor",
+                "=",
+                "Value"
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [],
       "objectGroups": []
     }
   ],
