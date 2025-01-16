@@ -234,6 +234,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    DoubleClick: {
+      gdjsAllowedProperties: ['_DoubleClickExtension', 'InputManager'],
+      gdjsEvtToolsAllowedProperties: ['input'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     FlexBox: {
       gdjsAllowedProperties: ['layoutContainers'],
       gdjsEvtToolsAllowedProperties: [],
