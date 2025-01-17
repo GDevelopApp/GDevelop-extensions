@@ -32,7 +32,8 @@
     "pointer"
   ],
   "authorIds": [
-    "Zu55H5hcb9YmZTltIVOTAFDJQyB2"
+    "Zu55H5hcb9YmZTltIVOTAFDJQyB2",
+    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
   ],
   "dependencies": [],
   "globalVariables": [],
@@ -68,29 +69,63 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "const canvas = runtimeScene.getGame().getRenderer().getCanvas();",
+            "class PointerLockHandler {",
+            "    movementX = 0;",
+            "    movementY = 0;",
+            "    retried = false;",
+            "    /**",
+            "     * @type {gdjs.RuntimeGame}",
+            "     */",
+            "    game;",
             "",
-            "gdjs._MousePointerLockExtension = {",
-            "    movementX: 0,",
-            "    movementY: 0,",
-            "    retried: false,",
+            "    /**",
+            "     * @param {gdjs.RuntimeGame} game",
+            "     */",
+            "    constructor(game) {",
+            "        this.game = game;",
+            "        const canvas = game.getRenderer().getCanvas();",
+            "",
+            "        canvas.addEventListener(\"pointermove\", event => {",
+            "            if (!!document.pointerLockElement) {",
+            "                this.movementX += event.movementX || 0;",
+            "                this.movementY += event.movementY || 0;",
+            "            }",
+            "        }, false);",
+            "",
+            "        document.addEventListener(\"pointerlockerror\", event => {",
+            "            if (!this.retried) {",
+            "                canvas.requestPointerLock();",
+            "                this.retried = true;",
+            "            }",
+            "        });",
+            "    }",
+            "",
+            "    requestPointerLock() {",
+            "        const canvas = this.game.getRenderer().getCanvas();",
+            "        if (canvas.requestPointerLock && !document.pointerLockElement) {",
+            "            this.retried = false;",
+            "            canvas.requestPointerLock({ unadjustedMovement: true });",
+            "        }",
+            "    }",
+            "",
+            "    exitPointerLock() {",
+            "        if (document.exitPointerLock) {",
+            "            document.exitPointerLock();",
+            "        }",
+            "    }",
+            "",
+            "    isPointerLocked() {",
+            "        return !!document.pointerLockElement;",
+            "    }",
+            "",
+            "    resetMovement() {",
+            "        this.movementX = 0;",
+            "        this.movementY = 0;",
+            "    }",
             "};",
             "",
-            "canvas.addEventListener(\"pointermove\", (e) => {",
-            "    if (!!document.pointerLockElement) {",
-            "        gdjs._MousePointerLockExtension.movementX += e.movementX || 0;",
-            "        gdjs._MousePointerLockExtension.movementY += e.movementY || 0;",
-            "    }",
-            "}, false);",
-            "",
-            "document.addEventListener(\"pointerlockerror\", (e) => {",
-            "    if (gdjs._MousePointerLockExtension.retried) {",
-            "        ",
-            "    } else {",
-            "        canvas.requestPointerLock();",
-            "        gdjs._MousePointerLockExtension.retried = true;",
-            "    }",
-            "});"
+            "gdjs._MousePointerLockExtension = { handler: new PointerLockHandler(runtimeScene.getGame()) };",
+            ""
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -103,23 +138,16 @@
     {
       "fullName": "",
       "functionType": "Action",
-      "name": "onScenePreEvents",
-      "sentence": "",
-      "events": [],
-      "parameters": [],
-      "objectGroups": []
-    },
-    {
-      "fullName": "",
-      "functionType": "Action",
       "name": "onScenePostEvents",
       "sentence": "",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "gdjs._MousePointerLockExtension.movementX = 0;\r",
-            "gdjs._MousePointerLockExtension.movementY = 0;"
+            "const { handler } = gdjs._MousePointerLockExtension;\r",
+            "\r",
+            "handler.resetMovement();\r",
+            ""
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -278,11 +306,10 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "const canvas = runtimeScene.getGame().getRenderer().getCanvas();\r",
-            "if (canvas.requestPointerLock && !document.pointerLockElement) {\r",
-            "    gdjs._MousePointerLockExtension.retried = false;\r",
-            "    canvas.requestPointerLock({ unadjustedMovement: true });\r",
-            "}"
+            "const { handler } = gdjs._MousePointerLockExtension;\r",
+            "\r",
+            "handler.requestPointerLock();\r",
+            ""
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -318,9 +345,11 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "if (document.exitPointerLock) {\r",
-            "    document.exitPointerLock();\r",
-            "}"
+            "\r",
+            "const { handler } = gdjs._MousePointerLockExtension;\r",
+            "\r",
+            "handler.exitPointerLock();\r",
+            ""
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -410,7 +439,13 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = !!document.pointerLockElement;",
+          "inlineCode": [
+            "\r",
+            "const { handler } = gdjs._MousePointerLockExtension;\r",
+            "\r",
+            "eventsFunctionContext.returnValue = handler.isPointerLocked();\r",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -532,7 +567,11 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = gdjs._MousePointerLockExtension.movementX || 0;",
+          "inlineCode": [
+            "\r",
+            "eventsFunctionContext.returnValue = gdjs._MousePointerLockExtension.handler.movementX || 0;\r",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -556,8 +595,9 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
+            "\r",
             "const value = eventsFunctionContext.getArgument(\"Value\");\r",
-            "gdjs._MousePointerLockExtension.movementX = value;\r",
+            "gdjs._MousePointerLockExtension.handler.movementX = value;\r",
             ""
           ],
           "parameterObjects": "",
@@ -578,7 +618,11 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = gdjs._MousePointerLockExtension.movementY || 0;",
+          "inlineCode": [
+            "\r",
+            "eventsFunctionContext.returnValue = gdjs._MousePointerLockExtension.handler.movementY || 0;\r",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -602,8 +646,9 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
+            "\r",
             "const value = eventsFunctionContext.getArgument(\"Value\");\r",
-            "gdjs._MousePointerLockExtension.movementY = value;\r",
+            "gdjs._MousePointerLockExtension.handler.movementY = value;\r",
             ""
           ],
           "parameterObjects": "",
