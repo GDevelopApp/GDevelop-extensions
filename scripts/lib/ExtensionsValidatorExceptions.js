@@ -310,7 +310,7 @@ const extensionsAllowedProperties = {
       ],
     },
     MousePointerLock: {
-      gdjsAllowedProperties: ['_MousePointerLockExtension'],
+      gdjsAllowedProperties: ['_MousePointerLockExtension', 'RuntimeGame'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],

@@ -8,7 +8,7 @@
   "name": "MousePointerLock",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Line Hero Pack/Master/SVG/Virtual Reality/Virtual Reality_360_rotate_vr_movement.svg",
   "shortDescription": "This behavior removes the limit on the distance the mouse can move and hides the cursor.",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "description": [
     "This behavior removes the limit on the distance the mouse can move and hides the cursor.",
     "",
@@ -32,11 +32,33 @@
     "pointer"
   ],
   "authorIds": [
-    "Zu55H5hcb9YmZTltIVOTAFDJQyB2"
+    "Zu55H5hcb9YmZTltIVOTAFDJQyB2",
+    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
   ],
   "dependencies": [],
   "globalVariables": [],
-  "sceneVariables": [],
+  "sceneVariables": [
+    {
+      "name": "TouchId",
+      "type": "number",
+      "value": -1
+    },
+    {
+      "name": "OldX",
+      "type": "number",
+      "value": 0
+    },
+    {
+      "name": "OldY",
+      "type": "number",
+      "value": 0
+    },
+    {
+      "name": "TouchSpeedFactor",
+      "type": "number",
+      "value": 4
+    }
+  ],
   "eventsFunctions": [
     {
       "fullName": "",
@@ -47,25 +69,63 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "const canvas = runtimeScene.getGame().getRenderer().getCanvas();",
+            "class PointerLockHandler {",
+            "    movementX = 0;",
+            "    movementY = 0;",
+            "    retried = false;",
+            "    /**",
+            "     * @type {gdjs.RuntimeGame}",
+            "     */",
+            "    game;",
             "",
-            "gdjs._MousePointerLockExtension = {",
-            "    movementX: 0,",
-            "    movementY: 0,",
-            "    retried: false,",
+            "    /**",
+            "     * @param {gdjs.RuntimeGame} game",
+            "     */",
+            "    constructor(game) {",
+            "        this.game = game;",
+            "        const canvas = game.getRenderer().getCanvas();",
+            "",
+            "        canvas.addEventListener(\"pointermove\", event => {",
+            "            if (!!document.pointerLockElement) {",
+            "                this.movementX += event.movementX || 0;",
+            "                this.movementY += event.movementY || 0;",
+            "            }",
+            "        }, false);",
+            "",
+            "        document.addEventListener(\"pointerlockerror\", event => {",
+            "            if (!this.retried) {",
+            "                canvas.requestPointerLock();",
+            "                this.retried = true;",
+            "            }",
+            "        });",
+            "    }",
+            "",
+            "    requestPointerLock() {",
+            "        const canvas = this.game.getRenderer().getCanvas();",
+            "        if (canvas.requestPointerLock && !document.pointerLockElement) {",
+            "            this.retried = false;",
+            "            canvas.requestPointerLock({ unadjustedMovement: true });",
+            "        }",
+            "    }",
+            "",
+            "    exitPointerLock() {",
+            "        if (document.exitPointerLock) {",
+            "            document.exitPointerLock();",
+            "        }",
+            "    }",
+            "",
+            "    isPointerLocked() {",
+            "        return !!document.pointerLockElement;",
+            "    }",
+            "",
+            "    resetMovement() {",
+            "        this.movementX = 0;",
+            "        this.movementY = 0;",
+            "    }",
             "};",
             "",
-            "canvas.addEventListener(\"pointermove\", (e) => {",
-            "    gdjs._MousePointerLockExtension.movementX += e.movementX || 0;",
-            "    gdjs._MousePointerLockExtension.movementY += e.movementY || 0;",
-            "}, false);",
-            "",
-            "document.addEventListener(\"pointerlockerror\", (e) => {",
-            "    if (!gdjs._MousePointerLockExtension.retried) {",
-            "        canvas.requestPointerLock();",
-            "        gdjs._MousePointerLockExtension.retried = true;",
-            "    } ",
-            "});"
+            "gdjs._MousePointerLockExtension = { handler: new PointerLockHandler(runtimeScene.getGame()) };",
+            ""
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -84,12 +144,98 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "gdjs._MousePointerLockExtension.movementX = 0;\r",
-            "gdjs._MousePointerLockExtension.movementY = 0;"
+            "const { handler } = gdjs._MousePointerLockExtension;\r",
+            "\r",
+            "handler.resetMovement();\r",
+            ""
           ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "MousePointerLock::isEmulatingPointerLock"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "MousePointerLock::SetMovementX"
+              },
+              "parameters": [
+                "",
+                "=",
+                "(MousePointerLock::TouchX(TouchId) - OldX) * TouchSpeedFactor",
+                ""
+              ]
+            },
+            {
+              "type": {
+                "value": "MousePointerLock::SetMovementY"
+              },
+              "parameters": [
+                "",
+                "=",
+                "(MousePointerLock::TouchY(TouchId) - OldY) * TouchSpeedFactor",
+                ""
+              ]
+            },
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "OldX",
+                "=",
+                "MousePointerLock::TouchX(TouchId)"
+              ]
+            },
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "OldY",
+                "=",
+                "MousePointerLock::TouchY(TouchId)"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "HasTouchEnded"
+              },
+              "parameters": [
+                "",
+                "TouchId"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "TouchId",
+                "=",
+                "-1"
+              ]
+            }
+          ]
         }
       ],
       "parameters": [],
@@ -103,17 +249,71 @@
       "sentence": "Request Pointer Lock",
       "events": [
         {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "HasAnyTouchOrMouseStarted"
+              },
+              "parameters": [
+                ""
+              ]
+            },
+            {
+              "type": {
+                "value": "NumberVariable"
+              },
+              "parameters": [
+                "TouchId",
+                "=",
+                "-1"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "TouchId",
+                "=",
+                "StartedTouchOrMouseId(0)"
+              ]
+            },
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "OldX",
+                "=",
+                "MousePointerLock::TouchX(TouchId)"
+              ]
+            },
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "OldY",
+                "=",
+                "MousePointerLock::TouchY(TouchId)"
+              ]
+            }
+          ]
+        },
+        {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "const canvas = runtimeScene.getGame().getRenderer().getCanvas();\r",
-            "if (canvas.requestPointerLock && !document.pointerLockElement) {\r",
-            "    canvas.requestPointerLock({ unadjustedMovement: true });\r",
-            "    gdjs._MousePointerLockExtension.retried = false;\r",
-            "}"
+            "const { handler } = gdjs._MousePointerLockExtension;\r",
+            "\r",
+            "handler.requestPointerLock();\r",
+            ""
           ],
           "parameterObjects": "",
           "useStrict": true,
-          "eventsSheetExpanded": true
+          "eventsSheetExpanded": false
         }
       ],
       "parameters": [],
@@ -127,11 +327,29 @@
       "sentence": "Exit pointer lock",
       "events": [
         {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "TouchId",
+                "=",
+                "-1"
+              ]
+            }
+          ]
+        },
+        {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "if (document.exitPointerLock) {\r",
-            "    document.exitPointerLock();\r",
-            "}"
+            "\r",
+            "const { handler } = gdjs._MousePointerLockExtension;\r",
+            "\r",
+            "handler.exitPointerLock();\r",
+            ""
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -149,11 +367,135 @@
       "sentence": "The mouse pointer is locked",
       "events": [
         {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "NumberVariable"
+              },
+              "parameters": [
+                "TouchId",
+                ">=",
+                "0"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "NumberVariable"
+              },
+              "parameters": [
+                "TouchId",
+                "<",
+                "0"
+              ]
+            },
+            {
+              "type": {
+                "value": "MousePointerLock::isPointerActuallyLocked"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Check if the mouse pointer is actually locked.",
+      "fullName": "Pointer is actually locked",
+      "functionType": "Condition",
+      "name": "isPointerActuallyLocked",
+      "private": true,
+      "sentence": "The mouse pointer actually is locked",
+      "events": [
+        {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = document.pointerLockElement ? true : false;",
+          "inlineCode": [
+            "\r",
+            "const { handler } = gdjs._MousePointerLockExtension;\r",
+            "\r",
+            "eventsFunctionContext.returnValue = handler.isPointerLocked();\r",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Check if the mouse pointer lock is emulated.",
+      "fullName": "Pointer lock is emulated",
+      "functionType": "Condition",
+      "name": "isEmulatingPointerLock",
+      "private": true,
+      "sentence": "The mouse pointer is lock is emulated",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "inverted": true,
+                "value": "MousePointerLock::isPointerActuallyLocked"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            },
+            {
+              "type": {
+                "value": "NumberVariable"
+              },
+              "parameters": [
+                "TouchId",
+                ">=",
+                "0"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
         }
       ],
       "parameters": [],
@@ -220,11 +562,16 @@
       "fullName": "Pointer X movement",
       "functionType": "ExpressionAndCondition",
       "name": "MovementX",
+      "private": true,
       "sentence": "the movement of the locked pointer on the X axis",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = gdjs._MousePointerLockExtension.movementX || 0;",
+          "inlineCode": [
+            "\r",
+            "eventsFunctionContext.returnValue = gdjs._MousePointerLockExtension.handler.movementX || 0;\r",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -237,15 +584,45 @@
       "objectGroups": []
     },
     {
+      "description": "the movement of the locked pointer on the X axis.",
+      "fullName": "Pointer X movement",
+      "functionType": "ActionWithOperator",
+      "getterName": "MovementX",
+      "name": "SetMovementX",
+      "private": true,
+      "sentence": "the movement of the locked pointer on the X axis",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "\r",
+            "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+            "gdjs._MousePointerLockExtension.handler.movementX = value;\r",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
       "description": "the movement of the pointer on the Y axis.",
       "fullName": "Pointer Y movement",
       "functionType": "ExpressionAndCondition",
       "name": "MovementY",
+      "private": true,
       "sentence": "the movement of the pointer on the Y axis",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": "eventsFunctionContext.returnValue = gdjs._MousePointerLockExtension.movementY || 0;",
+          "inlineCode": [
+            "\r",
+            "eventsFunctionContext.returnValue = gdjs._MousePointerLockExtension.handler.movementY || 0;\r",
+            ""
+          ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -254,6 +631,150 @@
       "expressionType": {
         "type": "expression"
       },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "the movement of the locked pointer on the X axis.",
+      "fullName": "Pointer X movement",
+      "functionType": "ActionWithOperator",
+      "getterName": "MovementY",
+      "name": "SetMovementY",
+      "private": true,
+      "sentence": "the movement of the locked pointer on the X axis",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "\r",
+            "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+            "gdjs._MousePointerLockExtension.handler.movementY = value;\r",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the X position of a specific touch",
+      "fullName": "Touch X position",
+      "functionType": "Expression",
+      "name": "TouchX",
+      "private": true,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const touchId = eventsFunctionContext.getArgument(\"NewTouchId\");",
+            "eventsFunctionContext.returnValue = runtimeScene.getGame().getInputManager().getTouchX(touchId);",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Touch identifier",
+          "name": "NewTouchId",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the Y position of a specific touch",
+      "fullName": "Touch Y position",
+      "functionType": "Expression",
+      "name": "TouchY",
+      "private": true,
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const touchId = eventsFunctionContext.getArgument(\"NewTouchId\");",
+            "eventsFunctionContext.returnValue = runtimeScene.getGame().getInputManager().getTouchY(touchId);",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Touch identifier",
+          "name": "NewTouchId",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "the speed factor for touch movement.",
+      "fullName": "Speed factor for touch movement",
+      "functionType": "ExpressionAndCondition",
+      "name": "TouchSpeedFactor",
+      "sentence": "the speed factor for touch movement",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnNumber"
+              },
+              "parameters": [
+                "TouchSpeedFactor"
+              ]
+            }
+          ]
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "ActionWithOperator",
+      "getterName": "TouchSpeedFactor",
+      "name": "SetTouchSpeedFactor",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetNumberVariable"
+              },
+              "parameters": [
+                "TouchSpeedFactor",
+                "=",
+                "Value"
+              ]
+            }
+          ]
+        }
+      ],
       "parameters": [],
       "objectGroups": []
     }
