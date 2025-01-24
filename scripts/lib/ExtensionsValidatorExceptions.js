@@ -576,6 +576,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: ['getObjects'],
       javaScriptObjectAllowedProperties: [],
     },
+    PlaygamaBridge: {
+      gdjsAllowedProperties: ['_playgamaBridgeExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
   },
 };
 
