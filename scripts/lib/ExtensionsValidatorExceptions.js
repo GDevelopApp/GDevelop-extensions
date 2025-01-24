@@ -582,6 +582,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Sky3D: {
+      gdjsAllowedProperties: ['__Sky3DExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
   },
 };
 
