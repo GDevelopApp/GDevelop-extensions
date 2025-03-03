@@ -232,10 +232,8 @@ const findAllRequiredBehaviorTypes = (
           tags: extension.tags,
           category: extension.category || 'General',
           previewIconUrl: extension.previewIconUrl,
+          gdevelopVersion: extension.gdevelopVersion,
         };
-        if (extensionsRequiring3DPhysics.has(name)) {
-          registryItem.gdevelopVersion = '>=5.5.220';
-        }
 
         /** @type {ExtensionShortHeader} */
         const extensionShortHeader = {
