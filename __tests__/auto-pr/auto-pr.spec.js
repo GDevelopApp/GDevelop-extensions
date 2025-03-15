@@ -57,6 +57,8 @@ describe('Auto-pr pipeline', () => {
     expect(await wrappedVerifyExtension(`cri.png`)).toBe('invalid-file-name');
     expect(await wrappedVerifyExtension(`RealExtension`)).toBe('invalid-json');
     expect(await wrappedVerifyExtension(`Share`)).toBe('rule-break');
+    expect(await wrappedVerifyExtension(`Fake`)).toBe('unknown-json-contents');
+    expect(await wrappedVerifyExtension(`ArrayTools`)).toBe('gdevelop-project-file');
 
     expect(await wrappedVerifyExtension(`UUID`)).toBe('success');
     expect(await wrappedVerifyExtension(`Clipboard`)).toBe('success');
