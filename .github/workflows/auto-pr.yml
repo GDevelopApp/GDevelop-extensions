@@ -22,15 +22,13 @@ jobs:
 
       - name: Extract and verify extension
         uses: actions/github-script@v6
-        env:
-          BODY: ${{ github.event.issue.body }}
         with:
           script: |
             const { extractExtension } = require('./scripts/extract-extension.js');
             const { verifyExtension } = require('./scripts/check-single-extension.js')
 
-            const reviewed = !process.env.BODY.includes("Community (Unreviewed)");
-            const { error, extensionName } = await extractExtension("/tmp/ext.zip", { reviewed });
+
+            const { error, extensionName } = await extractExtension("/tmp/ext.zip");
 
             if(error === "zip-error")
               github.rest.issues.createComment({
@@ -92,7 +90,7 @@ jobs:
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `👋 Thanks for your submission! We are sorry, but it seems we already have a ${reviewed ? 'community' : 'reviewed'} extension with that name. Extensions cannot share a name between the community and reviewed extensions list. If you are trying to update that other extension, please make sure you selected the correct review type. If the name clash is a coincidence, please update your original submission post with a new zip file containing your extension with a file and extension name that is not already taken 🙏`
+                body: `👋 Thanks for your submission! We are sorry, but it seems we already have a reviewed extension with that name. Extensions cannot be in both the community and reviewed extensions list at once. If you are trying to update that extension, please ask a member of the extension team for help. If the name clash is a coincidence, please update your original submission post with a new zip file containing your extension with a file name that is not already taken 🙏`
               })
 
             if(code === "invalid-json")

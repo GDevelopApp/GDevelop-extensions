@@ -1,19 +1,18 @@
 const { mkdir, rm } = require('fs/promises');
 const { verifyExtension } = require('../../scripts/check-single-extension');
 const { extractExtension } = require('../../scripts/extract-extension');
-const { readdirSync } = require('fs');
 
 const TEMPORARY_MOCK_EXTENSIONS_FOLDER = __dirname + '/mock_extensions_folder';
 const TEST_ZIPS_FOLDER = __dirname + '/test-zips';
 const TEST_EXTENSIONS_FOLDER = __dirname + '/test-extensions';
 
 /** @param {string} zipName */
-const wrappedExtractExtension = async (zipName, reviewed = false) =>
+const wrappedExtractExtension = async (zipName) =>
   (
-    await extractExtension(`${TEST_ZIPS_FOLDER}/${zipName}.zip`, {
-      extensionsFolder: TEMPORARY_MOCK_EXTENSIONS_FOLDER,
-      reviewed,
-    })
+    await extractExtension(
+      `${TEST_ZIPS_FOLDER}/${zipName}.zip`,
+      TEMPORARY_MOCK_EXTENSIONS_FOLDER
+    )
   ).error;
 
 /** @param {string} extensionName */
@@ -46,19 +45,7 @@ describe('Auto-pr pipeline', () => {
       'too-many-files'
     );
 
-    // As community extension
     expect(await wrappedExtractExtension(`valid-extension`)).toBeUndefined();
-    expect(
-      readdirSync(TEMPORARY_MOCK_EXTENSIONS_FOLDER + '/community')
-    ).toContain('UUID.json');
-
-    // As reviewed extension
-    expect(
-      await wrappedExtractExtension(`valid-extension`, true)
-    ).toBeUndefined();
-    expect(
-      readdirSync(TEMPORARY_MOCK_EXTENSIONS_FOLDER + '/reviewed')
-    ).toContain('UUID.json');
   });
 
   test(`verifyExtension()`, async () => {
