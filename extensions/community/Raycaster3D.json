@@ -2,14 +2,14 @@
   "author": "",
   "category": "General",
   "extensionNamespace": "",
-  "gdevelopVersion": ">=5.5.222",
   "fullName": "3D raycast",
+  "gdevelopVersion": ">=5.5.222",
   "helpPath": "",
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLXJheS1zdGFydC1hcnJvdyIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0yMywxMkwxOSwxNlYxM0g2LjgzQzYuNDIsMTQuMTcgNS4zMSwxNSA0LDE1QTMsMyAwIDAsMSAxLDEyQTMsMyAwIDAsMSA0LDlDNS4zMSw5IDYuNDIsOS44MyA2LjgzLDExSDE5VjhMMjMsMTJaIiAvPjwvc3ZnPg==",
   "name": "Raycaster3D",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/8419f46b76bce482c14b4c03b4141a64d457e4cdc92686f3470381f5d2694abd_ray-start-arrow.svg",
   "shortDescription": "Find 3D objects that cross a line.",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": [
     "It can be useful to:",
     "- Find 3D objects under the pointer",
@@ -29,6 +29,8 @@
     "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
   ],
   "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
   "eventsFunctions": [
     {
       "fullName": "",
@@ -487,6 +489,63 @@
           "description": "Y position on the screen (from 0 to 1)",
           "name": "PointerY",
           "type": "expression"
+        },
+        {
+          "description": "Ray maximum distance (in pixels)",
+          "name": "DistanceMax",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Sends a ray from the cursor on the camera screen, intersecting the closest object. The intersected object will become the only one taken into account.",
+      "fullName": "Raycast from cursor",
+      "functionType": "Condition",
+      "group": "Collision",
+      "name": "RaycastFromCameraCursor",
+      "sentence": "Cast a ray from the cursor on 2D layer: _PARAM2_ to a maximum distance of _PARAM3_ against _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const { camera, input } = gdjs.evtTools;",
+            "",
+            "const layer2D = eventsFunctionContext.getArgument(\"Layer2D\");",
+            "",
+            "const cameraMinX = camera.getCameraBorderLeft(runtimeScene, layer2D, 0);",
+            "const cameraMaxX = camera.getCameraBorderRight(runtimeScene, layer2D, 0);",
+            "const cameraMinY = camera.getCameraBorderTop(runtimeScene, layer2D, 0);",
+            "const cameraMaxY = camera.getCameraBorderBottom(runtimeScene, layer2D, 0);",
+            "",
+            "const cursorX = input.getCursorX(runtimeScene, layer2D, 0);",
+            "const cursorY = input.getCursorY(runtimeScene, layer2D, 0);",
+            "",
+            "eventsFunctionContext.returnValue =",
+            "    gdjs.__raycaster3DExtension.raycaster.recastFromCamera(",
+            "        eventsFunctionContext.getObjectsLists(\"Object\"),",
+            "        objects,",
+            "        (cursorX - cameraMinX) / (cameraMaxX - cameraMinX),",
+            "        (cursorY - cameraMinY) / (cameraMaxY - cameraMinY),",
+            "        eventsFunctionContext.getArgument(\"DistanceMax\")",
+            "    );",
+            ""
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Objects to test against the ray",
+          "name": "Object",
+          "type": "objectList"
+        },
+        {
+          "description": "2D layer",
+          "name": "Layer2D",
+          "type": "layer"
         },
         {
           "description": "Ray maximum distance (in pixels)",
