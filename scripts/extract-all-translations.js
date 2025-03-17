@@ -213,7 +213,9 @@ try {
     potContent += uniqueFiles.map((file) => `#: ${file}`).join('\n') + '\n';
 
     // Handle multi-line strings
-    const escapedValue = value.replace(/"/g, '\\"'); // Escape double quotes
+    const escapedValue = value
+      .replace(/\\/g, '\\\\') // Escape existing backslashes
+      .replace(/"/g, '\\"'); // Escape double quotes
 
     /** @type {string[]} */
     let lines = escapedValue.split('\n');
