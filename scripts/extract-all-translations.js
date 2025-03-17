@@ -12,10 +12,7 @@ if (!fs.existsSync(translationsPath)) {
 
 try {
   // Clean existing English messages catalog, if any
-  const enMessagesJsPath = path.join(
-    translationsPath,
-    'locales/en/messages.js'
-  );
+  const enMessagesJsPath = path.join(translationsPath, 'en/messages.js');
   if (fs.existsSync(enMessagesJsPath)) {
     console.info(
       `ℹ️ Removing ${enMessagesJsPath} as "en" should not have any translations ("pot" file)`
