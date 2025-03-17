@@ -69,7 +69,20 @@ try {
   translationsMap.forEach((files, value) => {
     const uniqueFiles = [...new Set(files)];
     potContent += uniqueFiles.map((file) => `#: ${file}`).join('\n') + '\n';
-    potContent += `msgid "${value.replace(/"/g, '\\"')}"\n`;
+
+    // Handle multi-line strings
+    const escapedValue = value.replace(/"/g, '\\"');
+    /** @type {string[]} */
+    let lines = escapedValue.split('\n');
+    lines = lines.filter((line) => line.trim());
+    potContent +=
+      'msgid ' +
+      lines
+        .map((line, index) =>
+          index === lines.length - 1 ? `"${line}"` : `"${line}\\n"`
+        )
+        .join('\n') +
+      '\n';
     potContent += 'msgstr ""\n\n';
   });
 
