@@ -173,6 +173,11 @@ getLocales()
       Promise.all(
         locales.map((locale) => {
           return new Promise((resolve) => {
+            // Create locale folder if it doesn't exist (for initial setup).
+            if (!fs.existsSync(getLocalePath(locale))) {
+              fs.mkdirSync(getLocalePath(locale));
+            }
+
             // Concatenate all message catalogs into a single one for lingui-js.
             const files = getLocaleSourceCatalogFiles(locale);
 
