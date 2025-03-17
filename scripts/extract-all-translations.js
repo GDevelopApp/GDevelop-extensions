@@ -95,7 +95,7 @@ try {
   );
   fs.writeFileSync(potFilePath, potContent);
   console.log(
-    "ℹ️ Translation file 'reviewed-messages.pot' generated and ready for translation."
+    "ℹ️ Translation file 'reviewed-extensions-messages.pot' generated and ready for translation."
   );
 } catch (error) {
   console.error('❌ Error occurred while extracting translations:', error);
