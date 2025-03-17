@@ -49,6 +49,7 @@ try {
     ['fullName', 'shortDescription', 'description', 'category'].forEach(
       (key) => {
         if (data[key]) {
+          /** @type {string[]} */
           const values = Array.isArray(data[key]) ? data[key] : [data[key]];
           values.forEach((value) => {
             if (value.trim()) {
