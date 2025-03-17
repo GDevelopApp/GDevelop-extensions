@@ -125,10 +125,6 @@ const sanitizeMessagePo = (path) => {
         str: '\\ t',
         regex: /\\ t/g,
       },
-      {
-        str: '\\ ',
-        regex: /\\ /g,
-      },
     ];
     let sanitizedContent = content;
     forbiddenStrings.forEach((forbiddenString) => {
