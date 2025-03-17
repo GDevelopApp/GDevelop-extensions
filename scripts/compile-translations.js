@@ -89,7 +89,6 @@ const writeLocaleMetadata = (object) => {
     `module.exports = ${JSON.stringify(object, null, 2)};`,
     ``,
   ].join('\n');
-  console.log(content);
   fs.writeFileSync(getLocaleMetadataPath(), content);
 };
 
