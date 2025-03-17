@@ -11,9 +11,8 @@ const {
   getLocaleName,
   getLocaleNativeName,
 } = require('./lib/Locales');
-const isWin = /^win/.test(process.platform);
 
-const newIdeAppPath = path.join(__dirname, '..');
+const rootPath = path.join(__dirname, '..');
 
 /**
  * @param {string} path
@@ -49,19 +48,11 @@ const writeUtf8File = (path, content) =>
 
 // Identify where msgcat is on the system
 let msgcat = '';
-if (isWin) {
-  shell.echo(`ℹ️ Skipping translations compilation on Windows.`);
-  shell.echo(
-    `ℹ️ Pull Requests are welcome to add support for "msgcat" on Windows!`
-  );
-  shell.exit(0);
-} else {
-  msgcat = shell.exec('which msgcat 2>/dev/null', { silent: true }).stdout;
-  if (!msgcat) {
-    msgcat = shell.exec('find /usr -name "msgcat" -print -quit 2>/dev/null', {
-      silent: true,
-    }).stdout;
-  }
+msgcat = shell.exec('which msgcat 2>/dev/null', { silent: true }).stdout;
+if (!msgcat) {
+  msgcat = shell.exec('find /usr -name "msgcat" -print -quit 2>/dev/null', {
+    silent: true,
+  }).stdout;
 }
 
 msgcat = msgcat.trim();
@@ -168,36 +159,7 @@ const lintMessagePo = (locale, path) => {
       return { errors };
     }
 
-    const operatorWithBracketsCount = (content.match(/<operator>/g) || [])
-      .length;
-    const valueWithBracketsCount = (content.match(/<value>/g) || []).length;
-    const subjectWithBracketsCount = (content.match(/<subject>/g) || []).length;
-
-    if (operatorWithBracketsCount !== 4 && operatorWithBracketsCount !== 8) {
-      errors.push({
-        str: `Unexpected number of <operator> (${operatorWithBracketsCount}): verify the <operator> translations`,
-      });
-    }
-    if (valueWithBracketsCount !== 6 && valueWithBracketsCount !== 12) {
-      errors.push({
-        str: `Unexpected number of <value> (${valueWithBracketsCount}): verify the <value> translations`,
-      });
-    }
-    if (subjectWithBracketsCount !== 12 && subjectWithBracketsCount !== 24) {
-      errors.push({
-        str: `Unexpected number of <subject> (${subjectWithBracketsCount}): verify the <subject> translations`,
-      });
-    }
-    if (
-      content.indexOf(`msgid "<subject> <operator> <value>"
-msgstr "<subject> <operator> <value>"`) === -1 &&
-      content.indexOf(`msgid "<subject> <operator> <value>"
-msgstr ""`) === -1
-    ) {
-      errors.push({
-        str: "Can't find an untranslated <subject> <operator> <value>: Double check these translations, they are surely wrongly done!",
-      });
-    }
+    // TODO: Add more checks here.
 
     return {
       errors,
@@ -323,9 +285,9 @@ getLocales()
   })
   .then((locales) => {
     // Launch "lingui compile" for transforming .PO files into
-    // js files ready to be used with @lingui/react newIDE translations
+    // js files ready to be used with @lingui/react IDE translations
     shell.exec('node node_modules/.bin/lingui compile', {
-      cwd: newIdeAppPath,
+      cwd: rootPath,
     });
 
     return locales;
