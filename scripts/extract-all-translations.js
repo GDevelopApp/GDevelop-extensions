@@ -5,6 +5,11 @@ const rootPath = path.join(__dirname, '..');
 const translationsPath = path.join(rootPath, '.translations');
 const reviewedExtensionsPath = path.join(rootPath, 'extensions', 'reviewed');
 
+// Ensure translations folder exists
+if (!fs.existsSync(translationsPath)) {
+  fs.mkdirSync(translationsPath);
+}
+
 try {
   // Clean existing English messages catalog, if any
   const enMessagesJsPath = path.join(
@@ -34,7 +39,7 @@ try {
     .readdirSync(reviewedExtensionsPath)
     .filter((file) => file.endsWith('.json'));
 
-  console.log('ℹ️ Generating .POT file...');
+  console.log('ℹ️ Reading extension files...');
   let potContent = 'msgid ""\nmsgstr ""\n\n';
   const translationsMap = new Map();
 
@@ -59,6 +64,7 @@ try {
     );
   });
 
+  console.log('ℹ️ Creating .POT content...');
   // Step 3: Build POT content
   translationsMap.forEach((files, value) => {
     const uniqueFiles = [...new Set(files)];
@@ -67,6 +73,7 @@ try {
     potContent += 'msgstr ""\n\n';
   });
 
+  console.log('ℹ️ Creating .POT file...');
   // Step 4: Write to .POT file
   const potFilePath = path.join(
     translationsPath,
@@ -78,4 +85,5 @@ try {
   );
 } catch (error) {
   console.error('❌ Error occurred while extracting translations:', error);
+  throw error;
 }
