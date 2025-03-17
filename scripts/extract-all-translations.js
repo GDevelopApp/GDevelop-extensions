@@ -3,6 +3,7 @@ const fs = require('fs');
 
 const rootPath = path.join(__dirname, '..');
 const translationsPath = path.join(rootPath, '.translations');
+const enPath = path.join(translationsPath, 'en');
 const reviewedExtensionsPath = path.join(rootPath, 'extensions', 'reviewed');
 
 // Ensure translations folder exists
@@ -10,24 +11,28 @@ if (!fs.existsSync(translationsPath)) {
   fs.mkdirSync(translationsPath);
 }
 
+if (!fs.existsSync(enPath)) {
+  fs.mkdirSync(enPath);
+}
+
 try {
   // Clean existing English messages catalog, if any
-  const enMessagesJsPath = path.join(translationsPath, 'en/messages.js');
+  const enMessagesJsPath = path.join(enPath, 'messages.js');
   if (fs.existsSync(enMessagesJsPath)) {
     console.info(
       `ℹ️ Removing ${enMessagesJsPath} as "en" should not have any translations ("pot" file)`
     );
-    fs.rmSync(enMessagesJsPath, { recursive: true, force: true });
+    fs.rmSync(enMessagesJsPath);
   }
   const enMessagesPotPath = path.join(
-    translationsPath,
+    enPath,
     'reviewed-extensions-messages.pot'
   );
   if (fs.existsSync(enMessagesPotPath)) {
     console.info(
       `ℹ️ Removing ${enMessagesPotPath} as "en" should not have any translations ("pot" file)`
     );
-    fs.rmSync(enMessagesPotPath, { recursive: true, force: true });
+    fs.rmSync(enMessagesPotPath);
   }
 
   // Step 1: Find JSON files in 'reviewed' folder.
@@ -233,10 +238,7 @@ try {
 
   console.log('ℹ️ Creating .POT file...');
   // Step 4: Write to .POT file
-  const potFilePath = path.join(
-    translationsPath,
-    'reviewed-extensions-messages.pot'
-  );
+  const potFilePath = path.join(enPath, 'reviewed-extensions-messages.pot');
   fs.writeFileSync(potFilePath, potContent);
   console.log(
     "ℹ️ Translation file 'reviewed-extensions-messages.pot' generated and ready for translation."

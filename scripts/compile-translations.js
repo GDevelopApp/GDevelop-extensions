@@ -163,7 +163,7 @@ getLocales()
             // For languages with a single source ("en" and "pseudo_LOCALE"),
             // don't concatenate anything, create the 'messages.po' file.
             const cpResult = shell.cp(
-              path.join(files[0]),
+              path.join(getLocalePath(locale), files[0]),
               path.join(getLocalePath(locale), 'messages.po')
             );
 
