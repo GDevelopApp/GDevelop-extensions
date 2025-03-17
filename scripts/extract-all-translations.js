@@ -40,16 +40,17 @@ try {
   let potContent = 'msgid ""\nmsgstr ""\n\n';
   const translationsMap = new Map();
 
-  jsonFiles.forEach((file) => {
-    const filePath = path.join(reviewedExtensionsPath, file);
-    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  /**
+   * @param {{[key: string]: any}} data
+   * @param {string} filePath
+   */
+  const getAndAddExtensionPropsForFile = (data, filePath) => {
     ['fullName', 'shortDescription', 'category'].forEach((key) => {
       if (data[key]) {
         /** @type {string[]} */
         const values = Array.isArray(data[key]) ? data[key] : [data[key]];
         values.forEach((value) => {
           if (value.trim()) {
-            // Avoid empty strings
             if (!translationsMap.has(value)) {
               translationsMap.set(value, []);
             }
@@ -58,6 +59,151 @@ try {
         });
       }
     });
+  };
+
+  /**
+   * @param {{[key: string]: any}} data
+   * @param {string} filePath
+   */
+  const getAndAddPropertyDescriptorsPropsForFile = (data, filePath) => {
+    /** @type {{[key: string]: any}[]} */
+    const propertyDescriptors = data.propertyDescriptors;
+
+    if (Array.isArray(propertyDescriptors)) {
+      propertyDescriptors.forEach((descriptor) => {
+        ['label', 'description', 'group'].forEach((key) => {
+          if (descriptor[key]) {
+            const value = descriptor[key].trim();
+            if (value) {
+              if (!translationsMap.has(value)) {
+                translationsMap.set(value, []);
+              }
+              translationsMap.get(value).push(`${filePath}`);
+            }
+          }
+        });
+      });
+    }
+  };
+
+  /**
+   * @param {{[key: string]: any}} data
+   * @param {string} filePath
+   */
+  const getAndAddEventsFunctionsPropsForFile = (data, filePath) => {
+    /** @type {{[key: string]: any}[]} */
+    const eventsFunctions = data.eventsFunctions;
+
+    if (Array.isArray(eventsFunctions)) {
+      eventsFunctions.forEach((func) => {
+        ['description', 'fullName', 'sentence'].forEach((key) => {
+          if (func[key]) {
+            const value = func[key].trim();
+            if (value) {
+              if (!translationsMap.has(value)) {
+                translationsMap.set(value, []);
+              }
+              translationsMap.get(value).push(`${filePath}`);
+            }
+          }
+        });
+
+        const parameters = func.parameters;
+        if (Array.isArray(parameters)) {
+          parameters.forEach((param) => {
+            ['description', 'longDescription'].forEach((key) => {
+              if (param[key]) {
+                const value = param[key].trim();
+                if (value) {
+                  if (!translationsMap.has(value)) {
+                    translationsMap.set(value, []);
+                  }
+                  translationsMap.get(value).push(`${filePath}`);
+                }
+              }
+            });
+          });
+        }
+      });
+    }
+  };
+
+  /**
+   * @param {{[key: string]: any}} data
+   * @param {string} filePath
+   */
+  const getAndAddEventsBasedBehaviorsPropsForFile = (data, filePath) => {
+    /** @type {{[key: string]: any}[]} */
+    const eventsBasedBehaviors = data.eventsBasedBehaviors;
+
+    if (Array.isArray(eventsBasedBehaviors)) {
+      eventsBasedBehaviors.forEach((func) => {
+        ['description', 'fullName'].forEach((key) => {
+          if (func[key]) {
+            const value = func[key].trim();
+            if (value) {
+              if (!translationsMap.has(value)) {
+                translationsMap.set(value, []);
+              }
+              translationsMap.get(value).push(`${filePath}`);
+            }
+          }
+        });
+
+        getAndAddPropertyDescriptorsPropsForFile(func, filePath);
+
+        const behaviorEventsFunctions = func.eventsFunctions;
+        if (Array.isArray(behaviorEventsFunctions)) {
+          behaviorEventsFunctions.forEach((func) => {
+            getAndAddEventsFunctionsPropsForFile(func, filePath);
+          });
+        }
+      });
+    }
+  };
+
+  /**
+   * @param {{[key: string]: any}} data
+   * @param {string} filePath
+   */
+  const getAndAddEventsBasedObjectsPropsForFile = (data, filePath) => {
+    /** @type {{[key: string]: any}[]} */
+    const eventsBasedObjects = data.eventsBasedObjects;
+
+    if (Array.isArray(eventsBasedObjects)) {
+      eventsBasedObjects.forEach((func) => {
+        ['description', 'fullName'].forEach((key) => {
+          if (func[key]) {
+            const value = func[key].trim();
+            if (value) {
+              if (!translationsMap.has(value)) {
+                translationsMap.set(value, []);
+              }
+              translationsMap.get(value).push(`${filePath}`);
+            }
+          }
+        });
+
+        getAndAddPropertyDescriptorsPropsForFile(func, filePath);
+
+        const behaviorEventsFunctions = func.eventsFunctions;
+        if (Array.isArray(behaviorEventsFunctions)) {
+          behaviorEventsFunctions.forEach((func) => {
+            getAndAddEventsFunctionsPropsForFile(func, filePath);
+          });
+        }
+      });
+    }
+  };
+
+  jsonFiles.forEach((file) => {
+    const filePath = path.join(reviewedExtensionsPath, file);
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+
+    getAndAddExtensionPropsForFile(data, filePath);
+    getAndAddEventsFunctionsPropsForFile(data, filePath);
+    getAndAddEventsBasedBehaviorsPropsForFile(data, filePath);
+    getAndAddEventsBasedObjectsPropsForFile(data, filePath);
   });
 
   console.log('ℹ️ Creating .POT content...');

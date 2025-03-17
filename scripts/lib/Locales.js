@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const ISO6391 = require('iso-639-1').default;
+const ISO6391 = require('iso-639-1');
 
 const rootPath = path.join(__dirname, '../..');
 const translationsPath = path.join(rootPath, '.translations');
@@ -97,6 +97,7 @@ const getLocaleName = (langCode) => {
     return 'for development only';
   }
 
+  // @ts-ignore
   return ISO6391.getName(getShortestCode(langCode));
 };
 
@@ -120,6 +121,7 @@ const getLocaleNativeName = (langCode) => {
     return 'Pseudolocalization';
   }
 
+  // @ts-ignore
   return ISO6391.getNativeName(getShortestCode(langCode));
 };
 
