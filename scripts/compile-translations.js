@@ -168,70 +168,65 @@ const lintMessagePo = (locale, path) => {
 };
 
 getLocales()
-  .then(
-    (locales) =>
-      Promise.all(
-        locales.map((locale) => {
-          return new Promise((resolve) => {
-            // Create locale folder if it doesn't exist (for initial setup).
-            if (!fs.existsSync(getLocalePath(locale))) {
-              fs.mkdirSync(getLocalePath(locale));
-            }
+  .then((locales) => {
+    console.info(`ℹ️ Compiling translations for ${locales.join(', ')}`);
+    return Promise.all(
+      locales.map((locale) => {
+        return new Promise((resolve) => {
+          console.info(`ℹ️ Compiling translations for ${locale}`);
+          // Concatenate all message catalogs into a single one for lingui-js.
+          const files = getLocaleSourceCatalogFiles(locale);
+          console.info(`ℹ️ Concatenating ${files.join(', ')} for ${locale}`);
 
-            // Concatenate all message catalogs into a single one for lingui-js.
-            const files = getLocaleSourceCatalogFiles(locale);
+          if (locale === 'en' || locale === 'pseudo_LOCALE') {
+            // For languages with a single source ("en" and "pseudo_LOCALE"),
+            // don't concatenate anything, create the 'messages.po' file.
+            const cpResult = shell.cp(
+              path.join(files[0]),
+              path.join(getLocalePath(locale), 'messages.po')
+            );
 
-            if (files.length === 1) {
-              // For languages with a single source ("en", "pseudo_LOCALE"),
-              // don't concatenate anything.
-              const cpResult = shell.cp(
-                path.join(getLocalePath(locale), files[0]),
-                path.join(getLocalePath(locale), 'messages.po')
-              );
+            return resolve({
+              locale,
+              shellOutput: {
+                code: cpResult.code,
+                stdout: cpResult.stdout,
+                stderr: cpResult.stderr,
+              },
+            });
+          }
 
-              return resolve({
+          // Run msgcat. Use --no-wrap to allow to sanitize the catalog with
+          // regex/string replace.
+          // Use --use-first to avoid merging multiple translations for the same
+          // string.
+          shell.exec(
+            msgcat + ` --no-wrap --use-first ${files.join(' ')} -o messages.po`,
+            {
+              cwd: getLocalePath(locale),
+              silent: true,
+            },
+            (code, stdout, stderr) =>
+              resolve({
                 locale,
                 shellOutput: {
-                  code: cpResult.code,
-                  stdout: cpResult.stdout,
-                  stderr: cpResult.stderr,
+                  code,
+                  stdout,
+                  stderr,
                 },
-              });
-            }
-
-            // Run msgcat. Use --no-wrap to allow to sanitize the catalog with
-            // regex/string replace.
-            // Use --use-first to avoid merging multiple translations for the same
-            // string.
-            shell.exec(
-              msgcat +
-                ` --no-wrap --use-first ${files.join(' ')} -o messages.po`,
-              {
-                cwd: getLocalePath(locale),
-                silent: true,
-              },
-              (code, stdout, stderr) =>
-                resolve({
-                  locale,
-                  shellOutput: {
-                    code,
-                    stdout,
-                    stderr,
-                  },
-                })
-            );
-          });
-        })
-      ),
-    (error) => {
-      shell.echo(
-        `❌ Error(s) occurred while listing locales folders: ` + error
-      );
-      shell.exit(1);
-      return;
-    }
-  )
+              })
+          );
+        });
+      })
+    );
+  })
+  .catch((error) => {
+    shell.echo(`❌ occurred while listing locales folders: ` + error);
+    shell.exit(1);
+    return;
+  })
   .then((results) => {
+    console.info('ℹ️ Returning successes & failures:');
     // Display success and errors while concatenating translation catalogs for each locale.
     const successes = (results || []).filter(
       ({ shellOutput }) => shellOutput.code === 0
@@ -256,6 +251,7 @@ getLocales()
     return successes.map(({ locale }) => locale);
   })
   .then((locales) => {
+    console.info('ℹ️ Sanitizing catalogs...');
     // "Sanitize" all catalogs by removing and warning about bad characters
     // in translations that would break js-lingui (incorrect ICU message format).
     return Promise.all(
@@ -274,6 +270,7 @@ getLocales()
     ).then(() => locales);
   })
   .then((locales) => {
+    console.info('ℹ️ Linting catalogs...');
     // "Lint" all catalogs to find common errors.
     return Promise.all(
       locales.map((locale) =>
@@ -289,15 +286,15 @@ getLocales()
     ).then(() => locales);
   })
   .then((locales) => {
+    console.info('ℹ️ Compiling catalogs...');
     // Launch "lingui compile" for transforming .PO files into
     // js files ready to be used with @lingui/react IDE translations
-    shell.exec('node node_modules/.bin/lingui compile', {
-      cwd: rootPath,
-    });
+    shell.exec('node node_modules/.bin/lingui compile');
 
     return locales;
   })
   .then((locales) => {
+    console.info('ℹ️ Computing stats...');
     // Compute some stats about the languages...
     return locales
       .map((locale) => {
@@ -322,7 +319,10 @@ getLocales()
   .then(
     // ... and store the stats in LocaleMetadata.js, to be displayed/used
     // in the editor.
-    (localesMetadata) => writeLocaleMetadata(localesMetadata),
+    (localesMetadata) => {
+      console.info('ℹ️ Writing metadata...');
+      writeLocaleMetadata(localesMetadata);
+    },
     (error) => {
       shell.echo(
         `❌ Error(s) occurred while computing ${getLocaleMetadataPath()}: ` +

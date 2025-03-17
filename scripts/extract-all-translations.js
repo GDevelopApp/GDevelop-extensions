@@ -43,23 +43,21 @@ try {
   jsonFiles.forEach((file) => {
     const filePath = path.join(reviewedExtensionsPath, file);
     const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-    ['fullName', 'shortDescription', 'description', 'category'].forEach(
-      (key) => {
-        if (data[key]) {
-          /** @type {string[]} */
-          const values = Array.isArray(data[key]) ? data[key] : [data[key]];
-          values.forEach((value) => {
-            if (value.trim()) {
-              // Avoid empty strings
-              if (!translationsMap.has(value)) {
-                translationsMap.set(value, []);
-              }
-              translationsMap.get(value).push(`${filePath}`);
+    ['fullName', 'shortDescription', 'category'].forEach((key) => {
+      if (data[key]) {
+        /** @type {string[]} */
+        const values = Array.isArray(data[key]) ? data[key] : [data[key]];
+        values.forEach((value) => {
+          if (value.trim()) {
+            // Avoid empty strings
+            if (!translationsMap.has(value)) {
+              translationsMap.set(value, []);
             }
-          });
-        }
+            translationsMap.get(value).push(`${filePath}`);
+          }
+        });
       }
-    );
+    });
   });
 
   console.log('ℹ️ Creating .POT content...');

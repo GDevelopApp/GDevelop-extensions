@@ -31,6 +31,11 @@ const getLocales = () => {
           .filter((name) => name !== '.DS_Store')
           .filter((name) => name !== 'LocalesMetadata.js')
           .filter((name) => name !== '_build')
+          // ensure it's a directory
+          .filter((name) => {
+            const fullPath = path.join(translationsPath, name);
+            return fs.statSync(fullPath).isDirectory();
+          })
       );
     });
   });
@@ -41,13 +46,8 @@ const getLocales = () => {
  * @returns {string[]}
  */
 const getLocaleSourceCatalogFiles = (localeName) => {
-  if (localeName === 'en') return ['ide-messages.pot'];
-  if (localeName === 'pseudo_LOCALE') return ['ide-messages.pot'];
-
-  return [
-    'reviewed-extensions-messages.po',
-    'community-extensions-messages.po',
-  ];
+  if (localeName === 'en') return ['reviewed-extensions-messages.pot'];
+  return ['reviewed-extensions-messages.po'];
 };
 
 /**
