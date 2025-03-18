@@ -1,0 +1,63 @@
+# GitHub Action to update translations by downloading them from Crowdin,
+# and open a Pull Request with the changes on GDevelop's repository.
+
+name: Update translations
+on:
+  # Execute only on main
+  push:
+    branches:
+      - main
+    tags-ignore:
+      - '**' # Don't run on new tags
+  # Allows to run this workflow manually from the Actions tab.
+  workflow_dispatch:
+
+jobs:
+  update-translations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+
+      - name: Install gettext
+        run: sudo apt update && sudo apt install gettext -y
+
+      - name: Install dependencies
+        run: npm install
+
+      # (Build and) download the most recent translations (PO files) from Crowdin.
+      - name: Install Crowdin CLI
+        run: npm i -g @crowdin/cli
+
+      - name: Extract translations
+        run: npm run extract-all-translations
+
+      - name: Download new translations from Crowdin
+        run: crowdin download
+        env:
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+
+      # Seems like the three letters code is not handled properly by LinguiJS?
+      # Do without this language while we find a solution.
+      - name: Remove catalogs not handled properly by LinguiJS compile command.
+        run: rm -rf .translations/pcm_NG/
+
+      - name: Compile translations into .js files that are read by LinguiJS (for the editor)
+        run: npm run compile-translations
+
+      - name: Create a Pull Request with the changes
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: Update translations [skip ci]
+          branch: chore/update-translations
+          delete-branch: true
+          title: '[Auto PR] Update translations'
+          body: |
+            This updates the translations by downloading them from Crowdin and compiling them for usage by the app.
+
+            Please double check the values in `.translations/LocalesMetadata.js` to ensure the changes are sensible.

@@ -1,0 +1,41 @@
+# GitHub Action to extract translations and (later) upload them to Crowdin.
+
+name: Extract translations
+on:
+  # Execute for all commits (to ensure translations extraction works)
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**' # Don't run on new tags
+  # Allows to run this workflow manually from the Actions tab.
+  workflow_dispatch:
+
+jobs:
+  extract-translations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Extract translations
+        run: npm run extract-all-translations
+
+      # Only upload on Crowdin for the main branch
+      - name: Install Crowdin CLI
+        if: github.ref == 'refs/heads/main'
+        run: npm i -g @crowdin/cli
+
+      - name: Upload translations to Crowdin
+        run: crowdin upload sources
+        if: github.ref == 'refs/heads/main'
+        env:
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
