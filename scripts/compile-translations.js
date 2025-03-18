@@ -12,8 +12,6 @@ const {
   getLocaleNativeName,
 } = require('./lib/Locales');
 
-const rootPath = path.join(__dirname, '..');
-
 /**
  * @param {string} path
  * @returns {Promise<string>}
