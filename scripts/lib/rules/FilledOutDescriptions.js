@@ -1,7 +1,7 @@
 /** @typedef {import("../../types").Extension} Extension */
 /** @typedef {import("../../types").EventsFunction} EventsFunction */
 /** @typedef {import("../../types").EventsBasedBehavior} EventsBasedBehaviors */
-/** @typedef {import("../../types").EventsBasedObjects} EventsBasedObjects */
+/** @typedef {import("../../types").EventsBasedObject} EventsBasedObject */
 /** @typedef {import("../../types").Parameter} Parameter */
 
 /**
@@ -18,7 +18,7 @@ const NECESSARY_FIELDS = {
   ACTION_WITH_OPERATOR: ['name', 'getterName'],
   /** @type {Partial<keyof EventsBasedBehaviors>[]} */
   BEHAVIOR: ['name', 'fullName', 'description'],
-  /** @type {Partial<keyof EventsBasedObjects>[]} */
+  /** @type {Partial<keyof EventsBasedObject>[]} */
   OBJECT: ['name', 'fullName', 'description'],
   /** @type {Partial<keyof Parameter>[]} */
   PARAMETER: ['description', 'name', 'type'],

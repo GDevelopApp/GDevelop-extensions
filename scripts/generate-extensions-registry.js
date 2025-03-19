@@ -16,7 +16,12 @@ const args = require('minimist')(process.argv.slice(2));
 /** @typedef {import('./types').ExtensionWithFileInfo} ExtensionWithFileInfo */
 /** @typedef {import('./types').ExtensionTier} ExtensionTier */
 /** @typedef {import('./types').Extension} Extension */
+/** @typedef {import('./types').EventsBasedObject} EventsBasedObject */
+/** @typedef {import('./types').EventsBasedObjectInsideExtensionShortHeader} EventsBasedObjectInsideExtensionShortHeader */
 /** @typedef {import('./types').EventsBasedBehavior} EventsBasedBehavior */
+/** @typedef {import('./types').EventsBasedBehaviorInsideExtensionShortHeader} EventsBasedBehaviorInsideExtensionShortHeader */
+/** @typedef {import('./types').EventsFunction} EventsFunction */
+/** @typedef {import('./types').EventsFunctionInsideExtensionShortHeader} EventsFunctionInsideExtensionShortHeader */
 
 const extensionsBasePath = path.join(__dirname, '..', 'extensions');
 const reviewedExtensionsTier = 'reviewed';
@@ -130,6 +135,70 @@ const findAllRequiredBehaviorTypes = (
   return requiredBehaviorTypes;
 };
 
+/**
+ * @param {EventsFunction} eventFunction
+ * @returns {EventsFunctionInsideExtensionShortHeader}
+ */
+const formatEventFunctionInsideExtensionShortHeader = (eventFunction) => {
+  // TODO: Empty fullname => remove.
+  return {
+    description: eventFunction.description,
+    fullName: eventFunction.fullName,
+    functionType: eventFunction.functionType,
+    name: eventFunction.name,
+  };
+};
+
+/**
+ * @param {EventsBasedBehavior} eventsBasedBehavior
+ * @returns {EventsBasedBehaviorInsideExtensionShortHeader}
+ */
+const formatEventsBasedBehaviorInsideExtensionShortHeader = (
+  eventsBasedBehavior
+) => {
+  return {
+    description: eventsBasedBehavior.description,
+    fullName: eventsBasedBehavior.fullName,
+    name: eventsBasedBehavior.name,
+    objectType: eventsBasedBehavior.objectType,
+    eventsFunctions: filterEventsFunctions(
+      eventsBasedBehavior.eventsFunctions
+    ).map(formatEventFunctionInsideExtensionShortHeader),
+  };
+};
+
+/**
+ * @param {EventsBasedObject} eventsBasedObject
+ * @returns {EventsBasedObjectInsideExtensionShortHeader}
+ */
+const formatEventsBasedObjectInsideExtensionShortHeader = (
+  eventsBasedObject
+) => {
+  return {
+    description: eventsBasedObject.description,
+    fullName: eventsBasedObject.fullName,
+    name: eventsBasedObject.name,
+    defaultName: eventsBasedObject.defaultName,
+    eventsFunctions: filterEventsFunctions(
+      eventsBasedObject.eventsFunctions
+    ).map(formatEventFunctionInsideExtensionShortHeader),
+  };
+};
+
+/** @param {Array<EventsBasedBehavior>} behaviors */
+const filterEventsBasedBehaviors = (behaviors) =>
+  behaviors.filter((behavior) => !behavior.private);
+
+/** @param {Array<EventsBasedObject>} objects */
+const filterEventsBasedObjects = (objects) =>
+  objects.filter((object) => !object.private);
+
+/** @param {Array<EventsFunction>} eventsFunctions */
+const filterEventsFunctions = (eventsFunctions) =>
+  eventsFunctions.filter(
+    (eventFunction) => !eventFunction.fullName || eventFunction.private
+  );
+
 (async () => {
   try {
     shell.mkdir('-p', distBasePath);
@@ -237,15 +306,38 @@ const findAllRequiredBehaviorTypes = (
           registryItem.gdevelopVersion = '>=5.5.220';
         }
 
+        // Some part of the extension are filtered if private or internal.
+        const eventsBasedBehaviors = filterEventsBasedBehaviors(
+          extension.eventsBasedBehaviors
+        );
+        const eventsFunctions = filterEventsFunctions(
+          extension.eventsFunctions
+        );
+        const eventsBasedObjects = filterEventsBasedObjects(
+          extension.eventsBasedObjects || []
+        );
+
         /** @type {ExtensionShortHeader} */
         const extensionShortHeader = {
           ...registryItem,
           shortDescription: extension.shortDescription,
           fullName: extension.fullName,
           name,
-          eventsBasedBehaviorsCount: extension.eventsBasedBehaviors.length,
-          eventsFunctionsCount: extension.eventsFunctions.length,
+          eventsBasedBehaviorsCount: eventsBasedBehaviors.length,
+          eventsFunctionsCount: eventsFunctions.length,
         };
+
+        if (tier === 'reviewed') {
+          extensionShortHeader.eventsBasedBehaviors = eventsBasedBehaviors.map(
+            formatEventsBasedBehaviorInsideExtensionShortHeader
+          );
+          extensionShortHeader.eventsFunctions = eventsFunctions.map(
+            formatEventFunctionInsideExtensionShortHeader
+          );
+          extensionShortHeader.eventsBasedObjects = eventsBasedObjects.map(
+            formatEventsBasedObjectInsideExtensionShortHeader
+          );
+        }
 
         extensionShortHeaders.push(extensionShortHeader);
 
@@ -262,24 +354,20 @@ const findAllRequiredBehaviorTypes = (
         /** @type {Array<BehaviorShortHeader>} */
         behaviorShortHeaders.push.apply(
           behaviorShortHeaders,
-          extension.eventsBasedBehaviors
-            .map((behavior) =>
-              behavior.private
-                ? null
-                : {
-                    ...registryItem,
-                    extensionName: name,
-                    name: behavior.name,
-                    fullName: behavior.fullName,
-                    description: behavior.description,
-                    objectType: behavior.objectType,
-                    allRequiredBehaviorTypes: findAllRequiredBehaviorTypes(
-                      extension,
-                      behavior
-                    ),
-                  }
-            )
-            .filter(Boolean)
+          filterEventsBasedBehaviors(extension.eventsBasedBehaviors).map(
+            (behavior) => ({
+              ...registryItem,
+              extensionName: name,
+              name: behavior.name,
+              fullName: behavior.fullName,
+              description: behavior.description,
+              objectType: behavior.objectType,
+              allRequiredBehaviorTypes: findAllRequiredBehaviorTypes(
+                extension,
+                behavior
+              ),
+            })
+          )
         );
 
         /** @type {Array<ObjectShortHeader>} */
