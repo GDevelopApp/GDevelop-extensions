@@ -67,13 +67,13 @@ export interface ExtensionShortHeader
   url: string;
   headerUrl: string;
   /** Only defined for "reviewed" extensions. */
-  eventsBasedBehaviors?: EventsBasedBehaviorInsideExtensionShortHeader[],
+  eventsBasedBehaviors?: EventsBasedBehaviorInsideExtensionShortHeader[];
   eventsBasedBehaviorsCount: number;
   /** Only defined for "reviewed" extensions. */
-  eventsFunctions?: EventsFunctionInsideExtensionShortHeader[],
+  eventsFunctions?: EventsFunctionInsideExtensionShortHeader[];
   eventsFunctionsCount: number;
   /** Only defined for "reviewed" extensions. */
-  eventsBasedObjects?: EventsBasedObjectInsideExtensionShortHeader[],
+  eventsBasedObjects?: EventsBasedObjectInsideExtensionShortHeader[];
 }
 
 interface BehaviorAndShortHeaderFields {
