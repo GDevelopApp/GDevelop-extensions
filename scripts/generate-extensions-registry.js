@@ -140,7 +140,6 @@ const findAllRequiredBehaviorTypes = (
  * @returns {EventsFunctionInsideExtensionShortHeader}
  */
 const formatEventFunctionInsideExtensionShortHeader = (eventFunction) => {
-  // TODO: Empty fullname => remove.
   return {
     description: eventFunction.description,
     fullName: eventFunction.fullName,
@@ -196,7 +195,7 @@ const filterEventsBasedObjects = (objects) =>
 /** @param {Array<EventsFunction>} eventsFunctions */
 const filterEventsFunctions = (eventsFunctions) =>
   eventsFunctions.filter(
-    (eventFunction) => !eventFunction.fullName || eventFunction.private
+    (eventFunction) => eventFunction.fullName && !eventFunction.private
   );
 
 (async () => {
