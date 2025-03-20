@@ -100,10 +100,10 @@ try {
     const eventsFunctions = data.eventsFunctions;
 
     if (Array.isArray(eventsFunctions)) {
-      eventsFunctions.forEach((func) => {
+      eventsFunctions.forEach((eventsFunction) => {
         ['description', 'fullName', 'sentence'].forEach((key) => {
-          if (func[key]) {
-            const value = func[key].trim();
+          if (eventsFunction[key]) {
+            const value = eventsFunction[key].trim();
             if (value) {
               if (!translationsMap.has(value)) {
                 translationsMap.set(value, []);
@@ -113,7 +113,7 @@ try {
           }
         });
 
-        const parameters = func.parameters;
+        const parameters = eventsFunction.parameters;
         if (Array.isArray(parameters)) {
           parameters.forEach((param) => {
             ['description', 'longDescription'].forEach((key) => {
@@ -142,10 +142,10 @@ try {
     const eventsBasedBehaviors = data.eventsBasedBehaviors;
 
     if (Array.isArray(eventsBasedBehaviors)) {
-      eventsBasedBehaviors.forEach((func) => {
+      eventsBasedBehaviors.forEach((eventsBasedBehavior) => {
         ['description', 'fullName'].forEach((key) => {
-          if (func[key]) {
-            const value = func[key].trim();
+          if (eventsBasedBehavior[key]) {
+            const value = eventsBasedBehavior[key].trim();
             if (value) {
               if (!translationsMap.has(value)) {
                 translationsMap.set(value, []);
@@ -155,14 +155,8 @@ try {
           }
         });
 
-        getAndAddPropertyDescriptorsPropsForFile(func, filePath);
-
-        const behaviorEventsFunctions = func.eventsFunctions;
-        if (Array.isArray(behaviorEventsFunctions)) {
-          behaviorEventsFunctions.forEach((func) => {
-            getAndAddEventsFunctionsPropsForFile(func, filePath);
-          });
-        }
+        getAndAddPropertyDescriptorsPropsForFile(eventsBasedBehavior, filePath);
+        getAndAddEventsFunctionsPropsForFile(eventsBasedBehavior, filePath);
       });
     }
   };
@@ -176,10 +170,10 @@ try {
     const eventsBasedObjects = data.eventsBasedObjects;
 
     if (Array.isArray(eventsBasedObjects)) {
-      eventsBasedObjects.forEach((func) => {
+      eventsBasedObjects.forEach((eventsBasedObject) => {
         ['description', 'fullName'].forEach((key) => {
-          if (func[key]) {
-            const value = func[key].trim();
+          if (eventsBasedObject[key]) {
+            const value = eventsBasedObject[key].trim();
             if (value) {
               if (!translationsMap.has(value)) {
                 translationsMap.set(value, []);
@@ -189,14 +183,8 @@ try {
           }
         });
 
-        getAndAddPropertyDescriptorsPropsForFile(func, filePath);
-
-        const behaviorEventsFunctions = func.eventsFunctions;
-        if (Array.isArray(behaviorEventsFunctions)) {
-          behaviorEventsFunctions.forEach((func) => {
-            getAndAddEventsFunctionsPropsForFile(func, filePath);
-          });
-        }
+        getAndAddPropertyDescriptorsPropsForFile(eventsBasedObject, filePath);
+        getAndAddEventsFunctionsPropsForFile(eventsBasedObject, filePath);
       });
     }
   };
