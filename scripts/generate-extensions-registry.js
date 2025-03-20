@@ -5,6 +5,7 @@ const {
   validateExtension,
   validateNoDuplicates,
 } = require('./lib/ExtensionValidator');
+const { getExtensionReferencePagePath } = require('./lib/WikiHelpLink');
 const args = require('minimist')(process.argv.slice(2));
 
 /** @typedef {import('./types').ExtensionShortHeader} ExtensionShortHeader */
@@ -322,7 +323,7 @@ const filterEventsFunctions = (eventsFunctions) =>
           name,
           eventsBasedBehaviorsCount: eventsBasedBehaviors.length,
           eventsFunctionsCount: eventsFunctions.length,
-          helpPath: extension.helpPath,
+          helpPath: extension.helpPath || getExtensionReferencePagePath(name),
         };
 
         if (tier === 'reviewed') {
