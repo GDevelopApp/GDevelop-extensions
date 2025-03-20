@@ -322,6 +322,7 @@ const filterEventsFunctions = (eventsFunctions) =>
           name,
           eventsBasedBehaviorsCount: eventsBasedBehaviors.length,
           eventsFunctionsCount: eventsFunctions.length,
+          helpPath: extension.helpPath,
         };
 
         if (tier === 'reviewed') {
@@ -341,7 +342,6 @@ const filterEventsFunctions = (eventsFunctions) =>
         /** @type {ExtensionHeader} */
         const extensionHeader = {
           ...extensionShortHeader,
-          helpPath: extension.helpPath,
           description: Array.isArray(extension.description)
             ? extension.description.join('\n')
             : extension.description,

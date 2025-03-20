@@ -23,11 +23,11 @@ interface ExtensionAndShortHeaderFields extends ItemExtensionHeaderFields {
   shortDescription: string;
   fullName: string;
   name: string;
+  helpPath: string;
 }
 
 interface ExtensionAndHeaderFields {
   description: string;
-  helpPath: string;
   iconUrl: string;
 }
 
