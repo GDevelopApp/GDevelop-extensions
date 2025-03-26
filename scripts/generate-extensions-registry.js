@@ -137,15 +137,52 @@ const findAllRequiredBehaviorTypes = (
 };
 
 /**
+ * @param {EventsFunction[]} eventFunctions
  * @param {EventsFunction} eventFunction
  * @returns {EventsFunctionInsideExtensionShortHeader}
  */
-const formatEventFunctionInsideExtensionShortHeader = (eventFunction) => {
+const formatEventFunctionInsideExtensionShortHeader = (
+  eventFunctions,
+  eventFunction
+) => {
+  if (eventFunction.functionType === 'ActionWithOperator') {
+    const getterFunction = eventFunctions.find(
+      (otherEventsFunction) =>
+        otherEventsFunction.name === eventFunction.getterName
+    );
+
+    if (getterFunction) {
+      return {
+        name: eventFunction.name,
+        fullName: getterFunction.fullName,
+        description:
+          'Change ' + (getterFunction.description || getterFunction.fullName),
+        functionType: 'Action',
+      };
+    } else {
+      return {
+        name: eventFunction.name,
+        fullName: eventFunction.fullName,
+        description: 'Change ' + eventFunction.description,
+        functionType: 'Action',
+      };
+    }
+  }
+
+  if (eventFunction.functionType === 'ExpressionAndCondition') {
+    return {
+      name: eventFunction.name,
+      fullName: eventFunction.fullName,
+      description: 'Compare ' + eventFunction.description,
+      functionType: 'Condition',
+    };
+  }
+
   return {
-    description: eventFunction.description,
-    fullName: eventFunction.fullName,
-    functionType: eventFunction.functionType,
     name: eventFunction.name,
+    fullName: eventFunction.fullName,
+    description: eventFunction.description,
+    functionType: eventFunction.functionType,
   };
 };
 
@@ -163,7 +200,12 @@ const formatEventsBasedBehaviorInsideExtensionShortHeader = (
     objectType: eventsBasedBehavior.objectType,
     eventsFunctions: filterEventsFunctions(
       eventsBasedBehavior.eventsFunctions
-    ).map(formatEventFunctionInsideExtensionShortHeader),
+    ).map((eventsFunction) =>
+      formatEventFunctionInsideExtensionShortHeader(
+        eventsBasedBehavior.eventsFunctions,
+        eventsFunction
+      )
+    ),
   };
 };
 
@@ -181,7 +223,12 @@ const formatEventsBasedObjectInsideExtensionShortHeader = (
     defaultName: eventsBasedObject.defaultName,
     eventsFunctions: filterEventsFunctions(
       eventsBasedObject.eventsFunctions
-    ).map(formatEventFunctionInsideExtensionShortHeader),
+    ).map((eventsFunction) =>
+      formatEventFunctionInsideExtensionShortHeader(
+        eventsBasedObject.eventsFunctions,
+        eventsFunction
+      )
+    ),
   };
 };
 
@@ -196,7 +243,13 @@ const filterEventsBasedObjects = (objects) =>
 /** @param {Array<EventsFunction>} eventsFunctions */
 const filterEventsFunctions = (eventsFunctions) =>
   eventsFunctions.filter(
-    (eventFunction) => eventFunction.fullName && !eventFunction.private
+    (eventFunction) =>
+      // Lifecycle functions, which have no full names, are never shown.
+      // ActionWithOperator have no full name but will read it from their associated getter.
+      (eventFunction.fullName ||
+        eventFunction.functionType === 'ActionWithOperator') &&
+      // Private functions are never shown.
+      !eventFunction.private
   );
 
 (async () => {
@@ -331,7 +384,11 @@ const filterEventsFunctions = (eventsFunctions) =>
             formatEventsBasedBehaviorInsideExtensionShortHeader
           );
           extensionShortHeader.eventsFunctions = eventsFunctions.map(
-            formatEventFunctionInsideExtensionShortHeader
+            (eventsFunction) =>
+              formatEventFunctionInsideExtensionShortHeader(
+                extension.eventsFunctions,
+                eventsFunction
+              )
           );
           extensionShortHeader.eventsBasedObjects = eventsBasedObjects.map(
             formatEventsBasedObjectInsideExtensionShortHeader
