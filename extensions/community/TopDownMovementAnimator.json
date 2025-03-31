@@ -9,7 +9,7 @@
   "name": "TopDownMovementAnimator",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/Glyphster Pack/Master/SVG/Arrows/a6026156355ae5f03613b03971e4ddb50d0c95b8901e7a21edc57f33f0032e42_Arrows_thin_arrows_all_directions_cross.svg",
   "shortDescription": "Change the animation according to the movement direction.",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Change the animation according to the movement direction.",
   "origin": {
     "identifier": "TopDownMovementAnimator",
@@ -229,26 +229,16 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "BooleanVariable"
-                  },
-                  "parameters": [
-                    "IsPausingAnimation",
-                    "True",
-                    ""
-                  ]
-                }
-              ],
+              "conditions": [],
               "actions": [
                 {
                   "type": {
-                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::SetAnimationPause"
+                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::UpdateAnimationDirection"
                   },
                   "parameters": [
                     "Object",
                     "Behavior",
+                    "NewAnimationDirection",
                     ""
                   ]
                 }
@@ -271,7 +261,7 @@
               "actions": [
                 {
                   "type": {
-                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::SetAnimationSpeedScale"
+                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::UpdateAnimationSpeedScale"
                   },
                   "parameters": [
                     "Object",
@@ -283,67 +273,28 @@
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "IsPausingAnimation",
+                    "True",
+                    ""
+                  ]
+                }
+              ],
               "actions": [
                 {
                   "type": {
-                    "value": "SetNumberVariable"
+                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::UpdateAnimationPause"
                   },
                   "parameters": [
-                    "NewAnimationDirection",
-                    "=",
-                    "Object.Behavior::Direction()"
+                    "Object",
+                    "Behavior",
+                    ""
                   ]
-                }
-              ],
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Comment",
-                  "color": {
-                    "b": 109,
-                    "g": 230,
-                    "r": 255,
-                    "textB": 0,
-                    "textG": 0,
-                    "textR": 0
-                  },
-                  "comment": "Use a small margin is used to avoid to flicker between 2 directions."
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BuiltinCommonInstructions::CompareNumbers"
-                      },
-                      "parameters": [
-                        "abs(Object.Behavior::DirectionDifference(NewAnimationDirection, AnimationDirection))",
-                        ">",
-                        "0.5 + 0.03125"
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "TopDownMovementAnimator::TopDownMovementAnimator::SetAnimationDirection"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "NewAnimationDirection",
-                        ""
-                      ]
-                    }
-                  ]
-                }
-              ],
-              "variables": [
-                {
-                  "folded": true,
-                  "name": "NewAnimationDirection",
-                  "type": "number",
-                  "value": 0
                 }
               ]
             }
@@ -411,6 +362,18 @@
           "sentence": "",
           "events": [
             {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Also update the animation direction to avoid to play the animation in an old direction for 1 frame."
+            },
+            {
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
@@ -442,6 +405,17 @@
                   "parameters": [
                     "Object",
                     "Behavior",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::UpdateAnimationDirection"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "NewAnimationDirection",
                     ""
                   ]
                 }
@@ -581,7 +555,7 @@
                 },
                 {
                   "type": {
-                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::SetAnimationPause"
+                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::UpdateAnimationPause"
                   },
                   "parameters": [
                     "Object",
@@ -735,7 +709,7 @@
                 },
                 {
                   "type": {
-                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::SetAnimationSpeedScale"
+                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::UpdateAnimationSpeedScale"
                   },
                   "parameters": [
                     "Object",
@@ -772,7 +746,7 @@
           "description": "Change the animation speed scale according to the object speed.",
           "fullName": "Animation speed scale",
           "functionType": "Action",
-          "name": "SetAnimationSpeedScale",
+          "name": "UpdateAnimationSpeedScale",
           "private": true,
           "sentence": "Change the animation speed scale according to _PARAM0_ speed",
           "events": [
@@ -854,7 +828,7 @@
           "description": "Pause the animation according to the object speed.",
           "fullName": "Animation pause",
           "functionType": "Action",
-          "name": "SetAnimationPause",
+          "name": "UpdateAnimationPause",
           "private": true,
           "sentence": "Pause the animation according to _PARAM0_ speed",
           "events": [
@@ -1021,12 +995,12 @@
           "objectGroups": []
         },
         {
-          "description": "Change the animation direction of the object.",
-          "fullName": "Animation name and direction",
+          "description": "Update the animation direction of the object.",
+          "fullName": "Update animation direction",
           "functionType": "Action",
-          "name": "SetAnimationDirection",
+          "name": "UpdateAnimationDirection",
           "private": true,
-          "sentence": "Change the animation direction of _PARAM0_ to _PARAM2_",
+          "sentence": "Update the animation direction of _PARAM0_",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Comment",
@@ -1049,47 +1023,103 @@
                     "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "AnimationDirection",
+                    "NewAnimationDirection",
                     "=",
-                    "mod(mod(round(NewDirection), DirectionCount) + DirectionCount, DirectionCount)"
+                    "Object.Behavior::Direction()"
                   ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Comment",
+                  "color": {
+                    "b": 109,
+                    "g": 230,
+                    "r": 255,
+                    "textB": 0,
+                    "textG": 0,
+                    "textR": 0
+                  },
+                  "comment": "Use a small margin is used to avoid to flicker between 2 directions."
                 },
                 {
-                  "type": {
-                    "value": "SetNumberVariable"
-                  },
-                  "parameters": [
-                    "AnimationElapsedTime",
-                    "=",
-                    "Object.Animation::ElapsedTime()"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "TopDownMovementAnimator::TopDownMovementAnimator::UpdateAnimationName"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    ""
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "AnimatableCapability::AnimatableBehavior::SetElapsedTime"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Animation",
-                    "=",
-                    "AnimationElapsedTime"
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                      },
+                      "parameters": [
+                        "abs(Object.Behavior::DirectionDifference(NewAnimationDirection, AnimationDirection))",
+                        ">",
+                        "0.5 + 0.03125"
+                      ]
+                    }
+                  ],
+                  "actions": [],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "AnimationDirection",
+                            "=",
+                            "mod(mod(round(NewAnimationDirection), DirectionCount) + DirectionCount, DirectionCount)"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "AnimationElapsedTime",
+                            "=",
+                            "Object.Animation::ElapsedTime()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "TopDownMovementAnimator::TopDownMovementAnimator::UpdateAnimationName"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            ""
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "AnimatableCapability::AnimatableBehavior::SetElapsedTime"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Animation",
+                            "=",
+                            "AnimationElapsedTime"
+                          ]
+                        }
+                      ],
+                      "variables": [
+                        {
+                          "folded": true,
+                          "name": "AnimationElapsedTime",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
+                    }
                   ]
                 }
               ],
               "variables": [
                 {
                   "folded": true,
-                  "name": "AnimationElapsedTime",
+                  "name": "NewAnimationDirection",
                   "type": "number",
                   "value": 0
                 }
@@ -1107,11 +1137,6 @@
               "name": "Behavior",
               "supplementaryInformation": "TopDownMovementAnimator::TopDownMovementAnimator",
               "type": "behavior"
-            },
-            {
-              "description": "Direction",
-              "name": "NewDirection",
-              "type": "expression"
             }
           ],
           "objectGroups": []
