@@ -1,0 +1,1113 @@
+{
+  "author": "",
+  "category": "Audio",
+  "extensionNamespace": "",
+  "fullName": "Audio Visualizer",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLXNpbmUtd2F2ZSIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xNi41LDIxQzEzLjUsMjEgMTIuMzEsMTYuNzYgMTEuMDUsMTIuMjhDMTAuMTQsOS4wNCA5LDUgNy41LDVDNC4xMSw1IDQsMTEuOTMgNCwxMkgyQzIsMTEuNjMgMi4wNiwzIDcuNSwzQzEwLjUsMyAxMS43MSw3LjI1IDEyLjk3LDExLjc0QzEzLjgzLDE0LjggMTUsMTkgMTYuNSwxOUMxOS45NCwxOSAyMC4wMywxMi4wNyAyMC4wMywxMkgyMi4wM0MyMi4wMywxMi4zNyAyMS45NywyMSAxNi41LDIxWiIgLz48L3N2Zz4=",
+  "name": "AudioVisualizer",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/bd4e52602005feec1eefcefb55205f6a67eb786b66158954520026ed93b6a09f_sine-wave.svg",
+  "shortDescription": "Record and play back audio from the microphone. Get real-time frequency and time-domain waveform data from the microphone and master output.",
+  "version": "0.0.1",
+  "description": "This extension provides the ability to record audio from the microphone and play it back through the speakers. It also provides the ability to monitor real-time audio data from the microphone and master output, which can be used to create audio visualizations such as a spectrogram, oscilloscope, RMS/Peak meter, or other animations which respond to properties of the audio signal.",
+  "tags": [
+    "Audio",
+    "Visualization",
+    "Microphone",
+    "Recording"
+  ],
+  "authorIds": [
+    "dyJAcFbMegXCP6rpqi0SFBbdZL83"
+  ],
+  "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
+  "eventsFunctions": [
+    {
+      "description": "Get frequency data from the selected analyzer.",
+      "fullName": "Get analyzer frequency data",
+      "functionType": "Action",
+      "name": "GetAnalyzerFrequencyData",
+      "sentence": "Copy FFT data from analyzer _PARAM1_ into array variable _PARAM3_ with data type _PARAM2_. Copy array size into number variable _PARAM4_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{",
+            "    const nodeName = eventsFunctionContext.getArgument(\"Node\")",
+            "    const analyzer = gdjs.__audioVisualizerExtension.audioVisualizer.getAnalyzerByName(nodeName)",
+            "    const format = eventsFunctionContext.getArgument(\"Format\")",
+            "    let data = []",
+            "    if (format == \"8-bit Unsigned Integer\"){",
+            "        data = gdjs.__audioVisualizerExtension.audioVisualizer.byteArrays[nodeName]",
+            "        analyzer.getByteFrequencyData(data)",
+            "    } else {",
+            "        data = gdjs.__audioVisualizerExtension.audioVisualizer.float32Arrays[nodeName]",
+            "        analyzer.getFloatFrequencyData(data)",
+            "    }",
+            "    data = data.slice(0, analyzer.frequencyBinCount)",
+            "    /** @type {gdjs.Variable}*/ ",
+            "    let outArray = eventsFunctionContext.getArgument(\"OutArray\")",
+            "    outArray.clearChildren()",
+            "    for (let val of data){",
+            "        outArray.pushValue(val)",
+            "    }",
+            "    /** @type {gdjs.Variable}*/ ",
+            "    const outSize = eventsFunctionContext.getArgument(\"OutSize\")",
+            "    outSize.setValue(data.length)",
+            "} catch(error){console.log(error)}",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": []
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Analyzer Node",
+          "name": "Node",
+          "supplementaryInformation": "[\"MasterOut\",\"Microphone\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Data Format",
+          "name": "Format",
+          "supplementaryInformation": "[\"8-bit Unsigned Integer\",\"32-bit Floating Point\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Array variable (data will be copied to this variable)",
+          "name": "OutArray",
+          "type": "variable"
+        },
+        {
+          "description": "Number variable (array size will be copied to this variable)",
+          "name": "OutSize",
+          "type": "variable"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get audio sample data from the selected analyzer.",
+      "fullName": "Get analyzer audio sample data",
+      "functionType": "Action",
+      "name": "GetAnalyzerTimeDomainData",
+      "sentence": "Copy audio sample data from analyzer _PARAM1_ into array variable_PARAM3_ with data type _PARAM2_. Copy array size into number variable _PARAM4_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{",
+            "    const nodeName = eventsFunctionContext.getArgument(\"Node\")",
+            "    const analyzer = gdjs.__audioVisualizerExtension.audioVisualizer.getAnalyzerByName(nodeName)",
+            "    const format = eventsFunctionContext.getArgument(\"Format\")",
+            "    let data = []",
+            "    if (format == \"8-bit Unsigned Integer\"){",
+            "        data = gdjs.__audioVisualizerExtension.audioVisualizer.byteArrays[nodeName]",
+            "        analyzer.getByteTimeDomainData(data)",
+            "    } else {",
+            "        data = gdjs.__audioVisualizerExtension.audioVisualizer.float32Arrays[nodeName]",
+            "        analyzer.getFloatTimeDomainData(data)",
+            "    }",
+            "",
+            "    /** @type {gdjs.Variable}*/ ",
+            "    let outArray = eventsFunctionContext.getArgument(\"OutArray\")",
+            "    outArray.clearChildren()",
+            "    for (let val of data){",
+            "        outArray.pushValue(val)",
+            "    }",
+            "    /** @type {gdjs.Variable}*/ ",
+            "    const outSize = eventsFunctionContext.getArgument(\"OutSize\")",
+            "    outSize.setValue(data.length)",
+            "} catch(error){console.log(error)}",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": []
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Analyzer Node",
+          "name": "Node",
+          "supplementaryInformation": "[\"MasterOut\",\"Microphone\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Data Format",
+          "name": "Format",
+          "supplementaryInformation": "[\"8-bit Unsigned Integer\",\"32-bit Floating Point\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Array variable (data will be copied to this variable)",
+          "name": "OutArray",
+          "type": "variable"
+        },
+        {
+          "description": "Number variable (array size will be copied to this variable)",
+          "name": "OutSize",
+          "type": "variable"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Set the FFT size of the selected analyzer.",
+      "fullName": "Set analyzer FFT size",
+      "functionType": "Action",
+      "name": "SetAnalyzerFFTSize",
+      "sentence": "Set the FFT size of analyzer _PARAM1_ to size _PARAM2_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{\r",
+            "    const fftSize = +eventsFunctionContext.getArgument(\"Size\")\r",
+            "    const audioVisualizer = gdjs.__audioVisualizerExtension.audioVisualizer\r",
+            "    const nodeName = eventsFunctionContext.getArgument(\"Node\")\r",
+            "    const analyzer = audioVisualizer.getAnalyzerByName(nodeName)\r",
+            "    analyzer.fftSize = fftSize\r",
+            "    audioVisualizer.byteArrays[nodeName] = new Uint8Array(analyzer.frequencyBinCount)\r",
+            "    audioVisualizer.float32Arrays[nodeName] = new Float32Array(analyzer.frequencyBinCount)\r",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Analyzer Node",
+          "name": "Node",
+          "supplementaryInformation": "[\"MasterOut\",\"Microphone\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "FFT Size",
+          "name": "Size",
+          "supplementaryInformation": "[\"1024\",\"2048\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get the FFT size of the selected analyzer.",
+      "fullName": "Get analyzer FFT size",
+      "functionType": "Expression",
+      "name": "AnalyzerFFTSize",
+      "sentence": "Set the FFT size of analyzer _PARAM1_ to size _PARAM2_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{\r",
+            "    eventsFunctionContext.returnValue = gdjs.__audioVisualizerExtension.audioVisualizer.getAnalyzerByName(eventsFunctionContext.getArgument(\"Node\")).fftSize\r",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Analyzer Node",
+          "name": "Node",
+          "supplementaryInformation": "[\"MasterOut\",\"Microphone\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Set the maximum decibels of the selected analyzer.",
+      "fullName": "Set analyzer max dB",
+      "functionType": "Action",
+      "name": "SetAnalyzerMaxDB",
+      "sentence": "Set the maximum decibels of analyzer _PARAM1_ to size _PARAM2_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{\r",
+            "    const maxDb = parseFloat(eventsFunctionContext.getArgument(\"DB\"))\r",
+            "    const audioVisualizer = gdjs.__audioVisualizerExtension.audioVisualizer\r",
+            "    const nodeName = eventsFunctionContext.getArgument(\"Node\")\r",
+            "    const analyzer = audioVisualizer.getAnalyzerByName(nodeName)\r",
+            "    analyzer.maxDecibels = maxDb\r",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Analyzer Node",
+          "name": "Node",
+          "supplementaryInformation": "[\"MasterOut\",\"Microphone\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Maximum Decibels",
+          "name": "DB",
+          "supplementaryInformation": "[]",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Set the minimum decibels of the selected analyzer.",
+      "fullName": "Set analyzer min dB",
+      "functionType": "Action",
+      "name": "SetAnalyzerMinDB",
+      "sentence": "Set the minimum decibels of analyzer _PARAM1_ to size _PARAM2_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{\r",
+            "    const minDb = parseFloat(eventsFunctionContext.getArgument(\"DB\"))\r",
+            "    const audioVisualizer = gdjs.__audioVisualizerExtension.audioVisualizer\r",
+            "    const nodeName = eventsFunctionContext.getArgument(\"Node\")\r",
+            "    const analyzer = audioVisualizer.getAnalyzerByName(nodeName)\r",
+            "    analyzer.minDecibels = minDb\r",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Analyzer Node",
+          "name": "Node",
+          "supplementaryInformation": "[\"MasterOut\",\"Microphone\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Minimum Decibels",
+          "name": "DB",
+          "supplementaryInformation": "[]",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Set the smoothing time constant of the selected analyzer.",
+      "fullName": "Set analyzer smoothing time constant",
+      "functionType": "Action",
+      "name": "SetAnalyzerSmoothingTimeConstant",
+      "sentence": "Set the smoothing time constant of analyzer _PARAM1_ to _PARAM2_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{\r",
+            "    const timeConstant = parseFloat(eventsFunctionContext.getArgument(\"TimeConstant\"))\r",
+            "    const audioVisualizer = gdjs.__audioVisualizerExtension.audioVisualizer\r",
+            "    const nodeName = eventsFunctionContext.getArgument(\"Node\")\r",
+            "    const analyzer = audioVisualizer.getAnalyzerByName(nodeName)\r",
+            "    analyzer.smoothingTimeConstant = timeConstant\r",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Analyzer Node",
+          "name": "Node",
+          "supplementaryInformation": "[\"MasterOut\",\"Microphone\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Smoothing time constant (0 - 1, zero indicates no smoothing)",
+          "name": "TimeConstant",
+          "supplementaryInformation": "[]",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get the number of frequency bins of the selected analyzer.",
+      "fullName": "Get analyzer frequency bin count",
+      "functionType": "Expression",
+      "name": "AnalyzerFrequencyBinCount",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{\r",
+            "    eventsFunctionContext.returnValue = gdjs.__audioVisualizerExtension.audioVisualizer.getAnalyzerByName(eventsFunctionContext.getArgument(\"Node\")).frequencyBinCount\r",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Analyzer Node",
+          "name": "Node",
+          "supplementaryInformation": "[\"MasterOut\",\"Microphone\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get the sample rate of the selected analyzer.",
+      "fullName": "Get analyzer sample rate",
+      "functionType": "Expression",
+      "name": "AnalyzerSampleRate",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{\r",
+            "    eventsFunctionContext.returnValue = gdjs.__audioVisualizerExtension.audioVisualizer.getAnalyzerByName(eventsFunctionContext.getArgument(\"Node\")).context.sampleRate\r",
+            "} catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Analyzer Node",
+          "name": "Node",
+          "supplementaryInformation": "[\"MasterOut\",\"Microphone\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get the frequency of the bin index.",
+      "fullName": "Get frequency at FFT bin",
+      "functionType": "Expression",
+      "name": "FrequencyAtFFTBin",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{\r",
+            "    eventsFunctionContext.returnValue = eventsFunctionContext.getArgument(\"Bin\") * eventsFunctionContext.getArgument(\"SampleRate\") / eventsFunctionContext.getArgument(\"FFTSize\")\r",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "FFT Bin Index",
+          "name": "Bin",
+          "type": "expression"
+        },
+        {
+          "description": "FFT Size",
+          "name": "FFTSize",
+          "type": "expression"
+        },
+        {
+          "description": "Sample Rate",
+          "name": "SampleRate",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get the bin index of the FFT frequency.",
+      "fullName": "Get bin of FFT frequency",
+      "functionType": "Expression",
+      "name": "FFTBinAtFrequency",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{\r",
+            "    eventsFunctionContext.returnValue = Math.floor(eventsFunctionContext.getArgument(\"Frequency\") / eventsFunctionContext.getArgument(\"SampleRate\") * eventsFunctionContext.getArgument(\"FFTSize\"))\r",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "FFT Frequency",
+          "name": "Frequency",
+          "type": "expression"
+        },
+        {
+          "description": "FFT Size",
+          "name": "FFTSize",
+          "type": "expression"
+        },
+        {
+          "description": "Sample Rate",
+          "name": "SampleRate",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Start a recording from the microphone.",
+      "fullName": "Start mic recording",
+      "functionType": "Action",
+      "name": "StartMicRecording",
+      "sentence": "Start a recording from the microphone",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{",
+            "    gdjs.__audioVisualizerExtension.microphoneManager.startRecording()",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Pause the microphone recording.",
+      "fullName": "Pause mic recording",
+      "functionType": "Action",
+      "name": "PauseMicRecording",
+      "sentence": "Pause the microphone recording",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{",
+            "    gdjs.__audioVisualizerExtension.microphoneManager.pauseRecording()",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Resume the microphone recording.",
+      "fullName": "Resume mic recording",
+      "functionType": "Action",
+      "name": "ResumeMicRecording",
+      "sentence": "Resume the microphone recording",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{",
+            "    gdjs.__audioVisualizerExtension.microphoneManager.resumeRecording()",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Stop the microphone recording.",
+      "fullName": "Stop mic recording",
+      "functionType": "Action",
+      "name": "StopMicRecording",
+      "sentence": "Stop the microphone recording",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{",
+            "    gdjs.__audioVisualizerExtension.microphoneManager.stopRecording()",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Save the microphone recording.",
+      "fullName": "Save mic recording",
+      "functionType": "Action",
+      "name": "SaveMicRecording",
+      "sentence": "Save the microphone recording with name _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{",
+            "    gdjs.__audioVisualizerExtension.microphoneManager.saveRecording(eventsFunctionContext.getArgument(\"Name\"))",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Recording Name",
+          "name": "Name",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Delete a microphone recording.",
+      "fullName": "Delete a mic recording",
+      "functionType": "Action",
+      "name": "DeleteMicRecording",
+      "sentence": "Delete the microphone recording with name _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{",
+            "    gdjs.__audioVisualizerExtension.microphoneManager.deleteRecording(eventsFunctionContext.getArgument(\"Name\"))",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Recording Name",
+          "name": "Name",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Play a microphone recording.",
+      "fullName": "Play mic recording",
+      "functionType": "Action",
+      "name": "PlayMicRecording",
+      "sentence": "Play the microphone recording named _PARAM1_ at volume _PARAM3_ with pitch factor _PARAM4_, optionally looped _PARAM2_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{",
+            "    gdjs.__audioVisualizerExtension.microphoneManager.playMicRecording(",
+            "        eventsFunctionContext.getArgument(\"Name\"),",
+            "        eventsFunctionContext.getArgument(\"Loop\"),",
+            "        eventsFunctionContext.getArgument(\"Volume\"),",
+            "        eventsFunctionContext.getArgument(\"Pitch\"))",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Recording Name",
+          "name": "Name",
+          "type": "string"
+        },
+        {
+          "description": "Loop",
+          "name": "Loop",
+          "type": "yesorno"
+        },
+        {
+          "description": "Playback Volume (0 - 100)",
+          "name": "Volume",
+          "type": "expression"
+        },
+        {
+          "description": "Pitch (default = 1)",
+          "name": "Pitch",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Play a microphone recording on a channel.",
+      "fullName": "Play mic recording on channel",
+      "functionType": "Action",
+      "name": "PlayMicRecordingOnChannel",
+      "sentence": "Play the microphone recording named _PARAM1_ on channel _PARAM2_ at volume _PARAM4_ with pitch factor _PARAM5_, optionally looped _PARAM3_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{",
+            "    gdjs.__audioVisualizerExtension.microphoneManager.playMicRecordingOnChannel(",
+            "        eventsFunctionContext.getArgument(\"Name\"),",
+            "        eventsFunctionContext.getArgument(\"Channel\"),",
+            "        eventsFunctionContext.getArgument(\"Loop\"),",
+            "        eventsFunctionContext.getArgument(\"Volume\"),",
+            "        eventsFunctionContext.getArgument(\"Pitch\"))",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Recording Name",
+          "name": "Name",
+          "type": "string"
+        },
+        {
+          "description": "Channel Number",
+          "name": "Channel",
+          "type": "expression"
+        },
+        {
+          "description": "Loop",
+          "name": "Loop",
+          "type": "yesorno"
+        },
+        {
+          "description": "Playback Volume (0 - 100)",
+          "name": "Volume",
+          "type": "expression"
+        },
+        {
+          "description": "Pitch (default = 1)",
+          "name": "Pitch",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get the state of the microphone recorder.",
+      "fullName": "Mic recorder state",
+      "functionType": "StringExpression",
+      "name": "MicRecorderState",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{",
+            "    eventsFunctionContext.returnValue = gdjs.__audioVisualizerExtension.microphoneManager.getMicMediaRecorderState()",
+            "} catch (error){",
+            "    eventsFunctionContext.returnValue = \"inactive\"",
+            "}",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "supplementaryInformation": "[\"recording\",\"paused\",\"inactive\"]",
+        "type": "stringWithSelector"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Check whether a recording has been saved with the given name.",
+      "fullName": "Recording exists",
+      "functionType": "Condition",
+      "name": "RecordingExists",
+      "sentence": "Check whether a recording has been saved with name _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{\r",
+            "    //eventsFunctionContext.returnValue = gdjs.__audioVisualizerExtension.microphoneManager.recordingExistsInProjectData(eventsFunctionContext.getArgument(\"Name\"))\r",
+            "    eventsFunctionContext.returnValue = gdjs.__audioVisualizerExtension.microphoneManager.recordingExists(eventsFunctionContext.getArgument(\"Name\"))\r",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Recording Name",
+          "name": "Name",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Check whether the microphone recorder is in the given state.",
+      "fullName": "Mic recorder is in state",
+      "functionType": "Condition",
+      "name": "MicRecorderIsInState",
+      "sentence": "Check whether the microphone recorder is in state _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{\r",
+            "    eventsFunctionContext.returnValue = eventsFunctionContext.getArgument(\"State\") == gdjs.__audioVisualizerExtension.microphoneManager.getMicMediaRecorderState()\r",
+            "}catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Recorder State",
+          "name": "State",
+          "supplementaryInformation": "[\"recording\",\"paused\",\"inactive\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onScenePreEvents",
+      "sentence": "",
+      "events": [
+        {
+          "disabled": true,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "SceneBackground"
+              },
+              "parameters": [
+                "",
+                "\"139;255;0\""
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{",
+            "    // if Howler has been initialized",
+            "    if (window.Howler.ctx != null){",
+            "        // sometimes Howler context changes. Not understood why, but need to detect this and recreate/connect",
+            "        // a new analyzer with the new context",
+            "        if (window.Howler.ctx.__same == undefined){",
+            "            // copy the existing analyzer settings",
+            "            // output",
+            "            let analyzer = new AnalyserNode(window.Howler.ctx, gdjs.__audioVisualizerExtension.audioVisualizer.masterOutAnalyzer)",
+            "            window.Howler.masterGain.connect(analyzer)",
+            "            gdjs.__audioVisualizerExtension.audioVisualizer.masterOutAnalyzer = analyzer",
+            "",
+            "            // mic",
+            "            analyzer = new AnalyserNode(window.Howler.ctx, gdjs.__audioVisualizerExtension.audioVisualizer.micAnalyzer)",
+            "            gdjs.__audioVisualizerExtension.audioVisualizer.micAnalyzer = analyzer",
+            "            gdjs.__audioVisualizerExtension.microphoneManager.setAnalyzerNode(analyzer)",
+            "            ",
+            "            window.Howler.ctx.__same = true",
+            "        }",
+            "    }",
+            "} catch(error){console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onSceneLoaded",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "try{\r",
+            "  class AudioVisualizer{\r",
+            "    constructor(){\r",
+            "      // these analyzers will be replaced later with ones from the Howler AudioContext\r",
+            "      // but this allows events to access analyzer data before Howler is initialized\r",
+            "      const initialContext = new AudioContext()\r",
+            "      this.masterOutAnalyzer = new AnalyserNode(initialContext, {maxDecibels: 0, minDecibels: -120})\r",
+            "      this.micAnalyzer = new AnalyserNode(initialContext, {maxDecibels: 0, minDecibels: -120})\r",
+            "      this.nodeNameMasterOut = \"MasterOut\"\r",
+            "      this.nodeNameMic = \"Microphone\"\r",
+            "      this.byteArrays = {}\r",
+            "      this.byteArrays[this.nodeNameMasterOut] = new Uint8Array(this.masterOutAnalyzer.fftSize)\r",
+            "      this.byteArrays[this.nodeNameMic] = new Uint8Array(this.micAnalyzer.fftSize)\r",
+            "      this.float32Arrays = {}\r",
+            "      this.float32Arrays[this.nodeNameMasterOut] = new Float32Array(this.masterOutAnalyzer.fftSize)\r",
+            "      this.float32Arrays[this.nodeNameMic] = new Float32Array(this.micAnalyzer.fftSize)\r",
+            "    }\r",
+            "\r",
+            "    getAnalyzerByName(name){\r",
+            "      if (name == this.nodeNameMasterOut){\r",
+            "        return this.masterOutAnalyzer\r",
+            "      } else {\r",
+            "        return this.micAnalyzer\r",
+            "      }\r",
+            "    }\r",
+            "  }\r",
+            "\r",
+            "  class MicrophoneManager{\r",
+            "    constructor(){\r",
+            "      this._mediaStream = null\r",
+            "      this._mediaStreamSource = null\r",
+            "      this._micMediaRecorder = null\r",
+            "      this._micRecording = null\r",
+            "      this._analyzerNode = null\r",
+            "      this._recordingMap = new Map()\r",
+            "    }\r",
+            "\r",
+            "    setAnalyzerNode(analyzerNode){\r",
+            "      this._analyzerNode = analyzerNode\r",
+            "      if (this._mediaStream != null){\r",
+            "        this._mediaStreamSource = this._analyzerNode.context.createMediaStreamSource(this._mediaStream)\r",
+            "        this._mediaStreamSource.connect(this._analyzerNode)\r",
+            "      }\r",
+            "    }\r",
+            "\r",
+            "    getMediaStream(){\r",
+            "      if (this._mediaStream != null){\r",
+            "        return new Promise((resolve) => {resolve(this._mediaStream)})\r",
+            "      }else{\r",
+            "        return navigator.mediaDevices.getUserMedia({audio: true})\r",
+            "      }\r",
+            "    }\r",
+            "    \r",
+            "    startRecording(){\r",
+            "      this.getMediaStream().then((stream) => {\r",
+            "        this._mediaStream = stream\r",
+            "        this._mediaStreamSource = this._analyzerNode.context.createMediaStreamSource(stream)\r",
+            "        this._mediaStreamSource.connect(this._analyzerNode)\r",
+            "        this._micMediaRecorder = new MediaRecorder(stream)\r",
+            "        const chunks = []\r",
+            "        this._micMediaRecorder.ondataavailable = (e) => {\r",
+            "            chunks.push(e.data)\r",
+            "        };\r",
+            "\r",
+            "        this._micRecording = new Promise((resolve, reject) => {\r",
+            "            this._micMediaRecorder.onstop = (e) => {\r",
+            "                resolve(new Blob(chunks, { type: 'audio/wav' }))\r",
+            "            }\r",
+            "        })\r",
+            "\r",
+            "        this._micMediaRecorder.start(100)\r",
+            "      })\r",
+            "    }\r",
+            "\r",
+            "    saveRecording(recordingName){\r",
+            "      const reader = new window.FileReader();\r",
+            "      let base64data = \"\"\r",
+            "      const recorder = this\r",
+            "\r",
+            "      reader.onload = (e) => {\r",
+            "        try{\r",
+            "          runtimeScene.getSoundManager().unloadAudio(reader.result, false)\r",
+            "        }catch(error){console.log(error)}\r",
+            "        this._recordingMap.set(recordingName, reader.result)\r",
+            "      }\r",
+            "\r",
+            "      this._micRecording.then((blob) => {\r",
+            "        reader.readAsDataURL(blob)\r",
+            "      }).catch((error)=>{console.log(error)})\r",
+            "    }\r",
+            "\r",
+            "    pauseRecording(){\r",
+            "      this._micMediaRecorder.pause()\r",
+            "    }  \r",
+            "\r",
+            "    resumeRecording(){\r",
+            "      this._micMediaRecorder.resume()\r",
+            "    }\r",
+            "\r",
+            "    stopRecording(){\r",
+            "      this._micMediaRecorder.stop()\r",
+            "    }\r",
+            "\r",
+            "    deleteRecording(recordingName){\r",
+            "      if (this._recordingMap.has(recordingName)){\r",
+            "        runtimeScene.getSoundManager().unloadAudio(this._recordingMap.get(recordingName))\r",
+            "        this._recordingMap.delete(recordingName)\r",
+            "      }\r",
+            "    }\r",
+            "\r",
+            "    recordingIndexInProjectResources(recordingName){\r",
+            "      return gdjs.projectData.resources.resources.findIndex((value, index, number, obj) => {\r",
+            "        //console.log(\"looking for \", recordingName, \" found \", value.name, \" at index \", index)\r",
+            "        return value.name == recordingName\r",
+            "        }) \r",
+            "    }\r",
+            "\r",
+            "    recordingExistsInProjectData(recordingName){\r",
+            "      return this.recordingIndexInProjectResources(recordingName) > -1\r",
+            "    }\r",
+            "\r",
+            "    recordingExists(recordingName){\r",
+            "      return this._recordingMap.has(recordingName)\r",
+            "    }\r",
+            "\r",
+            "    getMicMediaRecorderState(){\r",
+            "      let state = \"inactive\"\r",
+            "      if (this._micMediaRecorder != null){\r",
+            "        state = this._micMediaRecorder.state\r",
+            "      }\r",
+            "\r",
+            "      return state\r",
+            "    }\r",
+            "\r",
+            "    playMicRecording(recordingName, loop, volume, pitch){\r",
+            "      if (this.recordingExists(recordingName)){\r",
+            "        //runtimeScene.getSoundManager().playSound(recordingName, channel, loop, volume, pitch)\r",
+            "        runtimeScene.getSoundManager().playSound(\r",
+            "          this._recordingMap.get(recordingName), \r",
+            "          channel, \r",
+            "          loop, \r",
+            "          volume, \r",
+            "          pitch)\r",
+            "      }        \r",
+            "    }\r",
+            "\r",
+            "    playMicRecordingOnChannel(recordingName, channel, loop, volume, pitch){\r",
+            "      if (this.recordingExists(recordingName)){\r",
+            "        //runtimeScene.getSoundManager().playSoundOnChannel(recordingName, channel, loop, volume, pitch)\r",
+            "        runtimeScene.getSoundManager().playSoundOnChannel(\r",
+            "          this._recordingMap.get(recordingName),\r",
+            "          channel, \r",
+            "          loop, \r",
+            "          volume, \r",
+            "          pitch)\r",
+            "      }        \r",
+            "    }\r",
+            "  }\r",
+            "\r",
+            "  // initialize properties used by the extension\r",
+            "  if (gdjs.__audioVisualizerExtension === undefined){\r",
+            "    const visualizer = new AudioVisualizer()\r",
+            "    const micManager = new MicrophoneManager()\r",
+            "    micManager.setAnalyzerNode(visualizer.micAnalyzer)\r",
+            "    \r",
+            "    const namespace = {\r",
+            "      audioVisualizer: visualizer,\r",
+            "      microphoneManager: micManager\r",
+            "    }\r",
+            "    gdjs.__audioVisualizerExtension = namespace\r",
+            "  }\r",
+            "} catch (error) {console.log(error)}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
+}
