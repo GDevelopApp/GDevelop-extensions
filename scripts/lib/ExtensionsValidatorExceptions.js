@@ -363,6 +363,14 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: ['_objectStackExtension'],
       javaScriptObjectAllowedProperties: [],
     },
+    OneSatOrdinalsBSV: {
+      gdjsAllowedProperties: [
+        'PromiseTask',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     ParticleEmitter3D: {
       gdjsAllowedProperties: [
         '__particleEmmiter3DExtension',
