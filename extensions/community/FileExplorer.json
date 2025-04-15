@@ -1,0 +1,194 @@
+{
+  "author": "",
+  "category": "General",
+  "extensionNamespace": "",
+  "fullName": "File explorer",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWZpbGUtY2FiaW5ldCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xNCw4SDEwVjZIMTRWOE0yMCw0VjIwQzIwLDIxLjExIDE5LjExLDIyIDE4LDIySDZDNC44OSwyMiA0LDIxLjExIDQsMjBWNEEyLDIgMCAwLDEgNiwySDE4QzE5LjExLDIgMjAsMi45IDIwLDRNMTgsMTNINlYyMEgxOFYxM00xOCw0SDZWMTFIMThWNE0xNCwxNUgxMFYxN0gxNFYxNVoiIC8+PC9zdmc+",
+  "name": "FileExplorer",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/1895d0b0d23775317aff7665bd04b3a454a4870c4956e804aeaaa343368b4933_file-cabinet.svg",
+  "shortDescription": "Save and open files with the file explorer.",
+  "version": "1.0.0",
+  "description": [
+    "Save a file, or open a file returning its content, name, size, and path.",
+    "",
+    "For example, use it to:",
+    "- Load a text into the game",
+    "- Load a JSON into the game",
+    "- Load an image into the game from a file that contains a PNG in base64 format",
+    "- Create your own game creation tool that supports resource loading with the file explorer, while creating your own file extensions",
+    "",
+    "With this said, it's up to your imagination! :)"
+  ],
+  "tags": [],
+  "authorIds": [],
+  "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
+  "eventsFunctions": [
+    {
+      "description": "Save a file including the extension.",
+      "fullName": "Save a file",
+      "functionType": "Action",
+      "name": "Save",
+      "sentence": "Save a file with the content _PARAM1_ and name _PARAM2_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "ModVarSceneTxt"
+              },
+              "parameters": [
+                "_saveThis",
+                "=",
+                "Content"
+              ]
+            },
+            {
+              "type": {
+                "value": "ModVarSceneTxt"
+              },
+              "parameters": [
+                "_saveName",
+                "=",
+                "FileName"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "// Get the content to be saved from the \"_saveThis\" variable",
+            "const contentToSave = runtimeScene.getVariables().get(\"_saveThis\").getAsString(); ",
+            "",
+            "// Get the desired save name from the \"_saveName\" variable",
+            "const saveName = runtimeScene.getVariables().get(\"_saveName\").getAsString(); ",
+            "",
+            "// Create a Blob object from the content",
+            "const blob = new Blob([contentToSave], { type: 'text/plain' }); ",
+            "",
+            "// Create a temporary URL for the Blob",
+            "const url = window.URL.createObjectURL(blob);",
+            "",
+            "// Create a hidden anchor element to trigger the download",
+            "const a = document.createElement('a');",
+            "a.style.display = 'none';",
+            "a.href = url;",
+            "a.download = saveName; // Use the value from the scene variable",
+            "",
+            "// Append the anchor to the document and trigger the download",
+            "document.body.appendChild(a);",
+            "a.click();",
+            "",
+            "// Clean up the temporary URL",
+            "window.URL.revokeObjectURL(url);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Content (e.g.: the text you want to save into the file)",
+          "name": "Content",
+          "type": "string"
+        },
+        {
+          "description": "File name with extension (e.g.: \"myfile.txt\")",
+          "name": "FileName",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Open a file filtered to the extension.",
+      "fullName": "Open a file",
+      "functionType": "Action",
+      "name": "Open",
+      "sentence": "Open a file with the extension _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "ModVarSceneTxt"
+              },
+              "parameters": [
+                "_openFilter",
+                "=",
+                "Extension"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "// Create a hidden file input element\r",
+            "const fileInput = document.createElement('input');\r",
+            "fileInput.type = 'file';\r",
+            "// Get the file extension from the scene variable\r",
+            "fileInput.accept = runtimeScene.getVariables().get(\"_openFilter\").getAsString(); \r",
+            "fileInput.style.display = 'none'; // Hide the input element\r",
+            "document.body.appendChild(fileInput);\r",
+            "\r",
+            "// Function to handle the selected file\r",
+            "function handleFile(file) {\r",
+            "  // Attempt to get the full path (might be restricted by browser security)\r",
+            "  const filePath = file.path || file.name; // Fallback to file name if path is not available\r",
+            "\r",
+            "  console.log(\"Selected file path:\", filePath);\r",
+            "  runtimeScene.getVariables().get(\"_filePath\").setString(filePath);\r",
+            "\r",
+            "  // Get file name\r",
+            "  const fileName = file.name;\r",
+            "  console.log(\"Selected file name:\", fileName);\r",
+            "  runtimeScene.getVariables().get(\"_fileName\").setString(fileName); \r",
+            "\r",
+            "  // Get file size (in bytes)\r",
+            "  const fileSize = file.size;\r",
+            "  console.log(\"Selected file size:\", fileSize);\r",
+            "  runtimeScene.getVariables().get(\"_fileSize\").setNumber(fileSize); \r",
+            "\r",
+            "  // Optionally, you can read the file content here if needed\r",
+            "  // ... (similar to the previous solution)\r",
+            "}\r",
+            "\r",
+            "// Handle file selection from the file input\r",
+            "fileInput.addEventListener('change', () => {\r",
+            "  const selectedFile = fileInput.files[0];\r",
+            "  if (selectedFile) {\r",
+            "      handleFile(selectedFile);\r",
+            "  }\r",
+            "});\r",
+            "\r",
+            "// Trigger the file input to open the file explorer\r",
+            "fileInput.click(); // Simulate a click on the hidden file input"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Extension (e.g.: \".txt\") (Don't forget the dot!)",
+          "name": "Extension",
+          "supplementaryInformation": "[\".txt\",\".json\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
+}
