@@ -592,7 +592,7 @@ const extensionsAllowedProperties = {
       gdjsAllowedProperties: ['_playgamaBridgeExtension'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
+      javaScriptObjectAllowedProperties: ['setPrototypeOf'],
     },
     Sky3D: {
       gdjsAllowedProperties: ['__Sky3DExtension'],
