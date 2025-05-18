@@ -155,7 +155,7 @@ module.exports = [
     "languageCode": "ja_JP",
     "languageName": "Japanese",
     "languageNativeName": "日本語",
-    "translationRatio": 0.9866644715179453
+    "translationRatio": 0.9912742838327296
   },
   {
     "languageCode": "ka_GE",
