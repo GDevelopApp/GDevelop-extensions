@@ -355,9 +355,10 @@ const filterEventsFunctions = (eventsFunctions) =>
           category: extension.category || 'General',
           previewIconUrl: extension.previewIconUrl,
           gdevelopVersion: extension.gdevelopVersion,
-          changelog: Array.isArray(extension.changelog)
-            ? extension.changelog.join('\n')
-            : extension.changelog,
+          changelog: extension.changelog?.map(({ version, breaking }) => ({
+            version,
+            breaking: Array.isArray(breaking) ? breaking.join('\n') : breaking,
+          })),
         };
 
         // Some part of the extension are filtered if private or internal.
