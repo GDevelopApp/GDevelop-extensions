@@ -355,6 +355,7 @@ const filterEventsFunctions = (eventsFunctions) =>
           category: extension.category || 'General',
           previewIconUrl: extension.previewIconUrl,
           gdevelopVersion: extension.gdevelopVersion,
+          changelog: extension.changelog,
         };
 
         // Some part of the extension are filtered if private or internal.
