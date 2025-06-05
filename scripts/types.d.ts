@@ -6,7 +6,7 @@ interface ItemExtensionHeaderFields {
   tags: Array<string>;
   category: string;
   previewIconUrl: string;
-  changelog?: [{ version: string; breaking?: string }];
+  changelog?: Array<{ version: string; breaking?: string }>;
 }
 
 type ExtensionTier = 'community' | 'reviewed';
