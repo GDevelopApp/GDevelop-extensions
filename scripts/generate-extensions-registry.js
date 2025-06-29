@@ -31,7 +31,7 @@ const distBasePath = path.join(__dirname, '..', 'dist');
 const distDatabasesPath = path.join(distBasePath, 'extensions-database');
 const distExtensionsPath = path.join(distBasePath, 'extensions');
 const extensionsBaseUrl = 'https://resources.gdevelop-app.com/extensions';
-const extensionsWithoutValidation = new Set(['WithThreeJS']);
+const extensionsWithoutValidation = new Set([]);
 const extensionsRequiring3DPhysics = new Set([
   'AdvancedJump3D',
   'PhysicsCharacter3DAnimator',
