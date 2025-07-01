@@ -121,6 +121,12 @@ const extensionsAllowedProperties = {
   },
   /** @type {Record<string, ExtensionAllowedProperties>}} */
   extensionSpecificAllowance: {
+    A3F: {
+      gdjsAllowedProperties: ['_A3F'],
+      gdjsEvtToolsAllowedProperties: ['object', 'tween'],
+      runtimeSceneAllowedProperties: ['getRenderer'],
+      javaScriptObjectAllowedProperties: [],
+    },
     AdvancedHTTP: {
       gdjsAllowedProperties: ['_advancedHTTP', 'PromiseTask'],
       gdjsEvtToolsAllowedProperties: [],
