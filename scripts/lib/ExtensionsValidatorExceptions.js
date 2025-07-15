@@ -535,8 +535,11 @@ const extensionsAllowedProperties = {
       javaScriptObjectAllowedProperties: [],
     },
     TiledUnitsBar: {
-      gdjsAllowedProperties: ['_TiledUnitsBarExtension'],
-      gdjsEvtToolsAllowedProperties: ['AnchorRuntimeBehavior'],
+      gdjsAllowedProperties: [
+        '_TiledUnitsBarExtension',
+        'AnchorRuntimeBehavior',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
