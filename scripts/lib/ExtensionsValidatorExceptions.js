@@ -541,6 +541,15 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    TiledUnitsBar: {
+      gdjsAllowedProperties: [
+        '_TiledUnitsBarExtension',
+        'AnchorRuntimeBehavior',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     TopDownCornerSliding: {
       gdjsAllowedProperties: [
         '__topDownCornerSlidingExtension',
