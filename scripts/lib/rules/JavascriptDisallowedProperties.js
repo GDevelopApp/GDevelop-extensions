@@ -138,7 +138,7 @@ async function validate({ extension, onError }) {
           accumulator +
           inspect(current, undefined, undefined, process.env.CI !== 'true') +
           '\n',
-        `Found disallowed properties in extension '${extension.name}':\n`
+        `JavaScript usage of the extension '${extension.name}' must be checked by the reviewer:\n`
       )
       // Remove the last \n
       .slice(0, -1);

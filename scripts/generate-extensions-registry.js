@@ -285,11 +285,13 @@ const filterEventsFunctions = (eventsFunctions) =>
     const objectShortHeaders = [];
 
     let totalErrors = 0;
+    let fatalErrors = 0;
     let fixableErrors = 0;
 
     const errors = validateNoDuplicates(allExtensionWithFileInfos);
     errors.forEach((error) => {
       totalErrors++;
+      fatalErrors++;
       shell.echo(`❌ ${error.message}`);
     });
 
@@ -301,6 +303,7 @@ const filterEventsFunctions = (eventsFunctions) =>
             `\n❌ Unable to open extension in file ${extensionWithFileInfo.filename}: ${error.message}\n`
           );
           totalErrors++;
+          fatalErrors++;
           return;
         }
 
@@ -482,7 +485,9 @@ const filterEventsFunctions = (eventsFunctions) =>
             fixableErrors > 1 ? 's are' : ' is'
           } auto-fixable - pass the argument --fix to fix them automatically.`
         );
-      shell.exit(args['disable-exit-code'] ? 0 : 1);
+      if (fatalErrors) {
+        shell.exit(args['disable-exit-code'] ? 0 : 1);
+      }
     }
 
     const views = JSON.parse(
@@ -524,7 +529,13 @@ const filterEventsFunctions = (eventsFunctions) =>
       registry
     );
 
-    console.log(`✅ Headers and registry files successfully updated`);
+    if (totalErrors) {
+      console.log(
+        `No fatal error found the extension can be updated but still need fixes.`
+      );
+    } else {
+      console.log(`✅ Headers and registry files successfully updated`);
+    }
   } catch (error) {
     console.error(
       `⚠️ Error while generating headers and registry files:`,

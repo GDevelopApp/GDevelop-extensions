@@ -45,7 +45,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr comment ${{ github.event.issue.number }} --body "A build error occured while merging:
+          gh pr comment ${{ github.event.issue.number }} --body "A build error occurred while merging:
 
           \`\`\`${{ env.BUILD_LOGS }}
           \`\`\`"
@@ -96,7 +96,7 @@ jobs:
         shell: bash
 
       - name: Commit and push
-        if: ${{ steps.git-diff.outputs.changed == 'true' && contains(env.BUILD_LOGS, 'successfully updated') }}
+        if: ${{ steps.git-diff.outputs.changed == 'true' && contains(env.BUILD_LOGS, 'No fatal error found') }}
         run: |
           git add extensions
           git commit -m "Updated extension"
@@ -114,8 +114,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr comment ${{ github.event.issue.number }} --body "✅ Successfully updated the extension."
 
-      - name: Notify build error
-        if: ${{ steps.git-diff.outputs.changed == 'true' && !contains(env.BUILD_LOGS, 'successfully updated') }}
+      - name: Notify non-fatal build error
+        if: ${{ steps.git-diff.outputs.changed == 'true' && contains(env.BUILD_LOGS, 'No fatal error found') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ github.event.issue.number }} --body "Extension updated with errors:
+
+          \`\`\`${{ env.BUILD_LOGS }}
+          \`\`\`"
+
+      - name: Notify fatal build error
+        if: ${{ steps.git-diff.outputs.changed == 'true' && !contains(env.BUILD_LOGS, 'successfully updated') && !contains(env.BUILD_LOGS, 'No fatal error found') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
