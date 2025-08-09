@@ -67,6 +67,8 @@ const extensionsAllowedProperties = {
       'rgbToHexNumber',
       'hexNumberToRGB',
       'hexToRGBColor',
+      'rgbOrHexStringToNumber',
+      'hexNumberToRGBArray',
       'copyArray',
       'staticArray',
       'staticArray2',
@@ -119,6 +121,12 @@ const extensionsAllowedProperties = {
   },
   /** @type {Record<string, ExtensionAllowedProperties>}} */
   extensionSpecificAllowance: {
+    A3F: {
+      gdjsAllowedProperties: ['_A3F'],
+      gdjsEvtToolsAllowedProperties: ['object', 'tween'],
+      runtimeSceneAllowedProperties: ['getRenderer'],
+      javaScriptObjectAllowedProperties: [],
+    },
     AdvancedHTTP: {
       gdjsAllowedProperties: ['_advancedHTTP', 'PromiseTask'],
       gdjsEvtToolsAllowedProperties: [],
@@ -278,6 +286,17 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    HeightMap3D: {
+      gdjsAllowedProperties: [
+        '__heightMap3DExtension',
+        'CustomRuntimeObject3D',
+        'CustomRuntimeObject',
+        'Physics3DRuntimeBehavior',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     InkJS: {
       gdjsAllowedProperties: ['_InkJS', 'GDStory'],
       gdjsEvtToolsAllowedProperties: [],
@@ -370,6 +389,7 @@ const extensionsAllowedProperties = {
         'CustomRuntimeObjectInstanceContainer',
         'CustomRuntimeObject3DRenderer',
         'CustomRuntimeObject3D',
+        'SpriteAnimationData',
       ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: ['__particleEmmiter3DExtension'],
@@ -498,7 +518,6 @@ const extensionsAllowedProperties = {
         'CustomRuntimeObject3D',
         'CustomRuntimeObjectInstanceContainer',
         'CustomRuntimeObject3DRenderer',
-        'rgbOrHexStringToNumber',
       ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
@@ -522,6 +541,15 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    TiledUnitsBar: {
+      gdjsAllowedProperties: [
+        '_TiledUnitsBarExtension',
+        'AnchorRuntimeBehavior',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     TopDownCornerSliding: {
       gdjsAllowedProperties: [
         '__topDownCornerSlidingExtension',
@@ -539,8 +567,6 @@ const extensionsAllowedProperties = {
         '__tween3DExtension',
         'RuntimeObject3D',
         'registerObjectDeletedFromSceneCallback',
-        'rgbOrHexStringToNumber',
-        'hexNumberToRGBArray',
       ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: ['__tween3DExtension'],
@@ -592,7 +618,7 @@ const extensionsAllowedProperties = {
       gdjsAllowedProperties: ['_playgamaBridgeExtension'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
+      javaScriptObjectAllowedProperties: ['setPrototypeOf'],
     },
     Sky3D: {
       gdjsAllowedProperties: ['__Sky3DExtension'],
