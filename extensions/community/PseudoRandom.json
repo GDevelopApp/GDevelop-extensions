@@ -8,8 +8,8 @@
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLXNlZWQtb3V0bGluZSIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xNy4yLDVWNUMxNy44LDUgMTguNCw1IDE4LjksNS4xQzE5LjEsNy40IDE5LjEsMTIgMTYuNCwxNS4yQzE0LjQsMTcuNyAxMSwxOSA2LjQsMTlDNiwxOSA1LjUsMTkgNS4xLDE5QzQuOSwxNC40IDUuOCwxMC44IDcuOSw4LjVDMTAuNCw1LjYgMTQuNCw1IDE3LjIsNU0xNy4yLDNDMTEuNywzIDEuNiw1LjEgMy4yLDIwLjhDNC4zLDIwLjkgNS40LDIxIDYuNCwyMUMyNC4zLDIxIDIwLjcsMy4zIDIwLjcsMy4zQzIwLjcsMy4zIDE5LjMsMyAxNy4yLDNNMTcsN0M3LDcgNywxNyA3LDE3QzExLDkgMTcsNyAxNyw3WiIgLz48L3N2Zz4=",
   "name": "PseudoRandom",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/2a6e6d587c6bdcd43a56925d77bd4a7d96a3a1132e9a0dc0ce324d0858971990_seed-outline.svg",
-  "shortDescription": "Set seed to generate pseudo-random numbers in sub-events.",
-  "version": "1.0.2",
+  "shortDescription": "Pseudo random number generator based on seed.",
+  "version": "2.1.0",
   "description": [
     "This extension will be useful for:",
     "- Re-creating a randomly generated level.",
@@ -17,11 +17,11 @@
     "- Use in multiplayer so that all players have the same random event without having to synchronize its components.",
     "",
     "How to use:",
-    "- Put the action \"Set seed\" with a specific seed in the form of a number, for example \"1\", then all expressions and conditions of randomness in subevents will give the same result (each expression and condition separately) until you change the seed, meaning the expressions Random(), RandomInRange, RandomFloat() etc. and the condition \"Pick a random instance\".",
+    "- Put the action \"Set seed\" with a specific seed in the form of a number, for example \"1\", after that use expressions from this extension, they will return the same numbers every restart until you change the seed.",
     "",
     "Example:",
     "1. Create a new event with the condition \"At the beginning of the scene\" and the action \"Set seed\" and the seed equal to \"1\".",
-    "2. Create a sub-event with the action \"Log message\" and the message \"ToString(Random(100))+\";\"+ToString(Random(100))+\";\"+ToString(Random(100))\".",
+    "2. Create a sub-event with the action \"Log message\" and the message \"ToString(PseudoRandom::Random(100))+\";\"+ToString(PseudoRandom::Random(100))+\";\"+ToString(PseudoRandom::Random(100))\".",
     "3. Look in the console and you will see that the result at each restart will be equal to \"17;21;53\" until you change the seed."
   ],
   "tags": [
@@ -291,28 +291,52 @@
             "  [],     // pool: entropy pool starts empty\r",
             "  Math    // math: package containing random, pow, and seedrandom\r",
             ");\r",
+            "\r",
             ""
           ],
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "PseudoRandom::SetSeed"
+              },
+              "parameters": [
+                "",
+                "Time(\"timestamp\")",
+                "0",
+                ""
+              ]
+            }
+          ]
         }
       ],
       "parameters": [],
       "objectGroups": []
     },
     {
-      "description": "Set seed to generate pseudo-random numbers in sub-events.",
+      "description": "Set seed for pseudo random number generator.",
       "fullName": "Set seed",
       "functionType": "Action",
       "name": "SetSeed",
-      "sentence": "Set seed to  _PARAM1_",
+      "sentence": "Set seed to  _PARAM1_ with initial step _PARAM2_",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "const seed = eventsFunctionContext.getArgument(\"Seed\");",
-            "Math.seedrandom(seed);"
+            "gdjs.__PseudoRandomExtension = {};\r",
+            "gdjs.__PseudoRandomExtension.seed = eventsFunctionContext.getArgument(\"Seed\");\r",
+            "gdjs.__PseudoRandomExtension.rng = new Math.seedrandom(gdjs.__PseudoRandomExtension.seed);\r",
+            "gdjs.__PseudoRandomExtension.step = eventsFunctionContext.getArgument(\"Step\");\r",
+            "\r",
+            "for (let i = 0; i < gdjs.__PseudoRandomExtension.step; i++) {\r",
+            "  gdjs.__PseudoRandomExtension.rng();\r",
+            "}"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -323,6 +347,240 @@
         {
           "description": "Seed",
           "name": "Seed",
+          "type": "expression"
+        },
+        {
+          "description": "Start generation at a certain step",
+          "name": "Step",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Returns the last generation step.",
+      "fullName": "Step",
+      "functionType": "Expression",
+      "name": "Step",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "eventsFunctionContext.returnValue = gdjs.__PseudoRandomExtension.step;",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Returns the last used seed.",
+      "fullName": "Seed",
+      "functionType": "Expression",
+      "name": "Seed",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "eventsFunctionContext.returnValue = gdjs.__PseudoRandomExtension.seed;",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Pseudo random integer.",
+      "fullName": "Pseudo random integer",
+      "functionType": "Expression",
+      "name": "Random",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const max = eventsFunctionContext.getArgument(\"Max\");\r",
+            "\r",
+            "eventsFunctionContext.returnValue = Math.floor(gdjs.__PseudoRandomExtension.rng() * (max + 1));\r",
+            "gdjs.__PseudoRandomExtension.step++;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Maximum value",
+          "name": "Max",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Pseudo random integer in range.",
+      "fullName": "Pseudo random integer in range",
+      "functionType": "Expression",
+      "name": "RandomInRange",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const max = eventsFunctionContext.getArgument(\"Max\");",
+            "const min = eventsFunctionContext.getArgument(\"Min\");",
+            "",
+            "eventsFunctionContext.returnValue = Math.floor(gdjs.__PseudoRandomExtension.rng() * (max - min + 1)) + min;",
+            "gdjs.__PseudoRandomExtension.step++;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Minimum value",
+          "name": "Min",
+          "type": "expression"
+        },
+        {
+          "description": "Maximum value",
+          "name": "Max",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Pseudo random float.",
+      "fullName": "Pseudo random float",
+      "functionType": "Expression",
+      "name": "RandomFloat",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const max = eventsFunctionContext.getArgument(\"Max\");\r",
+            "\r",
+            "eventsFunctionContext.returnValue = gdjs.__PseudoRandomExtension.rng() * max;\r",
+            "gdjs.__PseudoRandomExtension.step++;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Maximum value",
+          "name": "Max",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Pseudo random float in range.",
+      "fullName": "Pseudo random float in range",
+      "functionType": "Expression",
+      "name": "RandomFloatInRange",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const max = eventsFunctionContext.getArgument(\"Max\");",
+            "const min = eventsFunctionContext.getArgument(\"Min\");",
+            "",
+            "eventsFunctionContext.returnValue = gdjs.__PseudoRandomExtension.rng() * (max - min) + min;",
+            "gdjs.__PseudoRandomExtension.step++;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Minimum value",
+          "name": "Min",
+          "type": "expression"
+        },
+        {
+          "description": "Maximum value",
+          "name": "Max",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Pseudo random integer in steps.",
+      "fullName": "Pseudo random integer in steps",
+      "functionType": "Expression",
+      "name": "RandomWithStep",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const max = eventsFunctionContext.getArgument(\"Max\");",
+            "const min = eventsFunctionContext.getArgument(\"Min\");",
+            "const step = eventsFunctionContext.getArgument(\"Step\");",
+            "",
+            "const range = Math.floor((max - min) / step) + 1;",
+            "const randomStepIndex = Math.floor(gdjs.__PseudoRandomExtension.rng() * range);",
+            "",
+            "eventsFunctionContext.returnValue = min + randomStepIndex * step;",
+            "gdjs.__PseudoRandomExtension.step++;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Minimum value",
+          "name": "Min",
+          "type": "expression"
+        },
+        {
+          "description": "Maximum value",
+          "name": "Max",
+          "type": "expression"
+        },
+        {
+          "description": "Step",
+          "name": "Step",
           "type": "expression"
         }
       ],
