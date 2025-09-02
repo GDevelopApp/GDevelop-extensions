@@ -2,20 +2,18 @@
   "author": "",
   "category": "Visual effect",
   "extensionNamespace": "",
+  "gdevelopVersion": ">=5.5.222",
   "fullName": "3D object shake",
   "helpPath": "",
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLXZlY3Rvci1kaWZmZXJlbmNlLWFiIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTMsMUMxLjg5LDEgMSwxLjg5IDEsM1Y1SDNWM0g1VjFIM003LDFWM0gxMFYxSDdNMTIsMVYzSDE0VjVIMTZWM0MxNiwxLjg5IDE1LjExLDEgMTQsMUgxMk0xLDdWMTBIM1Y3SDFNMTQsN0MxNCw3IDE0LDExLjY3IDE0LDE0QzExLjY3LDE0IDcsMTQgNywxNEM3LDE0IDcsMTggNywyMEM3LDIxLjExIDcuODksMjIgOSwyMkgyMEMyMS4xMSwyMiAyMiwyMS4xMSAyMiwyMFY5QzIyLDcuODkgMjEuMTEsNyAyMCw3QzE4LDcgMTQsNyAxNCw3TTE2LDlIMjBWMjBIOVYxNkgxNEMxNS4xMSwxNiAxNiwxNS4xMSAxNiwxNFY5TTEsMTJWMTRDMSwxNS4xMSAxLjg5LDE2IDMsMTZINVYxNEgzVjEySDFaIiAvPjwvc3ZnPg==",
   "name": "ShakeObject3D",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/vector-difference-ab.svg",
   "shortDescription": "Shake 3D objects.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": [
     "Shake 3D objects with translation and rotation.",
     "",
-    "The 3D racing game example uses this extension ([open the project online](https://editor.gdevelop.io/?project=example://3d-racing-game)).",
-    "",
-    "Breaking changes from 2.0.0",
-    "- The behavior for 3D box has been removed. The other behavior can be used for both models and boxes."
+    "The 3D racing game example uses this extension ([open the project online](https://editor.gdevelop.io/?project=example://3d-racing-game))."
   ],
   "origin": {
     "identifier": "ShakeObject3D",
@@ -32,7 +30,15 @@
   "authorIds": [
     "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
   ],
+  "changelog": [
+    {
+      "version": "2.0.0",
+      "breaking": "- The behavior for 3D box has been removed. The other behavior can be used for both models and boxes."
+    }
+  ],
   "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
   "eventsFunctions": [
     {
       "fullName": "",
@@ -41,29 +47,58 @@
       "sentence": "",
       "events": [
         {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "ShakeObject3D::DefineHelperClasses"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Define helper classes JavaScript code.",
+      "fullName": "Define helper classes",
+      "functionType": "Action",
+      "name": "DefineHelperClasses",
+      "private": true,
+      "sentence": "Define helper classes JavaScript code",
+      "events": [
+        {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "gdjs._shakeObjectExtension = gdjs._shakeObjectExtension || {};",
+            "if (gdjs._shakeObjectExtension) {",
+            "    return;",
+            "}",
             "",
             "/** Noise generator manager. */",
-            "gdjs._shakeObjectExtension.NoiseManager = /** @class */ (function () {",
+            "class NoiseManager {",
             "    /**",
             "     * Create the manager of noise generators.",
             "     */",
-            "    function NoiseManager() {",
+            "    constructor() {",
             "        this.seed = gdjs.randomInRange(1, Number.MAX_SAFE_INTEGER);",
-            "        /** @type {Map<string, gdjs._shakeObjectExtension.NoiseGenerator>} */",
+            "        /** @type {Map<string, NoiseGenerator>} */",
             "        this.generators = new Map();",
             "    }",
             "",
             "    /**",
             "     * @param name {string}",
-            "     * @return {gdjs._shakeObjectExtension.NoiseGenerator}",
+            "     * @return {NoiseGenerator}",
             "     */",
-            "    NoiseManager.prototype.getGenerator = function (name) {",
+            "    getGenerator(name) {",
             "        let generator = this.generators.get(name);",
             "        if (!generator) {",
-            "            generator = new gdjs._shakeObjectExtension.NoiseGenerator(name + this.seed);",
+            "            generator = new NoiseGenerator(name + this.seed);",
             "            this.generators.set(name, generator);",
             "        }",
             "        return generator;",
@@ -72,35 +107,33 @@
             "    /**",
             "     * @param seed {number}",
             "     */",
-            "    NoiseManager.prototype.setSeed = function (seed) {",
+            "    setSeed(seed) {",
             "        this.seed = seed;",
-            "        this.generators.forEach(generator => generator.setSeed(seed));",
+            "        this.generators.forEach(generator => generator.setSeed(name + this.seed));",
             "    }",
             "",
             "    /**",
             "     * @param name {string}",
             "     */",
-            "    NoiseManager.prototype.deleteGenerator = function (name) {",
+            "    deleteGenerator(name) {",
             "        this.generators.delete(name);",
             "    }",
             "",
             "    /**",
             "     */",
-            "    NoiseManager.prototype.deleteAllGenerators = function () {",
+            "    deleteAllGenerators() {",
             "        this.generators.clear();",
             "    }",
-            "",
-            "    return NoiseManager;",
-            "}());",
+            "}",
             "",
             "/** Noise generator with octaves. */",
-            "gdjs._shakeObjectExtension.NoiseGenerator = /** @class */ (function () {",
+            "class NoiseGenerator {",
             "    /**",
             "     * Create a noise generator with a seed.",
             "     * @param seed {string}",
             "     */",
-            "    function NoiseGenerator(seed) {",
-            "        this.simplexNoise = new gdjs._shakeObjectExtension.SimplexNoise(seed);",
+            "    constructor(seed) {",
+            "        this.simplexNoise = new SimplexNoise(seed);",
             "        this.frequency = 1;",
             "        this.octaves = 1;",
             "        this.persistence = 0.5;",
@@ -112,8 +145,8 @@
             "    /**",
             "     * @param seed {string}",
             "     */",
-            "    NoiseGenerator.prototype.setSeed = function(seed) {",
-            "        this.simplexNoise = new gdjs._shakeObjectExtension.SimplexNoise(seed);",
+            "    setSeed(seed) {",
+            "        this.simplexNoise = new SimplexNoise(seed);",
             "    }",
             "",
             "    /**",
@@ -123,7 +156,7 @@
             "     * @param w {float} optionnal",
             "     * @return {float}",
             "     */",
-            "    NoiseGenerator.prototype.noise = function (x, y, z, w) {",
+            "    noise(x, y, z, w) {",
             "        if (this.xLoopPeriod && this.yLoopPeriod) {",
             "            const circleRatioX = 2 * Math.PI / this.xLoopPeriod;",
             "            const circleRatioY = 2 * Math.PI / this.yLoopPeriod;",
@@ -138,7 +171,7 @@
             "            const circleRatio = 2 * Math.PI / this.xLoopPeriod;",
             "            const angleX = circleRatio * x;",
             "            w = z;",
-            "            z = y; ",
+            "            z = y;",
             "            x = Math.cos(angleX) / circleRatio;",
             "            y = Math.sin(angleX) / circleRatio;",
             "        }",
@@ -170,9 +203,7 @@
             "        }",
             "        return noiseSum / amplitudeSum;",
             "    }",
-            "",
-            "    return NoiseGenerator;",
-            "}());",
+            "}",
             "",
             "/*",
             "A fast javascript implementation of simplex noise by Jonas Wagner",
@@ -231,15 +262,90 @@
             "    1, 1, 1, 0, 1, 1, -1, 0, 1, -1, 1, 0, 1, -1, -1, 0,",
             "    -1, 1, 1, 0, -1, 1, -1, 0, -1, -1, 1, 0, -1, -1, -1, 0]);",
             "",
+            "",
+            "/**",
+            " * Builds a random permutation table.",
+            " * This is exported only for (internal) testing purposes.",
+            " * Do not rely on this export.",
+            " * @param {() => number} random",
+            " * @private",
+            " */",
+            "function buildPermutationTable(random) {",
+            "    const p = new Uint8Array(256);",
+            "    for (let i = 0; i < 256; i++) {",
+            "        p[i] = i;",
+            "    }",
+            "    for (let i = 0; i < 255; i++) {",
+            "        const r = i + ~~(random() * (256 - i));",
+            "        const aux = p[i];",
+            "        p[i] = p[r];",
+            "        p[r] = aux;",
+            "    }",
+            "    return p;",
+            "}",
+            "",
+            "/*",
+            "The ALEA PRNG and masher code used by simplex-noise.js",
+            "is based on code by Johannes Baagøe, modified by Jonas Wagner.",
+            "See alea.md for the full license.",
+            "@param {string|number} seed",
+            "*/",
+            "function alea(seed) {",
+            "    let s0 = 0;",
+            "    let s1 = 0;",
+            "    let s2 = 0;",
+            "    let c = 1;",
+            "    const mash = masher();",
+            "    s0 = mash(' ');",
+            "    s1 = mash(' ');",
+            "    s2 = mash(' ');",
+            "    s0 -= mash(seed);",
+            "    if (s0 < 0) {",
+            "        s0 += 1;",
+            "    }",
+            "    s1 -= mash(seed);",
+            "    if (s1 < 0) {",
+            "        s1 += 1;",
+            "    }",
+            "    s2 -= mash(seed);",
+            "    if (s2 < 0) {",
+            "        s2 += 1;",
+            "    }",
+            "    return function () {",
+            "        const t = 2091639 * s0 + c * 2.3283064365386963e-10; // 2^-32",
+            "        s0 = s1;",
+            "        s1 = s2;",
+            "        return s2 = t - (c = t | 0);",
+            "    };",
+            "}",
+            "",
+            "function masher() {",
+            "    let n = 0xefc8249d;",
+            "    return function (data) {",
+            "        data = data.toString();",
+            "        for (let i = 0; i < data.length; i++) {",
+            "            n += data.charCodeAt(i);",
+            "            let h = 0.02519603282416938 * n;",
+            "            n = h >>> 0;",
+            "            h -= n;",
+            "            h *= n;",
+            "            n = h >>> 0;",
+            "            h -= n;",
+            "            n += h * 0x100000000; // 2^32",
+            "        }",
+            "        return (n >>> 0) * 2.3283064365386963e-10; // 2^-32",
+            "    };",
+            "}",
+            "",
             "/** Deterministic simplex noise generator suitable for 2D, 3D and 4D spaces. */",
-            "gdjs._shakeObjectExtension.SimplexNoise = /** @class */ (function () {",
+            "class SimplexNoise {",
             "    /**",
             "     * Creates a new `SimplexNoise` instance.",
             "     * This involves some setup. You can save a few cpu cycles by reusing the same instance.",
             "     * @param {(() => number)|string|number} randomOrSeed A random number generator or a seed (string|number).",
             "     * Defaults to Math.random (random irreproducible initialization).",
             "     */",
-            "    function SimplexNoise(randomOrSeed) {",
+            "    constructor(randomOrSeed) {",
             "        if (randomOrSeed === void 0) { randomOrSeed = Math.random; }",
             "        const random = typeof randomOrSeed == 'function' ? randomOrSeed : alea(randomOrSeed);",
             "        this.p = buildPermutationTable(random);",
@@ -257,7 +363,7 @@
             "     * @param {number} y",
             "     * @returns a number in the interval [-1, 1]",
             "     */",
-            "    SimplexNoise.prototype.noise2D = function (x, y) {",
+            "    noise2D(x, y) {",
             "        const permMod12 = this.permMod12;",
             "        const perm = this.perm;",
             "        let n0 = 0; // Noise contributions from the three corners",
@@ -324,7 +430,7 @@
             "     * @param {number} z",
             "     * @returns a number in the interval [-1, 1]",
             "     */",
-            "    SimplexNoise.prototype.noise3D = function (x, y, z) {",
+            "    noise3D(x, y, z) {",
             "        const permMod12 = this.permMod12;",
             "        const perm = this.perm;",
             "        let n0, n1, n2, n3; // Noise contributions from the four corners",
@@ -458,7 +564,7 @@
             "     * @param {number} z",
             "     * @returns a number in the interval [-1, 1]",
             "     */",
-            "    SimplexNoise.prototype.noise4D = function (x, y, z, w) {",
+            "    noise4D(x, y, z, w) {",
             "        const perm = this.perm;",
             "        let n0, n1, n2, n3, n4; // Noise contributions from the five corners",
             "        // Skew the (x,y,z,w) space to determine which cell of 24 simplices we're in",
@@ -597,84 +703,12 @@
             "        // Sum up and scale the result to cover the range [-1,1]",
             "        return 27.0 * (n0 + n1 + n2 + n3 + n4);",
             "    };",
+            "}",
             "",
-            "    /**",
-            "     * Builds a random permutation table.",
-            "     * This is exported only for (internal) testing purposes.",
-            "     * Do not rely on this export.",
-            "     * @param {() => number} random",
-            "     * @private",
-            "     */",
-            "    function buildPermutationTable(random) {",
-            "        const p = new Uint8Array(256);",
-            "        for (let i = 0; i < 256; i++) {",
-            "            p[i] = i;",
-            "        }",
-            "        for (let i = 0; i < 255; i++) {",
-            "            const r = i + ~~(random() * (256 - i));",
-            "            const aux = p[i];",
-            "            p[i] = p[r];",
-            "            p[r] = aux;",
-            "        }",
-            "        return p;",
-            "    }",
-            "",
-            "    /*",
-            "    The ALEA PRNG and masher code used by simplex-noise.js",
-            "    is based on code by Johannes Baagøe, modified by Jonas Wagner.",
-            "    See alea.md for the full license.",
-            "    @param {string|number} seed",
-            "    */",
-            "    function alea(seed) {",
-            "        let s0 = 0;",
-            "        let s1 = 0;",
-            "        let s2 = 0;",
-            "        let c = 1;",
-            "        const mash = masher();",
-            "        s0 = mash(' ');",
-            "        s1 = mash(' ');",
-            "        s2 = mash(' ');",
-            "        s0 -= mash(seed);",
-            "        if (s0 < 0) {",
-            "            s0 += 1;",
-            "        }",
-            "        s1 -= mash(seed);",
-            "        if (s1 < 0) {",
-            "            s1 += 1;",
-            "        }",
-            "        s2 -= mash(seed);",
-            "        if (s2 < 0) {",
-            "            s2 += 1;",
-            "        }",
-            "        return function () {",
-            "            const t = 2091639 * s0 + c * 2.3283064365386963e-10; // 2^-32",
-            "            s0 = s1;",
-            "            s1 = s2;",
-            "            return s2 = t - (c = t | 0);",
-            "        };",
-            "    }",
-            "",
-            "    function masher() {",
-            "        let n = 0xefc8249d;",
-            "        return function (data) {",
-            "            data = data.toString();",
-            "            for (let i = 0; i < data.length; i++) {",
-            "                n += data.charCodeAt(i);",
-            "                let h = 0.02519603282416938 * n;",
-            "                n = h >>> 0;",
-            "                h -= n;",
-            "                h *= n;",
-            "                n = h >>> 0;",
-            "                h -= n;",
-            "                n += h * 0x100000000; // 2^32",
-            "            }",
-            "            return (n >>> 0) * 2.3283064365386963e-10; // 2^-32",
-            "        };",
-            "    }",
-            "    return SimplexNoise;",
-            "}());",
-            "",
-            "gdjs._shakeObjectExtension.noiseManager = new gdjs._shakeObjectExtension.NoiseManager();"
+            "gdjs._shakeObjectExtension = {",
+            "    noiseManager: new NoiseManager(),",
+            "};",
+            ""
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -1298,6 +1332,7 @@
       "fullName": "3D shake",
       "name": "ShakeModel3D",
       "objectType": "",
+      "quickCustomizationVisibility": "hidden",
       "eventsFunctions": [
         {
           "fullName": "",
@@ -1310,15 +1345,25 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::PropertyIsStartingAtCreation"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior"
+                    "IsStartingAtCreation",
+                    "True",
+                    ""
                   ]
                 }
               ],
               "actions": [
+                {
+                  "type": {
+                    "value": "ShakeObject3D::DefineHelperClasses"
+                  },
+                  "parameters": [
+                    "",
+                    ""
+                  ]
+                },
                 {
                   "type": {
                     "value": "ShakeObject3D::ShakeModel3D::StartShaking"
@@ -1372,24 +1417,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyTime"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "Time",
                     "+",
                     "TimeDelta()"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyNoiseTime"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "+",
-                    "TimeDelta() * Object.Behavior::Frequency()"
                   ]
                 }
               ]
@@ -1411,104 +1444,27 @@
               "actions": [
                 {
                   "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "NoiseTime",
+                    "+",
+                    "TimeDelta() * Frequency"
+                  ]
+                },
+                {
+                  "type": {
                     "value": "ShakeObject3D::ShakeModel3D::SetSharedPropertyEasingFactor"
                   },
                   "parameters": [
                     "Object",
                     "Behavior",
                     "=",
-                    "1"
+                    "min(Object.Behavior::StartEasingFactor(), Object.Behavior::StopEasingFactor())"
                   ]
                 }
               ],
               "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyTime"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "<",
-                        "Object.Behavior::PropertyStartEasingDuration()"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyTime"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "<",
-                        "Object.Behavior::PropertyDuration() - Object.Behavior::PropertyStopEasingDuration()"
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::SetSharedPropertyEasingFactor"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "=",
-                        "clamp(0, 1, Object.Behavior::PropertyTime() / Object.Behavior::PropertyStartEasingDuration())"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyTime"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        ">",
-                        "Object.Behavior::PropertyDuration() - Object.Behavior::PropertyStopEasingDuration()"
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::SetSharedPropertyEasingFactor"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "=",
-                        "clamp(0, 1, (Object.Behavior::PropertyDuration() - Object.Behavior::PropertyTime()) / Object.Behavior::PropertyStopEasingDuration())"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "disabled": true,
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "ShakeObject3D::SetFrequency"
-                      },
-                      "parameters": [
-                        "",
-                        "Object.Behavior::PropertyFrequency()",
-                        "\"\"",
-                        ""
-                      ]
-                    }
-                  ]
-                },
                 {
                   "type": "BuiltinCommonInstructions::Comment",
                   "color": {
@@ -1519,18 +1475,17 @@
                     "textG": 0,
                     "textR": 0
                   },
-                  "comment": "Shake the layer camera.\nSave the camera displacement to revert it in onScenePostEvents."
+                  "comment": "Shake the object.\nSave the object displacement to revert it in onScenePostEvents."
                 },
                 {
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyTranslationAmplitudeX"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "TranslationAmplitudeX",
                         "!=",
                         "0"
                       ]
@@ -1539,13 +1494,12 @@
                   "actions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::SetPropertyDeltaX"
+                        "value": "SetNumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "DeltaX",
                         "=",
-                        "ShakeObject3D::Noise2d(\"\", Object.Behavior::PropertyNoiseTime(), 1000) * Object.Behavior::PropertyTranslationAmplitudeX() * Object.Behavior::SharedPropertyEasingFactor()"
+                        "ShakeObject3D::Noise2d(\"\", NoiseTime, 1000) * TranslationAmplitudeX * EasingFactor"
                       ]
                     },
                     {
@@ -1555,7 +1509,7 @@
                       "parameters": [
                         "Object",
                         "+",
-                        "Object.Behavior::PropertyDeltaX()"
+                        "DeltaX"
                       ]
                     }
                   ]
@@ -1565,11 +1519,10 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyTranslationAmplitudeY"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "TranslationAmplitudeY",
                         "!=",
                         "0"
                       ]
@@ -1578,13 +1531,12 @@
                   "actions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::SetPropertyDeltaY"
+                        "value": "SetNumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "DeltaY",
                         "=",
-                        "ShakeObject3D::Noise2d(\"\", Object.Behavior::PropertyNoiseTime(), 2000) * Object.Behavior::PropertyTranslationAmplitudeY() * Object.Behavior::SharedPropertyEasingFactor()"
+                        "ShakeObject3D::Noise2d(\"\", NoiseTime, 2000) * TranslationAmplitudeY * EasingFactor"
                       ]
                     },
                     {
@@ -1594,7 +1546,7 @@
                       "parameters": [
                         "Object",
                         "+",
-                        "Object.Behavior::PropertyDeltaY()"
+                        "DeltaY"
                       ]
                     }
                   ]
@@ -1604,11 +1556,10 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyTranslationAmplitudeZ"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "TranslationAmplitudeZ",
                         "!=",
                         "0"
                       ]
@@ -1617,13 +1568,12 @@
                   "actions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::SetPropertyDeltaZ"
+                        "value": "SetNumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "DeltaZ",
                         "=",
-                        "ShakeObject3D::Noise2d(\"\", Object.Behavior::PropertyNoiseTime(), 3000) * Object.Behavior::PropertyTranslationAmplitudeZ() * Object.Behavior::SharedPropertyEasingFactor()"
+                        "ShakeObject3D::Noise2d(\"\", NoiseTime, 3000) * TranslationAmplitudeZ * EasingFactor"
                       ]
                     },
                     {
@@ -1634,7 +1584,7 @@
                         "Object",
                         "Object3D",
                         "+",
-                        "Object.Behavior::PropertyDeltaY()"
+                        "DeltaZ"
                       ]
                     }
                   ]
@@ -1644,11 +1594,10 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyRotationAmplitudeX"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "RotationAmplitudeX",
                         "!=",
                         "0"
                       ]
@@ -1657,13 +1606,12 @@
                   "actions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::SetPropertyDeltaAngleX"
+                        "value": "SetNumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "DeltaAngleX",
                         "=",
-                        "ShakeObject3D::Noise2d(\"\", Object.Behavior::PropertyNoiseTime(), 4000) * Object.Behavior::PropertyRotationAmplitudeX() * Object.Behavior::SharedPropertyEasingFactor()"
+                        "ShakeObject3D::Noise2d(\"\", NoiseTime, 4000) * RotationAmplitudeX * EasingFactor"
                       ]
                     },
                     {
@@ -1674,7 +1622,7 @@
                         "Object",
                         "Object3D",
                         "+",
-                        "Object.Behavior::PropertyDeltaAngleX()"
+                        "DeltaAngleX"
                       ]
                     }
                   ]
@@ -1684,11 +1632,10 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyRotationAmplitudeY"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "RotationAmplitudeY",
                         "!=",
                         "0"
                       ]
@@ -1697,13 +1644,12 @@
                   "actions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::SetPropertyDeltaAngleY"
+                        "value": "SetNumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "DeltaAngleY",
                         "=",
-                        "ShakeObject3D::Noise2d(\"\", Object.Behavior::PropertyNoiseTime(), 5000) * Object.Behavior::PropertyRotationAmplitudeY() * Object.Behavior::SharedPropertyEasingFactor()"
+                        "ShakeObject3D::Noise2d(\"\", NoiseTime, 5000) * RotationAmplitudeY * EasingFactor"
                       ]
                     },
                     {
@@ -1714,7 +1660,7 @@
                         "Object",
                         "Object3D",
                         "+",
-                        "Object.Behavior::PropertyDeltaAngleY()"
+                        "DeltaAngleY"
                       ]
                     }
                   ]
@@ -1724,11 +1670,10 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyRotationAmplitudeZ"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "RotationAmplitudeZ",
                         "!=",
                         "0"
                       ]
@@ -1737,13 +1682,12 @@
                   "actions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::SetPropertyDeltaAngleZ"
+                        "value": "SetNumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "DeltaAngleZ",
                         "=",
-                        "ShakeObject3D::Noise2d(\"\", Object.Behavior::PropertyNoiseTime(), 6000) * Object.Behavior::PropertyRotationAmplitudeZ() * Object.Behavior::SharedPropertyEasingFactor()"
+                        "ShakeObject3D::Noise2d(\"\", NoiseTime, 6000) * RotationAmplitudeZ * EasingFactor"
                       ]
                     },
                     {
@@ -1753,7 +1697,7 @@
                       "parameters": [
                         "Object",
                         "+",
-                        "Object.Behavior::PropertyDeltaAngleZ()"
+                        "DeltaAngleZ"
                       ]
                     }
                   ]
@@ -1815,11 +1759,10 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyTranslationAmplitudeX"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "TranslationAmplitudeX",
                         "!=",
                         "0"
                       ]
@@ -1833,7 +1776,7 @@
                       "parameters": [
                         "Object",
                         "-",
-                        "Object.Behavior::PropertyDeltaX()"
+                        "DeltaX"
                       ]
                     }
                   ]
@@ -1843,11 +1786,10 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyTranslationAmplitudeY"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "TranslationAmplitudeY",
                         "!=",
                         "0"
                       ]
@@ -1861,7 +1803,7 @@
                       "parameters": [
                         "Object",
                         "-",
-                        "Object.Behavior::PropertyDeltaY()"
+                        "DeltaY"
                       ]
                     }
                   ]
@@ -1871,11 +1813,10 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyTranslationAmplitudeZ"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "TranslationAmplitudeZ",
                         "!=",
                         "0"
                       ]
@@ -1890,7 +1831,7 @@
                         "Object",
                         "Object3D",
                         "-",
-                        "Object.Behavior::PropertyDeltaZ()"
+                        "DeltaZ"
                       ]
                     }
                   ]
@@ -1900,11 +1841,10 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyRotationAmplitudeX"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "RotationAmplitudeX",
                         "!=",
                         "0"
                       ]
@@ -1919,7 +1859,7 @@
                         "Object",
                         "Object3D",
                         "-",
-                        "Object.Behavior::PropertyDeltaAngleX()"
+                        "DeltaAngleX"
                       ]
                     }
                   ]
@@ -1929,11 +1869,10 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyRotationAmplitudeY"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "RotationAmplitudeY",
                         "!=",
                         "0"
                       ]
@@ -1948,7 +1887,7 @@
                         "Object",
                         "Object3D",
                         "-",
-                        "Object.Behavior::PropertyDeltaAngleY()"
+                        "DeltaAngleY"
                       ]
                     }
                   ]
@@ -1958,11 +1897,10 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "ShakeObject3D::ShakeModel3D::PropertyRotationAmplitudeZ"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "RotationAmplitudeZ",
                         "!=",
                         "0"
                       ]
@@ -1976,7 +1914,7 @@
                       "parameters": [
                         "Object",
                         "-",
-                        "Object.Behavior::PropertyDeltaAngleZ()"
+                        "DeltaAngleZ"
                       ]
                     }
                   ]
@@ -2000,7 +1938,7 @@
           "objectGroups": []
         },
         {
-          "description": "Shake the camera on layers chosen with configuration actions.",
+          "description": "Shake the object with a linear easing at the start and the end.",
           "fullName": "Shake",
           "functionType": "Action",
           "name": "Shake",
@@ -2012,57 +1950,52 @@
               "actions": [
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyTime"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "Time",
                     "=",
                     "0"
                   ]
                 },
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyNoiseTime"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "NoiseTime",
                     "=",
-                    "TimeFromStart() * Object.Behavior::Frequency()"
+                    "TimeFromStart() * Frequency"
                   ]
                 },
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyDuration"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "Duration",
                     "=",
-                    "GetArgumentAsNumber(\"Duration\")"
+                    "NewDuration"
                   ]
                 },
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyStartEasingDuration"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "StartEasingDuration",
                     "=",
-                    "GetArgumentAsNumber(\"StartEaseDuration\")"
+                    "StartEaseDuration"
                   ]
                 },
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyStopEasingDuration"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "StopEasingDuration",
                     "=",
-                    "GetArgumentAsNumber(\"StopEaseDuration\")"
+                    "StopEaseDuration"
                   ]
                 }
               ]
@@ -2072,36 +2005,34 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "CompareArgumentAsNumber"
+                    "value": "NumberVariable"
                   },
                   "parameters": [
-                    "\"Duration\"",
+                    "NewDuration",
                     "<",
-                    "GetArgumentAsNumber(\"StartEaseDuration\") + GetArgumentAsNumber(\"StopEaseDuration\")"
+                    "StartEaseDuration + StopEaseDuration"
                   ]
                 }
               ],
               "actions": [
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyStartEasingDuration"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "StartEasingDuration",
                     "=",
-                    "GetArgumentAsNumber(\"StartEaseDuration\") * Variable(__CameraShake.Duration) / (GetArgumentAsNumber(\"StartEaseDuration\") + GetArgumentAsNumber(\"StopEaseDuration\"))"
+                    "StartEaseDuration * NewDuration / (StartEaseDuration + StopEaseDuration)"
                   ]
                 },
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyStopEasingDuration"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "StopEasingDuration",
                     "=",
-                    "GetArgumentAsNumber(\"StopEaseDuration\") * Variable(__CameraShake.Duration) / (GetArgumentAsNumber(\"StartEaseDuration\") + GetArgumentAsNumber(\"StopEaseDuration\"))"
+                    "StopEaseDuration * NewDuration / (StartEaseDuration + StopEaseDuration)"
                   ]
                 }
               ]
@@ -2121,7 +2052,7 @@
             },
             {
               "description": "Duration (in seconds)",
-              "name": "Duration",
+              "name": "NewDuration",
               "type": "expression"
             },
             {
@@ -2138,7 +2069,7 @@
           "objectGroups": []
         },
         {
-          "description": "Start shaking the camera indefinitely.",
+          "description": "Shake the object with a linear easing at the start and keep shaking until the stop action is used.",
           "fullName": "Start shaking",
           "functionType": "Action",
           "name": "StartShaking",
@@ -2150,46 +2081,42 @@
               "actions": [
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyTime"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "Time",
                     "=",
                     "0"
                   ]
                 },
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyNoiseTime"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "NoiseTime",
                     "=",
-                    "TimeFromStart() * Object.Behavior::Frequency()"
+                    "TimeFromStart() * Frequency"
                   ]
                 },
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyDuration"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "Duration",
                     "=",
                     "1234567890"
                   ]
                 },
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyStartEasingDuration"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "StartEasingDuration",
                     "=",
-                    "GetArgumentAsNumber(\"EaseDuration\")"
+                    "EaseDuration"
                   ]
                 }
               ]
@@ -2216,7 +2143,7 @@
           "objectGroups": []
         },
         {
-          "description": "Stop shaking the camera.",
+          "description": "Stop shaking the object with a linear easing.",
           "fullName": "Stop shaking",
           "functionType": "Action",
           "name": "StopShaking",
@@ -2239,35 +2166,32 @@
               "actions": [
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyTime"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "Time",
                     "=",
                     "0"
                   ]
                 },
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyDuration"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "Duration",
                     "=",
-                    "GetArgumentAsNumber(\"EaseDuration\")"
+                    "EaseDuration"
                   ]
                 },
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyStopEasingDuration"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "StopEasingDuration",
                     "=",
-                    "GetArgumentAsNumber(\"EaseDuration\")"
+                    "EaseDuration"
                   ]
                 }
               ]
@@ -2305,13 +2229,82 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::PropertyTime"
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "Time",
+                    "<",
+                    "Duration"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "Time",
+                    ">",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "ShakeObject3D::ShakeModel3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if the object is stopping to shake.",
+          "fullName": "Is stopping to shake",
+          "functionType": "Condition",
+          "name": "IsStopping",
+          "sentence": "_PARAM0_ is stopping to shake",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "ShakeObject3D::ShakeModel3D::IsShaking"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ShakeObject3D::ShakeModel3D::StopEasingFactor"
                   },
                   "parameters": [
                     "Object",
                     "Behavior",
                     "<",
-                    "Object.Behavior::PropertyDuration()"
+                    "1",
+                    ""
                   ]
                 }
               ],
@@ -2359,7 +2352,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyFrequency()"
+                    "Frequency"
                   ]
                 }
               ]
@@ -2396,18 +2389,214 @@
               "actions": [
                 {
                   "type": {
-                    "value": "ShakeObject3D::ShakeModel3D::SetPropertyFrequency"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "Frequency",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
             }
           ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "ShakeObject3D::ShakeModel3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return the easing factor according to start properties.",
+          "fullName": "Start easing factor",
+          "functionType": "Expression",
+          "name": "StartEasingFactor",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "StartEasingDuration",
+                    "<=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "1"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "StartEasingDuration",
+                    ">",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "clamp(Time / StartEasingDuration, 0, 1)"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "ShakeObject3D::ShakeModel3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Return the easing factor according to stop properties.",
+          "fullName": "Stop easing factor",
+          "functionType": "ExpressionAndCondition",
+          "name": "StopEasingFactor",
+          "private": true,
+          "sentence": "stop easing factor",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "StopEasingDuration",
+                    "<=",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "NumberVariable"
+                      },
+                      "parameters": [
+                        "Time",
+                        "<",
+                        "Duration"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetReturnNumber"
+                      },
+                      "parameters": [
+                        "1"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "NumberVariable"
+                      },
+                      "parameters": [
+                        "Time",
+                        ">=",
+                        "Duration"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetReturnNumber"
+                      },
+                      "parameters": [
+                        "0"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "StopEasingDuration",
+                    ">",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "clamp((Duration - Time) / StopEasingDuration, 0, 1)"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
           "parameters": [
             {
               "description": "Object",
@@ -2433,7 +2622,6 @@
           "description": "",
           "group": "",
           "extraInformation": [],
-          "hidden": false,
           "name": "TranslationAmplitudeX"
         },
         {
@@ -2444,7 +2632,6 @@
           "description": "",
           "group": "",
           "extraInformation": [],
-          "hidden": false,
           "name": "TranslationAmplitudeY"
         },
         {
@@ -2455,7 +2642,6 @@
           "description": "",
           "group": "",
           "extraInformation": [],
-          "hidden": false,
           "name": "TranslationAmplitudeZ"
         },
         {
@@ -2466,7 +2652,6 @@
           "description": "",
           "group": "",
           "extraInformation": [],
-          "hidden": false,
           "name": "RotationAmplitudeX"
         },
         {
@@ -2477,7 +2662,6 @@
           "description": "",
           "group": "",
           "extraInformation": [],
-          "hidden": false,
           "name": "RotationAmplitudeY"
         },
         {
@@ -2488,7 +2672,6 @@
           "description": "",
           "group": "",
           "extraInformation": [],
-          "hidden": false,
           "name": "RotationAmplitudeZ"
         },
         {
@@ -2538,7 +2721,6 @@
           "description": "",
           "group": "",
           "extraInformation": [],
-          "hidden": false,
           "name": "Frequency"
         },
         {
@@ -2620,7 +2802,6 @@
           "extraInformation": [
             "Scene3D::Base3DBehavior"
           ],
-          "hidden": false,
           "name": "Object3D"
         },
         {
@@ -2630,7 +2811,6 @@
           "description": "",
           "group": "",
           "extraInformation": [],
-          "hidden": false,
           "name": "IsStartingAtCreation"
         }
       ],

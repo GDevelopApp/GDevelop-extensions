@@ -67,6 +67,8 @@ const extensionsAllowedProperties = {
       'rgbToHexNumber',
       'hexNumberToRGB',
       'hexToRGBColor',
+      'rgbOrHexStringToNumber',
+      'hexNumberToRGBArray',
       'copyArray',
       'staticArray',
       'staticArray2',
@@ -119,6 +121,12 @@ const extensionsAllowedProperties = {
   },
   /** @type {Record<string, ExtensionAllowedProperties>}} */
   extensionSpecificAllowance: {
+    A3F: {
+      gdjsAllowedProperties: ['_A3F'],
+      gdjsEvtToolsAllowedProperties: ['object', 'tween'],
+      runtimeSceneAllowedProperties: ['getRenderer'],
+      javaScriptObjectAllowedProperties: [],
+    },
     AdvancedHTTP: {
       gdjsAllowedProperties: ['_advancedHTTP', 'PromiseTask'],
       gdjsEvtToolsAllowedProperties: [],
@@ -127,6 +135,12 @@ const extensionsAllowedProperties = {
     },
     AdvancedJump: {
       gdjsAllowedProperties: ['PlatformerObjectRuntimeBehavior'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    AdvancedJump3D: {
+      gdjsAllowedProperties: ['PhysicsCharacter3DRuntimeBehavior'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
@@ -177,10 +191,16 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    CameraShake3D: {
+      gdjsAllowedProperties: ['_cameraShake3DExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getAllLayerNames'],
+      javaScriptObjectAllowedProperties: [],
+    },
     Collision3D: {
       gdjsAllowedProperties: [
         '_collision3DExtension',
-        'ObjectList',
+        'RuntimeObject3D',
         'AABB',
         'Polygon',
       ],
@@ -222,6 +242,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    DoubleClick: {
+      gdjsAllowedProperties: ['_DoubleClickExtension', 'InputManager'],
+      gdjsEvtToolsAllowedProperties: ['input'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     FlexBox: {
       gdjsAllowedProperties: ['layoutContainers'],
       gdjsEvtToolsAllowedProperties: [],
@@ -243,6 +269,37 @@ const extensionsAllowedProperties = {
     Geolocation: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: ['geolocation'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    HedgehogPlatformer: {
+      gdjsAllowedProperties: [
+        '__hedgehogPlatformerExtension',
+        'RuntimeInstanceContainer',
+        'BehaviorRBushAABB',
+        'RuntimeBehavior',
+        'RaycastTestResult',
+        'Polygon',
+        'SpriteRuntimeObject',
+      ],
+      gdjsEvtToolsAllowedProperties: ['object'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    HeightMap3D: {
+      gdjsAllowedProperties: [
+        '__heightMap3DExtension',
+        'CustomRuntimeObject3D',
+        'CustomRuntimeObject',
+        'Physics3DRuntimeBehavior',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    InkJS: {
+      gdjsAllowedProperties: ['_InkJS', 'GDStory'],
+      gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
@@ -278,7 +335,7 @@ const extensionsAllowedProperties = {
       ],
     },
     MousePointerLock: {
-      gdjsAllowedProperties: ['_MousePointerLockExtension'],
+      gdjsAllowedProperties: ['_MousePointerLockExtension', 'RuntimeGame'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
@@ -330,6 +387,9 @@ const extensionsAllowedProperties = {
         '__particleEmmiter3DExtension',
         'CustomRuntimeObject',
         'CustomRuntimeObjectInstanceContainer',
+        'CustomRuntimeObject3DRenderer',
+        'CustomRuntimeObject3D',
+        'SpriteAnimationData',
       ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: ['__particleEmmiter3DExtension'],
@@ -424,6 +484,22 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Sprite3D: {
+      gdjsAllowedProperties: [
+        '__sprite3DExtension',
+        'CustomRuntimeObject',
+        'Polygon',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    SpriteMultitouchJoystick: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['input'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     Sticker: {
       gdjsAllowedProperties: [
         '_stickerExtension',
@@ -434,6 +510,18 @@ const extensionsAllowedProperties = {
       gdjsEvtToolsAllowedProperties: ['object'],
       runtimeSceneAllowedProperties: ['_stickerExtension'],
       javaScriptObjectAllowedProperties: [],
+    },
+    Text3D: {
+      gdjsAllowedProperties: [
+        '__text3DExtension',
+        'TextRuntimeObject',
+        'CustomRuntimeObject3D',
+        'CustomRuntimeObjectInstanceContainer',
+        'CustomRuntimeObject3DRenderer',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: ['freeze'],
     },
     TextEntryVirtualKeyboard: {
       gdjsAllowedProperties: ['_extensionMobileKeyboard'],
@@ -453,6 +541,15 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    TiledUnitsBar: {
+      gdjsAllowedProperties: [
+        '_TiledUnitsBarExtension',
+        'AnchorRuntimeBehavior',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     TopDownCornerSliding: {
       gdjsAllowedProperties: [
         '__topDownCornerSlidingExtension',
@@ -465,6 +562,16 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Tween3D: {
+      gdjsAllowedProperties: [
+        '__tween3DExtension',
+        'RuntimeObject3D',
+        'registerObjectDeletedFromSceneCallback',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['__tween3DExtension'],
+      javaScriptObjectAllowedProperties: [],
+    },
     VoiceRecognition: {
       gdjsAllowedProperties: ['_extensionVoiceRecognition'],
       gdjsEvtToolsAllowedProperties: [],
@@ -474,6 +581,12 @@ const extensionsAllowedProperties = {
     WebSocketClient: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: ['wsClient'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    WortalSDK: {
+      gdjsAllowedProperties: ['_wortalExtension'],
+      gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
@@ -499,6 +612,24 @@ const extensionsAllowedProperties = {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: ['getObjects'],
+      javaScriptObjectAllowedProperties: [],
+    },
+    PlaygamaBridge: {
+      gdjsAllowedProperties: ['_playgamaBridgeExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: ['setPrototypeOf'],
+    },
+    Sky3D: {
+      gdjsAllowedProperties: ['__Sky3DExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    PlayerAvatar: {
+      gdjsAllowedProperties: ['_extensionAvatar', 'multiplayerMessageManager'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
   },

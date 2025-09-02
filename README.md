@@ -1,8 +1,8 @@
-![GDevelop logo](https://raw.githubusercontent.com/4ian/GDevelop/master/Core/docs/images/gdlogo.png 'GDevelop logo')
+![GDevelop logo](https://raw.githubusercontent.com/4ian/GDevelop/master/newIDE/GDevelop%20banner.png 'GDevelop logo')
 
-GDevelop is a full-featured, open-source game development software, allowing to create desktop and mobile games without any knowledge in a specific programming language. All the game logic is built up using an intuitive and powerful event-based system.
+GDevelop is a **full-featured, no-code, open-source** game development software. You can build **2D, 3D and multiplayer games** for mobile (iOS, Android), desktop and the web. GDevelop is fast and easy to use: the game logic is built up using an intuitive and powerful event-based system and reusable behaviors.
 
-# GDevelop Community Extensions
+# GDevelop Official and Community Extensions
 
 This repository hosts community made extensions for GDevelop. Extensions can provide new behaviors for objects, actions, conditions or expressions.
 
@@ -10,7 +10,7 @@ This repository hosts community made extensions for GDevelop. Extensions can pro
 
 | ❔ I want to...                 | 🚀 What to do                                                         |
 | ------------------------------- | --------------------------------------------------------------------- |
-| Download GDevelop to make games | Go on [GDevelop website](https://gdevelop.io) to download GD!    |
+| 🎮 Use GDevelop to make games   | Go to [GDevelop homepage](https://gdevelop.io) to download the app!   |
 | Use an extension                | Extensions can be **searched and downloaded** directly from GDevelop. |
 | Contribute to GDevelop itself   | Visit [GDevelop GitHub repository](https://github.com/4ian/GDevelop). |
 | Create/improve an extension     | Read below.                                                           |

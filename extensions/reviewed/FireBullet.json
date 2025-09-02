@@ -2,21 +2,25 @@
   "author": "@4ian",
   "category": "Game mechanic",
   "extensionNamespace": "",
+  "gdevelopVersion": ">=5.5.222",
   "fullName": "Fire bullets",
   "helpPath": "/extensions/fire-bullet/details",
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWJ1bGxldCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xNCwyMkgxMFYyMUgxNFYyMk0xMywxMFY3SDExVjEwTDEwLDExLjVWMjBIMTRWMTEuNUwxMywxME0xMiwyQzEyLDIgMTEsMyAxMSw1VjZIMTNWNUMxMyw1IDEzLDMgMTIsMloiIC8+PC9zdmc+",
   "name": "FireBullet",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/bullet.svg",
   "shortDescription": "Fire bullets, manage ammo, reloading and overheating.",
-  "version": "0.6.4",
+  "version": "0.9.1",
   "description": [
-    "This extension allows objects to fire bullets.",
+    "This extension allows objects to fire bullets. To use it, add the behavior to the object that will shoot, then use the provided action to launch another object as the bullet.",
     "",
-    "It handles:",
+    "The properties of the behavior can be used to customize:",
     "- Cooldown between shots",
     "- Firing multiple bullets at a time ([open the project online](https://editor.gdevelop.io/?project=example://fire-bullet))",
     "- Ammo management",
     "- Overheat",
+    "",
+    "The speed can be specified when using the actions to fire the bullets.",
+    "The bullets are automatically given a permanent force to make them move (no need to use a linear movement or move them with another behavior).",
     "",
     "It can be used for:",
     "- Twin-stick shooters ([open the project online](https://editor.gdevelop.io/?project=example://conviction-of-gun-dude-desktop))",
@@ -46,10 +50,12 @@
     "gqDaZjCfevOOxBYkK6zlhtZnXCg1"
   ],
   "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
   "eventsFunctions": [],
   "eventsBasedBehaviors": [
     {
-      "description": "Fire bullets, manage ammo, reloading, and overheating.",
+      "description": "Fire bullets, manage ammo, reloading, and overheating. Once added to your object that must shoot, use the behavior action in your events to fire another object as a bullet. This action will also make the bullet move (using a permanent force) at the speed specified in the action.",
       "fullName": "Fire bullets",
       "name": "FireBullet",
       "objectType": "",
@@ -75,24 +81,22 @@
                 },
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyAmmoQuantity"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "AmmoQuantity",
                     "=",
-                    "Object.Behavior::PropertyStartingAmmo()"
+                    "StartingAmmo"
                   ]
                 },
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyShotsBeforeNextReload"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "ShotsBeforeNextReload",
                     "=",
-                    "Object.Behavior::PropertyShotsPerReload()"
+                    "ShotsPerReload"
                   ]
                 }
               ]
@@ -145,114 +149,93 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "FireBullet::FireBullet::PropertyHasJustFired"
+                        "value": "BooleanVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior"
+                        "HasJustFired",
+                        "True",
+                        ""
                       ]
                     }
                   ],
-                  "actions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetBooleanVariable"
+                      },
+                      "parameters": [
+                        "HasJustFired",
+                        "False",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "ResetObjectTimer"
+                      },
+                      "parameters": [
+                        "Object",
+                        "\"__FireBullet.FiringCooldown\""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "TotalShotsFired",
+                        "+",
+                        "1"
+                      ]
+                    }
+                  ],
                   "events": [
                     {
                       "colorB": 228,
                       "colorG": 176,
                       "colorR": 74,
                       "creationTime": 0,
-                      "name": "Reset firing cooldown",
+                      "name": "Ammo",
                       "source": "",
                       "type": "BuiltinCommonInstructions::Group",
                       "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "ResetObjectTimer"
-                              },
-                              "parameters": [
-                                "Object",
-                                "\"__FireBullet.FiringCooldown\""
-                              ]
-                            }
-                          ]
-                        }
-                      ],
-                      "parameters": []
-                    },
-                    {
-                      "colorB": 228,
-                      "colorG": 176,
-                      "colorR": 74,
-                      "creationTime": 0,
-                      "name": "Update ammo",
-                      "source": "",
-                      "type": "BuiltinCommonInstructions::Group",
-                      "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Comment",
-                          "color": {
-                            "b": 109,
-                            "g": 230,
-                            "r": 255,
-                            "textB": 0,
-                            "textG": 0,
-                            "textR": 0
-                          },
-                          "comment": "Subtract 1 from ammo (if not unlimited ammo)"
-                        },
                         {
                           "type": "BuiltinCommonInstructions::Standard",
                           "conditions": [
                             {
                               "type": {
                                 "inverted": true,
-                                "value": "FireBullet::FireBullet::PropertyUnlimitedAmmo"
+                                "value": "BooleanVariable"
                               },
                               "parameters": [
-                                "Object",
-                                "Behavior"
+                                "UnlimitedAmmo",
+                                "True",
+                                ""
                               ]
                             }
                           ],
                           "actions": [
                             {
                               "type": {
-                                "value": "FireBullet::FireBullet::SetPropertyAmmoQuantity"
+                                "value": "SetNumberVariable"
                               },
                               "parameters": [
-                                "Object",
-                                "Behavior",
-                                "-",
-                                "1"
+                                "AmmoQuantity",
+                                "=",
+                                "max(0, AmmoQuantity - 1)"
                               ]
                             }
                           ]
-                        }
-                      ],
-                      "parameters": []
-                    },
-                    {
-                      "colorB": 228,
-                      "colorG": 176,
-                      "colorR": 74,
-                      "creationTime": 0,
-                      "name": "Update reloading counter",
-                      "source": "",
-                      "type": "BuiltinCommonInstructions::Group",
-                      "events": [
+                        },
                         {
                           "type": "BuiltinCommonInstructions::Standard",
                           "conditions": [
                             {
                               "type": {
-                                "value": "FireBullet::FireBullet::PropertyShotsPerReload"
+                                "value": "NumberVariable"
                               },
                               "parameters": [
-                                "Object",
-                                "Behavior",
+                                "ShotsPerReload",
                                 ">",
                                 "0"
                               ]
@@ -261,39 +244,27 @@
                           "actions": [
                             {
                               "type": {
-                                "value": "FireBullet::FireBullet::SetPropertyShotsBeforeNextReload"
+                                "value": "SetNumberVariable"
                               },
                               "parameters": [
-                                "Object",
-                                "Behavior",
+                                "ShotsBeforeNextReload",
                                 "-",
                                 "1"
                               ]
                             }
                           ]
-                        }
-                      ],
-                      "parameters": []
-                    },
-                    {
-                      "colorB": 228,
-                      "colorG": 176,
-                      "colorR": 74,
-                      "creationTime": 0,
-                      "name": "Automatically reload gun when needed",
-                      "source": "",
-                      "type": "BuiltinCommonInstructions::Group",
-                      "events": [
+                        },
                         {
                           "type": "BuiltinCommonInstructions::Standard",
                           "conditions": [
                             {
                               "type": {
-                                "value": "FireBullet::FireBullet::PropertyAutomaticReloading"
+                                "value": "BooleanVariable"
                               },
                               "parameters": [
-                                "Object",
-                                "Behavior"
+                                "AutomaticReloading",
+                                "True",
+                                ""
                               ]
                             },
                             {
@@ -339,32 +310,19 @@
                       "colorG": 176,
                       "colorR": 74,
                       "creationTime": 0,
-                      "name": "Update Overheat",
+                      "name": "Overheat",
                       "source": "",
                       "type": "BuiltinCommonInstructions::Group",
                       "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Comment",
-                          "color": {
-                            "b": 109,
-                            "g": 230,
-                            "r": 255,
-                            "textB": 0,
-                            "textG": 0,
-                            "textR": 0
-                          },
-                          "comment": "Increase heat (if needed)"
-                        },
                         {
                           "type": "BuiltinCommonInstructions::Standard",
                           "conditions": [
                             {
                               "type": {
-                                "value": "FireBullet::FireBullet::PropertyHeatIncreasePerShot"
+                                "value": "NumberVariable"
                               },
                               "parameters": [
-                                "Object",
-                                "Behavior",
+                                "HeatIncreasePerShot",
                                 ">",
                                 "0"
                               ]
@@ -373,39 +331,25 @@
                           "actions": [
                             {
                               "type": {
-                                "value": "FireBullet::FireBullet::SetPropertyHeatLevel"
+                                "value": "SetNumberVariable"
                               },
                               "parameters": [
-                                "Object",
-                                "Behavior",
+                                "HeatLevel",
                                 "+",
-                                "Object.Behavior::PropertyHeatIncreasePerShot()"
+                                "HeatIncreasePerShot"
                               ]
                             }
                           ],
                           "events": [
                             {
-                              "type": "BuiltinCommonInstructions::Comment",
-                              "color": {
-                                "b": 109,
-                                "g": 230,
-                                "r": 255,
-                                "textB": 0,
-                                "textG": 0,
-                                "textR": 0
-                              },
-                              "comment": "Check if this caused overheat"
-                            },
-                            {
                               "type": "BuiltinCommonInstructions::Standard",
                               "conditions": [
                                 {
                                   "type": {
-                                    "value": "FireBullet::FireBullet::PropertyOverheatDuration"
+                                    "value": "NumberVariable"
                                   },
                                   "parameters": [
-                                    "Object",
-                                    "Behavior",
+                                    "OverheatDuration",
                                     ">",
                                     "0"
                                   ]
@@ -437,63 +381,6 @@
                         }
                       ],
                       "parameters": []
-                    },
-                    {
-                      "colorB": 228,
-                      "colorG": 176,
-                      "colorR": 74,
-                      "creationTime": 0,
-                      "name": "Update statistics",
-                      "source": "",
-                      "type": "BuiltinCommonInstructions::Group",
-                      "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "FireBullet::FireBullet::SetPropertyTotalShotsFired"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                "+",
-                                "1"
-                              ]
-                            }
-                          ]
-                        }
-                      ],
-                      "parameters": []
-                    },
-                    {
-                      "colorB": 228,
-                      "colorG": 176,
-                      "colorR": 74,
-                      "creationTime": 0,
-                      "name": "Reset firing detection",
-                      "source": "",
-                      "type": "BuiltinCommonInstructions::Group",
-                      "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "FireBullet::FireBullet::SetPropertyHasJustFired"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                "="
-                              ]
-                            }
-                          ]
-                        }
-                      ],
-                      "parameters": []
                     }
                   ]
                 }
@@ -505,7 +392,7 @@
               "colorG": 176,
               "colorR": 74,
               "creationTime": 0,
-              "name": "Reload gun when needed",
+              "name": "Reload",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
               "events": [
@@ -542,30 +429,29 @@
                         "Object",
                         "\"__FireBullet.ReloadingTimer\"",
                         ">=",
-                        "Object.Behavior::PropertyReloadDuration()"
+                        "ReloadDuration"
                       ]
                     }
                   ],
                   "actions": [
                     {
                       "type": {
-                        "value": "FireBullet::FireBullet::SetPropertyTotalReloadsCompleted"
+                        "value": "SetNumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "TotalReloadsCompleted",
                         "+",
                         "1"
                       ]
                     },
                     {
                       "type": {
-                        "value": "FireBullet::FireBullet::SetPropertyReloadInProgress"
+                        "value": "SetBooleanVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
-                        "no"
+                        "ReloadInProgress",
+                        "False",
+                        ""
                       ]
                     }
                   ],
@@ -587,13 +473,12 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "FireBullet::FireBullet::SetPropertyShotsBeforeNextReload"
+                            "value": "SetNumberVariable"
                           },
                           "parameters": [
-                            "Object",
-                            "Behavior",
+                            "ShotsBeforeNextReload",
                             "=",
-                            "Object.Behavior::PropertyShotsPerReload()"
+                            "ShotsPerReload"
                           ]
                         }
                       ]
@@ -628,13 +513,12 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "FireBullet::FireBullet::SetPropertyShotsBeforeNextReload"
+                            "value": "SetNumberVariable"
                           },
                           "parameters": [
-                            "Object",
-                            "Behavior",
+                            "ShotsBeforeNextReload",
                             "=",
-                            "min(Object.Behavior::PropertyShotsPerReload(), Object.Behavior::PropertyAmmoQuantity())"
+                            "min(ShotsPerReload, AmmoQuantity)"
                           ]
                         }
                       ]
@@ -649,7 +533,7 @@
               "colorG": 176,
               "colorR": 74,
               "creationTime": 0,
-              "name": "Reduce heat level (based on cooling rate)",
+              "name": "Cooling",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
               "events": [
@@ -661,7 +545,7 @@
                         "value": "BuiltinCommonInstructions::CompareNumbers"
                       },
                       "parameters": [
-                        "Object.Behavior::HeatLevel()",
+                        "HeatLevel",
                         ">",
                         "0"
                       ]
@@ -674,11 +558,10 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "FireBullet::FireBullet::PropertyExponentialCoolingRate"
+                            "value": "NumberVariable"
                           },
                           "parameters": [
-                            "Object",
-                            "Behavior",
+                            "ExponentialCoolingRate",
                             ">",
                             "0"
                           ]
@@ -687,13 +570,12 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "FireBullet::FireBullet::SetPropertyHeatLevel"
+                            "value": "SetNumberVariable"
                           },
                           "parameters": [
-                            "Object",
-                            "Behavior",
+                            "HeatLevel",
                             "=",
-                            "max(0, Object.Behavior::PropertyHeatLevel() - TimeDelta() * Object.Behavior::PropertyExponentialCoolingRate() * Object.Behavior::PropertyHeatLevel())"
+                            "max(0, HeatLevel - TimeDelta() * ExponentialCoolingRate * HeatLevel)"
                           ]
                         }
                       ]
@@ -703,11 +585,10 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "FireBullet::FireBullet::PropertyLinearCoolingRate"
+                            "value": "NumberVariable"
                           },
                           "parameters": [
-                            "Object",
-                            "Behavior",
+                            "LinearCoolingRate",
                             ">",
                             "0"
                           ]
@@ -716,13 +597,12 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "FireBullet::FireBullet::SetPropertyHeatLevel"
+                            "value": "SetNumberVariable"
                           },
                           "parameters": [
-                            "Object",
-                            "Behavior",
+                            "HeatLevel",
                             "=",
-                            "max(0, Object.Behavior::PropertyHeatLevel() - TimeDelta() * Object.Behavior::PropertyLinearCoolingRate())"
+                            "max(0, HeatLevel - TimeDelta() * LinearCoolingRate)"
                           ]
                         }
                       ]
@@ -749,44 +629,32 @@
           "objectGroups": []
         },
         {
-          "description": "Fire bullets toward an object.",
+          "description": "Fire bullets toward an object at a specified speed.",
           "fullName": "Fire bullets toward an object",
           "functionType": "Action",
           "name": "FireTowardObject",
           "sentence": "Fire _PARAM4_ from _PARAM0_, at position _PARAM2_; _PARAM3_, toward _PARAM5_ with speed _PARAM6_ px/s",
           "events": [
             {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
-              "creationTime": 0,
-              "name": "Calculate the trajectory angle and use the \"Fire bullets\" action",
-              "source": "",
-              "type": "BuiltinCommonInstructions::Group",
-              "events": [
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
                 {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "FireBullet::FireBullet::Fire"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "GetArgumentAsNumber(\"XPosition\")",
-                        "GetArgumentAsNumber(\"YPosition\")",
-                        "Bullet",
-                        "Object.AngleToObject(TargetObject)",
-                        "GetArgumentAsNumber(\"Speed\")",
-                        ""
-                      ]
-                    }
+                  "type": {
+                    "value": "FireBullet::FireBullet::Fire"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "XPosition",
+                    "YPosition",
+                    "Bullet",
+                    "Object.AngleToObject(TargetObject)",
+                    "Speed",
+                    ""
                   ]
                 }
-              ],
-              "parameters": []
+              ]
             }
           ],
           "parameters": [
@@ -830,44 +698,32 @@
           "objectGroups": []
         },
         {
-          "description": "Fire bullets toward a position.",
+          "description": "Fire bullets toward a position at a specified speed.",
           "fullName": "Fire bullets toward a position",
           "functionType": "Action",
           "name": "FireTowardPosition",
           "sentence": "Fire _PARAM4_ from _PARAM0_, at position _PARAM2_; _PARAM3_, toward position _PARAM5_;_PARAM6_ with speed _PARAM7_ px/s",
           "events": [
             {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
-              "creationTime": 0,
-              "name": "Calculate the trajectory angle and use the \"Fire bullets\" action",
-              "source": "",
-              "type": "BuiltinCommonInstructions::Group",
-              "events": [
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
                 {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "FireBullet::FireBullet::Fire"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "GetArgumentAsNumber(\"XPosition\")",
-                        "GetArgumentAsNumber(\"YPosition\")",
-                        "Bullet",
-                        "Object.AngleToPosition(GetArgumentAsNumber(\"TargetXPosition\"), GetArgumentAsNumber(\"TargetYPosition\"))",
-                        "GetArgumentAsNumber(\"Speed\")",
-                        ""
-                      ]
-                    }
+                  "type": {
+                    "value": "FireBullet::FireBullet::Fire"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "XPosition",
+                    "YPosition",
+                    "Bullet",
+                    "Object.AngleToPosition(TargetXPosition, TargetYPosition)",
+                    "Speed",
+                    ""
                   ]
                 }
-              ],
-              "parameters": []
+              ]
             }
           ],
           "parameters": [
@@ -916,143 +772,170 @@
           "objectGroups": []
         },
         {
-          "description": "Fire bullets in the direction of a given angle.",
+          "description": "Fire bullets in the direction of a given angle at a specified speed.",
           "fullName": "Fire bullets toward an angle",
           "functionType": "Action",
           "name": "Fire",
           "sentence": "Fire _PARAM4_ from _PARAM0_, at position _PARAM2_; _PARAM3_, toward angle _PARAM5_ and speed _PARAM6_ px/s",
           "events": [
             {
-              "colorB": 228,
-              "colorG": 176,
-              "colorR": 74,
-              "creationTime": 0,
-              "name": "Check if ready to shoot",
-              "source": "",
-              "type": "BuiltinCommonInstructions::Group",
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::IsReadyToShoot"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetBooleanVariable"
+                  },
+                  "parameters": [
+                    "HasJustFired",
+                    "True",
+                    ""
+                  ]
+                }
+              ],
               "events": [
                 {
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [
                     {
                       "type": {
-                        "value": "FireBullet::FireBullet::IsReadyToShoot"
+                        "value": "BuiltinCommonInstructions::CompareNumbers"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
-                        ""
+                        "BulletQuantity",
+                        "=",
+                        "1"
                       ]
                     }
                   ],
                   "actions": [
                     {
                       "type": {
-                        "value": "FireBullet::FireBullet::SetPropertyHasJustFired"
+                        "value": "FireBullet::FireBullet::FireSingleBullet"
                       },
                       "parameters": [
                         "Object",
                         "Behavior",
-                        "yes"
+                        "XPosition",
+                        "YPosition",
+                        "Bullet",
+                        "Angle",
+                        "Speed",
+                        ""
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                      },
+                      "parameters": [
+                        "BulletQuantity",
+                        ">",
+                        "1"
                       ]
                     }
                   ],
+                  "actions": [],
                   "events": [
                     {
-                      "colorB": 228,
-                      "colorG": 176,
-                      "colorR": 74,
-                      "creationTime": 0,
-                      "name": "Single bullet",
-                      "source": "",
-                      "type": "BuiltinCommonInstructions::Group",
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [],
+                      "actions": [],
                       "events": [
                         {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [
+                          "type": "BuiltinCommonInstructions::Repeat",
+                          "repeatExpression": "BulletQuantity",
+                          "conditions": [],
+                          "actions": [],
+                          "events": [
                             {
-                              "type": {
-                                "value": "BuiltinCommonInstructions::CompareNumbers"
-                              },
-                              "parameters": [
-                                "Object.Behavior::PropertyBulletQuantity()",
-                                "=",
-                                "1"
-                              ]
-                            }
-                          ],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "FireBullet::FireBullet::FireSingleBullet"
-                              },
-                              "parameters": [
-                                "Object",
-                                "Behavior",
-                                "GetArgumentAsNumber(\"XPosition\")",
-                                "GetArgumentAsNumber(\"YPosition\")",
-                                "Bullet",
-                                "GetArgumentAsNumber(\"Angle\")",
-                                "GetArgumentAsNumber(\"Speed\")",
-                                ""
-                              ]
-                            }
-                          ]
-                        }
-                      ],
-                      "parameters": []
-                    },
-                    {
-                      "colorB": 228,
-                      "colorG": 176,
-                      "colorR": 74,
-                      "creationTime": 0,
-                      "name": "Multiple bullets",
-                      "source": "",
-                      "type": "BuiltinCommonInstructions::Group",
-                      "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [
-                            {
-                              "type": {
-                                "value": "BuiltinCommonInstructions::CompareNumbers"
-                              },
-                              "parameters": [
-                                "Object.Behavior::PropertyBulletQuantity()",
-                                ">",
-                                "1"
-                              ]
-                            }
-                          ],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "ModVarObjet"
-                              },
-                              "parameters": [
-                                "Object",
-                                "__FireBullet.CurrentBulletAngle",
-                                "=",
-                                "GetArgumentAsNumber(\"Angle\") - Object.Behavior::PropertyFiringArc()/2"
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [
+                                {
+                                  "type": {
+                                    "value": "FireBullet::FireBullet::FiringArc"
+                                  },
+                                  "parameters": [
+                                    "Object",
+                                    "Behavior",
+                                    "!=",
+                                    "360",
+                                    ""
+                                  ]
+                                }
+                              ],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "SetNumberVariable"
+                                  },
+                                  "parameters": [
+                                    "MultiShotAngle",
+                                    "=",
+                                    "Angle + lerp(-FiringArc / 2, FiringArc / 2, BulletIndex / (BulletQuantity - 1)) "
+                                  ]
+                                }
                               ]
                             },
                             {
-                              "type": {
-                                "value": "ModVarObjet"
+                              "type": "BuiltinCommonInstructions::Comment",
+                              "color": {
+                                "b": 109,
+                                "g": 230,
+                                "r": 255,
+                                "textB": 0,
+                                "textG": 0,
+                                "textR": 0
                               },
-                              "parameters": [
-                                "Object",
-                                "__FireBullet.BatchOrderID",
-                                "=",
-                                "0"
-                              ]
-                            }
-                          ],
-                          "events": [
+                              "comment": "When firing in a full circle, prevent first and last bullet from using the same angle"
+                            },
                             {
-                              "type": "BuiltinCommonInstructions::Repeat",
-                              "repeatExpression": "Object.Behavior::PropertyBulletQuantity()",
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [
+                                {
+                                  "type": {
+                                    "value": "FireBullet::FireBullet::FiringArc"
+                                  },
+                                  "parameters": [
+                                    "Object",
+                                    "Behavior",
+                                    "=",
+                                    "360",
+                                    ""
+                                  ]
+                                }
+                              ],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "SetNumberVariable"
+                                  },
+                                  "parameters": [
+                                    "MultiShotAngle",
+                                    "=",
+                                    "Angle + lerp(-FiringArc / 2, FiringArc / 2, BulletIndex / BulletQuantity) "
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
                               "conditions": [],
                               "actions": [
                                 {
@@ -1062,54 +945,22 @@
                                   "parameters": [
                                     "Object",
                                     "Behavior",
-                                    "GetArgumentAsNumber(\"XPosition\")",
-                                    "GetArgumentAsNumber(\"YPosition\")",
+                                    "XPosition",
+                                    "YPosition",
                                     "Bullet",
-                                    "Object.Variable(__FireBullet.CurrentBulletAngle) + RandomInRange(-Object.Behavior::PropertyAngleVariance(),Object.Behavior::PropertyAngleVariance())",
-                                    "GetArgumentAsNumber(\"Speed\")",
+                                    "MultiShotAngle",
+                                    "Speed",
                                     ""
                                   ]
-                                }
-                              ],
-                              "events": [
-                                {
-                                  "type": "BuiltinCommonInstructions::Comment",
-                                  "color": {
-                                    "b": 109,
-                                    "g": 230,
-                                    "r": 255,
-                                    "textB": 0,
-                                    "textG": 0,
-                                    "textR": 0
-                                  },
-                                  "comment": "Move temp variable to the next angle a bullet will be sent"
                                 },
                                 {
-                                  "type": "BuiltinCommonInstructions::Standard",
-                                  "conditions": [],
-                                  "actions": [
-                                    {
-                                      "type": {
-                                        "value": "ModVarObjet"
-                                      },
-                                      "parameters": [
-                                        "Object",
-                                        "__FireBullet.CurrentBulletAngle",
-                                        "+",
-                                        "Object.Behavior::PropertyFiringArc() / (Object.Behavior::PropertyBulletQuantity() - 1)"
-                                      ]
-                                    },
-                                    {
-                                      "type": {
-                                        "value": "ModVarObjet"
-                                      },
-                                      "parameters": [
-                                        "Object",
-                                        "__FireBullet.BatchOrderID",
-                                        "+",
-                                        "1"
-                                      ]
-                                    }
+                                  "type": {
+                                    "value": "SetNumberVariable"
+                                  },
+                                  "parameters": [
+                                    "BulletIndex",
+                                    "+",
+                                    "1"
                                   ]
                                 }
                               ]
@@ -1117,12 +968,23 @@
                           ]
                         }
                       ],
-                      "parameters": []
+                      "variables": [
+                        {
+                          "folded": true,
+                          "name": "MultiShotAngle",
+                          "type": "number",
+                          "value": 0
+                        },
+                        {
+                          "name": "BulletIndex",
+                          "type": "number",
+                          "value": 0
+                        }
+                      ]
                     }
                   ]
                 }
-              ],
-              "parameters": []
+              ]
             }
           ],
           "parameters": [
@@ -1206,9 +1068,9 @@
                       "parameters": [
                         "",
                         "Bullet",
-                        "GetArgumentAsNumber(\"XPosition\")",
-                        "GetArgumentAsNumber(\"YPosition\")",
-                        "Object.Behavior::PropertyBulletLayer()"
+                        "XPosition",
+                        "YPosition",
+                        "BulletLayer"
                       ]
                     }
                   ],
@@ -1231,13 +1093,12 @@
                       "actions": [
                         {
                           "type": {
-                            "value": "FireBullet::FireBullet::SetPropertyRandomizedAngle"
+                            "value": "SetNumberVariable"
                           },
                           "parameters": [
-                            "Object",
-                            "Behavior",
+                            "RandomizedAngle",
                             "=",
-                            "GetArgumentAsNumber(\"Angle\") + RandomInRange(-Object.Behavior::PropertyAngleVariance(), Object.Behavior::PropertyAngleVariance())"
+                            "Angle + RandomInRange(-AngleVariance, AngleVariance)"
                           ]
                         },
                         {
@@ -1246,60 +1107,9 @@
                           },
                           "parameters": [
                             "Bullet",
-                            "Object.Behavior::PropertyRandomizedAngle()",
-                            "GetArgumentAsNumber(\"Speed\") + RandomInRange(-Object.Behavior::PropertyBulletSpeedVariance(), Object.Behavior::PropertyBulletSpeedVariance())",
+                            "RandomizedAngle",
+                            "Speed + RandomInRange(-BulletSpeedVariance, BulletSpeedVariance)",
                             "1"
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "BuiltinCommonInstructions::Comment",
-                      "color": {
-                        "b": 109,
-                        "g": 230,
-                        "r": 255,
-                        "textB": 0,
-                        "textG": 0,
-                        "textR": 0
-                      },
-                      "comment": "Add identifier variables (to enable advanced picking by users)"
-                    },
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [],
-                      "actions": [
-                        {
-                          "type": {
-                            "value": "ModVarObjet"
-                          },
-                          "parameters": [
-                            "Bullet",
-                            "__FireBullet.BulletID",
-                            "=",
-                            "Object.Behavior::PropertyTotalBulletsCreated()"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "ModVarObjet"
-                          },
-                          "parameters": [
-                            "Bullet",
-                            "__FireBullet.BatchID",
-                            "=",
-                            "Object.Behavior::PropertyTotalShotsFired()"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "ModVarObjet"
-                          },
-                          "parameters": [
-                            "Bullet",
-                            "__FireBullet.BatchOrderID",
-                            "=",
-                            "0"
                           ]
                         }
                       ]
@@ -1321,11 +1131,12 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "FireBullet::FireBullet::PropertyRotateBullet"
+                            "value": "BooleanVariable"
                           },
                           "parameters": [
-                            "Object",
-                            "Behavior"
+                            "RotateBullet",
+                            "True",
+                            ""
                           ]
                         }
                       ],
@@ -1337,7 +1148,7 @@
                           "parameters": [
                             "Bullet",
                             "=",
-                            "Object.Behavior::PropertyRandomizedAngle()"
+                            "RandomizedAngle"
                           ]
                         }
                       ]
@@ -1362,11 +1173,10 @@
                   "actions": [
                     {
                       "type": {
-                        "value": "FireBullet::FireBullet::SetPropertyTotalBulletsCreated"
+                        "value": "SetNumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "TotalBulletsCreated",
                         "+",
                         "1"
                       ]
@@ -1442,12 +1252,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyReloadInProgress"
+                    "value": "SetBooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
-                    "yes"
+                    "ReloadInProgress",
+                    "True",
+                    ""
                   ]
                 },
                 {
@@ -1487,28 +1297,15 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "value": "SetReturnBoolean"
-                  },
-                  "parameters": [
-                    "False"
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::PropertyHasJustFired"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior"
+                    "HasJustFired",
+                    "True",
+                    ""
                   ]
                 }
               ],
@@ -1552,11 +1349,12 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::PropertyRotateBullet"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior"
+                    "RotateBullet",
+                    "True",
+                    ""
                   ]
                 }
               ],
@@ -1604,7 +1402,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyFiringArc()"
+                    "FiringArc"
                   ]
                 }
               ]
@@ -1641,13 +1439,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyFiringArc"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "FiringArc",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
@@ -1694,7 +1491,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")",
+                    "Value",
                     ""
                   ]
                 }
@@ -1738,7 +1535,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyAngleVariance()"
+                    "AngleVariance"
                   ]
                 }
               ]
@@ -1775,13 +1572,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyAngleVariance"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "AngleVariance",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
@@ -1828,7 +1624,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")",
+                    "Value",
                     ""
                   ]
                 }
@@ -1872,7 +1668,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyBulletSpeedVariance()"
+                    "BulletSpeedVariance"
                   ]
                 }
               ]
@@ -1909,13 +1705,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyBulletSpeedVariance"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "BulletSpeedVariance",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
@@ -1962,7 +1757,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")",
+                    "Value",
                     ""
                   ]
                 }
@@ -2006,7 +1801,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyBulletQuantity()"
+                    "BulletQuantity"
                   ]
                 }
               ]
@@ -2043,13 +1838,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyBulletQuantity"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "BulletQuantity",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
@@ -2096,7 +1890,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")",
+                    "Value",
                     ""
                   ]
                 }
@@ -2137,13 +1931,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyBulletLayer"
+                    "value": "SetStringVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "BulletLayer",
                     "=",
-                    "GetArgumentAsString(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
@@ -2183,22 +1976,24 @@
                 {
                   "type": {
                     "inverted": true,
-                    "value": "GetArgumentAsBoolean"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "\"RotateBullet\""
+                    "Value",
+                    "True",
+                    ""
                   ]
                 }
               ],
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyRotateBullet"
+                    "value": "SetBooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
-                    "no"
+                    "RotateBullet",
+                    "False",
+                    ""
                   ]
                 }
               ]
@@ -2208,22 +2003,24 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "GetArgumentAsBoolean"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "\"RotateBullet\""
+                    "Value",
+                    "True",
+                    ""
                   ]
                 }
               ],
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyRotateBullet"
+                    "value": "SetBooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
-                    "yes"
+                    "RotateBullet",
+                    "True",
+                    ""
                   ]
                 }
               ]
@@ -2244,7 +2041,7 @@
             {
               "defaultValue": "yes",
               "description": "Rotate bullet to match trajetory",
-              "name": "RotateBullet",
+              "name": "Value",
               "optional": true,
               "type": "yesorno"
             }
@@ -2265,22 +2062,24 @@
                 {
                   "type": {
                     "inverted": true,
-                    "value": "GetArgumentAsBoolean"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "\"UnlimitedAmmo\""
+                    "Value",
+                    "True",
+                    ""
                   ]
                 }
               ],
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyUnlimitedAmmo"
+                    "value": "SetBooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
-                    "no"
+                    "UnlimitedAmmo",
+                    "False",
+                    ""
                   ]
                 }
               ]
@@ -2290,22 +2089,24 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "GetArgumentAsBoolean"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "\"UnlimitedAmmo\""
+                    "Value",
+                    "True",
+                    ""
                   ]
                 }
               ],
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyUnlimitedAmmo"
+                    "value": "SetBooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
-                    "yes"
+                    "UnlimitedAmmo",
+                    "True",
+                    ""
                   ]
                 }
               ]
@@ -2326,7 +2127,7 @@
             {
               "defaultValue": "yes",
               "description": "Unlimited ammo",
-              "name": "UnlimitedAmmo",
+              "name": "Value",
               "optional": true,
               "type": "yesorno"
             }
@@ -2350,7 +2151,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyFireCooldown()"
+                    "FireCooldown"
                   ]
                 }
               ]
@@ -2387,13 +2188,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyFireCooldown"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "FireCooldown",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
@@ -2440,7 +2240,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"NewCooldown\")",
+                    "Value",
                     ""
                   ]
                 }
@@ -2461,7 +2261,7 @@
             },
             {
               "description": "Cooldown in seconds",
-              "name": "NewCooldown",
+              "name": "Value",
               "type": "expression"
             }
           ],
@@ -2484,7 +2284,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyReloadDuration()"
+                    "ReloadDuration"
                   ]
                 }
               ]
@@ -2521,13 +2321,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyReloadDuration"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "ReloadDuration",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
@@ -2574,7 +2373,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")",
+                    "Value",
                     ""
                   ]
                 }
@@ -2618,7 +2417,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyOverheatDuration()"
+                    "OverheatDuration"
                   ]
                 }
               ]
@@ -2655,13 +2454,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyOverheatDuration"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "OverheatDuration",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
@@ -2708,7 +2506,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")",
+                    "Value",
                     ""
                   ]
                 }
@@ -2752,7 +2550,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyAmmoQuantity()"
+                    "AmmoQuantity"
                   ]
                 }
               ]
@@ -2789,13 +2587,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyAmmoQuantity"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "AmmoQuantity",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "max(0, Value)"
                   ]
                 }
               ]
@@ -2842,7 +2639,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")",
+                    "max(0, Value)",
                     ""
                   ]
                 }
@@ -2886,7 +2683,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyHeatIncreasePerShot()"
+                    "HeatIncreasePerShot"
                   ]
                 }
               ]
@@ -2923,13 +2720,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyHeatIncreasePerShot"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "HeatIncreasePerShot",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
@@ -2976,7 +2772,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")",
+                    "Value",
                     ""
                   ]
                 }
@@ -3020,7 +2816,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyMaxAmmo()"
+                    "MaxAmmo"
                   ]
                 }
               ]
@@ -3057,13 +2853,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyMaxAmmo"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "MaxAmmo",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
@@ -3073,11 +2868,10 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::PropertyMaxAmmo"
+                    "value": "NumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "MaxAmmo",
                     ">",
                     "0"
                   ]
@@ -3086,13 +2880,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyAmmoQuantity"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "AmmoQuantity",
                     "=",
-                    "min(Object.Behavior::MaxAmmo(),Object.Behavior::AmmoQuantity())"
+                    "min(MaxAmmo, AmmoQuantity)"
                   ]
                 }
               ]
@@ -3139,7 +2932,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")",
+                    "Value",
                     ""
                   ]
                 }
@@ -3180,11 +2973,10 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyTotalShotsFired"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "TotalShotsFired",
                     "=",
                     "0"
                   ]
@@ -3221,11 +3013,10 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyTotalBulletsCreated"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "TotalBulletsCreated",
                     "=",
                     "0"
                   ]
@@ -3262,11 +3053,10 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyTotalReloadsCompleted"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "TotalReloadsCompleted",
                     "=",
                     "0"
                   ]
@@ -3306,7 +3096,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyShotsPerReload()"
+                    "ShotsPerReload"
                   ]
                 }
               ]
@@ -3343,13 +3133,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyShotsPerReload"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "ShotsPerReload",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
@@ -3359,26 +3148,24 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::PropertyShotsBeforeNextReload"
+                    "value": "NumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "ShotsBeforeNextReload",
                     ">",
-                    "Object.Behavior::PropertyShotsPerReload()"
+                    "ShotsPerReload"
                   ]
                 }
               ],
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyShotsBeforeNextReload"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "ShotsBeforeNextReload",
                     "=",
-                    "Object.Behavior::PropertyShotsPerReload()"
+                    "ShotsPerReload"
                   ]
                 }
               ]
@@ -3425,7 +3212,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")",
+                    "Value",
                     ""
                   ]
                 }
@@ -3466,12 +3253,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyAutomaticReloading"
+                    "value": "SetBooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
-                    "="
+                    "AutomaticReloading",
+                    "False",
+                    ""
                   ]
                 }
               ]
@@ -3481,22 +3268,24 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "GetArgumentAsBoolean"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "\"Value\""
+                    "Value",
+                    "True",
+                    ""
                   ]
                 }
               ],
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyAutomaticReloading"
+                    "value": "SetBooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
-                    "yes"
+                    "AutomaticReloading",
+                    "True",
+                    ""
                   ]
                 }
               ]
@@ -3541,7 +3330,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyLinearCoolingRate()"
+                    "LinearCoolingRate"
                   ]
                 }
               ]
@@ -3578,13 +3367,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyLinearCoolingRate"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "LinearCoolingRate",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
@@ -3631,7 +3419,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")",
+                    "Value",
                     ""
                   ]
                 }
@@ -3675,7 +3463,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyExponentialCoolingRate()"
+                    "ExponentialCoolingRate"
                   ]
                 }
               ]
@@ -3712,13 +3500,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyExponentialCoolingRate"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "ExponentialCoolingRate",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")"
+                    "Value"
                   ]
                 }
               ]
@@ -3766,7 +3553,7 @@
                     "Object",
                     "Behavior",
                     "=",
-                    "GetArgumentAsNumber(\"Value\")",
+                    "Value",
                     ""
                   ]
                 }
@@ -3807,13 +3594,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyAmmoQuantity"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "AmmoQuantity",
                     "+",
-                    "GetArgumentAsNumber(\"AmmoGained\")"
+                    "AmmoGained"
                   ]
                 }
               ]
@@ -3835,11 +3621,10 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::PropertyMaxAmmo"
+                    "value": "NumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "MaxAmmo",
                     ">",
                     "0"
                   ]
@@ -3848,13 +3633,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::SetPropertyAmmoQuantity"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "AmmoQuantity",
                     "=",
-                    "min(Object.Behavior::MaxAmmo(),Object.Behavior::AmmoQuantity())"
+                    "min(MaxAmmo, AmmoQuantity)"
                   ]
                 }
               ]
@@ -3874,11 +3658,12 @@
                 },
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::PropertyAutomaticReloading"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior"
+                    "AutomaticReloading",
+                    "True",
+                    ""
                   ]
                 }
               ],
@@ -3933,7 +3718,7 @@
                     "value": "SetReturnString"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyBulletLayer()"
+                    "BulletLayer"
                   ]
                 }
               ]
@@ -3974,7 +3759,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "min(1,Object.Behavior::PropertyHeatLevel())"
+                    "min(1, HeatLevel)"
                   ]
                 }
               ]
@@ -4015,7 +3800,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyTotalShotsFired()"
+                    "TotalShotsFired"
                   ]
                 }
               ]
@@ -4056,7 +3841,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyTotalBulletsCreated()"
+                    "TotalBulletsCreated"
                   ]
                 }
               ]
@@ -4097,7 +3882,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyTotalReloadsCompleted()"
+                    "TotalReloadsCompleted"
                   ]
                 }
               ]
@@ -4138,7 +3923,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.Behavior::PropertyShotsBeforeNextReload()"
+                    "ShotsBeforeNextReload"
                   ]
                 }
               ]
@@ -4179,7 +3964,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "max(0,Object.Behavior::Cooldown() - Object.ObjectTimerElapsedTime(\"__FireBullet.FiringCooldown\"))"
+                    "max(0, FireCooldown - Object.ObjectTimerElapsedTime(\"__FireBullet.FiringCooldown\"))"
                   ]
                 }
               ]
@@ -4232,7 +4017,60 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "max(0, Object.Behavior::PropertyOverheatDuration() - Object.ObjectTimerElapsedTime(\"__FireBullet.OverheatDuration\"))"
+                    "max(0, OverheatDuration - Object.ObjectTimerElapsedTime(\"__FireBullet.OverheatDuration\"))"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the remaining duration before the reload finishes, in seconds.",
+          "fullName": "Duration before the reload finishes",
+          "functionType": "ExpressionAndCondition",
+          "group": "Reload",
+          "name": "ReloadTimeLeft",
+          "sentence": "the remaining duration before the reload finishes",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "CompareObjectTimer"
+                  },
+                  "parameters": [
+                    "Object",
+                    "\"__FireBullet.ReloadingTimer\"",
+                    ">",
+                    "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "max(0, ReloadDuration - Object.ObjectTimerElapsedTime(\"__FireBullet.ReloadingTimer\"))"
                   ]
                 }
               ]
@@ -4283,11 +4121,12 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::PropertyReloadInProgress"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior"
+                    "ReloadInProgress",
+                    "True",
+                    ""
                   ]
                 }
               ],
@@ -4351,11 +4190,12 @@
                   "subInstructions": [
                     {
                       "type": {
-                        "value": "FireBullet::FireBullet::PropertyHasJustFired"
+                        "value": "BooleanVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior"
+                        "HasJustFired",
+                        "True",
+                        ""
                       ]
                     },
                     {
@@ -4487,11 +4327,12 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::PropertyAutomaticReloading"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior"
+                    "AutomaticReloading",
+                    "True",
+                    ""
                   ]
                 }
               ],
@@ -4549,11 +4390,12 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::PropertyUnlimitedAmmo"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior"
+                    "UnlimitedAmmo",
+                    "True",
+                    ""
                   ]
                 }
               ],
@@ -4622,12 +4464,11 @@
                 },
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::PropertyAmmoQuantity"
+                    "value": "NumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
-                    "=",
+                    "AmmoQuantity",
+                    "<=",
                     "0"
                   ]
                 }
@@ -4698,22 +4539,20 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::PropertyShotsPerReload"
+                    "value": "NumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "ShotsPerReload",
                     ">",
                     "0"
                   ]
                 },
                 {
                   "type": {
-                    "value": "FireBullet::FireBullet::PropertyShotsBeforeNextReload"
+                    "value": "NumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "ShotsBeforeNextReload",
                     "=",
                     "0"
                   ]
@@ -4779,11 +4618,10 @@
                   "subInstructions": [
                     {
                       "type": {
-                        "value": "FireBullet::FireBullet::PropertyHeatLevel"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "HeatLevel",
                         ">=",
                         "1"
                       ]

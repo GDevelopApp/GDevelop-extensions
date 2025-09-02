@@ -5,6 +5,7 @@ const {
   validateExtension,
   validateNoDuplicates,
 } = require('./lib/ExtensionValidator');
+const { getExtensionReferencePagePath } = require('./lib/WikiHelpLink');
 const args = require('minimist')(process.argv.slice(2));
 
 /** @typedef {import('./types').ExtensionShortHeader} ExtensionShortHeader */
@@ -16,7 +17,12 @@ const args = require('minimist')(process.argv.slice(2));
 /** @typedef {import('./types').ExtensionWithFileInfo} ExtensionWithFileInfo */
 /** @typedef {import('./types').ExtensionTier} ExtensionTier */
 /** @typedef {import('./types').Extension} Extension */
+/** @typedef {import('./types').EventsBasedObject} EventsBasedObject */
+/** @typedef {import('./types').EventsBasedObjectInsideExtensionShortHeader} EventsBasedObjectInsideExtensionShortHeader */
 /** @typedef {import('./types').EventsBasedBehavior} EventsBasedBehavior */
+/** @typedef {import('./types').EventsBasedBehaviorInsideExtensionShortHeader} EventsBasedBehaviorInsideExtensionShortHeader */
+/** @typedef {import('./types').EventsFunction} EventsFunction */
+/** @typedef {import('./types').EventsFunctionInsideExtensionShortHeader} EventsFunctionInsideExtensionShortHeader */
 
 const extensionsBasePath = path.join(__dirname, '..', 'extensions');
 const reviewedExtensionsTier = 'reviewed';
@@ -25,7 +31,16 @@ const distBasePath = path.join(__dirname, '..', 'dist');
 const distDatabasesPath = path.join(distBasePath, 'extensions-database');
 const distExtensionsPath = path.join(distBasePath, 'extensions');
 const extensionsBaseUrl = 'https://resources.gdevelop-app.com/extensions';
-const extensionsWithoutValidation = new Set(['WithThreeJS']);
+/**
+ * @type {Set<string>}
+ */
+const extensionsWithoutValidation = new Set([]);
+const extensionsRequiring3DPhysics = new Set([
+  'AdvancedJump3D',
+  'PhysicsCharacter3DAnimator',
+  'PhysicsCharacter3DKeyMapper',
+  'PhysicsEllipseMovement3D',
+]);
 
 /**
  * @param {string} path
@@ -124,6 +139,122 @@ const findAllRequiredBehaviorTypes = (
   return requiredBehaviorTypes;
 };
 
+/**
+ * @param {EventsFunction[]} eventFunctions
+ * @param {EventsFunction} eventFunction
+ * @returns {EventsFunctionInsideExtensionShortHeader}
+ */
+const formatEventFunctionInsideExtensionShortHeader = (
+  eventFunctions,
+  eventFunction
+) => {
+  if (eventFunction.functionType === 'ActionWithOperator') {
+    const getterFunction = eventFunctions.find(
+      (otherEventsFunction) =>
+        otherEventsFunction.name === eventFunction.getterName
+    );
+
+    if (getterFunction) {
+      return {
+        name: eventFunction.name,
+        fullName: getterFunction.fullName,
+        description:
+          'Change ' + (getterFunction.description || getterFunction.fullName),
+        functionType: 'Action',
+      };
+    } else {
+      return {
+        name: eventFunction.name,
+        fullName: eventFunction.fullName,
+        description: 'Change ' + eventFunction.description,
+        functionType: 'Action',
+      };
+    }
+  }
+
+  if (eventFunction.functionType === 'ExpressionAndCondition') {
+    return {
+      name: eventFunction.name,
+      fullName: eventFunction.fullName,
+      description: 'Compare ' + eventFunction.description,
+      functionType: 'Condition',
+    };
+  }
+
+  return {
+    name: eventFunction.name,
+    fullName: eventFunction.fullName,
+    description: eventFunction.description,
+    functionType: eventFunction.functionType,
+  };
+};
+
+/**
+ * @param {EventsBasedBehavior} eventsBasedBehavior
+ * @returns {EventsBasedBehaviorInsideExtensionShortHeader}
+ */
+const formatEventsBasedBehaviorInsideExtensionShortHeader = (
+  eventsBasedBehavior
+) => {
+  return {
+    description: eventsBasedBehavior.description,
+    fullName: eventsBasedBehavior.fullName,
+    name: eventsBasedBehavior.name,
+    objectType: eventsBasedBehavior.objectType,
+    eventsFunctions: filterEventsFunctions(
+      eventsBasedBehavior.eventsFunctions
+    ).map((eventsFunction) =>
+      formatEventFunctionInsideExtensionShortHeader(
+        eventsBasedBehavior.eventsFunctions,
+        eventsFunction
+      )
+    ),
+  };
+};
+
+/**
+ * @param {EventsBasedObject} eventsBasedObject
+ * @returns {EventsBasedObjectInsideExtensionShortHeader}
+ */
+const formatEventsBasedObjectInsideExtensionShortHeader = (
+  eventsBasedObject
+) => {
+  return {
+    description: eventsBasedObject.description,
+    fullName: eventsBasedObject.fullName,
+    name: eventsBasedObject.name,
+    defaultName: eventsBasedObject.defaultName,
+    eventsFunctions: filterEventsFunctions(
+      eventsBasedObject.eventsFunctions
+    ).map((eventsFunction) =>
+      formatEventFunctionInsideExtensionShortHeader(
+        eventsBasedObject.eventsFunctions,
+        eventsFunction
+      )
+    ),
+  };
+};
+
+/** @param {Array<EventsBasedBehavior>} behaviors */
+const filterEventsBasedBehaviors = (behaviors) =>
+  behaviors.filter((behavior) => !behavior.private);
+
+/** @param {Array<EventsBasedObject>} objects */
+const filterEventsBasedObjects = (objects) =>
+  objects.filter((object) => !object.private);
+
+/** @param {Array<EventsFunction>} eventsFunctions */
+const filterEventsFunctions = (eventsFunctions) =>
+  eventsFunctions.filter(
+    (eventFunction) =>
+      // Lifecycle functions, which have no full names, are never shown.
+      // ActionWithOperator have no full name but will read it from their associated getter.
+      (eventFunction.fullName ||
+        eventFunction.functionType === 'ActionWithOperator') &&
+      // Private functions are never shown.
+      !eventFunction.private
+  );
+
 (async () => {
   try {
     shell.mkdir('-p', distBasePath);
@@ -154,11 +285,13 @@ const findAllRequiredBehaviorTypes = (
     const objectShortHeaders = [];
 
     let totalErrors = 0;
+    let fatalErrors = 0;
     let fixableErrors = 0;
 
     const errors = validateNoDuplicates(allExtensionWithFileInfos);
     errors.forEach((error) => {
       totalErrors++;
+      fatalErrors++;
       shell.echo(`❌ ${error.message}`);
     });
 
@@ -170,6 +303,7 @@ const findAllRequiredBehaviorTypes = (
             `\n❌ Unable to open extension in file ${extensionWithFileInfo.filename}: ${error.message}\n`
           );
           totalErrors++;
+          fatalErrors++;
           return;
         }
 
@@ -226,23 +360,56 @@ const findAllRequiredBehaviorTypes = (
           tags: extension.tags,
           category: extension.category || 'General',
           previewIconUrl: extension.previewIconUrl,
+          gdevelopVersion: extension.gdevelopVersion,
+          changelog: extension.changelog?.map(({ version, breaking }) => ({
+            version,
+            breaking: Array.isArray(breaking) ? breaking.join('\n') : breaking,
+          })),
         };
+
+        // Some part of the extension are filtered if private or internal.
+        const eventsBasedBehaviors = filterEventsBasedBehaviors(
+          extension.eventsBasedBehaviors
+        );
+        const eventsFunctions = filterEventsFunctions(
+          extension.eventsFunctions
+        );
+        const eventsBasedObjects = filterEventsBasedObjects(
+          extension.eventsBasedObjects || []
+        );
+
         /** @type {ExtensionShortHeader} */
         const extensionShortHeader = {
           ...registryItem,
           shortDescription: extension.shortDescription,
           fullName: extension.fullName,
           name,
-          eventsBasedBehaviorsCount: extension.eventsBasedBehaviors.length,
-          eventsFunctionsCount: extension.eventsFunctions.length,
+          eventsBasedBehaviorsCount: eventsBasedBehaviors.length,
+          eventsFunctionsCount: eventsFunctions.length,
+          helpPath: extension.helpPath || getExtensionReferencePagePath(name),
         };
+
+        if (tier === 'reviewed') {
+          extensionShortHeader.eventsBasedBehaviors = eventsBasedBehaviors.map(
+            formatEventsBasedBehaviorInsideExtensionShortHeader
+          );
+          extensionShortHeader.eventsFunctions = eventsFunctions.map(
+            (eventsFunction) =>
+              formatEventFunctionInsideExtensionShortHeader(
+                extension.eventsFunctions,
+                eventsFunction
+              )
+          );
+          extensionShortHeader.eventsBasedObjects = eventsBasedObjects.map(
+            formatEventsBasedObjectInsideExtensionShortHeader
+          );
+        }
 
         extensionShortHeaders.push(extensionShortHeader);
 
         /** @type {ExtensionHeader} */
         const extensionHeader = {
           ...extensionShortHeader,
-          helpPath: extension.helpPath,
           description: Array.isArray(extension.description)
             ? extension.description.join('\n')
             : extension.description,
@@ -252,24 +419,20 @@ const findAllRequiredBehaviorTypes = (
         /** @type {Array<BehaviorShortHeader>} */
         behaviorShortHeaders.push.apply(
           behaviorShortHeaders,
-          extension.eventsBasedBehaviors
-            .map((behavior) =>
-              behavior.private
-                ? null
-                : {
-                    ...registryItem,
-                    extensionName: name,
-                    name: behavior.name,
-                    fullName: behavior.fullName,
-                    description: behavior.description,
-                    objectType: behavior.objectType,
-                    allRequiredBehaviorTypes: findAllRequiredBehaviorTypes(
-                      extension,
-                      behavior
-                    ),
-                  }
-            )
-            .filter(Boolean)
+          filterEventsBasedBehaviors(extension.eventsBasedBehaviors).map(
+            (behavior) => ({
+              ...registryItem,
+              extensionName: name,
+              name: behavior.name,
+              fullName: behavior.fullName,
+              description: behavior.description,
+              objectType: behavior.objectType,
+              allRequiredBehaviorTypes: findAllRequiredBehaviorTypes(
+                extension,
+                behavior
+              ),
+            })
+          )
         );
 
         /** @type {Array<ObjectShortHeader>} */
@@ -322,7 +485,9 @@ const findAllRequiredBehaviorTypes = (
             fixableErrors > 1 ? 's are' : ' is'
           } auto-fixable - pass the argument --fix to fix them automatically.`
         );
-      shell.exit(args['disable-exit-code'] ? 0 : 1);
+      if (fatalErrors) {
+        shell.exit(args['disable-exit-code'] ? 0 : 1);
+      }
     }
 
     const views = JSON.parse(
@@ -364,7 +529,13 @@ const findAllRequiredBehaviorTypes = (
       registry
     );
 
-    console.log(`✅ Headers and registry files successfully updated`);
+    if (totalErrors) {
+      console.log(
+        `No fatal error found the extension can be updated but still need fixes.`
+      );
+    } else {
+      console.log(`✅ Headers and registry files successfully updated`);
+    }
   } catch (error) {
     console.error(
       `⚠️ Error while generating headers and registry files:`,

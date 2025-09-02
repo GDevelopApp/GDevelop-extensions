@@ -3,12 +3,13 @@
   "category": "Movement",
   "extensionNamespace": "",
   "fullName": "Boids movement",
+  "gdevelopVersion": ">=5.5.222",
   "helpPath": "/extensions/boids-movement/details/",
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyMy4wLjMsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iSWNvbnMiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4Ig0KCSB2aWV3Qm94PSIwIDAgMzIgMzIiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDMyIDMyOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8Zz4NCgk8cGF0aCBkPSJNMjkuMywxMC4xYy0wLjQtMC4xLTAuOCwwLTEuMSwwLjNsLTMuMiw0Yy0xLjctMi01LjktNi40LTExLTYuNGMtMC4yLDAtMC4zLDAtMC41LDBjMS40LDIuNCwyLjEsNS4xLDIuMSw4DQoJCWMwLDIuOC0wLjcsNS42LTIuMSw4YzAuMiwwLDAuMywwLDAuNSwwYzUuMSwwLDkuMy00LjMsMTEtNi40bDMuMiw0YzAuMiwwLjIsMC41LDAuNCwwLjgsMC40YzAuMSwwLDAuMiwwLDAuMy0wLjENCgkJYzAuNC0wLjEsMC43LTAuNSwwLjctMC45VjExQzMwLDEwLjYsMjkuNywxMC4yLDI5LjMsMTAuMXoiLz4NCgk8cGF0aCBkPSJNMTEuNCw4LjRjLTUuMiwxLjUtOSw2LjgtOS4yLDdjLTAuMiwwLjMtMC4yLDAuOCwwLDEuMmMwLjIsMC4zLDQsNS42LDkuMiw3YzEuNS0yLjMsMi4yLTQuOSwyLjItNy42DQoJCUMxMy42LDEzLjMsMTIuOCwxMC42LDExLjQsOC40eiBNMTAsMTZjMCwwLjYtMC40LDEtMSwxcy0xLTAuNC0xLTF2LTJjMC0wLjYsMC40LTEsMS0xczEsMC40LDEsMVYxNnoiLz4NCjwvZz4NCjwvc3ZnPg0K",
   "name": "BoidsMovement",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Glyphster Pack/Master/SVG/Restaurant/Restaurant_restaurant_seafood_animal_fish.svg",
   "shortDescription": "Simulates flocks movement.",
-  "version": "0.2.0",
+  "version": "0.4.1",
   "description": [
     "Simulates swarms or flocks movement following the separation, alignment, cohesion principles. The flock can be attracted to a location or avoid some obstacles.",
     "",
@@ -30,6 +31,15 @@
     "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
   ],
   "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [
+    {
+      "folded": true,
+      "name": "HasAlreadyRunThisFrame",
+      "type": "boolean",
+      "value": false
+    }
+  ],
   "eventsFunctions": [
     {
       "description": "Define helper classes JavaScript code.",
@@ -183,6 +193,8 @@
             " * https://github.com/nature-of-code/noc-examples-processing/blob/master/chp06_agents/NOC_6_09_Flocking/Boid.pde",
             " */",
             "class Boid {",
+            "  /** @type {gdjs.BehaviorRBushAABB} */",
+            "  currentRBushAABB = null;",
             "  acceleration = new Vector(0, 0);",
             "  velocity = new Vector(gdjs.randomFloatInRange(-1, 1), gdjs.randomFloatInRange(-1, 1));",
             "  separationDirection = new Vector(0, 0);",
@@ -398,9 +410,9 @@
             "   */",
             "  constructor() {",
             "    /**",
-            "     * @type {Map<string, Boid>}",
+            "     * @type {Set<Boid>}",
             "     */",
-            "    this.boids = new Map();",
+            "    this.boids = new Set();",
             "    this.boidsRBush = new rbush();",
             "  }",
             "",
@@ -410,8 +422,13 @@
             "   * @returns {Boid} the created Boid",
             "   */",
             "  add(behavior) {",
-            "    const boid = new Boid(behavior);",
-            "    this.boids.set(behavior.owner.id, boid);",
+            "    if (!behavior.__boidsExtension) {",
+            "      behavior.__boidsExtension = {",
+            "        boid: new Boid(behavior)",
+            "      };",
+            "    }",
+            "    const boid = behavior.__boidsExtension.boid;",
+            "    this.boids.add(boid);",
             "    this.addToRBush(boid);",
             "    return boid;",
             "  }",
@@ -437,9 +454,10 @@
             "   * @param {gdjs.RuntimeBehavior} behavior",
             "   */",
             "  remove(behavior) {",
-            "    this.boids.delete(behavior.owner.id);",
+            "    const boid = behavior.__boidsExtension.boid;",
+            "    this.boids.delete(boid);",
             "",
-            "    this.removeFromRBush(behavior.__boidsExtension.boid.currentRBushAABB);",
+            "    this.removeFromRBush(boid);",
             "  }",
             "",
             "  /**",
@@ -454,12 +472,14 @@
             "   * Move all instances.",
             "   */",
             "  moveAll() {",
-            "    this.boids.forEach(boid => boid.flock());",
-            "    this.boids.forEach(boid => {",
+            "    for (const boid of this.boids) {",
+            "      boid.flock();",
+            "    }",
+            "    for (const boid of this.boids) {",
             "      boid.move();",
             "      this.removeFromRBush(boid);",
             "      this.addToRBush(boid);",
-            "    });",
+            "    }",
             "  }",
             "",
             "  /**",
@@ -479,6 +499,7 @@
             "    searchArea.maxX = x + radius;",
             "    searchArea.maxY = y + radius;",
             "    // TODO The R-Tree should not allocate an array.",
+            "    /** @type {Array<Boid>} */",
             "    const nearbys = this.boidsRBush.search(searchArea);",
             "",
             "    const radiusSq = radius * radius;",
@@ -490,6 +511,9 @@
             "      const behavior = nearbys[i].behavior;",
             "      const otherObject = behavior.owner;",
             "      if (object === otherObject) {",
+            "        continue;",
+            "      }",
+            "      if (behavior._getCollisionLayer() !== behavior._getCollisionLayer()) {",
             "        continue;",
             "      }",
             "      const distanceSq = object.getSqDistanceToObject(otherObject);",
@@ -566,9 +590,7 @@
                 "const object = objects[0];\r",
                 "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");\r",
                 "const behavior = object.getBehavior(behaviorName);\r",
-                "behavior.__boidsExtension = behavior.__boidsExtension || {\r",
-                "    boid: runtimeScene.__boidsExtension.boidsManager.add(behavior),\r",
-                "};"
+                "runtimeScene.__boidsExtension.boidsManager.add(behavior);"
               ],
               "parameterObjects": "Object",
               "useStrict": true,
@@ -613,10 +635,11 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "SceneVariableAsBoolean"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "__BoidsBehaviour_hasAlreadyRunThisFrame",
+                    "HasAlreadyRunThisFrame",
+                    "=",
                     ""
                   ]
                 }
@@ -624,21 +647,25 @@
               "actions": [
                 {
                   "type": {
-                    "value": "SetSceneVariableAsBoolean"
+                    "value": "SetBooleanVariable"
                   },
                   "parameters": [
-                    "__BoidsBehaviour_hasAlreadyRunThisFrame",
-                    "True"
+                    "HasAlreadyRunThisFrame",
+                    "True",
+                    ""
                   ]
                 }
               ],
               "events": [
                 {
                   "type": "BuiltinCommonInstructions::JsCode",
-                  "inlineCode": "runtimeScene.__boidsExtension.boidsManager.moveAll();",
+                  "inlineCode": [
+                    "runtimeScene.__boidsExtension.boidsManager.moveAll();\r",
+                    ""
+                  ],
                   "parameterObjects": "Object",
                   "useStrict": true,
-                  "eventsSheetExpanded": true
+                  "eventsSheetExpanded": false
                 }
               ]
             }
@@ -670,11 +697,12 @@
               "actions": [
                 {
                   "type": {
-                    "value": "SetSceneVariableAsBoolean"
+                    "value": "SetBooleanVariable"
                   },
                   "parameters": [
-                    "__BoidsBehaviour_hasAlreadyRunThisFrame",
-                    "False"
+                    "HasAlreadyRunThisFrame",
+                    "False",
+                    ""
                   ]
                 }
               ]
@@ -930,8 +958,7 @@
                     "Behavior",
                     "TargetedObject.CenterX()",
                     "TargetedObject.CenterY()",
-                    "DecisionWeight",
-                    "GetArgumentAsNumber(\"DecisionWeight\")"
+                    "DecisionWeight"
                   ]
                 }
               ]
@@ -987,56 +1014,15 @@
               "actions": [
                 {
                   "type": {
-                    "value": "BoidsMovement::BoidsMovement::SetPropertyTrajectoryDistance"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "TrajectoryDistance",
                     "=",
                     "(Object.Behavior::VelocityX() * (Object.CenterY() - CenterY) + Object.Behavior::VelocityY() * (CenterX - Object.CenterX())) / Object.Behavior::Speed()"
                   ]
                 }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Comment",
-              "color": {
-                "b": 109,
-                "g": 230,
-                "r": 255,
-                "textB": 0,
-                "textG": 0,
-                "textR": 0
-              },
-              "comment": "If this distance is smaller than the specified radius, the Boid must try turn in the right direction to avoid the area."
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "BoidsMovement::BoidsMovement::PropertyTrajectoryDistance"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    ">",
-                    "- Radius"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "BoidsMovement::BoidsMovement::PropertyTrajectoryDistance"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "<",
-                    "Radius"
-                  ]
-                }
               ],
-              "actions": [],
               "events": [
                 {
                   "type": "BuiltinCommonInstructions::Comment",
@@ -1048,81 +1034,127 @@
                     "textG": 0,
                     "textR": 0
                   },
-                  "comment": "(normalX ; normalY)"
+                  "comment": "If this distance is smaller than the specified radius, the Boid must try turn in the right direction to avoid the area."
                 },
                 {
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [
                     {
                       "type": {
-                        "value": "BoidsMovement::BoidsMovement::PropertyTrajectoryDistance"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
+                        "TrajectoryDistance",
                         ">",
-                        "0"
+                        "- Radius"
                       ]
-                    }
-                  ],
-                  "actions": [
+                    },
                     {
                       "type": {
-                        "value": "BoidsMovement::BoidsMovement::MoveInDirection"
+                        "value": "NumberVariable"
                       },
                       "parameters": [
-                        "Object",
-                        "Behavior",
-                        "-(CenterY - Object.CenterY())",
-                        "CenterX - Object.CenterX()",
-                        "DecisionWeight",
-                        ""
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Comment",
-                  "color": {
-                    "b": 109,
-                    "g": 230,
-                    "r": 255,
-                    "textB": 0,
-                    "textG": 0,
-                    "textR": 0
-                  },
-                  "comment": "(-normalX ; -normalY)"
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BoidsMovement::BoidsMovement::PropertyTrajectoryDistance"
-                      },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
+                        "TrajectoryDistance",
                         "<",
-                        "0"
+                        "Radius"
                       ]
                     }
                   ],
-                  "actions": [
+                  "actions": [],
+                  "events": [
                     {
-                      "type": {
-                        "value": "BoidsMovement::BoidsMovement::MoveInDirection"
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
                       },
-                      "parameters": [
-                        "Object",
-                        "Behavior",
-                        "CenterY - Object.CenterY()",
-                        "-(CenterX - Object.CenterX())",
-                        "DecisionWeight",
-                        ""
+                      "comment": "(normalX ; normalY)"
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "NumberVariable"
+                          },
+                          "parameters": [
+                            "TrajectoryDistance",
+                            ">",
+                            "0"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "BoidsMovement::BoidsMovement::MoveInDirection"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "-(CenterY - Object.CenterY())",
+                            "CenterX - Object.CenterX()",
+                            "DecisionWeight",
+                            ""
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
+                      },
+                      "comment": "(-normalX ; -normalY)"
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "NumberVariable"
+                          },
+                          "parameters": [
+                            "TrajectoryDistance",
+                            "<",
+                            "0"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "BoidsMovement::BoidsMovement::MoveInDirection"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            "CenterY - Object.CenterY()",
+                            "-(CenterX - Object.CenterX())",
+                            "DecisionWeight",
+                            ""
+                          ]
+                        }
                       ]
                     }
                   ]
+                }
+              ],
+              "variables": [
+                {
+                  "folded": true,
+                  "name": "TrajectoryDistance",
+                  "type": "number",
+                  "value": 0
                 }
               ]
             }
@@ -1264,8 +1296,8 @@
           "objectGroups": []
         },
         {
-          "description": "Return the current vertical speed.",
-          "fullName": "Velocity Y",
+          "description": "Return the current horizontal speed.",
+          "fullName": "Velocity X",
           "functionType": "Expression",
           "name": "VelocityX",
           "sentence": "",
@@ -1306,8 +1338,8 @@
           "objectGroups": []
         },
         {
-          "description": "Return the current horizontal speed.",
-          "fullName": "Velocity X",
+          "description": "Return the current vertical  speed.",
+          "fullName": "Velocity Y",
           "functionType": "Expression",
           "name": "VelocityY",
           "sentence": "",
@@ -1348,98 +1380,6 @@
           "objectGroups": []
         },
         {
-          "description": "Change the maximum speed of the object.",
-          "fullName": "Maximum speed",
-          "functionType": "Action",
-          "group": "Boids movement configuration",
-          "name": "SetMaxSpeed",
-          "sentence": "Change the maximum speed of _PARAM0_ to _PARAM2_",
-          "events": [
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "value": "BoidsMovement::BoidsMovement::SetPropertyMaxSpeed"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "=",
-                    "MaxSpeed"
-                  ]
-                }
-              ]
-            }
-          ],
-          "parameters": [
-            {
-              "description": "Object",
-              "name": "Object",
-              "type": "object"
-            },
-            {
-              "description": "Behavior",
-              "name": "Behavior",
-              "supplementaryInformation": "BoidsMovement::BoidsMovement",
-              "type": "behavior"
-            },
-            {
-              "description": "Max Speed",
-              "name": "MaxSpeed",
-              "type": "expression"
-            }
-          ],
-          "objectGroups": []
-        },
-        {
-          "description": "Change the maximum acceleration of the object.",
-          "fullName": "Maximum acceleration",
-          "functionType": "Action",
-          "group": "Boids movement configuration",
-          "name": "SetMaxAcceleration",
-          "sentence": "Change the maximum acceleration of _PARAM0_ to _PARAM2_",
-          "events": [
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "value": "BoidsMovement::BoidsMovement::SetPropertyMaxAcceleration"
-                  },
-                  "parameters": [
-                    "Object",
-                    "Behavior",
-                    "=",
-                    "SteeringForce"
-                  ]
-                }
-              ]
-            }
-          ],
-          "parameters": [
-            {
-              "description": "Object",
-              "name": "Object",
-              "type": "object"
-            },
-            {
-              "description": "Behavior",
-              "name": "Behavior",
-              "supplementaryInformation": "BoidsMovement::BoidsMovement",
-              "type": "behavior"
-            },
-            {
-              "description": "Steering Force",
-              "name": "SteeringForce",
-              "type": "expression"
-            }
-          ],
-          "objectGroups": []
-        },
-        {
           "description": "Check if the object is rotated while moving on its path.",
           "fullName": "Object Rotated",
           "functionType": "Condition",
@@ -1452,11 +1392,12 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "BoidsMovement::BoidsMovement::PropertyShouldRotate"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior"
+                    "ShouldRotate",
+                    "True",
+                    ""
                   ]
                 }
               ],
@@ -1529,6 +1470,51 @@
           "objectGroups": []
         },
         {
+          "description": "Change the maximum speed of the object.",
+          "fullName": "Maximum speed",
+          "functionType": "Action",
+          "group": "Boids movement configuration",
+          "name": "SetMaxSpeed",
+          "sentence": "Change the maximum speed of _PARAM0_ to _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "MaxSpeed",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "description": "Max Speed",
+              "name": "Value",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "description": "Return the maximum acceleration.",
           "fullName": "Maximum acceleration",
           "functionType": "Expression",
@@ -1565,6 +1551,51 @@
               "name": "Behavior",
               "supplementaryInformation": "BoidsMovement::BoidsMovement",
               "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change the maximum acceleration of the object.",
+          "fullName": "Maximum acceleration",
+          "functionType": "Action",
+          "group": "Boids movement configuration",
+          "name": "SetMaxAcceleration",
+          "sentence": "Change the maximum acceleration of _PARAM0_ to _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "MaxAcceleration",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "BoidsMovement::BoidsMovement",
+              "type": "behavior"
+            },
+            {
+              "description": "Steering Force",
+              "name": "Value",
+              "type": "expression"
             }
           ],
           "objectGroups": []
@@ -1624,11 +1655,10 @@
               "actions": [
                 {
                   "type": {
-                    "value": "BoidsMovement::BoidsMovement::SetPropertyCohesionRadius"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "CohesionRadius",
                     "=",
                     "Value"
                   ]
@@ -1711,11 +1741,10 @@
               "actions": [
                 {
                   "type": {
-                    "value": "BoidsMovement::BoidsMovement::SetPropertyAlignmentRadius"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "AlignmentRadius",
                     "=",
                     "Value"
                   ]
@@ -1798,11 +1827,10 @@
               "actions": [
                 {
                   "type": {
-                    "value": "BoidsMovement::BoidsMovement::SetPropertySeparationRadius"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "SeparationRadius",
                     "=",
                     "Value"
                   ]
@@ -1885,11 +1913,10 @@
               "actions": [
                 {
                   "type": {
-                    "value": "BoidsMovement::BoidsMovement::SetPropertyCohesionWeight"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "CohesionWeight",
                     "=",
                     "Value"
                   ]
@@ -1972,11 +1999,10 @@
               "actions": [
                 {
                   "type": {
-                    "value": "BoidsMovement::BoidsMovement::SetPropertyAlignmentWeight"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "AlignmentWeight",
                     "=",
                     "Value"
                   ]
@@ -2059,11 +2085,10 @@
               "actions": [
                 {
                   "type": {
-                    "value": "BoidsMovement::BoidsMovement::SetPropertySeparationWeight"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "SeparationWeight",
                     "=",
                     "Value"
                   ]
@@ -2096,21 +2121,21 @@
         {
           "value": "360",
           "type": "Number",
-          "label": "Maximum speed (in pixels per second)",
+          "unit": "PixelSpeed",
+          "label": "Maximum speed",
           "description": "",
           "group": "Movement",
           "extraInformation": [],
-          "hidden": false,
           "name": "MaxSpeed"
         },
         {
           "value": "720",
           "type": "Number",
-          "label": "Maximum acceleration (in pixels per second per second)",
+          "unit": "PixelAcceleration",
+          "label": "Maximum acceleration",
           "description": "",
           "group": "Movement",
           "extraInformation": [],
-          "hidden": false,
           "name": "MaxAcceleration"
         },
         {
@@ -2120,78 +2145,86 @@
           "description": "",
           "group": "Movement",
           "extraInformation": [],
-          "hidden": false,
+          "quickCustomizationVisibility": "hidden",
           "name": "ShouldRotate"
         },
         {
           "value": "64",
           "type": "Number",
+          "unit": "Pixel",
           "label": "Cohesion sight radius",
           "description": "",
           "group": "Sight",
           "extraInformation": [],
-          "hidden": false,
+          "quickCustomizationVisibility": "hidden",
           "name": "CohesionRadius"
         },
         {
           "value": "48",
           "type": "Number",
+          "unit": "Pixel",
           "label": "Alignement sight radius",
           "description": "",
           "group": "Sight",
           "extraInformation": [],
-          "hidden": false,
+          "quickCustomizationVisibility": "hidden",
           "name": "AlignmentRadius"
         },
         {
           "value": "32",
           "type": "Number",
+          "unit": "Pixel",
           "label": "Separation sight radius",
           "description": "",
           "group": "Sight",
           "extraInformation": [],
-          "hidden": false,
+          "quickCustomizationVisibility": "hidden",
           "name": "SeparationRadius"
         },
         {
           "value": "1",
           "type": "Number",
+          "unit": "Dimensionless",
           "label": "Cohesion decision weight",
           "description": "",
           "group": "Decision",
           "extraInformation": [],
-          "hidden": false,
+          "quickCustomizationVisibility": "hidden",
           "name": "CohesionWeight"
         },
         {
           "value": "1",
           "type": "Number",
+          "unit": "Dimensionless",
           "label": "Alignment decision weight",
           "description": "",
           "group": "Decision",
           "extraInformation": [],
-          "hidden": false,
+          "quickCustomizationVisibility": "hidden",
           "name": "AlignmentWeight"
         },
         {
           "value": "2",
           "type": "Number",
+          "unit": "Dimensionless",
           "label": "Separation decision weight",
           "description": "",
           "group": "Decision",
           "extraInformation": [],
-          "hidden": false,
+          "quickCustomizationVisibility": "hidden",
           "name": "SeparationWeight"
         },
         {
-          "value": "",
+          "value": "0",
           "type": "Number",
-          "label": "",
+          "unit": "Dimensionless",
+          "label": "Collision layer",
           "description": "",
           "group": "",
           "extraInformation": [],
-          "hidden": true,
-          "name": "TrajectoryDistance"
+          "advanced": true,
+          "quickCustomizationVisibility": "hidden",
+          "name": "CollisionLayer"
         }
       ],
       "sharedPropertyDescriptors": []

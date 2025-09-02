@@ -6,6 +6,7 @@ interface ItemExtensionHeaderFields {
   tags: Array<string>;
   category: string;
   previewIconUrl: string;
+  changelog?: Array<{ version: string; breaking?: string }>;
 }
 
 type ExtensionTier = 'community' | 'reviewed';
@@ -23,12 +24,41 @@ interface ExtensionAndShortHeaderFields extends ItemExtensionHeaderFields {
   shortDescription: string;
   fullName: string;
   name: string;
+  helpPath: string;
 }
 
 interface ExtensionAndHeaderFields {
   description: string;
-  helpPath: string;
   iconUrl: string;
+}
+
+export interface EventsFunctionInsideExtensionShortHeader {
+  description: string;
+  fullName: string;
+  functionType:
+    | 'StringExpression'
+    | 'Expression'
+    | 'Action'
+    | 'Condition'
+    | 'ExpressionAndCondition'
+    | 'ActionWithOperator';
+  name: string;
+}
+
+export interface EventsBasedBehaviorInsideExtensionShortHeader {
+  description: string;
+  fullName: string;
+  name: string;
+  objectType: string;
+  eventsFunctions: EventsFunctionInsideExtensionShortHeader[];
+}
+
+export interface EventsBasedObjectInsideExtensionShortHeader {
+  description: string;
+  fullName: string;
+  name: string;
+  defaultName: string;
+  eventsFunctions: EventsFunctionInsideExtensionShortHeader[];
 }
 
 export interface ExtensionShortHeader
@@ -37,8 +67,14 @@ export interface ExtensionShortHeader
   tier: ExtensionTier;
   url: string;
   headerUrl: string;
+  /** Only defined for "reviewed" extensions. */
+  eventsBasedBehaviors?: EventsBasedBehaviorInsideExtensionShortHeader[];
   eventsBasedBehaviorsCount: number;
+  /** Only defined for "reviewed" extensions. */
+  eventsFunctions?: EventsFunctionInsideExtensionShortHeader[];
   eventsFunctionsCount: number;
+  /** Only defined for "reviewed" extensions. */
+  eventsBasedObjects?: EventsBasedObjectInsideExtensionShortHeader[];
 }
 
 interface BehaviorAndShortHeaderFields {
@@ -167,11 +203,12 @@ export interface EventsBasedBehavior {
   propertyDescriptors: PropertyDescriptor[];
 }
 
-export interface EventsBasedObjects {
+export interface EventsBasedObject {
   description: string;
   fullName: string;
   name: string;
   defaultName: string;
+  private?: boolean;
   eventsFunctions: EventsFunction[];
 }
 
@@ -181,7 +218,7 @@ export interface Extension
   tags: string | string[];
   eventsFunctions: EventsFunction[];
   eventsBasedBehaviors: EventsBasedBehavior[];
-  eventsBasedObjects?: EventsBasedObjects[];
+  eventsBasedObjects?: EventsBasedObject[];
 }
 
 export interface ExtensionWithProperFileInfo {

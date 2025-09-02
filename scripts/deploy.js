@@ -61,8 +61,11 @@ axios
     purgeCacheUrl,
     {
       files: [
-        // Update the "database"
+        // Update the "database".
         'https://resources.gdevelop-app.com/extensions-database/extensions-database.json',
+        // Also purge the query params that can be used by backend services:
+        'https://resources.gdevelop-app.com/extensions-database/extensions-database.json?cache-version=1',
+        'https://resources.gdevelop-app.com/extensions-database/extensions-database.json?cache-version=2',
       ],
     },
     {
