@@ -17,7 +17,6 @@
   ],
   "tags": [
     "multiplayer",
-    "custom",
     "lobby",
     "lobbies"
   ],
@@ -660,6 +659,22 @@
           "numberProperties": [],
           "stringProperties": [],
           "initialVariables": []
+        },
+        {
+          "angle": 0,
+          "customSize": false,
+          "height": 0,
+          "keepRatio": true,
+          "layer": "",
+          "name": "Lobby",
+          "persistentUuid": "eba5ca7d-8986-49b7-ac7b-dd89e6721e4d",
+          "width": 0,
+          "x": 0,
+          "y": 150,
+          "zOrder": 13,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": []
         }
       ],
       "eventsFunctions": [
@@ -669,6 +684,120 @@
           "name": "onCreated",
           "sentence": "",
           "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "SceneInstancesCount"
+                  },
+                  "parameters": [
+                    "",
+                    "Lobby",
+                    "=",
+                    "1"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "RowHeight",
+                    "=",
+                    "1.4 * Lobby.Height()"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Detect the margin from Lobby instances positions."
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "SceneInstancesCount"
+                  },
+                  "parameters": [
+                    "",
+                    "Lobby",
+                    ">",
+                    "1"
+                  ]
+                }
+              ],
+              "actions": [],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::ForEach",
+                  "object": "Lobby",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "ListTop",
+                        "=",
+                        "min(ListTop, Lobby.BoundingBoxTop())"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "ListBottom",
+                        "=",
+                        "max(ListBottom, Lobby.BoundingBoxBottom())"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "RowHeight",
+                        "=",
+                        "Lobby.Height() + (ListBottom - ListTop - Lobby.Height() * SceneInstancesCount(Lobby)) / (SceneInstancesCount(Lobby) - 1)"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "variables": [
+                {
+                  "name": "ListTop",
+                  "type": "number",
+                  "value": 123456
+                },
+                {
+                  "name": "ListBottom",
+                  "type": "number",
+                  "value": -123456
+                }
+              ]
+            },
             {
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [],
@@ -719,6 +848,511 @@
                   "parameters": [
                     "Object",
                     "\"UpdateLobbiesTimer\""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "MultiplayerCustomLobbies::CustomLobbies",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "doStepPostEvents",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BuiltinCommonInstructions::Or"
+                  },
+                  "parameters": [],
+                  "subInstructions": [
+                    {
+                      "type": {
+                        "value": "BooleanVariable"
+                      },
+                      "parameters": [
+                        "UpdateLobbies",
+                        "True",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "CompareObjectTimer"
+                      },
+                      "parameters": [
+                        "Object",
+                        "\"UpdateLobbiesTimer\"",
+                        ">=",
+                        "10"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "MultiplayerCustomLobbies::CustomLobbies::UpdateLobbies"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetBooleanVariable"
+                  },
+                  "parameters": [
+                    "UpdateLobbies",
+                    "False",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ResetObjectTimer"
+                  },
+                  "parameters": [
+                    "Object",
+                    "\"UpdateLobbiesTimer\""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Multiplayer::IsSearchingForLobbyToJoin"
+                  },
+                  "parameters": [
+                    ""
+                  ]
+                }
+              ],
+              "actions": [],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "ResizableCapability::ResizableBehavior::Height"
+                      },
+                      "parameters": [
+                        "ScrollbarBackground",
+                        "Resizable",
+                        ">=",
+                        "ListHeight"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "Cache"
+                      },
+                      "parameters": [
+                        "Scrollbar"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "ActivateBehavior"
+                      },
+                      "parameters": [
+                        "ScrollbarThumb",
+                        "Draggable",
+                        "no"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "MultiplayerCustomLobbies::CustomLobbies::SetScrollPosition"
+                      },
+                      "parameters": [
+                        "Object",
+                        "=",
+                        "0",
+                        ""
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "ResizableCapability::ResizableBehavior::Height"
+                      },
+                      "parameters": [
+                        "ScrollbarBackground",
+                        "Resizable",
+                        "<",
+                        "ListHeight"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "Montre"
+                      },
+                      "parameters": [
+                        "Scrollbar",
+                        ""
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "ActivateBehavior"
+                      },
+                      "parameters": [
+                        "ScrollbarThumb",
+                        "Draggable",
+                        "yes"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "ResizableCapability::ResizableBehavior::SetHeight"
+                      },
+                      "parameters": [
+                        "ScrollbarThumb",
+                        "Resizable",
+                        "=",
+                        "max(40, ScrollbarBackground.Height() * ScrollbarBackground.Height() / ListHeight)"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "SourisSurObjet"
+                          },
+                          "parameters": [
+                            "Background",
+                            "",
+                            "",
+                            ""
+                          ]
+                        },
+                        {
+                          "type": {
+                            "inverted": true,
+                            "value": "DraggableBehavior::Dragged"
+                          },
+                          "parameters": [
+                            "ScrollbarThumb",
+                            "Draggable"
+                          ]
+                        }
+                      ],
+                      "actions": [],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::Or"
+                              },
+                              "parameters": [],
+                              "subInstructions": [
+                                {
+                                  "type": {
+                                    "value": "IsMouseWheelScrollingUp"
+                                  },
+                                  "parameters": [
+                                    ""
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "IsMouseWheelScrollingDown"
+                                  },
+                                  "parameters": [
+                                    ""
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "MultiplayerCustomLobbies::CustomLobbies::SetScrollPosition"
+                              },
+                              "parameters": [
+                                "Object",
+                                "-",
+                                "0.01 * MouseWheelDelta() * RowHeight",
+                                ""
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "MouseButtonFromTextPressed"
+                              },
+                              "parameters": [
+                                "",
+                                "\"Left\""
+                              ]
+                            }
+                          ],
+                          "actions": [],
+                          "events": [
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [
+                                {
+                                  "type": {
+                                    "value": "BuiltinCommonInstructions::Once"
+                                  },
+                                  "parameters": []
+                                }
+                              ],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "SetNumberVariable"
+                                  },
+                                  "parameters": [
+                                    "OldCursorY",
+                                    "=",
+                                    "CursorY()"
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "MultiplayerCustomLobbies::CustomLobbies::SetScrollPosition"
+                                  },
+                                  "parameters": [
+                                    "Object",
+                                    "-",
+                                    "CursorY() - OldCursorY",
+                                    ""
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "SetNumberVariable"
+                                  },
+                                  "parameters": [
+                                    "OldCursorY",
+                                    "=",
+                                    "CursorY()"
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::Or"
+                          },
+                          "parameters": [],
+                          "subInstructions": [
+                            {
+                              "type": {
+                                "value": "DraggableBehavior::Dragged"
+                              },
+                              "parameters": [
+                                "ScrollbarThumb",
+                                "Draggable"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "DraggableBehavior::Dropped"
+                              },
+                              "parameters": [
+                                "ScrollbarThumb",
+                                "Draggable"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "MultiplayerCustomLobbies::CustomLobbies::SetScrollPosition"
+                          },
+                          "parameters": [
+                            "Object",
+                            "=",
+                            "(ScrollbarThumb.Y() - ScrollbarBackground.Y()) * ListHeight / ScrollbarBackground.Height()",
+                            ""
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::Or"
+                          },
+                          "parameters": [],
+                          "subInstructions": [
+                            {
+                              "type": {
+                                "value": "PosY"
+                              },
+                              "parameters": [
+                                "Lobby",
+                                ">",
+                                "Background.BoundingBoxBottom() - Lobby.Height()"
+                              ]
+                            },
+                            {
+                              "type": {
+                                "value": "PosY"
+                              },
+                              "parameters": [
+                                "Lobby",
+                                "<",
+                                "Background.BoundingBoxTop() + Lobby.Height()"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "Cache"
+                          },
+                          "parameters": [
+                            "Lobby"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "MultiplayerCustomLobbies::Lobby::ActivateInteractions"
+                          },
+                          "parameters": [
+                            "Lobby",
+                            "",
+                            ""
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "PosY"
+                          },
+                          "parameters": [
+                            "Lobby",
+                            "<",
+                            "Background.BoundingBoxBottom() - Lobby.Height()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "PosY"
+                          },
+                          "parameters": [
+                            "Lobby",
+                            ">",
+                            "Background.BoundingBoxTop() + Lobby.Height()"
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "ObjectVariableAsBoolean"
+                          },
+                          "parameters": [
+                            "Lobby",
+                            "Old",
+                            "False"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "Montre"
+                          },
+                          "parameters": [
+                            "Lobby",
+                            ""
+                          ]
+                        }
+                      ],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "inverted": true,
+                                "value": "MultiplayerCustomLobbies::Lobby::IsFull"
+                              },
+                              "parameters": [
+                                "Lobby",
+                                ""
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "MultiplayerCustomLobbies::Lobby::ActivateInteractions"
+                              },
+                              "parameters": [
+                                "Lobby",
+                                "yes",
+                                ""
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
                   ]
                 }
               ]
@@ -794,6 +1428,16 @@
                         "False",
                         ""
                       ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "y",
+                        "=",
+                        "ScrollbarBackground.Y()"
+                      ]
                     }
                   ]
                 },
@@ -867,28 +1511,13 @@
                     },
                     {
                       "type": {
-                        "value": "SetNumberVariable"
+                        "value": "ModVarObjet"
                       },
                       "parameters": [
-                        "y",
-                        "+",
-                        "LobbiesOffset"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "SetNumberVariable"
-                      },
-                      "parameters": [
-                        "LobbyListBottomBorder",
+                        "Lobby",
+                        "StartY",
                         "=",
-                        "y-LobbiesOffset"
+                        "Lobby.Y()"
                       ]
                     },
                     {
@@ -896,12 +1525,24 @@
                         "value": "SetNumberVariable"
                       },
                       "parameters": [
-                        "LobbyListViewportHigh",
-                        "=",
-                        "(Background.BoundingBoxBottom() - Lobby.Height()) - (Background.BoundingBoxTop() + Lobby.Height())"
+                        "y",
+                        "+",
+                        "RowHeight"
                       ]
                     }
                   ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Comment",
+                  "color": {
+                    "b": 109,
+                    "g": 230,
+                    "r": 255,
+                    "textB": 0,
+                    "textG": 0,
+                    "textR": 0
+                  },
+                  "comment": "The wait is to avoid a flash because of a 1-frame delay of Anchor behavior on child-objects."
                 },
                 {
                   "type": "BuiltinCommonInstructions::Standard",
@@ -960,6 +1601,16 @@
                       "actions": [
                         {
                           "type": {
+                            "value": "SetNumberVariable"
+                          },
+                          "parameters": [
+                            "ListHeight",
+                            "=",
+                            "RowHeight * VariableChildCount(data)"
+                          ]
+                        },
+                        {
+                          "type": {
                             "value": "Montre"
                           },
                           "parameters": [
@@ -994,142 +1645,13 @@
                         },
                         {
                           "type": {
-                            "value": "Cache"
+                            "value": "MultiplayerCustomLobbies::CustomLobbies::SetScrollPosition"
                           },
                           "parameters": [
-                            "Scrollbar"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "ActivateBehavior"
-                          },
-                          "parameters": [
-                            "ScrollbarThumb",
-                            "Draggable",
-                            "no"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "MettreY"
-                          },
-                          "parameters": [
-                            "ScrollbarThumb",
+                            "Object",
                             "=",
-                            "80"
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "NumberVariable"
-                          },
-                          "parameters": [
-                            "LobbyListViewportHigh",
-                            "<",
-                            "LobbyListBottomBorder"
-                          ]
-                        }
-                      ],
-                      "actions": [
-                        {
-                          "type": {
-                            "value": "SetBooleanVariable"
-                          },
-                          "parameters": [
-                            "Scrollable",
-                            "True",
+                            "ScrollPosition",
                             ""
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "BooleanVariable"
-                          },
-                          "parameters": [
-                            "Scrollable",
-                            "True",
-                            ""
-                          ]
-                        }
-                      ],
-                      "actions": [
-                        {
-                          "type": {
-                            "value": "Montre"
-                          },
-                          "parameters": [
-                            "Scrollbar",
-                            ""
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "ActivateBehavior"
-                          },
-                          "parameters": [
-                            "ScrollbarThumb",
-                            "Draggable",
-                            "yes"
-                          ]
-                        }
-                      ],
-                      "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "ResizableCapability::ResizableBehavior::SetHeight"
-                              },
-                              "parameters": [
-                                "ScrollbarThumb",
-                                "Resizable",
-                                "=",
-                                "max(40, ((LobbyListViewportHigh / LobbiesOffset) / SceneInstancesCount(Lobby)) * ScrollbarBackground.Height())"
-                              ]
-                            },
-                            {
-                              "type": {
-                                "value": "SetNumberVariable"
-                              },
-                              "parameters": [
-                                "ScrollbarStepPerRow",
-                                "=",
-                                "ScrollbarBackground.Height() / (LobbyListBottomBorder - LobbyListViewportHigh) * LobbiesOffset"
-                              ]
-                            }
-                          ],
-                          "events": [
-                            {
-                              "type": "BuiltinCommonInstructions::ForEach",
-                              "object": "Lobby",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "ModVarObjet"
-                                  },
-                                  "parameters": [
-                                    "Lobby",
-                                    "StartY",
-                                    "=",
-                                    "Lobby.Y()"
-                                  ]
-                                }
-                              ]
-                            }
                           ]
                         }
                       ]
@@ -1141,7 +1663,7 @@
                 {
                   "name": "y",
                   "type": "number",
-                  "value": 80
+                  "value": 0
                 },
                 {
                   "name": "data",
@@ -1223,629 +1745,92 @@
           "objectGroups": []
         },
         {
+          "description": "the scrollPosition of the object.",
+          "fullName": "ScrollPosition",
+          "functionType": "ExpressionAndCondition",
+          "group": "Multiplayer custom lobbies configuration",
+          "name": "ScrollPosition",
+          "private": true,
+          "sentence": "the scrollPosition",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "ScrollPosition"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "MultiplayerCustomLobbies::CustomLobbies",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
           "fullName": "",
-          "functionType": "Action",
-          "name": "doStepPostEvents",
+          "functionType": "ActionWithOperator",
+          "getterName": "ScrollPosition",
+          "name": "SetScrollPosition",
+          "private": true,
           "sentence": "",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
+              "conditions": [],
+              "actions": [
                 {
                   "type": {
-                    "inverted": true,
-                    "value": "Multiplayer::IsSearchingForLobbyToJoin"
+                    "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    ""
-                  ]
-                }
-              ],
-              "actions": [],
-              "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BooleanVariable"
-                      },
-                      "parameters": [
-                        "Scrollable",
-                        "True",
-                        ""
-                      ]
-                    }
-                  ],
-                  "actions": [],
-                  "events": [
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "SourisSurObjet"
-                          },
-                          "parameters": [
-                            "Background",
-                            "",
-                            "",
-                            ""
-                          ]
-                        },
-                        {
-                          "type": {
-                            "inverted": true,
-                            "value": "DraggableBehavior::Dragged"
-                          },
-                          "parameters": [
-                            "ScrollbarThumb",
-                            "Draggable"
-                          ]
-                        }
-                      ],
-                      "actions": [],
-                      "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [
-                            {
-                              "type": {
-                                "value": "BuiltinCommonInstructions::Or"
-                              },
-                              "parameters": [],
-                              "subInstructions": [
-                                {
-                                  "type": {
-                                    "value": "IsMouseWheelScrollingUp"
-                                  },
-                                  "parameters": [
-                                    ""
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "IsMouseWheelScrollingDown"
-                                  },
-                                  "parameters": [
-                                    ""
-                                  ]
-                                }
-                              ]
-                            }
-                          ],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "MettreY"
-                              },
-                              "parameters": [
-                                "ScrollbarThumb",
-                                "-",
-                                "ScrollbarStepPerRow * (MouseWheelDelta() / 100)"
-                              ]
-                            },
-                            {
-                              "type": {
-                                "value": "SetBooleanVariable"
-                              },
-                              "parameters": [
-                                "UpdateScroll",
-                                "True",
-                                ""
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [
-                            {
-                              "type": {
-                                "value": "MouseButtonFromTextPressed"
-                              },
-                              "parameters": [
-                                "",
-                                "\"Left\""
-                              ]
-                            }
-                          ],
-                          "actions": [],
-                          "events": [
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [
-                                {
-                                  "type": {
-                                    "value": "BuiltinCommonInstructions::Once"
-                                  },
-                                  "parameters": []
-                                }
-                              ],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "SetNumberVariable"
-                                  },
-                                  "parameters": [
-                                    "CursorScrollStartY",
-                                    "=",
-                                    "CursorY()"
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "ModVarObjet"
-                                  },
-                                  "parameters": [
-                                    "ScrollbarThumb",
-                                    "StartScrollY",
-                                    "=",
-                                    "ScrollbarThumb.Y()"
-                                  ]
-                                }
-                              ]
-                            },
-                            {
-                              "type": "BuiltinCommonInstructions::Standard",
-                              "conditions": [],
-                              "actions": [
-                                {
-                                  "type": {
-                                    "value": "MettreY"
-                                  },
-                                  "parameters": [
-                                    "ScrollbarThumb",
-                                    "=",
-                                    "ScrollbarThumb.StartScrollY - (CursorY() - CursorScrollStartY)"
-                                  ]
-                                },
-                                {
-                                  "type": {
-                                    "value": "SetBooleanVariable"
-                                  },
-                                  "parameters": [
-                                    "UpdateScroll",
-                                    "True",
-                                    ""
-                                  ]
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "DraggableBehavior::Dragged"
-                          },
-                          "parameters": [
-                            "ScrollbarThumb",
-                            "Draggable"
-                          ]
-                        }
-                      ],
-                      "actions": [
-                        {
-                          "type": {
-                            "value": "SetBooleanVariable"
-                          },
-                          "parameters": [
-                            "UpdateScroll",
-                            "True",
-                            ""
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "BooleanVariable"
-                          },
-                          "parameters": [
-                            "UpdateScroll",
-                            "True",
-                            ""
-                          ]
-                        }
-                      ],
-                      "actions": [],
-                      "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "MettreX"
-                              },
-                              "parameters": [
-                                "ScrollbarThumb",
-                                "=",
-                                "ScrollbarBackground.X()"
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [
-                            {
-                              "type": {
-                                "value": "PosY"
-                              },
-                              "parameters": [
-                                "ScrollbarThumb",
-                                "<",
-                                "80"
-                              ]
-                            }
-                          ],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "MettreY"
-                              },
-                              "parameters": [
-                                "ScrollbarThumb",
-                                "=",
-                                "80"
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [
-                            {
-                              "type": {
-                                "value": "PosY"
-                              },
-                              "parameters": [
-                                "ScrollbarThumb",
-                                ">",
-                                "(80 + ScrollbarBackground.Height() - ScrollbarThumb.Height())"
-                              ]
-                            }
-                          ],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "MettreY"
-                              },
-                              "parameters": [
-                                "ScrollbarThumb",
-                                "=",
-                                "(80 + ScrollbarBackground.Height() - ScrollbarThumb.Height())"
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "SetNumberVariable"
-                              },
-                              "parameters": [
-                                "Scroll",
-                                "=",
-                                "((ScrollbarThumb.Y() - 80) / (ScrollbarBackground.Height() - ScrollbarThumb.Height())) * (LobbyListBottomBorder - LobbyListViewportHigh)"
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "BuiltinCommonInstructions::ForEach",
-                          "object": "Lobby",
-                          "conditions": [],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "MettreY"
-                              },
-                              "parameters": [
-                                "Lobby",
-                                "=",
-                                "Lobby.StartY - Scroll"
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::Not"
-                          },
-                          "parameters": [],
-                          "subInstructions": [
-                            {
-                              "type": {
-                                "value": "DraggableBehavior::Dragged"
-                              },
-                              "parameters": [
-                                "ScrollbarThumb",
-                                "Draggable"
-                              ]
-                            },
-                            {
-                              "type": {
-                                "value": "IsMouseWheelScrollingUp"
-                              },
-                              "parameters": [
-                                ""
-                              ]
-                            },
-                            {
-                              "type": {
-                                "value": "IsMouseWheelScrollingDown"
-                              },
-                              "parameters": [
-                                ""
-                              ]
-                            },
-                            {
-                              "type": {
-                                "value": "MouseButtonFromTextPressed"
-                              },
-                              "parameters": [
-                                "",
-                                "\"Left\""
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "BooleanVariable"
-                          },
-                          "parameters": [
-                            "UpdateScroll",
-                            "True",
-                            ""
-                          ]
-                        }
-                      ],
-                      "actions": [
-                        {
-                          "type": {
-                            "value": "SetBooleanVariable"
-                          },
-                          "parameters": [
-                            "UpdateScroll",
-                            "False",
-                            ""
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "BuiltinCommonInstructions::Or"
-                          },
-                          "parameters": [],
-                          "subInstructions": [
-                            {
-                              "type": {
-                                "value": "PosY"
-                              },
-                              "parameters": [
-                                "Lobby",
-                                ">",
-                                "Background.BoundingBoxBottom() - Lobby.Height()"
-                              ]
-                            },
-                            {
-                              "type": {
-                                "value": "PosY"
-                              },
-                              "parameters": [
-                                "Lobby",
-                                "<",
-                                "Background.BoundingBoxTop() + Lobby.Height()"
-                              ]
-                            }
-                          ]
-                        }
-                      ],
-                      "actions": [],
-                      "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "Cache"
-                              },
-                              "parameters": [
-                                "Lobby"
-                              ]
-                            },
-                            {
-                              "type": {
-                                "value": "MultiplayerCustomLobbies::Lobby::ActivateInteractions"
-                              },
-                              "parameters": [
-                                "Lobby",
-                                "",
-                                ""
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "PosY"
-                          },
-                          "parameters": [
-                            "Lobby",
-                            "<",
-                            "Background.BoundingBoxBottom() - Lobby.Height()"
-                          ]
-                        },
-                        {
-                          "type": {
-                            "value": "PosY"
-                          },
-                          "parameters": [
-                            "Lobby",
-                            ">",
-                            "Background.BoundingBoxTop() + Lobby.Height()"
-                          ]
-                        }
-                      ],
-                      "actions": [],
-                      "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [
-                            {
-                              "type": {
-                                "value": "VarObjet"
-                              },
-                              "parameters": [
-                                "Lobby",
-                                "StartY",
-                                "!=",
-                                "0"
-                              ]
-                            }
-                          ],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "Montre"
-                              },
-                              "parameters": [
-                                "Lobby",
-                                ""
-                              ]
-                            }
-                          ]
-                        },
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [
-                            {
-                              "type": {
-                                "inverted": true,
-                                "value": "MultiplayerCustomLobbies::Lobby::IsFull"
-                              },
-                              "parameters": [
-                                "Lobby",
-                                ""
-                              ]
-                            }
-                          ],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "MultiplayerCustomLobbies::Lobby::ActivateInteractions"
-                              },
-                              "parameters": [
-                                "Lobby",
-                                "yes",
-                                ""
-                              ]
-                            }
-                          ]
-                        }
-                      ]
-                    }
+                    "ScrollPosition",
+                    "=",
+                    "clamp(Value, 0, max(0, ListHeight - ScrollbarBackground.Height()))"
                   ]
                 },
                 {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BooleanVariable"
-                      },
-                      "parameters": [
-                        "UpdateLobbies",
-                        "True",
-                        ""
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "MultiplayerCustomLobbies::CustomLobbies::UpdateLobbies"
-                      },
-                      "parameters": [
-                        "Object",
-                        ""
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "SetBooleanVariable"
-                      },
-                      "parameters": [
-                        "UpdateLobbies",
-                        "False",
-                        ""
-                      ]
-                    }
+                  "type": {
+                    "value": "MettreX"
+                  },
+                  "parameters": [
+                    "ScrollbarThumb",
+                    "=",
+                    "ScrollbarBackground.X()"
                   ]
                 },
                 {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "CompareObjectTimer"
-                      },
-                      "parameters": [
-                        "Object",
-                        "\"UpdateLobbiesTimer\"",
-                        ">=",
-                        "10"
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "MultiplayerCustomLobbies::CustomLobbies::UpdateLobbies"
-                      },
-                      "parameters": [
-                        "Object",
-                        ""
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "ResetObjectTimer"
-                      },
-                      "parameters": [
-                        "Object",
-                        "\"UpdateLobbiesTimer\""
-                      ]
-                    }
+                  "type": {
+                    "value": "MettreY"
+                  },
+                  "parameters": [
+                    "ScrollbarThumb",
+                    "=",
+                    "ScrollbarBackground.Y() + ScrollPosition * ScrollbarBackground.Height() / ListHeight"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "MettreY"
+                  },
+                  "parameters": [
+                    "Lobby",
+                    "=",
+                    "Lobby.StartY - ScrollPosition"
                   ]
                 }
               ]
@@ -1864,39 +1849,25 @@
       ],
       "propertyDescriptors": [
         {
-          "value": "",
+          "value": "0",
           "type": "Number",
           "label": "",
           "hidden": true,
-          "name": "CursorScrollStartY"
+          "name": "OldCursorY"
         },
         {
-          "value": "",
+          "value": "0",
           "type": "Number",
           "label": "",
           "hidden": true,
-          "name": "LobbyListBottomBorder"
+          "name": "ListHeight"
         },
         {
-          "value": "",
+          "value": "0",
           "type": "Number",
           "label": "",
           "hidden": true,
-          "name": "Scroll"
-        },
-        {
-          "value": "",
-          "type": "Number",
-          "label": "",
-          "hidden": true,
-          "name": "LobbyListViewportHigh"
-        },
-        {
-          "value": "",
-          "type": "Boolean",
-          "label": "",
-          "hidden": true,
-          "name": "UpdateScroll"
+          "name": "ScrollPosition"
         },
         {
           "value": "",
@@ -1916,16 +1887,9 @@
           "value": "70",
           "type": "Number",
           "unit": "Pixel",
-          "label": "Lobbies Y offset",
-          "name": "LobbiesOffset"
-        },
-        {
-          "value": "",
-          "type": "Number",
-          "unit": "Pixel",
           "label": "",
           "hidden": true,
-          "name": "ScrollbarStepPerRow"
+          "name": "RowHeight"
         }
       ]
     },
@@ -2214,6 +2178,59 @@
                     "JoinButton",
                     "Effect",
                     "\"Full\"",
+                    "no"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "MultiplayerCustomLobbies::Lobby",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "doStepPostEvents",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "Multiplayer::IsSearchingForLobbyToJoin"
+                  },
+                  "parameters": [
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "PanelSpriteButton::PanelSpriteButton::IsClicked"
+                  },
+                  "parameters": [
+                    "JoinButton",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Multiplayer::QuickJoinWithLobbyID"
+                  },
+                  "parameters": [
+                    "",
+                    "JoinButton.LobbyID",
+                    "",
                     "no"
                   ]
                 }
@@ -2555,59 +2572,6 @@
               "description": "Yes or no",
               "name": "YesOrNo",
               "type": "yesorno"
-            }
-          ],
-          "objectGroups": []
-        },
-        {
-          "fullName": "",
-          "functionType": "Action",
-          "name": "doStepPostEvents",
-          "sentence": "",
-          "events": [
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "inverted": true,
-                    "value": "Multiplayer::IsSearchingForLobbyToJoin"
-                  },
-                  "parameters": [
-                    ""
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "PanelSpriteButton::PanelSpriteButton::IsClicked"
-                  },
-                  "parameters": [
-                    "JoinButton",
-                    ""
-                  ]
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "value": "Multiplayer::QuickJoinWithLobbyID"
-                  },
-                  "parameters": [
-                    "",
-                    "JoinButton.LobbyID",
-                    "",
-                    "no"
-                  ]
-                }
-              ]
-            }
-          ],
-          "parameters": [
-            {
-              "description": "Object",
-              "name": "Object",
-              "supplementaryInformation": "MultiplayerCustomLobbies::Lobby",
-              "type": "object"
             }
           ],
           "objectGroups": []
