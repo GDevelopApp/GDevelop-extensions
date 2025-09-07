@@ -137,6 +137,48 @@
       },
       "parameters": [],
       "objectGroups": []
+    },
+    {
+      "description": "Define a shape painter as a mask of an object.",
+      "fullName": "Mask an object with a shape painter",
+      "functionType": "Action",
+      "name": "MaskWithShapePainter",
+      "private": true,
+      "sentence": "Mask _PARAM1_ with mask _PARAM2_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const maskObject = eventsFunctionContext.getObjects(\"Mask\")[0];",
+            "if (!maskObject) return;",
+            "",
+            "const maskedObjects = eventsFunctionContext.getObjects(\"Masked\");",
+            "for (const maskedObject of maskedObjects) {",
+            "    const maskedRenderer = maskedObject.getRendererObject(); ",
+            "    maskedRenderer.mask = maskObject.getRendererObject();",
+            "}",
+            "",
+            ""
+          ],
+          "parameterObjects": "masked",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object to mask",
+          "name": "Masked",
+          "type": "objectList"
+        },
+        {
+          "description": "Shape painter to use as a mask",
+          "name": "Mask",
+          "supplementaryInformation": "PrimitiveDrawing::Drawer",
+          "type": "objectList"
+        }
+      ],
+      "objectGroups": []
     }
   ],
   "eventsBasedBehaviors": [
@@ -252,8 +294,8 @@
           "behaviors": [
             {
               "name": "Anchor",
-              "rightEdgeAnchor": 2,
               "type": "AnchorBehavior::AnchorBehavior",
+              "rightEdgeAnchor": 2,
               "bottomEdgeAnchor": 0,
               "leftEdgeAnchor": 1,
               "relativeToOriginalWindowSize": true,
@@ -436,10 +478,10 @@
           "effects": [],
           "behaviors": [
             {
-              "bottomEdgeAnchor": 2,
               "name": "Anchor",
-              "topEdgeAnchor": 1,
               "type": "AnchorBehavior::AnchorBehavior",
+              "bottomEdgeAnchor": 2,
+              "topEdgeAnchor": 1,
               "leftEdgeAnchor": 0,
               "relativeToOriginalWindowSize": true,
               "rightEdgeAnchor": 2,
@@ -447,6 +489,41 @@
             }
           ],
           "content": {}
+        },
+        {
+          "assetStoreId": "",
+          "name": "ViewportMask",
+          "type": "PrimitiveDrawing::Drawer",
+          "variables": [],
+          "effects": [],
+          "behaviors": [
+            {
+              "bottomEdgeAnchor": 2,
+              "leftEdgeAnchor": 1,
+              "name": "Anchor",
+              "relativeToOriginalWindowSize": true,
+              "rightEdgeAnchor": 2,
+              "topEdgeAnchor": 1,
+              "type": "AnchorBehavior::AnchorBehavior",
+              "useLegacyBottomAndRightAnchors": false
+            }
+          ],
+          "fillOpacity": 255,
+          "outlineSize": 0,
+          "outlineOpacity": 255,
+          "absoluteCoordinates": false,
+          "clearBetweenFrames": false,
+          "antialiasing": "none",
+          "fillColor": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
+          "outlineColor": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
         }
       ],
       "objectsFolderStructure": {
@@ -469,6 +546,9 @@
           },
           {
             "objectName": "Lobby"
+          },
+          {
+            "objectName": "ViewportMask"
           }
         ]
       },
@@ -723,6 +803,18 @@
               ]
             },
             {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Shape painters are faster than sprites for masking, especially when only a rectangle is drawn."
+            },
+            {
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [],
               "actions": [
@@ -772,6 +864,79 @@
                   "parameters": [
                     "Object",
                     "\"UpdateLobbiesTimer\""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Delete"
+                  },
+                  "parameters": [
+                    "ViewportMask",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "ViewportMask",
+                    "0",
+                    "Scrollbar.Y()",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ChangePlan"
+                  },
+                  "parameters": [
+                    "ViewportMask",
+                    "=",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "PrimitiveDrawing::Rectangle"
+                  },
+                  "parameters": [
+                    "ViewportMask",
+                    "0",
+                    "0",
+                    "100",
+                    "100"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ResizableCapability::ResizableBehavior::SetWidth"
+                  },
+                  "parameters": [
+                    "ViewportMask",
+                    "Resizable",
+                    "=",
+                    "Object.Width()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ResizableCapability::ResizableBehavior::SetHeight"
+                  },
+                  "parameters": [
+                    "ViewportMask",
+                    "Resizable",
+                    "=",
+                    "Scrollbar.Height()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Cache"
+                  },
+                  "parameters": [
+                    "ViewportMask"
                   ]
                 }
               ]
@@ -829,6 +994,15 @@
               "actions": [
                 {
                   "type": {
+                    "value": "AjoutObjConcern"
+                  },
+                  "parameters": [
+                    "",
+                    "Object"
+                  ]
+                },
+                {
+                  "type": {
                     "value": "MultiplayerCustomLobbies::CustomLobbies::UpdateLobbies"
                   },
                   "parameters": [
@@ -868,15 +1042,6 @@
                   "parameters": [
                     ""
                   ]
-                },
-                {
-                  "type": {
-                    "value": "Scrollbar::Scrollbar::IsScrollingRequired"
-                  },
-                  "parameters": [
-                    "Scrollbar",
-                    ""
-                  ]
                 }
               ],
               "actions": [],
@@ -886,19 +1051,7 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "SourisSurObjet"
-                      },
-                      "parameters": [
-                        "Background",
-                        "",
-                        "",
-                        ""
-                      ]
-                    },
-                    {
-                      "type": {
-                        "inverted": true,
-                        "value": "Scrollbar::Scrollbar::IsThumbDragged"
+                        "value": "Scrollbar::Scrollbar::IsScrollingRequired"
                       },
                       "parameters": [
                         "Scrollbar",
@@ -913,53 +1066,23 @@
                       "conditions": [
                         {
                           "type": {
-                            "value": "BuiltinCommonInstructions::Or"
+                            "value": "SourisSurObjet"
                           },
-                          "parameters": [],
-                          "subInstructions": [
-                            {
-                              "type": {
-                                "value": "IsMouseWheelScrollingUp"
-                              },
-                              "parameters": [
-                                ""
-                              ]
-                            },
-                            {
-                              "type": {
-                                "value": "IsMouseWheelScrollingDown"
-                              },
-                              "parameters": [
-                                ""
-                              ]
-                            }
+                          "parameters": [
+                            "Background",
+                            "",
+                            "",
+                            ""
                           ]
-                        }
-                      ],
-                      "actions": [
+                        },
                         {
                           "type": {
-                            "value": "Scrollbar::Scrollbar::SetScrollPosition"
+                            "inverted": true,
+                            "value": "Scrollbar::Scrollbar::IsThumbDragged"
                           },
                           "parameters": [
                             "Scrollbar",
-                            "-",
-                            "0.01 * MouseWheelDelta() * RowHeight",
                             ""
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "type": "BuiltinCommonInstructions::Standard",
-                      "conditions": [
-                        {
-                          "type": {
-                            "value": "MouseButtonFromTextPressed"
-                          },
-                          "parameters": [
-                            "",
-                            "\"Left\""
                           ]
                         }
                       ],
@@ -970,27 +1093,29 @@
                           "conditions": [
                             {
                               "type": {
-                                "value": "BuiltinCommonInstructions::Once"
+                                "value": "BuiltinCommonInstructions::Or"
                               },
-                              "parameters": []
-                            }
-                          ],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "SetNumberVariable"
-                              },
-                              "parameters": [
-                                "OldCursorY",
-                                "=",
-                                "CursorY()"
+                              "parameters": [],
+                              "subInstructions": [
+                                {
+                                  "type": {
+                                    "value": "IsMouseWheelScrollingUp"
+                                  },
+                                  "parameters": [
+                                    ""
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "IsMouseWheelScrollingDown"
+                                  },
+                                  "parameters": [
+                                    ""
+                                  ]
+                                }
                               ]
                             }
-                          ]
-                        },
-                        {
-                          "type": "BuiltinCommonInstructions::Standard",
-                          "conditions": [],
+                          ],
                           "actions": [
                             {
                               "type": {
@@ -999,18 +1124,75 @@
                               "parameters": [
                                 "Scrollbar",
                                 "-",
-                                "CursorY() - OldCursorY",
+                                "0.01 * MouseWheelDelta() * RowHeight",
                                 ""
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "MouseButtonFromTextPressed"
+                              },
+                              "parameters": [
+                                "",
+                                "\"Left\""
+                              ]
+                            }
+                          ],
+                          "actions": [],
+                          "events": [
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [
+                                {
+                                  "type": {
+                                    "value": "BuiltinCommonInstructions::Once"
+                                  },
+                                  "parameters": []
+                                }
+                              ],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "SetNumberVariable"
+                                  },
+                                  "parameters": [
+                                    "OldCursorY",
+                                    "=",
+                                    "CursorY()"
+                                  ]
+                                }
                               ]
                             },
                             {
-                              "type": {
-                                "value": "SetNumberVariable"
-                              },
-                              "parameters": [
-                                "OldCursorY",
-                                "=",
-                                "CursorY()"
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "Scrollbar::Scrollbar::SetScrollPosition"
+                                  },
+                                  "parameters": [
+                                    "Scrollbar",
+                                    "-",
+                                    "CursorY() - OldCursorY",
+                                    ""
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "SetNumberVariable"
+                                  },
+                                  "parameters": [
+                                    "OldCursorY",
+                                    "=",
+                                    "CursorY()"
+                                  ]
+                                }
                               ]
                             }
                           ]
@@ -1046,7 +1228,7 @@
                       "subInstructions": [
                         {
                           "type": {
-                            "value": "BoundingBoxCenterY"
+                            "value": "BoundingBoxBottom"
                           },
                           "parameters": [
                             "Lobby",
@@ -1056,7 +1238,7 @@
                         },
                         {
                           "type": {
-                            "value": "BoundingBoxCenterY"
+                            "value": "BoundingBoxTop"
                           },
                           "parameters": [
                             "Lobby",
@@ -1093,7 +1275,7 @@
                   "conditions": [
                     {
                       "type": {
-                        "value": "BoundingBoxCenterY"
+                        "value": "BoundingBoxBottom"
                       },
                       "parameters": [
                         "Lobby",
@@ -1103,7 +1285,7 @@
                     },
                     {
                       "type": {
-                        "value": "BoundingBoxCenterY"
+                        "value": "BoundingBoxTop"
                       },
                       "parameters": [
                         "Lobby",
@@ -1210,35 +1392,38 @@
                     "json",
                     "data"
                   ]
+                },
+                {
+                  "type": {
+                    "value": "Montre"
+                  },
+                  "parameters": [
+                    "ViewportMask",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetObjectVariableAsBoolean"
+                  },
+                  "parameters": [
+                    "Lobby",
+                    "Old",
+                    "True"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "y",
+                    "=",
+                    "Scrollbar.Y()"
+                  ]
                 }
               ],
               "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "SetObjectVariableAsBoolean"
-                      },
-                      "parameters": [
-                        "Lobby",
-                        "Old",
-                        "True"
-                      ]
-                    },
-                    {
-                      "type": {
-                        "value": "SetNumberVariable"
-                      },
-                      "parameters": [
-                        "y",
-                        "=",
-                        "Scrollbar.Y()"
-                      ]
-                    }
-                  ]
-                },
                 {
                   "type": "BuiltinCommonInstructions::ForEachChildVariable",
                   "iterableVariableName": "data",
@@ -1326,6 +1511,17 @@
                         "y",
                         "+",
                         "RowHeight"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "MultiplayerCustomLobbies::MaskWithShapePainter"
+                      },
+                      "parameters": [
+                        "",
+                        "Lobby",
+                        "ViewportMask",
+                        ""
                       ]
                     }
                   ]
