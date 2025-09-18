@@ -15,9 +15,9 @@ This repository hosts official and experimental extensions for GDevelop. Extensi
 | Contribute to GDevelop itself   | Visit [GDevelop GitHub repository](https://github.com/4ian/GDevelop). |
 | Create/improve an extension     | Read below.                                                           |
 
-## 🚀 Discover more extensions on the [GDevelop Community List](https://github.com/GDevelopApp/GDevelop-community-list)
+### 🚀 Discover more extensions on the [GDevelop Community List](https://github.com/GDevelopApp/GDevelop-community-list).
 
-The **[GDevelop Community List](https://github.com/GDevelopApp/GDevelop-community-list)** is where extensions built by the whole GDevelop community can be found. Check it out!
+The [GDevelop Community List](https://github.com/GDevelopApp/GDevelop-community-list) is where extensions built by the whole GDevelop community can be found. Check it out!
 
 ## ⚙️ Submit your extension to the list of experimental extensions
 
