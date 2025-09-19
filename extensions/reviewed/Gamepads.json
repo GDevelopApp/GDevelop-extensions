@@ -9,7 +9,7 @@
   "name": "Gamepads",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/gamepad-variant-outline.svg",
   "shortDescription": "Add support for gamepads (or other controllers) to your game, giving access to information such as button presses, axis positions, trigger pressure, etc...",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": [
     "Add support for gamepads (or other physical controllers).",
     "",
@@ -41,7 +41,8 @@
   "authorIds": [
     "2OwwM8ToR9dx9RJ2sAKTcrLmCB92",
     "taRwmWxwAFYFL9yyBwB3cwBw0BO2",
-    "mnImQKdn8nQxwzkS5D6a1JB27V23"
+    "mnImQKdn8nQxwzkS5D6a1JB27V23",
+    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
   ],
   "dependencies": [],
   "globalVariables": [],
@@ -107,7 +108,6 @@
             "    return;\r",
             "}\r",
             "\r",
-            "let lastActiveController = -1;\r",
             "/**\r",
             " *  Associate controller button ids to button names\r",
             " */\r",
@@ -461,7 +461,6 @@
             "\r",
             "gdjs._extensionController = {\r",
             "    getPlayer,\r",
-            "    lastActiveController,\r",
             "    controllerButtonNames,\r",
             "    getInputString,\r",
             "    getButtonId,\r",
@@ -1014,6 +1013,7 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
+            "const { getNormalizedAxisValue } = gdjs._extensionController;\r",
             "\r",
             "const playerId = eventsFunctionContext.getArgument(\"player_ID\") - 1;\r",
             "const stick = eventsFunctionContext.getArgument(\"stick\").toUpperCase();\r",
@@ -1031,7 +1031,9 @@
             "const axisValueX = stick === 'RIGHT' ? gamepad.axes[2] : gamepad.axes[0];\r",
             "const axisValueY = stick === 'RIGHT' ? gamepad.axes[3] : gamepad.axes[1];\r",
             "\r",
-            "eventsFunctionContext.returnValue = gdjs.evtTools.common.clamp(Math.abs(gdjs._extensionController.getNormalizedAxisValue(axisValueX, playerId)) + Math.abs(gdjs._extensionController.getNormalizedAxisValue(axisValueY, playerId)), 0, 1);\r",
+            "eventsFunctionContext.returnValue = gdjs.evtTools.common.clamp(\r",
+            "    Math.abs(getNormalizedAxisValue(axisValueX, playerId)) +\r",
+            "    Math.abs(getNormalizedAxisValue(axisValueY, playerId)), 0, 1);\r",
             ""
           ],
           "parameterObjects": "",
@@ -1108,6 +1110,7 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
+            "const { getNormalizedAxisValue } = gdjs._extensionController;\r",
             "\r",
             "const playerId = eventsFunctionContext.getArgument(\"player_ID\") - 1;\r",
             "const stick = eventsFunctionContext.getArgument(\"stick\").toUpperCase();\r",
@@ -1122,19 +1125,12 @@
             "    // The gamepad is not connected.\r",
             "    return;\r",
             "}\r",
-            "switch (stick) {\r",
-            "    case 'LEFT':\r",
-            "        eventsFunctionContext.returnValue = gdjs._extensionController.axisToAngle(gdjs._extensionController.getNormalizedAxisValue(gamepad.axes[0], playerId), gdjs._extensionController.getNormalizedAxisValue(gamepad.axes[1], playerId));\r",
-            "        break;\r",
+            "const axisValueX = stick === 'RIGHT' ? gamepad.axes[2] : gamepad.axes[0];\r",
+            "const axisValueY = stick === 'RIGHT' ? gamepad.axes[3] : gamepad.axes[1];\r",
             "\r",
-            "    case 'RIGHT':\r",
-            "        eventsFunctionContext.returnValue = gdjs._extensionController.axisToAngle(gdjs._extensionController.getNormalizedAxisValue(gamepad.axes[2], playerId), gdjs._extensionController.getNormalizedAxisValue(gamepad.axes[3], playerId));\r",
-            "        break;\r",
-            "\r",
-            "    default:\r",
-            "        eventsFunctionContext.returnValue = -1;\r",
-            "        break;\r",
-            "}"
+            "eventsFunctionContext.returnValue = gdjs._extensionController.axisToAngle(\r",
+            "    getNormalizedAxisValue(axisValueX, playerId),\r",
+            "    getNormalizedAxisValue(axisValueY, playerId));"
           ],
           "parameterObjects": "",
           "useStrict": true,
