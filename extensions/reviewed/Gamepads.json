@@ -1608,11 +1608,16 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r",
             "\r",
-            "const controllerId = gdjs._extensionController.lastActiveController;\r",
-            "eventsFunctionContext.returnValue = gamepads[controllerId] ? controllerId + 1 : 0;\r",
-            ""
+            "const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];\r",
+            "let lastGamepadIndex = -1;\r",
+            "for (let playerId = 0; playerId < gamepads.length; playerId++) {\r",
+            "    // Gamepads can be disconnected and become null\r",
+            "    if (gamepads[playerId]) {\r",
+            "        lastGamepadIndex = playerId\r",
+            "    }\r",
+            "}\r",
+            "eventsFunctionContext.returnValue = lastGamepadIndex + 1;"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -1802,24 +1807,24 @@
     },
     {
       "description": "Return the number of connected gamepads.",
-      "fullName": "Connected gamepads number",
+      "fullName": "Connected gamepads count",
       "functionType": "Expression",
       "name": "ConnectedGamepadsCount",
       "sentence": "",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [],
-          "actions": []
-        },
-        {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "/** @type {Gamepad[]} */\r",
-            "const gamepads = navigator.getGamepads ? navigator.getGamepads() : (navigator.webkitGetGamepads ? navigator.webkitGetGamepads() : []);\r",
             "\r",
-            "// Gamepads can be disconnected and become null, so we have to filter them.\r",
-            "eventsFunctionContext.returnValue = Object.keys(gamepads).filter(key => !!gamepads[key]).length;\r",
+            "const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];\r",
+            "let connectedGamepadCount = 0;\r",
+            "for (let playerId = 0; playerId < gamepads.length; playerId++) {\r",
+            "    // Gamepads can be disconnected and become null\r",
+            "    if (gamepads[playerId]) {\r",
+            "        connectedGamepadCount++;\r",
+            "    }\r",
+            "}\r",
+            "eventsFunctionContext.returnValue = connectedGamepadCount;\r",
             ""
           ],
           "parameterObjects": "",
