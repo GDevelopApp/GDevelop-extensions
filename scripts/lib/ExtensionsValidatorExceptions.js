@@ -390,6 +390,7 @@ const extensionsAllowedProperties = {
         'CustomRuntimeObject3DRenderer',
         'CustomRuntimeObject3D',
         'SpriteAnimationData',
+        'Polygon',
       ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: ['__particleEmmiter3DExtension'],
