@@ -9,7 +9,7 @@
   "name": "SpriteMultitouchJoystick",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Line Hero Pack/Master/SVG/Videogames/Videogames_controller_joystick_arrows_direction.svg",
   "shortDescription": "Joysticks or buttons for touchscreens.",
-  "version": "1.8.4",
+  "version": "1.9.0",
   "description": [
     "Multitouch joysticks are objects showing a joystick on the screen, useful for mobile. They work like a physical gamepad:",
     "- 4 or 8 directions",
@@ -519,11 +519,11 @@
       "objectGroups": []
     },
     {
-      "description": "Check if a button is pressed on a gamepad.",
-      "fullName": "Multitouch controller button pressed",
+      "description": "Check if a button was just pressed on a multitouch controller.",
+      "fullName": "Multitouch controller button just pressed",
       "functionType": "Condition",
-      "name": "IsButtonPressed",
-      "sentence": "Button _PARAM2_ of multitouch controller _PARAM1_ is pressed",
+      "name": "IsButtonJustPressed",
+      "sentence": "Button _PARAM2_ of multitouch controller _PARAM1_ was just pressed",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
@@ -535,7 +535,7 @@
               "parameters": [
                 "Controllers[ControllerIdentifier].Buttons[Button].State",
                 "=",
-                "\"Pressed\""
+                "\"JustPressed\""
               ]
             }
           ],
@@ -567,7 +567,73 @@
       "objectGroups": []
     },
     {
-      "description": "Check if a button is released on a gamepad.",
+      "description": "Check if a button is pressed on a multitouch controller.",
+      "fullName": "Multitouch controller button pressed",
+      "functionType": "Condition",
+      "name": "IsButtonPressed",
+      "sentence": "Button _PARAM2_ of multitouch controller _PARAM1_ is pressed",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Or"
+              },
+              "parameters": [],
+              "subInstructions": [
+                {
+                  "type": {
+                    "value": "StringVariable"
+                  },
+                  "parameters": [
+                    "Controllers[ControllerIdentifier].Buttons[Button].State",
+                    "=",
+                    "\"Pressed\""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "StringVariable"
+                  },
+                  "parameters": [
+                    "Controllers[ControllerIdentifier].Buttons[Button].State",
+                    "=",
+                    "\"JustPressed\""
+                  ]
+                }
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Multitouch controller identifier (1, 2, 3, 4...)",
+          "name": "ControllerIdentifier",
+          "type": "expression"
+        },
+        {
+          "description": "Button name",
+          "name": "Button",
+          "supplementaryInformation": "[\"A\",\"CROSS\",\"B\",\"CIRCLE\",\"X\",\"SQUARE\",\"Y\",\"TRIANGLE\",\"LB\",\"L1\",\"RB\",\"R1\",\"LT\",\"L2\",\"RT\",\"R2\",\"UP\",\"DOWN\",\"LEFT\",\"RIGHT\",\"BACK\",\"SHARE\",\"START\",\"OPTIONS\",\"CLICK_STICK_LEFT\",\"CLICK_STICK_RIGHT\",\"PS_BUTTON\",\"CLICK_TOUCHPAD\"]",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Check if a button is released on a multitouch controller.",
       "fullName": "Multitouch controller button released",
       "functionType": "Condition",
       "name": "IsButtonReleased",
@@ -653,7 +719,7 @@
         {
           "description": "Button state",
           "name": "ButtonState",
-          "supplementaryInformation": "[\"Idle\",\"Pressed\",\"Released\"]",
+          "supplementaryInformation": "[\"Idle\",\"Pressed\",\"JustPressed\",\"Released\"]",
           "type": "stringWithSelector"
         }
       ],
@@ -3143,11 +3209,11 @@
               "conditions": [
                 {
                   "type": {
-                    "value": "SpriteMultitouchJoystick::MultitouchButton::IsReleased"
+                    "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "Object",
-                    "Behavior",
+                    "IsReleased",
+                    "True",
                     ""
                   ]
                 }
@@ -3171,6 +3237,44 @@
                     "Object",
                     "Behavior",
                     "\"Idle\"",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "IsJustPressed",
+                    "True",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetBooleanVariable"
+                  },
+                  "parameters": [
+                    "IsJustPressed",
+                    "False",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SpriteMultitouchJoystick::MultitouchButton::SetButtonState"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    "\"Pressed\"",
                     ""
                   ]
                 }
@@ -3268,7 +3372,17 @@
                           "parameters": [
                             "Object",
                             "Behavior",
-                            "\"Pressed\"",
+                            "\"JustPressed\"",
+                            ""
+                          ]
+                        },
+                        {
+                          "type": {
+                            "value": "SetBooleanVariable"
+                          },
+                          "parameters": [
+                            "IsJustPressed",
+                            "True",
                             ""
                           ]
                         }
@@ -3341,6 +3455,16 @@
                 },
                 {
                   "type": {
+                    "value": "SetBooleanVariable"
+                  },
+                  "parameters": [
+                    "IsJustPressed",
+                    "False",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
                     "value": "SetNumberVariable"
                   },
                   "parameters": [
@@ -3368,11 +3492,11 @@
           "objectGroups": []
         },
         {
-          "description": "Check if button is released.",
-          "fullName": "Button released",
+          "description": "Check if the button was just pressed.",
+          "fullName": "Button just pressed",
           "functionType": "Condition",
-          "name": "IsReleased",
-          "sentence": "Button _PARAM0_ is released",
+          "name": "IsJustPressed",
+          "sentence": "Button _PARAM0_ was just pressed",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -3382,7 +3506,7 @@
                     "value": "BooleanVariable"
                   },
                   "parameters": [
-                    "IsReleased",
+                    "IsJustPressed",
                     "True",
                     ""
                   ]
@@ -3416,7 +3540,7 @@
           "objectGroups": []
         },
         {
-          "description": "Check if button is pressed.",
+          "description": "Check if the button is pressed.",
           "fullName": "Button pressed",
           "functionType": "Condition",
           "name": "IsPressed",
@@ -3433,6 +3557,54 @@
                     "TouchId",
                     "!=",
                     "0"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "SpriteMultitouchJoystick::MultitouchButton",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if the button is released.",
+          "fullName": "Button released",
+          "functionType": "Condition",
+          "name": "IsReleased",
+          "sentence": "Button _PARAM0_ is released",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "IsReleased",
+                    "True",
+                    ""
                   ]
                 }
               ],
@@ -3504,7 +3676,7 @@
             {
               "description": "Button state",
               "name": "ButtonState",
-              "supplementaryInformation": "[\"Idle\",\"Pressed\",\"Released\"]",
+              "supplementaryInformation": "[\"Idle\",\"JustPressed\",\"Pressed\",\"Released\"]",
               "type": "stringWithSelector"
             }
           ],
@@ -3544,6 +3716,13 @@
           "label": "Button released",
           "hidden": true,
           "name": "IsReleased"
+        },
+        {
+          "value": "",
+          "type": "Boolean",
+          "label": "Button just pressed",
+          "hidden": true,
+          "name": "IsJustPressed"
         },
         {
           "value": "0",
@@ -3742,6 +3921,7 @@
           "extraInformation": [
             "PlatformBehavior::PlatformerObjectBehavior"
           ],
+          "choices": [],
           "name": "Property"
         },
         {
@@ -3755,9 +3935,15 @@
           "type": "Choice",
           "label": "Joystick name",
           "group": "Controls",
-          "extraInformation": [
-            "Primary",
-            "Secondary"
+          "choices": [
+            {
+              "label": "Primary",
+              "value": "Primary"
+            },
+            {
+              "label": "Secondary",
+              "value": "Secondary"
+            }
           ],
           "name": "JoystickIdentifier"
         },
@@ -3878,6 +4064,7 @@
           "extraInformation": [
             "Physics3D::PhysicsCharacter3D"
           ],
+          "choices": [],
           "name": "PhysicsCharacter3D"
         },
         {
@@ -3891,9 +4078,15 @@
           "type": "Choice",
           "label": "Walk joystick",
           "group": "Controls",
-          "extraInformation": [
-            "Primary",
-            "Secondary"
+          "choices": [
+            {
+              "label": "Primary",
+              "value": "Primary"
+            },
+            {
+              "label": "Secondary",
+              "value": "Secondary"
+            }
           ],
           "name": "JoystickIdentifier"
         },
@@ -4003,6 +4196,7 @@
           "extraInformation": [
             "Physics3D::PhysicsCharacter3D"
           ],
+          "choices": [],
           "name": "PhysicsCharacter3D"
         },
         {
@@ -4016,9 +4210,15 @@
           "type": "Choice",
           "label": "Walk joystick",
           "group": "Controls",
-          "extraInformation": [
-            "Primary",
-            "Secondary"
+          "choices": [
+            {
+              "label": "Primary",
+              "value": "Primary"
+            },
+            {
+              "label": "Secondary",
+              "value": "Secondary"
+            }
           ],
           "name": "JoystickIdentifier"
         },
@@ -4961,6 +5161,7 @@
           "extraInformation": [
             "Scene3D::Base3DBehavior"
           ],
+          "choices": [],
           "name": "Object3D"
         },
         {
@@ -4974,9 +5175,15 @@
           "type": "Choice",
           "label": "Camera joystick",
           "group": "Controls",
-          "extraInformation": [
-            "Primary",
-            "Secondary"
+          "choices": [
+            {
+              "label": "Primary",
+              "value": "Primary"
+            },
+            {
+              "label": "Secondary",
+              "value": "Secondary"
+            }
           ],
           "name": "CameraStick"
         },
@@ -5192,6 +5399,7 @@
           "extraInformation": [
             "Physics3D::PhysicsCar3D"
           ],
+          "choices": [],
           "name": "PhysicsCar3D"
         },
         {
@@ -5205,9 +5413,15 @@
           "type": "Choice",
           "label": "Steer joystick",
           "group": "Controls",
-          "extraInformation": [
-            "Primary",
-            "Secondary"
+          "choices": [
+            {
+              "label": "Primary",
+              "value": "Primary"
+            },
+            {
+              "label": "Secondary",
+              "value": "Secondary"
+            }
           ],
           "name": "SteerJoystickIdentifier"
         },
@@ -5216,9 +5430,15 @@
           "type": "Choice",
           "label": "Speed joystick",
           "group": "Controls",
-          "extraInformation": [
-            "Primary",
-            "Secondary"
+          "choices": [
+            {
+              "label": "Primary",
+              "value": "Primary"
+            },
+            {
+              "label": "Secondary",
+              "value": "Secondary"
+            }
           ],
           "name": "SpeedJoystickIdentifier"
         },
@@ -5751,6 +5971,7 @@
           "extraInformation": [
             "TopDownMovementBehavior::TopDownMovementBehavior"
           ],
+          "choices": [],
           "name": "TopDownMovement"
         },
         {
@@ -5763,9 +5984,15 @@
           "value": "Primary",
           "type": "Choice",
           "label": "Joystick name",
-          "extraInformation": [
-            "Primary",
-            "Secondary"
+          "choices": [
+            {
+              "label": "Primary",
+              "value": "Primary"
+            },
+            {
+              "label": "Secondary",
+              "value": "Secondary"
+            }
           ],
           "name": "JoystickIdentifier"
         },
@@ -5774,10 +6001,19 @@
           "type": "Choice",
           "label": "Stick mode",
           "group": "Controls",
-          "extraInformation": [
-            "Analog",
-            "360°",
-            "8 Directions"
+          "choices": [
+            {
+              "label": "Analog",
+              "value": "Analog"
+            },
+            {
+              "label": "360°",
+              "value": "360°"
+            },
+            {
+              "label": "8 Directions",
+              "value": "8 Directions"
+            }
           ],
           "name": "StickMode"
         }
@@ -7044,9 +7280,15 @@
           "value": "Primary",
           "type": "Choice",
           "label": "Joystick name",
-          "extraInformation": [
-            "Primary",
-            "Secondary"
+          "choices": [
+            {
+              "label": "Primary",
+              "value": "Primary"
+            },
+            {
+              "label": "Secondary",
+              "value": "Secondary"
+            }
           ],
           "name": "JoystickIdentifier"
         },
@@ -7065,6 +7307,7 @@
           "extraInformation": [
             "Thumb"
           ],
+          "choices": [],
           "hidden": true,
           "name": "ThumbAnchorOrigin"
         },
@@ -7084,6 +7327,7 @@
           "extraInformation": [
             "Thumb"
           ],
+          "choices": [],
           "hidden": true,
           "name": "ThumbIsScaledProportionally"
         },
