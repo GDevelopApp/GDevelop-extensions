@@ -9,7 +9,7 @@
   "name": "HeightMap3D",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/10e0a26c0d500830dfe23b94138beb0ef61607ba62bca05a5aa5c849777f1b06_terrain.svg",
   "shortDescription": "A terrain with hills where 3D physics objects can stand.",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": [
     "A terrain with hills where objects with the 3D physics behavior can stand.",
     "",
@@ -28,7 +28,8 @@
     "physics"
   ],
   "authorIds": [
-    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
+    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2",
+    "m8kleQHonagHWsvILDhyJhgVhuF2"
   ],
   "dependencies": [],
   "globalVariables": [],
@@ -241,6 +242,85 @@
             "        /** @type {THREE.MeshStandardMaterial} */",
             "        const material = this.mesh.material;",
             "        material.wireframe = wireframe;",
+            "    }",
+            "    ",
+            "    /**",
+            "     * @param TextureImage {string}",
+            "     * @param TextureRepeatX {number}",
+            "     * @param TextureRepeatY {number}",
+            "     * @param NormalMapImage {string|undefined}",
+            "     * @param ArmMapImage {string|undefined}",
+            "     * @param NormalMapIntensity {number}",
+            "     * @param AoMapIntensity {number}",
+            "     * @param RoughnessMapIntensity {number}",
+            "     * @param MetalnessMapIntensity {number}",
+            "     */",
+            "    setVisualTexture(TextureImage, TextureRepeatX, TextureRepeatY, NormalMapImage, NormalMapIntensity, ArmMapImage, AoMapIntensity, RoughnessMapIntensity, MetalnessMapIntensity) {",
+            "    /** @type {THREE.MeshStandardMaterial} */",
+            "    const material = this.mesh.material;",
+            "    const runtimeScene = this.object.getRuntimeScene();",
+            "    const imageManager = runtimeScene.getGame().getImageManager();",
+            "",
+            "    // Create a new material if needed",
+            "    if (material.type !== 'MeshStandardMaterial') {",
+            "        material.dispose();",
+            "        this.mesh.material = new THREE.MeshStandardMaterial();",
+            "    }",
+            "",
+            "    // Diffuse texture",
+            "    if (TextureImage && TextureImage !== \"\") {",
+            "        const baseTexture = imageManager.getThreeTexture(TextureImage);",
+            "        const texture = baseTexture.clone();",
+            "",
+            "        texture.wrapS = THREE.RepeatWrapping;",
+            "        texture.wrapT = THREE.RepeatWrapping;",
+            "        texture.repeat.set(TextureRepeatX, TextureRepeatY);",
+            "",
+            "        this.mesh.material.map = texture;",
+            "    } else {",
+            "        // if an empty string is passed revert to color",
+            "        this.mesh.material.map = null;",
+            "    }",
+            "",
+            "    // Handle normal map",
+            "    if (NormalMapImage && NormalMapImage !== \"\") {",
+            "        const baseNormalMap = imageManager.getThreeTexture(NormalMapImage);",
+            "        const normalMap = baseNormalMap.clone();",
+            "",
+            "        normalMap.wrapS = THREE.RepeatWrapping;",
+            "        normalMap.wrapT = THREE.RepeatWrapping;",
+            "        normalMap.repeat.set(TextureRepeatX, TextureRepeatY);",
+            "",
+            "        this.mesh.material.normalMap = normalMap;",
+            "        this.mesh.material.normalScale.set(NormalMapIntensity, NormalMapIntensity);",
+            "    } else {",
+            "        this.mesh.material.normalMap = null;",
+            "    }",
+            "",
+            "    // Handle ARM map",
+            "    if (ArmMapImage && ArmMapImage !== \"\") {",
+            "        const baseArmMap = imageManager.getThreeTexture(ArmMapImage);",
+            "        const armMap = baseArmMap.clone();",
+            "",
+            "        armMap.wrapS = THREE.RepeatWrapping;",
+            "        armMap.wrapT = THREE.RepeatWrapping;",
+            "        armMap.repeat.set(TextureRepeatX, TextureRepeatY);",
+            "",
+            "        material.aoMap = armMap;",
+            "        material.roughnessMap = armMap;",
+            "        material.metalnessMap = armMap;",
+            "",
+            "        material.aoMapIntensity = AoMapIntensity;",
+            "        material.roughness = RoughnessMapIntensity; ",
+            "        material.metalness = MetalnessMapIntensity;",
+            "    } else {",
+            "        // Revert all PBR maps if no combined map is provided",
+            "        material.aoMap = null;",
+            "        material.roughnessMap = null;",
+            "        material.metalnessMap = null;",
+            "    }",
+            "",
+            "    this.mesh.material.needsUpdate = true;",
             "    }",
             "}",
             "",
@@ -543,6 +623,7 @@
                     "const physics = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Physics3D\"));\r",
                     "\r",
                     "object.__heightMap3DExtension.physicsHeightMap = new gdjs.__heightMap3DExtension.PhysicsHeightMap(physics, object.__heightMap3DExtension.heightMap);\r",
+                    "\r",
                     ""
                   ],
                   "parameterObjects": "Object",
@@ -704,7 +785,6 @@
           "ambientLightColorB": 200,
           "ambientLightColorG": 200,
           "ambientLightColorR": 200,
-          "camera2DPlaneMaxDrawingDistance": 5000,
           "camera3DFarPlaneDistance": 10000,
           "camera3DFieldOfView": 45,
           "camera3DNearPlaneDistance": 3,
@@ -824,13 +904,43 @@
                 "const dimY = object._getGridDimensionY();\r",
                 "const color = object._getColor();\r",
                 "const wireframe = object._getWireframe();\r",
+                "\r",
+                "const textureImage = object._getTextureImage();\r",
+                "const repeatX = object._getTextureRepeatX();\r",
+                "const repeatY = object._getTextureRepeatY();\r",
+                "const normalImage = object._getNormalMapImage();\r",
+                "const armMap = object._getArmMapImage();\r",
+                "const normalIntensity = object._getNormalMapIntensity();\r",
+                "const aoMapIntensity = object._getAoMapIntensity();\r",
+                "const roughnessMapIntensity = object._getRoughnessMapIntensity();\r",
+                "const metalnessMapIntensity = object._getMetalnessMapIntensity();\r",
+                "\r",
                 "object.__heightMap3DExtension = {\r",
                 "    heightMap: new gdjs.__heightMap3DExtension.HeightMap(object, dimX, dimY, color, wireframe)\r",
-                "};"
+                "};\r",
+                "\r",
+                "// Apply texture\r",
+                "object.__heightMap3DExtension.heightMap.setVisualTexture(textureImage, repeatX, repeatY, normalImage, normalIntensity, armMap, aoMapIntensity, roughnessMapIntensity, metalnessMapIntensity);\r",
+                ""
               ],
               "parameterObjects": "Object",
               "useStrict": true,
-              "eventsSheetExpanded": false
+              "eventsSheetExpanded": true
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "HeightMap3D::HeightMap3D::UpdateShadowProperties"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
             },
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -1865,6 +1975,56 @@
             }
           ],
           "objectGroups": []
+        },
+        {
+          "description": "Update the shadow casting and receiving properties.",
+          "fullName": "Update shadow properties",
+          "functionType": "Action",
+          "name": "UpdateShadowProperties",
+          "private": true,
+          "sentence": "Update shadow properties for _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "/** @type {gdjs.CustomRuntimeObject} */",
+                "const object = objects[0];",
+                "",
+                "if (object.get3DRendererObject) {",
+                "    const rendererObject = object.get3DRendererObject();",
+                "    if (rendererObject && rendererObject.children) {",
+                "        const castShadows = object._getCastShadows();",
+                "        const receiveShadows = object._getReceiveShadows();",
+                "",
+                "        const applyShadowProperties = (obj) => {",
+                "            obj.castShadow = castShadows;",
+                "            obj.receiveShadow = receiveShadows;",
+                "            if (obj.material) {",
+                "                obj.material.needsUpdate = true;",
+                "            }",
+                "            if (obj.children) {",
+                "                obj.children.forEach(applyShadowProperties);",
+                "            }",
+                "        };",
+                "",
+                "        applyShadowProperties(rendererObject);",
+                "    }",
+                "}"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "HeightMap3D::HeightMap3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
         }
       ],
       "propertyDescriptors": [
@@ -1898,6 +2058,7 @@
           "value": "255;255;255",
           "type": "Color",
           "label": "Color",
+          "description": "Color will also effect tint of the texture. For no color tint it should be white (255;255;255)",
           "group": "Style",
           "name": "Color"
         },
@@ -1961,6 +2122,95 @@
           "label": "",
           "hidden": true,
           "name": "InitialImageOffsetY"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "Cast shadows",
+          "group": "Lighting",
+          "name": "CastShadows"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "Receive Shadows",
+          "group": "Lighting",
+          "name": "ReceiveShadows"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "label": "Repeat Texture X",
+          "group": "Texture",
+          "name": "TextureRepeatX"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "label": "Repeat Texture Y",
+          "group": "Texture",
+          "name": "TextureRepeatY"
+        },
+        {
+          "value": "",
+          "type": "Resource",
+          "label": "Normal Map (GL)",
+          "group": "Texture",
+          "extraInformation": [
+            "image"
+          ],
+          "choices": [],
+          "name": "NormalMapImage"
+        },
+        {
+          "value": "",
+          "type": "Resource",
+          "label": "Texture",
+          "group": "Texture",
+          "extraInformation": [
+            "image"
+          ],
+          "choices": [],
+          "name": "TextureImage"
+        },
+        {
+          "value": "",
+          "type": "Resource",
+          "label": "ARM Map (AO/Rough/Metal)",
+          "group": "Texture",
+          "extraInformation": [
+            "image"
+          ],
+          "choices": [],
+          "name": "ArmMapImage"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "label": "Normal Map Intensity",
+          "group": "Texture Intensities",
+          "name": "NormalMapIntensity"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "label": "Roughness Map Intensity",
+          "group": "Texture Intensities",
+          "name": "RoughnessMapIntensity"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "label": "Metalness Map Intensity",
+          "group": "Texture Intensities",
+          "name": "MetalnessMapIntensity"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "label": "Ambient Occlusion Map Intensity",
+          "group": "Texture Intensities",
+          "name": "AoMapIntensity"
         }
       ]
     }
