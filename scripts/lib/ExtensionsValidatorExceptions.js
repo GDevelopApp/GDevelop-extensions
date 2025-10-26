@@ -117,6 +117,8 @@ const extensionsAllowedProperties = {
       'getOwnPropertyDescriptor',
       'defineProperties',
       'prototype',
+      // This is for UMD extends emulation.
+      'setPrototypeOf',
     ],
   },
   /** @type {Record<string, ExtensionAllowedProperties>}} */
@@ -347,7 +349,6 @@ const extensionsAllowedProperties = {
       javaScriptObjectAllowedProperties: [
         'prototype',
         'getPrototypeOf',
-        'setPrototypeOf',
         'getOwnPropertySymbols',
         'getOwnPropertyDescriptor',
         'getOwnPropertyDescriptors',
@@ -357,8 +358,7 @@ const extensionsAllowedProperties = {
       gdjsAllowedProperties: ['__NavMeshPathfinding'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
-      // This is for UMD extends emulation.
-      javaScriptObjectAllowedProperties: ['setPrototypeOf'],
+      javaScriptObjectAllowedProperties: [],
     },
     Noise: {
       gdjsAllowedProperties: ['_extensionNoise', 'randomInRange'],
@@ -542,6 +542,15 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    ThirdPersonCamera: {
+      gdjsAllowedProperties: [
+        '__thirdPersonCameraExtension',
+        'RuntimeObject3D',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     TiledUnitsBar: {
       gdjsAllowedProperties: [
         '_TiledUnitsBarExtension',
@@ -619,7 +628,7 @@ const extensionsAllowedProperties = {
       gdjsAllowedProperties: ['_playgamaBridgeExtension'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: ['setPrototypeOf'],
+      javaScriptObjectAllowedProperties: [],
     },
     Sky3D: {
       gdjsAllowedProperties: ['__Sky3DExtension'],
