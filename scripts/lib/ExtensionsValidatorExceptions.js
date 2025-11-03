@@ -336,6 +336,12 @@ const extensionsAllowedProperties = {
         'getPrototypeOf',
       ],
     },
+    Model9Patch3D: {
+      gdjsAllowedProperties: ['CustomRuntimeObject'],
+      gdjsEvtToolsAllowedProperties: [''],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     MousePointerLock: {
       gdjsAllowedProperties: ['_MousePointerLockExtension', 'RuntimeGame'],
       gdjsEvtToolsAllowedProperties: [],
