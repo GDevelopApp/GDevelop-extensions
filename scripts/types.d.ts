@@ -25,13 +25,13 @@ interface ExtensionAndShortHeaderFields extends ItemExtensionHeaderFields {
   fullName: string;
   name: string;
   helpPath: string;
-  requiredExtensions?: Array<ExtensionDependency>
+  requiredExtensions?: Array<ExtensionDependency>;
 }
 
 interface ExtensionDependency {
   extensionName: string;
   extensionVersion: string;
-};
+}
 
 interface ExtensionAndHeaderFields {
   description: string;
