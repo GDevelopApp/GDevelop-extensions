@@ -387,6 +387,7 @@ const filterEventsFunctions = (eventsFunctions) =>
           eventsBasedBehaviorsCount: eventsBasedBehaviors.length,
           eventsFunctionsCount: eventsFunctions.length,
           helpPath: extension.helpPath || getExtensionReferencePagePath(name),
+          requiredExtensions: extension.requiredExtensions,
         };
 
         if (tier === 'reviewed') {
@@ -431,6 +432,7 @@ const filterEventsFunctions = (eventsFunctions) =>
                 extension,
                 behavior
               ),
+              requiredExtensions: extension.requiredExtensions,
             })
           )
         );
