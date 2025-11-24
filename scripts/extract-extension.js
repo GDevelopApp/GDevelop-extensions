@@ -55,7 +55,7 @@ exports.extractExtension = async function (zipPath, options) {
       return { error: 'nothing-to-update' };
     }
     if (reviewed) {
-      tier = 'reviewed'
+      tier = 'reviewed';
     }
   }
 
