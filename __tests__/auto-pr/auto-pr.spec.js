@@ -6,13 +6,16 @@ const TEMPORARY_MOCK_EXTENSIONS_FOLDER = __dirname + '/mock_extensions_folder';
 const TEST_ZIPS_FOLDER = __dirname + '/test-zips';
 const TEST_EXTENSIONS_FOLDER = __dirname + '/test-extensions';
 
-/** @param {string} zipName */
-const wrappedExtractExtension = async (zipName) =>
+/**
+ *  @param {string} zipName
+ *  @param {boolean | undefined} isUpdate
+ */
+const wrappedExtractExtension = async (zipName, isUpdate = false) =>
   (
-    await extractExtension(
-      `${TEST_ZIPS_FOLDER}/${zipName}.zip`,
-      TEMPORARY_MOCK_EXTENSIONS_FOLDER
-    )
+    await extractExtension(`${TEST_ZIPS_FOLDER}/${zipName}.zip`, {
+      extensionsFolder: TEMPORARY_MOCK_EXTENSIONS_FOLDER,
+      isUpdate,
+    })
   ).error;
 
 /** @param {string} extensionName */
@@ -45,7 +48,13 @@ describe('Auto-pr pipeline', () => {
       'too-many-files'
     );
 
-    expect(await wrappedExtractExtension(`valid-extension`)).toBeUndefined();
+    expect(await wrappedExtractExtension(`new-extension`)).toBeUndefined();
+    expect(await wrappedExtractExtension(`experimental-update`)).toBeUndefined();
+    expect(await wrappedExtractExtension(`reviewed-update`)).toBeUndefined();
+
+    expect(await wrappedExtractExtension(`new-extension`, true)).toBe('nothing-to-update');
+    expect(await wrappedExtractExtension(`experimental-update`, true)).toBeUndefined();
+    expect(await wrappedExtractExtension(`reviewed-update`, true)).toBeUndefined();
   });
 
   test(`verifyExtension()`, async () => {
