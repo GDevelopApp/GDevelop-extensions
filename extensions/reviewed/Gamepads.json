@@ -9,7 +9,7 @@
   "name": "Gamepads",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/gamepad-variant-outline.svg",
   "shortDescription": "Add support for gamepads (or other controllers) to your game, giving access to information such as button presses, axis positions, trigger pressure, etc...",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": [
     "Add support for gamepads (or other physical controllers).",
     "",
@@ -290,7 +290,27 @@
             "    }\r",
             "}();\r",
             "\r",
-            "function onScenePostEvents() {\r",
+            "/**\r",
+            " * @param {gdjs.RuntimeScene} runtimeScene\r",
+            " */\r",
+            "function addFrameBeginningTaskIfNeeded(runtimeScene) {\r",
+            "    const taskManager = runtimeScene.getAsyncTasksManager();\r",
+            "    for (const taskWithCallback of taskManager.tasksWithCallback) {\r",
+            "        if (taskWithCallback.asyncTask === frameBeginningTask) {\r",
+            "            return;\r",
+            "        }\r",
+            "    }\r",
+            "    // Async tasks are run before everything.\r",
+            "    // This is a hack to make sure that button states are updated\r",
+            "    // before mapping behavior events.\r",
+            "    taskManager.addTask(frameBeginningTask);\r",
+            "}\r",
+            "\r",
+            "/**\r",
+            " * @param {gdjs.RuntimeScene} runtimeScene\r",
+            " */\r",
+            "function onScenePostEvents(runtimeScene) {\r",
+            "    addFrameBeginningTaskIfNeeded(runtimeScene);\r",
             "    /** @type {Gamepad[]} */\r",
             "    const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];\r",
             "    for (let playerId = 0; playerId < gamepads.length; playerId++) {\r",
@@ -471,6 +491,7 @@
             "    getGamepad,\r",
             "    onScenePostEvents,\r",
             "    frameBeginningTask,\r",
+            "    addFrameBeginningTaskIfNeeded,\r",
             "}"
           ],
           "parameterObjects": "",
@@ -489,12 +510,7 @@
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": [
-            "// Async tasks are run before everything.\r",
-            "// This is a hack to make sure that button states are updated\r",
-            "// before mapping behavior events.\r",
-            "runtimeScene.getAsyncTasksManager().addTask(gdjs._extensionController.frameBeginningTask);"
-          ],
+          "inlineCode": "gdjs._extensionController.addFrameBeginningTaskIfNeeded(runtimeScene);",
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": false
@@ -512,7 +528,7 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "gdjs._extensionController.onScenePostEvents();",
+            "gdjs._extensionController.onScenePostEvents(runtimeScene);",
             ""
           ],
           "parameterObjects": "",
@@ -1920,7 +1936,6 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "",
             "const playerId = eventsFunctionContext.getArgument(\"PlayerId\") - 1;",
             "/** @type {Gamepad[]} */",
             "const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];",

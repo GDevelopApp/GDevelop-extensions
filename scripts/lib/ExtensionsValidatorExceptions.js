@@ -263,7 +263,11 @@ const extensionsAllowedProperties = {
       javaScriptObjectAllowedProperties: [],
     },
     Gamepads: {
-      gdjsAllowedProperties: ['_extensionController', 'AsyncTask'],
+      gdjsAllowedProperties: [
+        '_extensionController',
+        'AsyncTask',
+        'RuntimeScene',
+      ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: ['getElapsedTime', 'getAsyncTasksManager'],
       javaScriptObjectAllowedProperties: [],
