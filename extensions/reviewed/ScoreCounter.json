@@ -9,7 +9,7 @@
   "name": "ScoreCounter",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/48ec8784eacd92181e4a3bde4755962b5f6edf986e624fc85ea423a31408450d_counter.svg",
   "shortDescription": "An animated score counter with an icon and a customisable font.",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": [
     "An animated score counter with an icon and a customisable font.",
     "",
@@ -28,13 +28,7 @@
   ],
   "dependencies": [],
   "globalVariables": [],
-  "sceneVariables": [
-    {
-      "name": "RisingPitch",
-      "type": "number",
-      "value": 1
-    }
-  ],
+  "sceneVariables": [],
   "eventsFunctions": [
     {
       "description": "Check if the events are running for the editor.",
@@ -2949,6 +2943,7 @@
           "ambientLightColorB": 200,
           "ambientLightColorG": 200,
           "ambientLightColorR": 200,
+          "camera2DPlaneMaxDrawingDistance": 5000,
           "camera3DFarPlaneDistance": 10000,
           "camera3DFieldOfView": 45,
           "camera3DNearPlaneDistance": 3,
@@ -3141,34 +3136,6 @@
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
-              "actions": [
-                {
-                  "type": {
-                    "value": "SetNumberVariable"
-                  },
-                  "parameters": [
-                    "Score",
-                    "=",
-                    "Value"
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "ScoreCounter::RollingCounter::SetValue"
-                  },
-                  "parameters": [
-                    "Counter",
-                    "RollingCounter",
-                    "=",
-                    "Score",
-                    ""
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
                   "type": {
@@ -3178,6 +3145,16 @@
                   "parameters": [
                     "",
                     ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "Value",
+                    ">",
+                    "Score"
                   ]
                 }
               ],
@@ -3194,19 +3171,18 @@
                         "",
                         "\"RisingPitch\"",
                         ">",
-                        "1"
+                        "PitchTimeout"
                       ]
                     }
                   ],
                   "actions": [
                     {
                       "type": {
-                        "value": "SetNumberVariable"
+                        "value": "ScoreCounter::ScoreCounter::Function"
                       },
                       "parameters": [
-                        "RisingPitch",
-                        "=",
-                        "0.8"
+                        "Object",
+                        ""
                       ]
                     }
                   ]
@@ -3221,10 +3197,10 @@
                       },
                       "parameters": [
                         "",
-                        "Collect coin 1.wav",
+                        "IncreasingScoreSound",
                         "no",
                         "100",
-                        "RisingPitch"
+                        "CurrentPitch"
                       ]
                     },
                     {
@@ -3232,9 +3208,9 @@
                         "value": "SetNumberVariable"
                       },
                       "parameters": [
-                        "RisingPitch",
+                        "CurrentPitch",
                         "*",
-                        "1.01"
+                        "PitchFactor"
                       ]
                     },
                     {
@@ -3283,6 +3259,95 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "Value",
+                    "<",
+                    "Score"
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ScoreCounter::ScoreCounter::Function"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Score",
+                    "=",
+                    "Value"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ScoreCounter::RollingCounter::SetValue"
+                  },
+                  "parameters": [
+                    "Counter",
+                    "RollingCounter",
+                    "=",
+                    "Score",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ScoreCounter::ScoreCounter",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Reset the pitch to the baseline value.",
+          "fullName": "Reset pitch",
+          "functionType": "Action",
+          "name": "Function",
+          "private": true,
+          "sentence": "Reset the pitch of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "CurrentPitch",
+                    "=",
+                    "RandomFloatInRange(PitchBaselineMin, PitchBaselineMax)"
+                  ]
+                }
+              ]
             }
           ],
           "parameters": [
@@ -3305,6 +3370,57 @@
           "description": "Default score",
           "group": "Value",
           "name": "Score"
+        },
+        {
+          "value": "",
+          "type": "Resource",
+          "label": "Increasing score sound",
+          "group": "Sound",
+          "extraInformation": [
+            "audio"
+          ],
+          "choices": [],
+          "name": "IncreasingScoreSound"
+        },
+        {
+          "value": "0.7",
+          "type": "Number",
+          "label": "Min baseline pitch",
+          "group": "Sound",
+          "advanced": true,
+          "name": "PitchBaselineMin"
+        },
+        {
+          "value": "0.8",
+          "type": "Number",
+          "label": "Max baseline pitch",
+          "group": "Sound",
+          "advanced": true,
+          "name": "PitchBaselineMax"
+        },
+        {
+          "value": "1.01",
+          "type": "Number",
+          "label": "Pitch factor",
+          "group": "Sound",
+          "advanced": true,
+          "name": "PitchFactor"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "unit": "Second",
+          "label": "Pitch reset timeout",
+          "group": "Sound",
+          "advanced": true,
+          "name": "PitchTimeout"
+        },
+        {
+          "value": "0.8",
+          "type": "Number",
+          "label": "Current pitch",
+          "hidden": true,
+          "name": "CurrentPitch"
         }
       ]
     }
