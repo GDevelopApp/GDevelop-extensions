@@ -2,39 +2,64 @@
   "author": "",
   "category": "Network",
   "extensionNamespace": "",
+  "fullName": "Upload/Download files",
   "gdevelopVersion": ">=5.5.222",
-  "fullName": "Upload Download Text File",
   "helpPath": "https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications",
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLXVwbG9hZCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik05LDE2VjEwSDVMMTIsM0wxOSwxMEgxNVYxNkg5TTUsMjBWMThIMTlWMjBINVoiIC8+PC9zdmc+",
   "name": "UploadDownloadTextFile",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/16a8e2514d1c9a57f65f506bb7a420bf63e53dc56c58dfceff63178893031c69_upload.svg",
   "shortDescription": "Allows users to upload/download text content to a filename and vice versa. ",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": [
-    "Allows users to upload/download text content to a filename and vice versa. ",
-    "(The current gdevelop only supports desktop version, this one is compatible with browsers)",
+    "Allows users to upload and download text files (JSON or plain text).",
     "",
-    "[Open this example](https://editor.gdevelop.io/?project=https://resources.gdevelop-app.com/examples/extension-upload-download-text/extension-upload-download-text.json) to learn how to use this extension."
+    "## Usage",
+    "",
+    "**Download a file:**",
+    "```",
+    "Download [file type] with filename [name], containing [text content]",
+    "```",
+    "",
+    "**Upload a file:**",
+    "```",
+    "Upload a [file type] to text input [variable], with ID [unique ID]",
+    "```",
+    "",
+    "Then check if upload finished:",
+    "```",
+    "Uploading text file with id [unique ID] finished?",
+    "```",
+    "",
+    "## Example",
+    "",
+    "To save game data, use the download action with your filename and JSON content. To load it back, use the upload action with a unique ID, then wait for the upload finished condition before reading the variable."
   ],
+  "origin": {
+    "identifier": "UploadDownloadTextFile",
+    "name": "gdevelop-extension-store"
+  },
   "tags": [
     "download",
     "upload",
     "text",
     "file",
     "browser",
-    "DOM apis"
+    "dom apis"
   ],
   "authorIds": [
-    "rotBq28wITdtfsrE7McHQri4k2w2"
+    "rotBq28wITdtfsrE7McHQri4k2w2",
+    "D7erWGZ1oEMfqC61eTysriJsrIx2"
   ],
   "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
   "eventsFunctions": [
     {
       "description": "Download file with text content.",
       "fullName": "Download file with text content",
       "functionType": "Action",
       "name": "DownloadTextFile",
-      "sentence": "Download text with filename _PARAM1_",
+      "sentence": "Download _PARAM3_ with filename _PARAM1_, containing __PARAM2_",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -53,7 +78,7 @@
             "const FileName = eventsFunctionContext.getArgument(\"FileName\");",
             "const TextContent = eventsFunctionContext.getArgument(\"TextContent\");",
             "",
-            "DownloadTextContent(FileName, \"text/plain\", TextContent);"
+            "DownloadTextContent(FileName, eventsFunctionContext.getArgument(\"filetype\"), TextContent);"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -70,6 +95,12 @@
           "description": "TextContent",
           "name": "TextContent",
           "type": "string"
+        },
+        {
+          "description": "Type",
+          "name": "filetype",
+          "supplementaryInformation": "[\"application/json\",\"text/plain\"]",
+          "type": "stringWithSelector"
         }
       ],
       "objectGroups": []
@@ -79,24 +110,28 @@
       "fullName": "Upload a text file to text input",
       "functionType": "Action",
       "name": "UploadTextFile",
-      "sentence": "Upload a text file to text input _PARAM1_",
+      "sentence": "Upload a _PARAM2_ to text input _PARAM1_, with the following ID _PARAM3_",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "const allowedFileTypes = [\"text/plain\", \"application/json\"];",
+            "// --- Get Arguments ---",
+            "const allowedFileTypes = [eventsFunctionContext.getArgument(\"filetype\")];",
+            "const SceneVariable = eventsFunctionContext.getArgument(\"Variable\");",
+            "const transactionID = eventsFunctionContext.getArgument(\"ID\");",
             "",
+            "// --- Setup Input ---",
             "const InputElement = document.createElement('input');",
             "InputElement.type = \"file\";",
-            "",
             "InputElement.addEventListener(\"change\", handleFiles, false);",
             "InputElement.click();",
             "",
-            "const SceneVariable = eventsFunctionContext.getArgument(\"SceneVariable\");",
+            "// --- Setup Status Variable ---",
             "const Uploading = runtimeScene.getVariables().get(\"__UploadDownloadTextFile\");",
+            "// Reset status and clear old ID",
+            "Uploading.fromJSObject({Uploading:false, ID:transactionID}); ",
             "",
-            "Uploading.fromJSObject({Uploading:false});",
-            "",
+            "// --- Handle File ---",
             "async function handleFiles() {",
             "  const files = this.files;",
             "  ",
@@ -107,8 +142,7 @@
             "  } else {",
             "    SceneVariable.setString(await files[0].text());",
             "  }",
-            "",
-            "  Uploading.fromJSObject({Uploading:true});",
+            "  Uploading.fromJSObject({Uploading:true, ID:transactionID}); ",
             "  InputElement.remove();",
             "}"
           ],
@@ -119,9 +153,21 @@
       ],
       "parameters": [
         {
-          "description": "SceneVariable",
-          "name": "SceneVariable",
-          "type": "scenevar"
+          "description": "Variable",
+          "name": "Variable",
+          "type": "variable"
+        },
+        {
+          "description": "Type",
+          "name": "filetype",
+          "supplementaryInformation": "[\"application/json\",\"text/plain\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Upload ID",
+          "name": "ID",
+          "supplementaryInformation": "sceneID",
+          "type": "identifier"
         }
       ],
       "objectGroups": []
@@ -131,58 +177,36 @@
       "fullName": "Uploading text file finished?",
       "functionType": "Condition",
       "name": "UploadFinished",
-      "sentence": "Uploading text file finished?",
+      "sentence": "Uploading text file with id _PARAM1_ finished?",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [
-            {
-              "type": {
-                "value": "SceneVariableAsBoolean"
-              },
-              "parameters": [
-                "__UploadDownloadTextFile.Uploading",
-                "False"
-              ]
-            }
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const Uploading = runtimeScene.getVariables().get(\"__UploadDownloadTextFile\");",
+            "const ID = eventsFunctionContext.getArgument(\"ID\");",
+            "const upload = Uploading.toJSObject();",
+            "",
+            "console.log(upload)",
+            "",
+            "if (upload.Uploading && upload.ID === ID) { // Use strict equality (===)",
+            "    eventsFunctionContext.returnValue = true;",
+            "} else {",
+            "    eventsFunctionContext.returnValue = false;",
+            "}"
           ],
-          "actions": [
-            {
-              "type": {
-                "value": "SetReturnBoolean"
-              },
-              "parameters": [
-                "False"
-              ]
-            }
-          ]
-        },
-        {
-          "type": "BuiltinCommonInstructions::Standard",
-          "conditions": [
-            {
-              "type": {
-                "value": "SceneVariableAsBoolean"
-              },
-              "parameters": [
-                "__UploadDownloadTextFile.Uploading",
-                "True"
-              ]
-            }
-          ],
-          "actions": [
-            {
-              "type": {
-                "value": "SetReturnBoolean"
-              },
-              "parameters": [
-                "True"
-              ]
-            }
-          ]
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
         }
       ],
-      "parameters": [],
+      "parameters": [
+        {
+          "description": "Upload ID",
+          "name": "ID",
+          "supplementaryInformation": "sceneID",
+          "type": "identifier"
+        }
+      ],
       "objectGroups": []
     }
   ],
