@@ -1,4 +1,5 @@
 const { mkdir, rm } = require('fs/promises');
+const { cp } = require('fs').promises;
 const { verifyExtension } = require('../../scripts/check-single-extension');
 const { extractExtension } = require('../../scripts/extract-extension');
 
@@ -27,34 +28,65 @@ const wrappedVerifyExtension = async (extensionName) =>
   ).code;
 
 describe('Auto-pr pipeline', () => {
-  beforeAll(async () =>
-    mkdir(TEMPORARY_MOCK_EXTENSIONS_FOLDER + '/community', { recursive: true })
+  beforeEach(
+    async () =>
+      await cp(TEST_EXTENSIONS_FOLDER, TEMPORARY_MOCK_EXTENSIONS_FOLDER, {
+        recursive: true,
+      })
   );
-  beforeAll(async () =>
-    mkdir(TEMPORARY_MOCK_EXTENSIONS_FOLDER + '/reviewed', { recursive: true })
-  );
-  afterAll(async () =>
-    rm(TEMPORARY_MOCK_EXTENSIONS_FOLDER, { recursive: true })
+  afterEach(
+    async () => await rm(TEMPORARY_MOCK_EXTENSIONS_FOLDER, { recursive: true })
   );
 
-  test('extractExtension()', async () => {
-    expect(await wrappedExtractExtension(`empty`)).toBe('no-json-found');
-    expect(await wrappedExtractExtension(`invalid-zip`)).toBe('zip-error');
-    expect(await wrappedExtractExtension(`not-a-json`)).toBe('no-json-found');
-    expect(await wrappedExtractExtension(`path-shenanigans`)).toBe(
-      'invalid-file-name'
-    );
-    expect(await wrappedExtractExtension(`too-many-extensions`)).toBe(
-      'too-many-files'
-    );
+  describe('extractExtension()', () => {
+    test('Can detect extension file errors', async () => {
+      expect(await wrappedExtractExtension(`empty-file`)).toBe('zip-error');
+      expect(await wrappedExtractExtension(`empty-archive`)).toBe(
+        'no-json-found'
+      );
+      expect(await wrappedExtractExtension(`invalid-zip`)).toBe('zip-error');
+      expect(await wrappedExtractExtension(`not-a-json`)).toBe('no-json-found');
+      expect(await wrappedExtractExtension(`path-shenanigans`)).toBe(
+        'invalid-file-name'
+      );
+      expect(await wrappedExtractExtension(`too-many-extensions`)).toBe(
+        'too-many-files'
+      );
+    });
 
-    expect(await wrappedExtractExtension(`new-extension`)).toBeUndefined();
-    expect(await wrappedExtractExtension(`experimental-update`)).toBeUndefined();
-    expect(await wrappedExtractExtension(`reviewed-update`)).toBeUndefined();
+    test('Can submit a valid new extension', async () => {
+      expect(await wrappedExtractExtension(`new-extension`)).toBeUndefined();
+    });
 
-    expect(await wrappedExtractExtension(`new-extension`, true)).toBe('nothing-to-update');
-    expect(await wrappedExtractExtension(`experimental-update`, true)).toBeUndefined();
-    expect(await wrappedExtractExtension(`reviewed-update`, true)).toBeUndefined();
+    test('Can detect that the new experimental extension already exists', async () => {
+      expect(await wrappedExtractExtension(`experimental-update`)).toBe(
+        'already-exists'
+      );
+    });
+
+    test('Can detect that the new reviewed extension already exists', async () => {
+      expect(await wrappedExtractExtension(`reviewed-update`)).toBe(
+        'already-exists'
+      );
+    });
+
+    test("Can detect that the extension to update doesn't exist", async () => {
+      expect(await wrappedExtractExtension(`new-extension`, true)).toBe(
+        'nothing-to-update'
+      );
+    });
+
+    test('Can submit a valid experimental extension update', async () => {
+      expect(
+        await wrappedExtractExtension(`experimental-update`, true)
+      ).toBeUndefined();
+    });
+
+    test('Can submit a valid reviewed extension update', async () => {
+      expect(
+        await wrappedExtractExtension(`reviewed-update`, true)
+      ).toBeUndefined();
+    });
   });
 
   test(`verifyExtension()`, async () => {
@@ -67,7 +99,9 @@ describe('Auto-pr pipeline', () => {
     expect(await wrappedVerifyExtension(`RealExtension`)).toBe('invalid-json');
     expect(await wrappedVerifyExtension(`Share`)).toBe('rule-break');
     expect(await wrappedVerifyExtension(`Fake`)).toBe('unknown-json-contents');
-    expect(await wrappedVerifyExtension(`ArrayTools`)).toBe('gdevelop-project-file');
+    expect(await wrappedVerifyExtension(`ArrayTools`)).toBe(
+      'gdevelop-project-file'
+    );
 
     expect(await wrappedVerifyExtension(`UUID`)).toBe('success');
     expect(await wrappedVerifyExtension(`Clipboard`)).toBe('success');

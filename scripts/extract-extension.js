@@ -9,7 +9,7 @@ const pipeline = require('util').promisify(require('stream').pipeline);
  * Extracts exactly one extension into the community extensions folder from a zip file.
  * @param {string} zipPath The path to the zip file to extract.
  * @param {{extensionsFolder?: string, preliminaryCheck?: boolean, isUpdate?: boolean}} [options]
- * @returns {Promise<{error: "too-many-files" | "no-json-found"| "invalid-file-name" | "zip-error" | "nothing-to-update", details?: any} | {error?: undefined,extensionName: string, tier: string}>} the name of the extracted extension if successful, else a generic error code.
+ * @returns {Promise<{error: "too-many-files" | "no-json-found"| "invalid-file-name" | "zip-error" | "nothing-to-update" | "already-exists", details?: any} | {error?: undefined,extensionName: string, tier: string}>} the name of the extracted extension if successful, else a generic error code.
  */
 exports.extractExtension = async function (zipPath, options) {
   const {
@@ -18,11 +18,13 @@ exports.extractExtension = async function (zipPath, options) {
     isUpdate = false,
   } = options || {};
   // Load in the archive with JSZip
-  const zip = await JSZip.loadAsync(await readFile(zipPath)).catch((e) => {
-    console.warn(`JSZip loading error caught: `, e);
-    return null;
-  });
-  if (zip === null) return { error: 'zip-error' };
+  let zip;
+  try {
+    zip = await JSZip.loadAsync(await readFile(zipPath));
+  } catch (error) {
+    console.warn(`JSZip loading error caught: `, error);
+    return { error: 'zip-error' };
+  }
 
   // Find JSON files in the zip top level folder
   const jsonFiles = zip.file(/.*\.json$/);
@@ -42,21 +44,23 @@ exports.extractExtension = async function (zipPath, options) {
     return { error: 'invalid-file-name' };
 
   let tier = 'community';
+  const [community, reviewed] = await Promise.all([
+    readFile(`${extensionsFolder}/community/${extensionName}.json`).catch(
+      () => null
+    ),
+    readFile(`${extensionsFolder}/reviewed/${extensionName}.json`).catch(
+      () => null
+    ),
+  ]);
   if (isUpdate) {
-    const [community, reviewed] = await Promise.all([
-      readFile(`${extensionsFolder}/community/${extensionName}.json`).catch(
-        () => null
-      ),
-      readFile(`${extensionsFolder}/reviewed/${extensionName}.json`).catch(
-        () => null
-      ),
-    ]);
     if (!community && !reviewed) {
       return { error: 'nothing-to-update' };
     }
     if (reviewed) {
       tier = 'reviewed';
     }
+  } else if (community || reviewed) {
+    return { error: 'already-exists' };
   }
 
   try {
