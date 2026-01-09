@@ -137,6 +137,7 @@ export interface ExtensionsDatabase {
     views: {
       default: {
         firstIds: Array<{ extensionName: string; objectName: string }>;
+        secondIds: Array<{ extensionName: string; objectName: string }>;
       };
     };
   };

@@ -35,12 +35,6 @@ const extensionsBaseUrl = 'https://resources.gdevelop-app.com/extensions';
  * @type {Set<string>}
  */
 const extensionsWithoutValidation = new Set([]);
-const extensionsRequiring3DPhysics = new Set([
-  'AdvancedJump3D',
-  'PhysicsCharacter3DAnimator',
-  'PhysicsCharacter3DKeyMapper',
-  'PhysicsEllipseMovement3D',
-]);
 
 /**
  * @param {string} path
@@ -516,6 +510,7 @@ const filterEventsFunctions = (eventsFunctions) =>
         views: {
           default: {
             firstIds: views.default.firstObjectIds,
+            secondIds: views.default.secondObjectIds,
           },
         },
       },
