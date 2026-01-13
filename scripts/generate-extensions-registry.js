@@ -441,6 +441,7 @@ const filterEventsFunctions = (eventsFunctions) =>
                 name: object.name,
                 fullName: object.fullName,
                 description: object.description,
+                assetStoreTag: object.assetStoreTag || '',
               }))
             : []
         );

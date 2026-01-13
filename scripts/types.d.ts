@@ -104,6 +104,7 @@ interface ObjectAndShortHeaderFields {
   description: string;
   fullName: string;
   name: string;
+  assetStoreTag: string;
 }
 
 export interface ObjectShortHeader
@@ -215,6 +216,7 @@ export interface EventsBasedObject {
   fullName: string;
   name: string;
   defaultName: string;
+  assetStoreTag?: string;
   private?: boolean;
   eventsFunctions: EventsFunction[];
 }
