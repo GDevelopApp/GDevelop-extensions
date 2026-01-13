@@ -1,0 +1,1885 @@
+{
+  "author": "",
+  "category": "Game mechanic",
+  "extensionNamespace": "",
+  "fullName": "FireBullet3D Weapon System",
+  "gdevelopVersion": "",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWJ1bGxldCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xNCwyMkgxMFYyMUgxNFYyMk0xMywxMFY3SDExVjEwTDEwLDExLjVWMjBIMTRWMTEuNUwxMywxME0xMiwyQzEyLDIgMTEsMyAxMSw1VjZIMTNWNUMxMyw1IDEzLDMgMTIsMloiIC8+PC9zdmc+",
+  "name": "FireBullet3D",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/0b1c1558bd66b570fb751fd2749a92dd080594208c0c30837e47a74bc4b43134_bullet.svg",
+  "shortDescription": "Handles physical bullets, hitscan raycasting, ammo management (clips & reserves), reloading logic, smart-aiming, and fire rates.",
+  "version": "1.0.0",
+  "description": [
+    "Turn any 3D object into a fully functional weapon. This extension provides a hybrid \"Projectile + Raycast\" system suitable for FPS and TPS games.",
+    "",
+    "**Key Features:**",
+    "*   **Hybrid Shooting:** Choose between Physical Bullets (with gravity/velocity) or Hitscan Rays (instant lasers).",
+    "*   **Smart Aiming:** Automatically corrects parallax errors so bullets hit exactly where the crosshair is pointing, even at close range.",
+    "*   **Complete Ammo System:** Manages Clip Size, Current Ammo, and Backpack Reserves (Call of Duty style).",
+    "*   **Reload Logic:** Includes Reload Timers, Auto-Reload on empty, and \"Infinite Ammo\" modes.",
+    "*   **Fire Rate Control:** Built-in timers to handle automatic fire logic easily.",
+    "*   **Debug Tools:** Visualize bullet paths and raycast hits with colored lines to test accuracy.",
+    "",
+    "**How to use:**",
+    "1. Add the **Firebullet3D** behavior to your Gun object.",
+    "2. Configure properties (Clip Size, Fire Rate, Reload Time, etc.).",
+    "3. In your Events, use the **\"Is Gun Ready To Fire?\"** condition.",
+    "4. Use the **\"Spawn Bullet\"** or **\"Shoot Hitscan Ray\"** actions to fire.",
+    "5. Use **\"Reload Gun\"** action when the R key is pressed."
+  ],
+  "origin": {
+    "identifier": "FireBullet3D",
+    "name": "gdevelop-extension-store"
+  },
+  "tags": [
+    "3d",
+    "shooter",
+    "gun",
+    "weapon",
+    "bullet",
+    "ammo",
+    "raycast",
+    "fps",
+    "mechanics",
+    "physics"
+  ],
+  "authorIds": [
+    "4OuGzdcTnhefGk7Yv9A816YpKPo1"
+  ],
+  "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [
+    {
+      "name": "Temp",
+      "type": "number",
+      "value": 0
+    }
+  ],
+  "eventsFunctions": [
+    {
+      "description": "Deletes the entire save file for the specified slot.",
+      "fullName": "Clear all save data",
+      "functionType": "Action",
+      "name": "ClearAllSaveData",
+      "sentence": "Clear all save data from slot _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const saveSlot = eventsFunctionContext.getArgument(\"SaveSlotName\") || \"GameData\";",
+            "",
+            "// Function: clearJSONFile(storageName)",
+            "gdjs.evtTools.storage.clearJSONFile(saveSlot);",
+            "",
+            "console.log(`Cb Wiped Entire Save File: ${saveSlot}`);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Save Slot to Wipe",
+          "name": "SaveSlotName",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [
+    {
+      "description": "Handles physical bullets, hitscan raycasting, ammo management, reloading logic, and smart-aiming.",
+      "fullName": "FireBullet3D Weapon System",
+      "name": "Firebullet3D",
+      "objectType": "",
+      "eventsFunctions": [
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "doStepPreEvents",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "(function(runtimeScene, objects) {",
+                "    // 1. SETUP",
+                "    // This function runs for EVERY object with the behavior, so 'objects' is a list.",
+                "    // Usually only 1 object per call in GDevelop logic, but we loop to be safe.",
+                "    for (let i = 0; i < objects.length; i++) {",
+                "        const gunObj = objects[i];",
+                "        const variables = gunObj.getVariables();",
+                "",
+                "        // 2. CHECK STATE",
+                "        // If we are NOT reloading, stop here. Save performance.",
+                "        if (!variables.has(\"IsReloading\") || !variables.get(\"IsReloading\").getAsBoolean()) {",
+                "            continue; ",
+                "        }",
+                "",
+                "        // 3. HANDLE TIMER",
+                "        // Get TimeDelta (Time passed since last frame in seconds)",
+                "        const dt = runtimeScene.getTimeManager().getElapsedTime() / 1000;",
+                "        ",
+                "        let timer = variables.get(\"ReloadTimer\").getAsNumber();",
+                "        timer -= dt; // Count down",
+                "        variables.get(\"ReloadTimer\").setNumber(timer);",
+                "",
+                "        // 4. CHECK IF DONE",
+                "        if (timer <= 0) {",
+                "            // === RELOAD COMPLETE! ===",
+                "            ",
+                "            // A. TURN OFF STATE",
+                "            variables.get(\"IsReloading\").setBoolean(false);",
+                "",
+                "            // B. PERFORM THE AMMO MATH (Moved from the old Action)",
+                "            const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "            const behavior = gunObj.getBehavior(behaviorName);",
+                "",
+                "            const clipSize = Number(behavior._behaviorData.ClipSize) || 30;",
+                "            const startReserve = (behavior._behaviorData.ReserveAmmo !== undefined) ? Number(behavior._behaviorData.ReserveAmmo) : 90;",
+                "            const infiniteAmmo = behavior._behaviorData.InfiniteAmmo || false;",
+                "",
+                "            if (!variables.has(\"CurrentAmmo\")) variables.get(\"CurrentAmmo\").setNumber(clipSize);",
+                "            let current = variables.get(\"CurrentAmmo\").getAsNumber();",
+                "",
+                "            if (!variables.has(\"ReserveAmmo\")) variables.get(\"ReserveAmmo\").setNumber(startReserve);",
+                "            let reserve = variables.get(\"ReserveAmmo\").getAsNumber();",
+                "",
+                "            // Only fill if needed",
+                "            if (current < clipSize) {",
+                "                // If Infinite Ammo is ON, just fill it",
+                "                if (infiniteAmmo) {",
+                "                    variables.get(\"CurrentAmmo\").setNumber(clipSize);",
+                "                } ",
+                "                // Normal Logic",
+                "                else if (reserve > 0) {",
+                "                    const needed = clipSize - current;",
+                "                    const amountToMove = Math.min(needed, reserve);",
+                "                    current += amountToMove;",
+                "                    reserve -= amountToMove;",
+                "                    ",
+                "                    // Save Results",
+                "                    variables.get(\"CurrentAmmo\").setNumber(current);",
+                "                    variables.get(\"ReserveAmmo\").setNumber(reserve);",
+                "                }",
+                "            }",
+                "            ",
+                "            // console.log(\"✅ Reload Complete via Internal Timer\");",
+                "        }",
+                "    }",
+                "})(runtimeScene, eventsFunctionContext.getObjects(\"Object\"));"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Returns true if the backpack is full (Max Capacity).",
+          "fullName": "Is reserve ammo full",
+          "functionType": "Condition",
+          "name": "IsReserveFull",
+          "sentence": "_PARAM0_ reserve ammo is full",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "// 1. Get Object",
+                "const objects = eventsFunctionContext.getObjects(\"Object\");",
+                "if (objects.length === 0) {",
+                "    eventsFunctionContext.returnValue = false;",
+                "    return false;",
+                "}",
+                "const gunObj = objects[0];",
+                "",
+                "// 2. Get Settings",
+                "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "const behavior = gunObj.getBehavior(behaviorName);",
+                "",
+                "// Get Max Limit (Property) - Default to 210 if missing",
+                "const maxReserve = (behavior._behaviorData.MaxReserveAmmo !== undefined) ? Number(behavior._behaviorData.MaxReserveAmmo) : 210;",
+                "// Get Start Reserve (Property) - Default to 90",
+                "const startReserve = (behavior._behaviorData.ReserveAmmo !== undefined) ? Number(behavior._behaviorData.ReserveAmmo) : 90;",
+                "",
+                "// 3. Get Current Value from Variable",
+                "const variables = gunObj.getVariables();",
+                "let currentReserve = startReserve;",
+                "",
+                "if (variables.has(\"ReserveAmmo\")) {",
+                "    currentReserve = variables.get(\"ReserveAmmo\").getAsNumber();",
+                "}",
+                "",
+                "// 4. COMPARE",
+                "// If current reserve is Equal to (or somehow greater than) Max, we are FULL.",
+                "if (currentReserve >= maxReserve) {",
+                "    eventsFunctionContext.returnValue = true;",
+                "    return true;",
+                "}",
+                "",
+                "// Otherwise, not full.",
+                "eventsFunctionContext.returnValue = false;",
+                "return false;"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Returns true if the gun is currently performing a reload.",
+          "fullName": "Is reloading",
+          "functionType": "Condition",
+          "name": "IsReloading",
+          "sentence": "_PARAM0_ is reloading",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const objects = eventsFunctionContext.getObjects(\"Object\");",
+                "if (objects.length === 0) { eventsFunctionContext.returnValue = false; return false; }",
+                "",
+                "const gunObj = objects[0];",
+                "const variables = gunObj.getVariables();",
+                "",
+                "if (variables.has(\"IsReloading\")) {",
+                "    const isReloading = variables.get(\"IsReloading\").getAsBoolean();",
+                "    eventsFunctionContext.returnValue = isReloading;",
+                "    return isReloading;",
+                "}",
+                "",
+                "eventsFunctionContext.returnValue = false;",
+                "return false;",
+                ""
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Checks if the Fire Rate cooldown has passed and if there is ammo.",
+          "fullName": "Is Gun Ready To Fire",
+          "functionType": "Condition",
+          "name": "IsReadyToFire",
+          "sentence": "_PARAM0_ is ready to fire",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "// 1. Get Objects",
+                "const objects = eventsFunctionContext.getObjects(\"Object\");",
+                "if (objects.length === 0) {",
+                "    eventsFunctionContext.returnValue = false;",
+                "    return false;",
+                "}",
+                "const gunObj = objects[0];",
+                "",
+                "// 2. Get Settings from Behavior",
+                "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "const behavior = gunObj.getBehavior(behaviorName);",
+                "",
+                "const fireRate = behavior._behaviorData.FireRate || 0.1;",
+                "const clipSize = behavior._behaviorData.ClipSize || 30;",
+                "const infiniteAmmo = behavior._behaviorData.InfiniteAmmo || false;",
+                "",
+                "// 3. Get Variables (State)",
+                "const variables = gunObj.getVariables();",
+                "",
+                "// Check Ammo",
+                "let currentAmmo = clipSize;",
+                "if (variables.has(\"CurrentAmmo\")) {",
+                "    currentAmmo = variables.get(\"CurrentAmmo\").getAsNumber();",
+                "}",
+                "",
+                "// Check Timer",
+                "let lastShotTime = 0;",
+                "if (variables.has(\"ShootTimer\")) {",
+                "    lastShotTime = variables.get(\"ShootTimer\").getAsNumber();",
+                "}",
+                "",
+                "// 4. PERFORM CHECKS",
+                "",
+                "// A. Ammo Check",
+                "if (!infiniteAmmo && currentAmmo <= 0) {",
+                "    eventsFunctionContext.returnValue = false; ",
+                "    return false;",
+                "}",
+                "",
+                "// B. Cooldown Check (THE FIX IS HERE)",
+                "// We use GDevelop's time, not System time.",
+                "const currentTime = runtimeScene.getTimeManager().getTimeFromStart() / 1000; ",
+                "",
+                "// Safety: If we switched time systems and lastShotTime is huge (from Date.now), reset it.",
+                "if (lastShotTime > currentTime) {",
+                "    lastShotTime = 0;",
+                "}",
+                "",
+                "if (currentTime - lastShotTime < fireRate) {",
+                "    eventsFunctionContext.returnValue = false; ",
+                "    return false;",
+                "}",
+                "",
+                "// 5. SUCCESS!",
+                "eventsFunctionContext.returnValue = true; ",
+                "return true;"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Returns the maximum ammo of the gun.",
+          "fullName": "Should Gun Auto Reload",
+          "functionType": "Condition",
+          "name": "ShouldAutoReload",
+          "sentence": "_PARAM0_ should auto-reload",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "// 1. Get Objects",
+                "const objects = eventsFunctionContext.getObjects(\"Object\");",
+                "if (objects.length === 0) {",
+                "    eventsFunctionContext.returnValue = false;",
+                "    return false;",
+                "}",
+                "const gunObj = objects[0];",
+                "",
+                "// 2. Get Settings",
+                "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "const behavior = gunObj.getBehavior(behaviorName);",
+                "",
+                "const autoReload = behavior._behaviorData.AutoReload || false;",
+                "const clipSize = behavior._behaviorData.ClipSize || 30;",
+                "const infiniteAmmo = behavior._behaviorData.InfiniteAmmo || false;",
+                "const startReserve = (behavior._behaviorData.ReserveAmmo !== undefined) ? Number(behavior._behaviorData.ReserveAmmo) : 90;",
+                "",
+                "// 3. Get Variables",
+                "const variables = gunObj.getVariables();",
+                "",
+                "// Check Current Ammo",
+                "let currentAmmo = clipSize;",
+                "if (variables.has(\"CurrentAmmo\")) {",
+                "    currentAmmo = variables.get(\"CurrentAmmo\").getAsNumber();",
+                "}",
+                "",
+                "// Check Reserve Ammo",
+                "let reserveAmmo = startReserve;",
+                "if (variables.has(\"ReserveAmmo\")) {",
+                "    reserveAmmo = variables.get(\"ReserveAmmo\").getAsNumber();",
+                "}",
+                "",
+                "// 4. THE LOGIC",
+                "// We should ONLY reload if:",
+                "// A. Auto Reload is enabled",
+                "// B. Clip is Empty (0)",
+                "// C. We actually have bullets in the backpack (Reserve > 0)",
+                "// D. Infinite Ammo is OFF (Infinite ammo never needs reload)",
+                "",
+                "if (autoReload && !infiniteAmmo && currentAmmo <= 0 && reserveAmmo > 0) {",
+                "    eventsFunctionContext.returnValue = true;",
+                "    return true;",
+                "}",
+                "",
+                "// Otherwise, no.",
+                "eventsFunctionContext.returnValue = false;",
+                "return false;",
+                ""
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Spawns a physical bullet object from the gun aimed at the crosshair.",
+          "fullName": "Spawn bullet",
+          "functionType": "Action",
+          "name": "Spawn_Bullet_at_Gun_Position",
+          "sentence": "Spawn _PARAM2_ from _PARAM0_ aimed at _PARAM6_ (Offset: _PARAM3_, _PARAM4_, _PARAM5_) (Speed: _PARAM7_, Tracer: _PARAM8_, Spread: _PARAM9_) (RotFix: _PARAM10_, _PARAM11_)",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": []
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "(function(runtimeScene, eventsFunctionContext) {",
+                "    // 1. GET OBJECTS",
+                "    const gunObjects = eventsFunctionContext.getObjects(\"Object\"); ",
+                "    const bulletResource = eventsFunctionContext.getObjects(\"The_Bullet\"); ",
+                "    const crosshairObjects = eventsFunctionContext.getObjects(\"The_Crosshair\"); ",
+                "",
+                "    // ARGS",
+                "    const offX = eventsFunctionContext.getArgument(\"OffsetX\") || 0;",
+                "    const offY = eventsFunctionContext.getArgument(\"OffsetY\") || 0;",
+                "    const offZ = eventsFunctionContext.getArgument(\"OffsetZ\") || 0;",
+                "    const speed = eventsFunctionContext.getArgument(\"BulletSpeed\") || 0;",
+                "    const tracerStretch = eventsFunctionContext.getArgument(\"TracerLength\") || 0;",
+                "    const spread = eventsFunctionContext.getArgument(\"Spread\") || 0;",
+                "    const fixRotX = eventsFunctionContext.getArgument(\"ModelRotX\") || 0;",
+                "    const fixRotY = eventsFunctionContext.getArgument(\"ModelRotY\") || 0;",
+                "    const fixRotZ = eventsFunctionContext.getArgument(\"ModelRotZ\") || 0;",
+                "",
+                "    if (gunObjects.length === 0 || bulletResource.length === 0) return;",
+                "    const gunObj = gunObjects[0];",
+                "    const bulletName = bulletResource[0].getName(); ",
+                "",
+                "    // =========================================================",
+                "    // 🔫 AMMO, FIRE RATE & SETTINGS",
+                "    // =========================================================",
+                "    ",
+                "    const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "    const behavior = gunObj.getBehavior(behaviorName);",
+                "    ",
+                "    const fireRate = behavior._behaviorData.FireRate || 0.1;",
+                "    const clipSize = behavior._behaviorData.ClipSize || 30;",
+                "    const infiniteAmmo = behavior._behaviorData.InfiniteAmmo || false;",
+                "    const bulletsPerShot = Number(behavior._behaviorData.BulletsPerShot) || 1;",
+                "    ",
+                "    // NEW: Get the Gravity Scale (Default to 0 if missing)",
+                "    const gravityScale = (behavior._behaviorData.GravityScale !== undefined) ? Number(behavior._behaviorData.GravityScale) : 0;",
+                "    ",
+                "    const startAmmo = (behavior._behaviorData.CurrentAmmo !== undefined) ? behavior._behaviorData.CurrentAmmo : clipSize;",
+                "",
+                "    const variables = gunObj.getVariables();",
+                "    let currentAmmo = 0;",
+                "    ",
+                "    if (!variables.has(\"CurrentAmmo\")) {",
+                "        variables.get(\"CurrentAmmo\").setNumber(startAmmo);",
+                "        currentAmmo = startAmmo;",
+                "    } else {",
+                "        currentAmmo = variables.get(\"CurrentAmmo\").getAsNumber();",
+                "    }",
+                "",
+                "    if (!variables.has(\"ShootTimer\")) variables.get(\"ShootTimer\").setNumber(0);",
+                "    const timerVar = variables.get(\"ShootTimer\");",
+                "    let lastShotTime = timerVar.getAsNumber();",
+                "    ",
+                "    // Time Fix",
+                "    const currentTime = runtimeScene.getTimeManager().getTimeFromStart() / 1000; ",
+                "",
+                "    if (lastShotTime > currentTime) {",
+                "        lastShotTime = 0;",
+                "    }",
+                "",
+                "    if (currentTime - lastShotTime < fireRate) return; ",
+                "    if (!infiniteAmmo && currentAmmo <= 0) return; ",
+                "",
+                "    // DECREASE AMMO",
+                "    if (!infiniteAmmo) {",
+                "        variables.get(\"CurrentAmmo\").setNumber(currentAmmo - 1);",
+                "    }",
+                "    timerVar.setNumber(currentTime);",
+                "",
+                "    // =========================================================",
+                "    // 🎯 AIMING LOGIC",
+                "    // =========================================================",
+                "",
+                "    const gunRenderer = gunObj.get3DRendererObject();",
+                "    if (!gunRenderer) return;",
+                "",
+                "    const layerName = gunObj.getLayer();",
+                "    const layer = runtimeScene.getLayer(layerName);",
+                "    const layerRenderer = layer.getRenderer();",
+                "    if (!layerRenderer || !layerRenderer.getThreeScene || !layerRenderer.getThreeCamera) return;",
+                "",
+                "    const threeScene = layerRenderer.getThreeScene();",
+                "    const camera = layerRenderer.getThreeCamera();",
+                "",
+                "    const gunPos = new THREE.Vector3();",
+                "    const gunQuat = new THREE.Quaternion();",
+                "    gunRenderer.getWorldPosition(gunPos);",
+                "    gunRenderer.getWorldQuaternion(gunQuat);",
+                "",
+                "    const offsetVector = new THREE.Vector3(offX, offY, offZ);",
+                "    offsetVector.applyQuaternion(gunQuat);",
+                "    gunPos.add(offsetVector);",
+                "",
+                "    // Raycast Setup",
+                "    const camRaycaster = new THREE.Raycaster();",
+                "    camRaycaster.far = 5000; ",
+                "",
+                "    if (crosshairObjects.length > 0) {",
+                "        const crosshair = crosshairObjects[0];",
+                "        ",
+                "        const uiLayer = runtimeScene.getLayer(crosshair.getLayer());",
+                "        const width = uiLayer.getCameraWidth();",
+                "        const height = uiLayer.getCameraHeight();",
+                "",
+                "        const cX = crosshair.getCenterXInScene();",
+                "        const cY = crosshair.getCenterYInScene();",
+                "",
+                "        const pointer = new THREE.Vector2();",
+                "        pointer.x = (cX / width) * 2 - 1;",
+                "        pointer.y = - (cY / height) * 2 + 1;",
+                "",
+                "        camRaycaster.setFromCamera(pointer, camera);",
+                "    } else {",
+                "        const camPos = new THREE.Vector3();",
+                "        const camDir = new THREE.Vector3();",
+                "        camera.getWorldPosition(camPos);",
+                "        camera.getWorldDirection(camDir);",
+                "        camRaycaster.set(camPos, camDir);",
+                "    }",
+                "",
+                "    const camIntersects = camRaycaster.intersectObjects(threeScene.children, true);",
+                "    let baseTargetPos = new THREE.Vector3();",
+                "    camRaycaster.ray.at(5000, baseTargetPos);",
+                "",
+                "    for (let i = 0; i < camIntersects.length; i++) {",
+                "        const hit = camIntersects[i];",
+                "        const obj = hit.object;",
+                "        if (!obj.visible || obj.isLine || obj.isPoints) continue;",
+                "        if (obj === gunRenderer || obj.parent === gunRenderer) continue;",
+                "        if (hit.distance < 150) continue; ",
+                "        ",
+                "        baseTargetPos = hit.point;",
+                "        break;",
+                "    }",
+                "    ",
+                "    threeScene.worldToLocal(gunPos);",
+                "    threeScene.worldToLocal(baseTargetPos);",
+                "",
+                "    // =========================================================",
+                "    // 💥 BULLET SPAWN LOOP",
+                "    // =========================================================",
+                "",
+                "    for (let i = 0; i < bulletsPerShot; i++) {",
+                "        const direction = new THREE.Vector3().subVectors(baseTargetPos, gunPos).normalize();",
+                "",
+                "        if (spread > 0) {",
+                "            const rx = (Math.random() - 0.5) * spread;",
+                "            const ry = (Math.random() - 0.5) * spread;",
+                "            const rz = (Math.random() - 0.5) * spread;",
+                "            direction.x += rx; ",
+                "            direction.y += ry; ",
+                "            direction.z += rz;",
+                "            direction.normalize();",
+                "        }",
+                "",
+                "        const bulletLookTarget = new THREE.Vector3().copy(gunPos).add(direction.clone().multiplyScalar(2000));",
+                "        const lookMatrix = new THREE.Matrix4();",
+                "        lookMatrix.lookAt(gunPos, bulletLookTarget, new THREE.Vector3(0, 1, 0));",
+                "        let finalQuat = new THREE.Quaternion().setFromRotationMatrix(lookMatrix);",
+                "",
+                "        if (fixRotX !== 0 || fixRotY !== 0 || fixRotZ !== 0) {",
+                "            const correctionEuler = new THREE.Euler(",
+                "                THREE.MathUtils.degToRad(fixRotX),",
+                "                THREE.MathUtils.degToRad(fixRotY),",
+                "                THREE.MathUtils.degToRad(fixRotZ),",
+                "                'XYZ'",
+                "            );",
+                "            finalQuat.multiply(new THREE.Quaternion().setFromEuler(correctionEuler));",
+                "        }",
+                "",
+                "        const newBullet = runtimeScene.createObject(bulletName);",
+                "",
+                "        if (newBullet) {",
+                "            newBullet.setLayer(layerName);",
+                "            if (newBullet.getVariables().has(\"IsActive\")) {",
+                "                newBullet.getVariables().get(\"IsActive\").setBoolean(true);",
+                "            }",
+                "",
+                "            newBullet.setX(gunPos.x);",
+                "            newBullet.setY(gunPos.y);",
+                "            if (typeof newBullet.setZ === 'function') newBullet.setZ(gunPos.z);",
+                "            else if (typeof newBullet.setElevation === 'function') newBullet.setElevation(gunPos.z);",
+                "",
+                "            const euler = new THREE.Euler().setFromQuaternion(finalQuat, 'YXZ');",
+                "            const rotX = THREE.MathUtils.radToDeg(euler.x);",
+                "            const rotY = THREE.MathUtils.radToDeg(euler.y);",
+                "            const rotZ = THREE.MathUtils.radToDeg(euler.z);",
+                "",
+                "            if (typeof newBullet.setRotationX === 'function') {",
+                "                newBullet.setRotationX(rotX);",
+                "                newBullet.setRotationY(rotY);",
+                "                if (typeof newBullet.setRotationZ === 'function') newBullet.setRotationZ(rotZ);",
+                "                else newBullet.setAngle(rotZ);",
+                "            } else {",
+                "                newBullet.setAngle(rotY); ",
+                "            }",
+                "",
+                "            if (tracerStretch > 0 && speed > 0) {",
+                "                const stretchZ = 1 + (speed * tracerStretch); ",
+                "                if (typeof newBullet.setScaleZ === 'function') {",
+                "                    newBullet.setScaleZ(stretchZ);",
+                "                    newBullet.setScaleX(1); newBullet.setScaleY(1);",
+                "                }",
+                "            }",
+                "",
+                "            const bulletRenderer = newBullet.get3DRendererObject();",
+                "            if (bulletRenderer) {",
+                "                bulletRenderer.position.copy(gunPos);",
+                "                bulletRenderer.quaternion.copy(finalQuat);",
+                "                bulletRenderer.updateMatrix();",
+                "                bulletRenderer.updateMatrixWorld(true);",
+                "            }",
+                "",
+                "            // --- PHYSICS APPLICATION ---",
+                "            if (speed > 0) {",
+                "                const velocityVec = direction.clone().multiplyScalar(speed);",
+                "                const behaviors = newBullet._behaviors; ",
+                "                if (behaviors) {",
+                "                    for (let bIndex = 0; bIndex < behaviors.length; bIndex++) {",
+                "                        const b = behaviors[bIndex];",
+                "                        if (b && (typeof b.setLinearVelocityX === 'function' || typeof b.applyImpulseAtCenter === 'function')) {",
+                "                            ",
+                "                            // *** GRAVITY FIX ***",
+                "                            // Instead of hardcoding 0, we use the 'gravityScale' variable",
+                "                            if (typeof b.setGravityScale === 'function') {",
+                "                                b.setGravityScale(gravityScale); ",
+                "                            }",
+                "                            ",
+                "                            if (typeof b.setLinearDamping === 'function') b.setLinearDamping(0);",
+                "                            if (typeof b.setAngularDamping === 'function') b.setAngularDamping(0);",
+                "                            if (typeof b.activate === 'function') b.activate();",
+                "                            ",
+                "                            if (typeof b.setLinearVelocityX === 'function') {",
+                "                                b.setLinearVelocityX(velocityVec.x);",
+                "                                b.setLinearVelocityY(velocityVec.y);",
+                "                                b.setLinearVelocityZ(velocityVec.z);",
+                "                            } ",
+                "                            else if (typeof b.setLinearVelocity === 'function') {",
+                "                                b.setLinearVelocity(velocityVec.x, velocityVec.y);",
+                "                            }",
+                "                            else if (typeof b.setVelocity === 'function') {",
+                "                                b.setVelocity(velocityVec.x, velocityVec.y);",
+                "                            }",
+                "                            break;",
+                "                        }",
+                "                    }",
+                "                }",
+                "            }",
+                "        }",
+                "    } ",
+                "})(runtimeScene, eventsFunctionContext);"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            },
+            {
+              "description": "The bullet object",
+              "name": "The_Bullet",
+              "supplementaryInformation": "Scene3D::Model3DObject",
+              "type": "objectList"
+            },
+            {
+              "description": "(Forward/Back)",
+              "name": "OffsetX",
+              "type": "expression"
+            },
+            {
+              "description": "(Right/Left)",
+              "name": "OffsetY",
+              "type": "expression"
+            },
+            {
+              "description": "(Up/Down)",
+              "name": "OffsetZ",
+              "type": "expression"
+            },
+            {
+              "description": "The UI crosshair sprite",
+              "name": "The_Crosshair",
+              "type": "objectList"
+            },
+            {
+              "description": "Bullet Speed (Physics)",
+              "name": "BulletSpeed",
+              "type": "expression"
+            },
+            {
+              "description": "Accuracy Spread (0 = Perfect)",
+              "name": "Spread",
+              "type": "expression"
+            },
+            {
+              "description": "ModelRotX",
+              "name": "ModelRotX",
+              "type": "expression"
+            },
+            {
+              "description": "ModelRotY",
+              "name": "ModelRotY",
+              "type": "expression"
+            },
+            {
+              "description": "ModelRotZ",
+              "name": "ModelRotZ",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Saves the Current and Reserve ammo to the device storage.",
+          "fullName": "Save Weapon Ammo",
+          "functionType": "Action",
+          "name": "SaveWeaponData",
+          "sentence": "Save _PARAM0_ ammo to slot _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": []
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "// 1. Get Object",
+                "const objects = eventsFunctionContext.getObjects(\"Object\");",
+                "if (objects.length === 0) return;",
+                "const gunObj = objects[0];",
+                "",
+                "// 2. Get Data",
+                "const variables = gunObj.getVariables();",
+                "let current = 0;",
+                "let reserve = 0;",
+                "",
+                "if (variables.has(\"CurrentAmmo\")) current = variables.get(\"CurrentAmmo\").getAsNumber();",
+                "if (variables.has(\"ReserveAmmo\")) reserve = variables.get(\"ReserveAmmo\").getAsNumber();",
+                "",
+                "const saveSlot = eventsFunctionContext.getArgument(\"SaveSlotName\") || \"GameData\";",
+                "const uniqueName = gunObj.getName();",
+                "",
+                "// 3. SAVE DATA",
+                "// Function: writeNumberInJSONFile(storageName, key, value)",
+                "// Note: This function does NOT use 'runtimeScene' as the first argument!",
+                "",
+                "gdjs.evtTools.storage.writeNumberInJSONFile(",
+                "    saveSlot, ",
+                "    uniqueName + \"_Current\", ",
+                "    current",
+                ");",
+                "",
+                "gdjs.evtTools.storage.writeNumberInJSONFile(",
+                "    saveSlot, ",
+                "    uniqueName + \"_Reserve\", ",
+                "    reserve",
+                ");",
+                "",
+                "// console.log(`💾 Saved Weapon: ${uniqueName}`);"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            },
+            {
+              "description": "Save Slot Name (e.g. \"Save1\")",
+              "name": "SaveSlotName",
+              "type": "string"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Removes the saved ammo data for this specific weapon.",
+          "fullName": "Delete Weapon Data",
+          "functionType": "Action",
+          "name": "DeleteWeaponData",
+          "sentence": "Delete _PARAM0_ save data from slot _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "// 1. Get Object",
+                "const objects = eventsFunctionContext.getObjects(\"Object\");",
+                "if (objects.length === 0) return;",
+                "const gunObj = objects[0];",
+                "",
+                "// 2. Get Settings",
+                "const saveSlot = eventsFunctionContext.getArgument(\"SaveSlotName\") || \"GameData\";",
+                "const uniqueName = gunObj.getName();",
+                "",
+                "// 3. DELETE SPECIFIC KEYS",
+                "// Function: deleteElementFromJSONFile(storageName, key)",
+                "",
+                "gdjs.evtTools.storage.deleteElementFromJSONFile(",
+                "    saveSlot, ",
+                "    uniqueName + \"_Current\"",
+                ");",
+                "",
+                "gdjs.evtTools.storage.deleteElementFromJSONFile(",
+                "    saveSlot, ",
+                "    uniqueName + \"_Reserve\"",
+                ");",
+                "",
+                "console.log(`🗑️ Deleted Save Data for: ${uniqueName}`);",
+                ""
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            },
+            {
+              "description": "GameData",
+              "name": "SaveSlotName",
+              "type": "string"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Loads the ammo counts from storage (if they exist).",
+          "fullName": "Load Weapon Ammo",
+          "functionType": "Action",
+          "name": "LoadWeaponData",
+          "sentence": "Load _PARAM0_ ammo from slot _PARAM2_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "// 1. Get Object",
+                "const objects = eventsFunctionContext.getObjects(\"Object\");",
+                "if (objects.length === 0) return;",
+                "const gunObj = objects[0];",
+                "",
+                "// 2. Get Settings (Defaults)",
+                "// We need these so we can set the \"Fresh Game\" values if no save exists",
+                "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "const behavior = gunObj.getBehavior(behaviorName);",
+                "",
+                "const defaultClip = Number(behavior._behaviorData.ClipSize) || 30;",
+                "const startAmmo = (behavior._behaviorData.CurrentAmmo !== undefined) ? Number(behavior._behaviorData.CurrentAmmo) : defaultClip;",
+                "const defaultReserve = (behavior._behaviorData.ReserveAmmo !== undefined) ? Number(behavior._behaviorData.ReserveAmmo) : 90;",
+                "",
+                "// 3. Get Save Slot & Unique Key",
+                "const saveSlot = eventsFunctionContext.getArgument(\"SaveSlotName\") || \"GameData\";",
+                "const uniqueName = gunObj.getName();",
+                "const variables = gunObj.getVariables();",
+                "",
+                "// 4. INITIALIZE VARIABLES (The Fix)",
+                "// If variables are missing, set them to DEFAULTS, not 0.",
+                "if (!variables.has(\"CurrentAmmo\")) variables.get(\"CurrentAmmo\").setNumber(startAmmo);",
+                "if (!variables.has(\"ReserveAmmo\")) variables.get(\"ReserveAmmo\").setNumber(defaultReserve);",
+                "",
+                "// 5. TRY TO OVERWRITE WITH SAVE DATA",
+                "const tempVar = new gdjs.Variable({ type: \"number\", value: -9999 });",
+                "",
+                "// --- LOAD CURRENT AMMO ---",
+                "gdjs.evtTools.storage.readNumberFromJSONFile(",
+                "    saveSlot, ",
+                "    uniqueName + \"_Current\", ",
+                "    runtimeScene, ",
+                "    tempVar",
+                ");",
+                "",
+                "if (tempVar.getAsNumber() !== -9999) {",
+                "    // Save data found! Overwrite the default.",
+                "    variables.get(\"CurrentAmmo\").setNumber(tempVar.getAsNumber());",
+                "}",
+                "",
+                "// --- LOAD RESERVE AMMO ---",
+                "tempVar.setNumber(-9999); // Reset",
+                "",
+                "gdjs.evtTools.storage.readNumberFromJSONFile(",
+                "    saveSlot, ",
+                "    uniqueName + \"_Reserve\", ",
+                "    runtimeScene, ",
+                "    tempVar",
+                ");",
+                "",
+                "if (tempVar.getAsNumber() !== -9999) {",
+                "    // Save data found! Overwrite the default.",
+                "    variables.get(\"ReserveAmmo\").setNumber(tempVar.getAsNumber());",
+                "}",
+                "",
+                "// console.log(`✅ Checked Save Data for: ${uniqueName}`);"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            },
+            {
+              "description": "Save Slot Name",
+              "name": "SaveSlotName",
+              "type": "string"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Spawns a visual effect at the gun barrel.",
+          "fullName": "Spawn muzzle flash",
+          "functionType": "Action",
+          "name": "Spawn_Muzzle_Flash",
+          "sentence": "Spawn muzzle flash _PARAM2_ on _PARAM0_ (Scale: _PARAM3_)",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "(function(runtimeScene, eventsFunctionContext) {",
+                "    // 1. GET OBJECTS",
+                "    // Use \"Object\" because this is a behavior function attached to the Gun",
+                "    const gunObjects = eventsFunctionContext.getObjects(\"Object\"); ",
+                "    const flashResource = eventsFunctionContext.getObjects(\"Flash_Object\"); ",
+                "    ",
+                "    // ARGS",
+                "    const offX = eventsFunctionContext.getArgument(\"OffsetX\") || 0;",
+                "    const offY = eventsFunctionContext.getArgument(\"OffsetY\") || 0;",
+                "    const offZ = eventsFunctionContext.getArgument(\"OffsetZ\") || 0;",
+                "    const scale = eventsFunctionContext.getArgument(\"Scale\") || 1;",
+                "",
+                "    if (gunObjects.length === 0 || flashResource.length === 0) return;",
+                "",
+                "    const gunObj = gunObjects[0];",
+                "    const flashName = flashResource[0].getName(); ",
+                "",
+                "    // 2. GET POSITIONS",
+                "    const gunRenderer = gunObj.get3DRendererObject();",
+                "    if (!gunRenderer) return;",
+                "",
+                "    const layerName = gunObj.getLayer();",
+                "    const layer = runtimeScene.getLayer(layerName);",
+                "    const layerRenderer = layer.getRenderer();",
+                "    ",
+                "    if (!layerRenderer || !layerRenderer.getThreeScene) return;",
+                "    const threeScene = layerRenderer.getThreeScene();",
+                "",
+                "    const gunPos = new THREE.Vector3();",
+                "    const gunQuat = new THREE.Quaternion();",
+                "",
+                "    gunRenderer.getWorldPosition(gunPos);",
+                "    gunRenderer.getWorldQuaternion(gunQuat);",
+                "",
+                "    // Apply Offsets",
+                "    const offsetVector = new THREE.Vector3(offX, offY, offZ);",
+                "    offsetVector.applyQuaternion(gunQuat);",
+                "    gunPos.add(offsetVector);",
+                "",
+                "    // 3. CONVERT TO LOCAL",
+                "    threeScene.worldToLocal(gunPos);",
+                "",
+                "    // 4. SPAWN FLASH",
+                "    const newFlash = runtimeScene.createObject(flashName);",
+                "",
+                "    if (newFlash) {",
+                "        newFlash.setLayer(layerName);",
+                "        ",
+                "        // Position",
+                "        newFlash.setX(gunPos.x);",
+                "        newFlash.setY(gunPos.y);",
+                "        if (typeof newFlash.setZ === 'function') newFlash.setZ(gunPos.z);",
+                "        else if (typeof newFlash.setElevation === 'function') newFlash.setElevation(gunPos.z);",
+                "",
+                "        // Rotation: Match Gun + Random Roll",
+                "        const randomRoll = Math.random() * Math.PI * 2; ",
+                "        const rollQuat = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), randomRoll);",
+                "        const finalQuat = gunQuat.multiply(rollQuat);",
+                "",
+                "        // Apply Logic Rotation (THE FIX IS HERE)",
+                "        const euler = new THREE.Euler().setFromQuaternion(finalQuat, 'YXZ');",
+                "        const rotX = THREE.MathUtils.radToDeg(euler.x);",
+                "        const rotY = THREE.MathUtils.radToDeg(euler.y);",
+                "        const rotZ = THREE.MathUtils.radToDeg(euler.z);",
+                "",
+                "        if (typeof newFlash.setRotationX === 'function') {",
+                "            newFlash.setRotationX(rotX);",
+                "            newFlash.setRotationY(rotY);",
+                "            ",
+                "            // SAFE CHECK: Does setRotationZ exist?",
+                "            if (typeof newFlash.setRotationZ === 'function') {",
+                "                newFlash.setRotationZ(rotZ);",
+                "            } else {",
+                "                // Fallback for Emitters/Sprites",
+                "                newFlash.setAngle(rotZ);",
+                "            }",
+                "        } else {",
+                "            // Standard 2D object fallback",
+                "            newFlash.setAngle(rotY);",
+                "        }",
+                "",
+                "        // Apply Scale",
+                "        if (typeof newFlash.setScale === 'function') newFlash.setScale(scale);",
+                "",
+                "        // FORCE VISUAL UPDATE",
+                "        const flashRenderer = newFlash.get3DRendererObject();",
+                "        if (flashRenderer) {",
+                "            flashRenderer.position.copy(gunPos);",
+                "            flashRenderer.quaternion.copy(finalQuat);",
+                "            flashRenderer.updateMatrix();",
+                "            flashRenderer.updateMatrixWorld(true);",
+                "        }",
+                "",
+                "        // 5. LIFETIME TAG",
+                "        // Increase to 0.1 or 0.2 if the flash is too quick to see",
+                "        newFlash.getVariables().get(\"LifeTime\").setNumber(0.1); ",
+                "    }",
+                "",
+                "})(runtimeScene, eventsFunctionContext);"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            },
+            {
+              "description": "3D emitter",
+              "name": "Flash_Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "objectList"
+            },
+            {
+              "description": "Scale (Default 1.0)",
+              "name": "Scale",
+              "type": "expression"
+            },
+            {
+              "description": "Offset X (Forward)",
+              "name": "OffsetX",
+              "type": "expression"
+            },
+            {
+              "description": "Offset Y (Right)",
+              "name": "OffsetY",
+              "type": "expression"
+            },
+            {
+              "description": "Offset Z (Up)",
+              "name": "OffsetZ",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Fires an instant raycast shot towards the crosshair.",
+          "fullName": "Shoot hitscan ray",
+          "functionType": "Action",
+          "name": "Shoot_Hitscan_Ray",
+          "sentence": "Shoot hitscan ray from _PARAM0_ (Max Dist: _PARAM2_)_PARAM3_ aimed at _",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": []
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "(function(runtimeScene, eventsFunctionContext) {",
+                "    // 1. GET OBJECTS",
+                "    const gunObjects = eventsFunctionContext.getObjects(\"Object\"); ",
+                "    const crosshairObjects = eventsFunctionContext.getObjects(\"The_Crosshair\");",
+                "    ",
+                "    const maxDist = eventsFunctionContext.getArgument(\"MaxDistance\") || 5000;",
+                "",
+                "    if (gunObjects.length === 0) return;",
+                "    const gunObj = gunObjects[0];",
+                "",
+                "    // GET BEHAVIOR PROPERTY",
+                "    const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "    const behavior = gunObj.getBehavior(behaviorName);",
+                "    const debugMode = behavior._behaviorData.ShowDebugRay || false;",
+                "",
+                "    // 2. GET RENDERER & SCENE",
+                "    const gunRenderer = gunObj.get3DRendererObject();",
+                "    if (!gunRenderer) return;",
+                "",
+                "    const layerName = gunObj.getLayer();",
+                "    const layer = runtimeScene.getLayer(layerName);",
+                "    const layerRenderer = layer.getRenderer();",
+                "    if (!layerRenderer || !layerRenderer.getThreeScene || !layerRenderer.getThreeCamera) return;",
+                "",
+                "    const threeScene = layerRenderer.getThreeScene();",
+                "    const camera = layerRenderer.getThreeCamera();",
+                "",
+                "    // 3. STEP 1: FIND TARGET (FIXED RESOLUTION LOGIC)",
+                "    ",
+                "    const camRaycaster = new THREE.Raycaster();",
+                "    camRaycaster.far = maxDist;",
+                "",
+                "    // A. Check if Crosshair exists",
+                "    if (crosshairObjects.length > 0) {",
+                "        const crosshair = crosshairObjects[0];",
+                "        ",
+                "        // B. Get the Layer Dimensions (This fixes the accuracy drift)",
+                "        // We use the layer of the crosshair specifically.",
+                "        const uiLayer = runtimeScene.getLayer(crosshair.getLayer());",
+                "        const width = uiLayer.getCameraWidth();   // Visible width in scene units",
+                "        const height = uiLayer.getCameraHeight(); // Visible height in scene units",
+                "",
+                "        // C. Calculate Normalized Device Coordinates (NDC) -1 to +1",
+                "        const cX = crosshair.getCenterXInScene();",
+                "        const cY = crosshair.getCenterYInScene();",
+                "",
+                "        // Map 2D pixel coordinates to 3D Camera Space",
+                "        const pointer = new THREE.Vector2();",
+                "        pointer.x = (cX / width) * 2 - 1;",
+                "        pointer.y = - (cY / height) * 2 + 1; // Invert Y for 3D space",
+                "",
+                "        // D. Set Ray from Camera through that specific screen point",
+                "        camRaycaster.setFromCamera(pointer, camera);",
+                "    } else {",
+                "        // Fallback: Center Screen",
+                "        const camPos = new THREE.Vector3();",
+                "        const camDir = new THREE.Vector3();",
+                "        camera.getWorldPosition(camPos);",
+                "        camera.getWorldDirection(camDir);",
+                "        camRaycaster.set(camPos, camDir);",
+                "    }",
+                "",
+                "    // Intersect everything to find what we are looking at",
+                "    const camIntersects = camRaycaster.intersectObjects(threeScene.children, true);",
+                "    ",
+                "    // Default Target: The end of the ray (Sky)",
+                "    let finalTargetPoint = new THREE.Vector3();",
+                "    camRaycaster.ray.at(maxDist, finalTargetPoint);",
+                "",
+                "    // Check what the CAMERA/CROSSHAIR hit",
+                "    for (let i = 0; i < camIntersects.length; i++) {",
+                "        const hit = camIntersects[i];",
+                "        const obj = hit.object;",
+                "",
+                "        if (!obj.visible || obj.isLine || obj.isPoints) continue;",
+                "        if (obj === gunRenderer || obj.parent === gunRenderer) continue; // Ignore Gun",
+                "        ",
+                "        // Ignore Player Body (Increased safety distance to 150 to prevent hitting self)",
+                "        if (hit.distance < 150) continue; ",
+                "",
+                "        finalTargetPoint = hit.point;",
+                "        break; ",
+                "    }",
+                "",
+                "    // 4. STEP 2: CALCULATE GUN SHOT",
+                "    const gunMuzzlePos = new THREE.Vector3();",
+                "    gunRenderer.getWorldPosition(gunMuzzlePos);",
+                "",
+                "    // Direction: From Gun -> The Point found by the Crosshair Ray",
+                "    const gunDirection = new THREE.Vector3().subVectors(finalTargetPoint, gunMuzzlePos).normalize();",
+                "    ",
+                "    // Offset Start (Skip Gun/Player Hitbox)",
+                "    const raycastOrigin = gunMuzzlePos.clone().add(gunDirection.clone().multiplyScalar(80));",
+                "",
+                "    // Perform the Actual Gun Raycast",
+                "    const gunRaycaster = new THREE.Raycaster(raycastOrigin, gunDirection, 0, maxDist);",
+                "    const gunIntersects = gunRaycaster.intersectObjects(threeScene.children, true);",
+                "",
+                "    let hitPoint = finalTargetPoint.clone(); ",
+                "    let hitObject = null;",
+                "",
+                "    for (let i = 0; i < gunIntersects.length; i++) {",
+                "        const hit = gunIntersects[i];",
+                "        const obj = hit.object;",
+                "",
+                "        if (!obj.visible || obj.isLine || obj.isPoints) continue;",
+                "        if (obj === gunRenderer || obj.parent === gunRenderer) continue;",
+                "        if (hit.distance < 100) continue; ",
+                "",
+                "        hitPoint = hit.point;",
+                "        hitObject = obj;",
+                "        break; ",
+                "    }",
+                "",
+                "    // 5. OUTPUT RESULTS",
+                "    gunObj.getVariables().get(\"RayHitX\").setNumber(hitPoint.x);",
+                "    gunObj.getVariables().get(\"RayHitY\").setNumber(hitPoint.y);",
+                "    gunObj.getVariables().get(\"RayHitZ\").setNumber(hitPoint.z);",
+                "    ",
+                "    if (hitObject) {",
+                "        gunObj.getVariables().get(\"RayHitFound\").setBoolean(true);",
+                "    } else {",
+                "        gunObj.getVariables().get(\"RayHitFound\").setBoolean(false);",
+                "    }",
+                "",
+                "    // 6. DEBUG VISUALIZATION",
+                "    if (debugMode) {",
+                "        const laserName = \"RayDebug_\" + gunObj.id;",
+                "        let laserLine = threeScene.getObjectByName(laserName);",
+                "",
+                "        const visualStart = gunMuzzlePos.clone();",
+                "        const visualEnd = hitPoint.clone();",
+                "",
+                "        threeScene.worldToLocal(visualStart);",
+                "        threeScene.worldToLocal(visualEnd);",
+                "",
+                "        if (!laserLine) {",
+                "            const material = new THREE.LineBasicMaterial({ ",
+                "                color: 0x00FFFF, ",
+                "                linewidth: 2,",
+                "                depthTest: false, ",
+                "                transparent: true",
+                "            });",
+                "            const geometry = new THREE.BufferGeometry().setFromPoints([visualStart, visualEnd]);",
+                "            laserLine = new THREE.Line(geometry, material);",
+                "            laserLine.name = laserName;",
+                "            laserLine.frustumCulled = false; ",
+                "            laserLine.renderOrder = 999;     ",
+                "            threeScene.add(laserLine);",
+                "        } else {",
+                "            const positions = laserLine.geometry.attributes.position.array;",
+                "            positions[0] = visualStart.x; positions[1] = visualStart.y; positions[2] = visualStart.z;",
+                "            positions[3] = visualEnd.x;   positions[4] = visualEnd.y;   positions[5] = visualEnd.z;",
+                "            laserLine.geometry.attributes.position.needsUpdate = true;",
+                "            laserLine.visible = true;",
+                "        }",
+                "    }",
+                "",
+                "})(runtimeScene, eventsFunctionContext);"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            },
+            {
+              "description": "Max Distance (e.g. 5000)",
+              "name": "MaxDistance",
+              "type": "expression"
+            },
+            {
+              "description": "The_Crosshair",
+              "name": "The_Crosshair",
+              "type": "objectList"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Starts the reload process if ammo is needed and available.",
+          "fullName": "Reload gun",
+          "functionType": "Action",
+          "name": "Reload_Gun",
+          "sentence": "Reload _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": []
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "(function(runtimeScene, eventsFunctionContext) {",
+                "    const gunObjects = eventsFunctionContext.getObjects(\"Object\"); ",
+                "    if (gunObjects.length === 0) return;",
+                "    const gunObj = gunObjects[0];",
+                "",
+                "    const variables = gunObj.getVariables();",
+                "",
+                "    // 1. PREVENT DOUBLE RELOAD",
+                "    if (variables.has(\"IsReloading\") && variables.get(\"IsReloading\").getAsBoolean()) {",
+                "        return; // Already doing it",
+                "    }",
+                "",
+                "    // 2. GET SETTINGS",
+                "    const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "    const behavior = gunObj.getBehavior(behaviorName);",
+                "    ",
+                "    // Get Reload Time (Default 2.0s)",
+                "    const reloadTime = Number(behavior._behaviorData.ReloadDuration) || 2.0;",
+                "    const clipSize = Number(behavior._behaviorData.ClipSize) || 30;",
+                "    ",
+                "    // Check if full (Don't reload if full)",
+                "    let current = 0;",
+                "    if (variables.has(\"CurrentAmmo\")) current = variables.get(\"CurrentAmmo\").getAsNumber();",
+                "    if (current >= clipSize) return;",
+                "",
+                "    // 3. START THE PROCESS",
+                "    variables.get(\"IsReloading\").setBoolean(true);",
+                "    variables.get(\"ReloadTimer\").setNumber(reloadTime);",
+                "",
+                "    // console.log(`⏳ Reload Started... Waiting ${reloadTime} seconds.`);",
+                "",
+                "})(runtimeScene, eventsFunctionContext);"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Adds ammo to the backpack reserve.",
+          "fullName": "Add reserve ammo",
+          "functionType": "Action",
+          "name": "Add_Reserve_Ammo",
+          "sentence": "Add _PARAM2_ to _PARAM0_ reserve ammo",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": []
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "(function(runtimeScene, eventsFunctionContext) {",
+                "    const gunObjects = eventsFunctionContext.getObjects(\"Object\"); ",
+                "    if (gunObjects.length === 0) return;",
+                "    const gunObj = gunObjects[0];",
+                "    const amountToAdd = eventsFunctionContext.getArgument(\"Amount\") || 0;",
+                "",
+                "    // 1. GET SETTINGS",
+                "    const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "    const behavior = gunObj.getBehavior(behaviorName);",
+                "    ",
+                "    // Get Max Limit",
+                "    const maxReserve = (behavior._behaviorData.MaxReserveAmmo !== undefined) ? Number(behavior._behaviorData.MaxReserveAmmo) : 210;",
+                "    const startReserve = (behavior._behaviorData.ReserveAmmo !== undefined) ? Number(behavior._behaviorData.ReserveAmmo) : 90;",
+                "",
+                "    // 2. GET VARIABLES",
+                "    const variables = gunObj.getVariables();",
+                "    ",
+                "    // Initialize if missing",
+                "    if (!variables.has(\"ReserveAmmo\")) variables.get(\"ReserveAmmo\").setNumber(startReserve);",
+                "    let reserve = variables.get(\"ReserveAmmo\").getAsNumber();",
+                "",
+                "    // 3. ADD AND CAP",
+                "    reserve += amountToAdd;",
+                "",
+                "    // Don't go over the Max Reserve Limit",
+                "    if (reserve > maxReserve) {",
+                "        reserve = maxReserve;",
+                "    }",
+                "",
+                "    // 4. SAVE",
+                "    variables.get(\"ReserveAmmo\").setNumber(reserve);",
+                "    console.log(`➕ Ammo Added. Reserve: ${reserve} / ${maxReserve}`);",
+                "",
+                "})(runtimeScene, eventsFunctionContext);"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            },
+            {
+              "description": "Amount to Add",
+              "name": "Amount",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Forces GDevelop to load the Storage module.",
+          "fullName": "",
+          "functionType": "Action",
+          "name": "_Internal_ForceStorage",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ReadNumberFromStorage"
+                  },
+                  "parameters": [
+                    "\"Dummy\"",
+                    "\"Dummy\"",
+                    "",
+                    "Temp"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Returns the number of bullets currently in the clip.",
+          "fullName": "Current ammo",
+          "functionType": "Expression",
+          "name": "CurrentAmmo",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": []
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "// 1. Get Objects",
+                "const objects = eventsFunctionContext.getObjects(\"Object\");",
+                "if (objects.length === 0) {",
+                "    eventsFunctionContext.returnValue = 0;",
+                "    return 0;",
+                "}",
+                "",
+                "const gunObj = objects[0];",
+                "let finalAmmo = 0;",
+                "",
+                "// 2. Check if the Game Variable exists (Has the game started tracking ammo?)",
+                "if (gunObj.getVariables().has(\"CurrentAmmo\")) {",
+                "    finalAmmo = gunObj.getVariables().get(\"CurrentAmmo\").getAsNumber();",
+                "} ",
+                "else {",
+                "    // 3. Fallback: Read the \"CurrentAmmo\" PROPERTY from the Behavior Settings",
+                "    const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "    const behavior = gunObj.getBehavior(behaviorName);",
+                "    ",
+                "    // Check if you typed a number in the \"CurrentAmmo\" property box",
+                "    if (behavior._behaviorData.CurrentAmmo !== undefined) {",
+                "        finalAmmo = Number(behavior._behaviorData.CurrentAmmo);",
+                "    } else {",
+                "        // Safety fallback if property is missing",
+                "        finalAmmo = Number(behavior._behaviorData.ClipSize) || 30;",
+                "    }",
+                "}",
+                "",
+                "eventsFunctionContext.returnValue = finalAmmo;",
+                "return finalAmmo;"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Returns the maximum ammo of the gun.",
+          "fullName": "Get Clip Size",
+          "functionType": "Expression",
+          "name": "ClipSize",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "// 1. Get Objects",
+                "const objects = eventsFunctionContext.getObjects(\"Object\");",
+                "if (objects.length === 0) return 0;",
+                "",
+                "const gunObj = objects[0];",
+                "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "const behavior = gunObj.getBehavior(behaviorName);",
+                "",
+                "// 2. Get the Value safely",
+                "let finalValue = 30; // Default",
+                "",
+                "if (behavior._behaviorData && behavior._behaviorData.ClipSize !== undefined) {",
+                "    finalValue = Number(behavior._behaviorData.ClipSize);",
+                "}",
+                "",
+                "// 3. FORCE RETURN VALUE (The Fix)",
+                "// This explicitly tells GDevelop's engine \"This is the result\".",
+                "eventsFunctionContext.returnValue = finalValue;",
+                "",
+                "// 4. Standard Return (Backup)",
+                "return finalValue;"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Returns the number of bullets remaining in the reserve.",
+          "fullName": "Reserve ammo",
+          "functionType": "Expression",
+          "name": "ReserveAmmo",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": []
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const objects = eventsFunctionContext.getObjects(\"Object\");",
+                "if (objects.length === 0) { eventsFunctionContext.returnValue = 0; return 0; }",
+                "",
+                "const gunObj = objects[0];",
+                "let finalVal = 0;",
+                "",
+                "// 1. Check Object Variable",
+                "if (gunObj.getVariables().has(\"ReserveAmmo\")) {",
+                "    finalVal = gunObj.getVariables().get(\"ReserveAmmo\").getAsNumber();",
+                "} else {",
+                "    // 2. Fallback to Property",
+                "    const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "    const behavior = gunObj.getBehavior(behaviorName);",
+                "    // Note: If property is missing, default to 90",
+                "    finalVal = (behavior._behaviorData.ReserveAmmo !== undefined) ? Number(behavior._behaviorData.ReserveAmmo) : 90;",
+                "}",
+                "",
+                "eventsFunctionContext.returnValue = finalVal;",
+                "return finalVal;"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Returns the time it takes to reload in seconds.",
+          "fullName": "Reload duration",
+          "functionType": "Expression",
+          "name": "ReloadTime",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": []
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const objects = eventsFunctionContext.getObjects(\"Object\");",
+                "if (objects.length === 0) return 0;",
+                "",
+                "const gunObj = objects[0];",
+                "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "const behavior = gunObj.getBehavior(behaviorName);",
+                "",
+                "return Number(behavior._behaviorData.ReloadDuration) || 2.0;"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet3D::Firebullet3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        }
+      ],
+      "propertyDescriptors": [
+        {
+          "value": "",
+          "type": "Boolean",
+          "label": "Show Debug Raycast (Visual Line)",
+          "name": "ShowDebugRay"
+        },
+        {
+          "value": "30",
+          "type": "Number",
+          "label": "Max Clip size",
+          "name": "ClipSize"
+        },
+        {
+          "value": "0.1",
+          "type": "Number",
+          "label": "",
+          "description": "This means 0.1 seconds between shots, or 10 rounds per second",
+          "name": "FireRate"
+        },
+        {
+          "value": "30",
+          "type": "Number",
+          "label": "",
+          "name": "CurrentAmmo"
+        },
+        {
+          "value": "90",
+          "type": "Number",
+          "label": "Start Reserve Ammo (Backpack)",
+          "name": "ReserveAmmo"
+        },
+        {
+          "value": "210",
+          "type": "Number",
+          "label": "Max Reserve Ammo Limit",
+          "name": "MaxReserveAmmo"
+        },
+        {
+          "value": "",
+          "type": "Boolean",
+          "label": "Infinite Ammo (Bottomless Clip)",
+          "name": "InfiniteAmmo"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "Auto Reload when empty",
+          "name": "AutoReload"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "label": "Reload Time (Seconds)",
+          "name": "ReloadDuration"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "label": "Bullets Per Shot (Shotgun Pellet Count)",
+          "name": "BulletsPerShot"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Bullet Gravity Scale (0 = Straight, 1 = Normal)",
+          "description": "0 (This keeps it flying straight by default, so we don't break your existing guns)",
+          "name": "GravityScale"
+        }
+      ],
+      "sharedPropertyDescriptors": []
+    }
+  ],
+  "eventsBasedObjects": []
+}
