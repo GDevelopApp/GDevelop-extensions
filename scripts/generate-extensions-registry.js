@@ -435,7 +435,7 @@ const filterEventsFunctions = (eventsFunctions) =>
         objectShortHeaders.push.apply(
           objectShortHeaders,
           extension.eventsBasedObjects
-            ? extension.eventsBasedObjects.map((object) => ({
+            ? filterEventsBasedObjects(extension.eventsBasedObjects).map((object) => ({
                 ...registryItem,
                 extensionName: name,
                 name: object.name,
