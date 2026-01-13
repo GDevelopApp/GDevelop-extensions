@@ -435,14 +435,16 @@ const filterEventsFunctions = (eventsFunctions) =>
         objectShortHeaders.push.apply(
           objectShortHeaders,
           extension.eventsBasedObjects
-            ? filterEventsBasedObjects(extension.eventsBasedObjects).map((object) => ({
-                ...registryItem,
-                extensionName: name,
-                name: object.name,
-                fullName: object.fullName,
-                description: object.description,
-                assetStoreTag: object.assetStoreTag || '',
-              }))
+            ? filterEventsBasedObjects(extension.eventsBasedObjects).map(
+                (object) => ({
+                  ...registryItem,
+                  extensionName: name,
+                  name: object.name,
+                  fullName: object.fullName,
+                  description: object.description,
+                  assetStoreTag: object.assetStoreTag || '',
+                })
+              )
             : []
         );
 
