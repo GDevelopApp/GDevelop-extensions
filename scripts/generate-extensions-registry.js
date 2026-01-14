@@ -443,6 +443,7 @@ const filterEventsFunctions = (eventsFunctions) =>
                   fullName: object.fullName,
                   description: object.description,
                   assetStoreTag: object.assetStoreTag || '',
+                  requiredExtensions: extension.requiredExtensions,
                 })
               )
             : []
