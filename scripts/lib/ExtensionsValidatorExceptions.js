@@ -635,7 +635,10 @@ const extensionsAllowedProperties = {
       javaScriptObjectAllowedProperties: [],
     },
     PlaygamaBridge: {
-      gdjsAllowedProperties: ['_playgamaBridgeExtension'],
+      gdjsAllowedProperties: [
+        '_playgamaBridgeExtension',
+        'registerRuntimeScenePostEventsCallback',
+      ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
