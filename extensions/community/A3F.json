@@ -9,12 +9,13 @@
   "name": "A3F",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/Line Hero Pack/Master/SVG/Graphic Design/f4c71080f9213188ee5556b1acb45ad46fe6e5225947301c363105b080fca008_Graphic Design_3d_cube_isometric.svg",
   "shortDescription": "This extension adds features to the built-in 3D.",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": [
     "3D features added by this extension:  ",
     "- Lighting",
     "- Light color and intensity control",
     "- Shadows",
+    "- 3D sound",
     "- Local translation and rotation",
     "- Blend modes",
     "- Opacity",
@@ -42,7 +43,9 @@
     "opacity",
     "distance",
     "bone",
-    "morph"
+    "morph",
+    "sound",
+    "audio"
   ],
   "authorIds": [
     "Zu55H5hcb9YmZTltIVOTAFDJQyB2"
@@ -96,6 +99,56 @@
               ]
             }
           ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onSceneLoaded",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "A3F::SetListenerForCamera"
+              },
+              "parameters": [
+                "",
+                "\"\"",
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onSceneUnloading",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (gdjs._A3F.AudioListener) {",
+            "    gdjs._A3F.AudioListener.removeFromParent();",
+            "}",
+            "gdjs._A3F.AudioBufferCache.clear();",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
         }
       ],
       "parameters": [],
@@ -174,7 +227,116 @@
           ],
           "parameterObjects": "",
           "useStrict": true,
-          "eventsSheetExpanded": true
+          "eventsSheetExpanded": false
+        },
+        {
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "古いThree.jsを使用しているためAudioListenerにあるupベクトルが正しく更新されない問題とscale.yが-1な点に対応するためのカスタムAudioListener"
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "/**",
+            " * CustomAudioListenerForGD",
+            " * ",
+            " * Y軸スケールが-1で反転したシーン（GDevelop等）用のAudioListener。",
+            " * 反転したシーンでも正しい方向から音が聞こえるように補正する。",
+            " * ",
+            " * 特徴:",
+            " * - Y軸反転シーン対応（scale.y = -1）",
+            " * - 完全なワールド座標変換（位置・forward・up）",
+            " * - メモリ効率的（オブジェクト再利用、GC発生なし）",
+            " * - スムーズな音声遷移（linearRampToValueAtTime使用）",
+            " * - 新旧Web Audio API両対応",
+            " */",
+            "class CustomAudioListenerForGD extends THREE.AudioListener {",
+            "",
+            "    // 再利用可能な一時オブジェクト（GC回避）",
+            "    _position = new THREE.Vector3();",
+            "    _quaternion = new THREE.Quaternion();",
+            "    _scale = new THREE.Vector3();",
+            "    _forward = new THREE.Vector3();",
+            "    _up = new THREE.Vector3();",
+            "",
+            "    updateMatrixWorld(force) {",
+            "        super.updateMatrixWorld(force);",
+            "",
+            "        const listener = this.context.listener;",
+            "",
+            "        // ワールド変換を取得（スケールも取得して反転を検出）",
+            "        this.matrixWorld.decompose(this._position, this._quaternion, this._scale);",
+            "",
+            "        // ローカル軸をワールド空間に変換",
+            "        this._forward.set(0, 0, -1).applyQuaternion(this._quaternion);",
+            "        this._up.set(0, 1, 0).applyQuaternion(this._quaternion);",
+            "",
+            "        // Y軸が反転している場合、forward と up を補正",
+            "        // 負のスケールは座標系の反転を意味するため、ベクトルを反転して補正",
+            "        if (this._scale.y < 0) {",
+            "            this._forward.y *= -1;",
+            "            this._up.y *= -1;",
+            "        }",
+            "",
+            "        if (listener.positionX) {",
+            "            // 新仕様 Web Audio API",
+            "            const endTime = this.context.currentTime + this.timeDelta;",
+            "",
+            "            // 位置（Y軸反転を補正）",
+            "            const posY = this._scale.y < 0 ? -this._position.y : this._position.y;",
+            "            listener.positionX.linearRampToValueAtTime(this._position.x, endTime);",
+            "            listener.positionY.linearRampToValueAtTime(posY, endTime);",
+            "            listener.positionZ.linearRampToValueAtTime(this._position.z, endTime);",
+            "",
+            "            // forward方向のスケジュールをキャンセルしてから更新",
+            "            listener.forwardX.cancelScheduledValues(this.context.currentTime);",
+            "            listener.forwardY.cancelScheduledValues(this.context.currentTime);",
+            "            listener.forwardZ.cancelScheduledValues(this.context.currentTime);",
+            "            listener.forwardX.linearRampToValueAtTime(this._forward.x, endTime);",
+            "            listener.forwardY.linearRampToValueAtTime(this._forward.y, endTime);",
+            "            listener.forwardZ.linearRampToValueAtTime(this._forward.z, endTime);",
+            "",
+            "            // up方向のスケジュールをキャンセルしてから更新",
+            "            listener.upX.cancelScheduledValues(this.context.currentTime);",
+            "            listener.upY.cancelScheduledValues(this.context.currentTime);",
+            "            listener.upZ.cancelScheduledValues(this.context.currentTime);",
+            "            listener.upX.linearRampToValueAtTime(this._up.x, endTime);",
+            "            listener.upY.linearRampToValueAtTime(this._up.y, endTime);",
+            "            listener.upZ.linearRampToValueAtTime(this._up.z, endTime);",
+            "",
+            "        } else {",
+            "            // 旧仕様（Safari等）",
+            "            const posY = this._scale.y < 0 ? -this._position.y : this._position.y;",
+            "            listener.setPosition(",
+            "                this._position.x,",
+            "                posY,",
+            "                this._position.z",
+            "            );",
+            "            listener.setOrientation(",
+            "                this._forward.x, this._forward.y, this._forward.z,",
+            "                this._up.x, this._up.y, this._up.z",
+            "            );",
+            "        }",
+            "    }",
+            "}",
+            "// AudioListener and AudioBufferCache",
+            "if (THREE) {",
+            "    gdjs._A3F.AudioListener = new CustomAudioListenerForGD();",
+            "}",
+            "gdjs._A3F.AudioBufferCache = new Map();",
+            "",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
         }
       ],
       "parameters": [],
@@ -1284,7 +1446,7 @@
       "functionType": "Action",
       "group": "Debug",
       "name": "AddAxesHelper",
-      "sentence": "🛟Add axes helper (_PARAM1_, _PARAM2_)",
+      "sentence": "🛟Add axes helper (_PARAM1_)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::ForEach",
@@ -2670,6 +2832,87 @@
         }
       ],
       "objectGroups": []
+    },
+    {
+      "description": "Set a listener on the 3D camera.\nOnly one listener can exist in the scene at any time.\nEach time the scene starts, the listener is automatically set on the base layer’s camera.",
+      "fullName": "👂️Set listener for camera",
+      "functionType": "Action",
+      "name": "SetListenerForCamera",
+      "sentence": "👂️Set listener for camera (Layer: _PARAM1_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const Layer = eventsFunctionContext.getArgument(\"Layer\");\r",
+            "const Camera3D = runtimeScene.getLayer(Layer).getRenderer().getThreeCamera();\r",
+            "if (!Camera3D) {\r",
+            "    return;\r",
+            "}\r",
+            "if (!gdjs._A3F.AudioListener) {\r",
+            "    return;\r",
+            "}\r",
+            "Camera3D.add(gdjs._A3F.AudioListener);\r",
+            "gdjs._A3F.AudioListener.rotation.set(gdjs.toRad(0), gdjs.toRad(0), gdjs.toRad(0),\"ZYX\");\r",
+            "\r",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Layer",
+          "name": "Layer",
+          "type": "layer"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Set a listener at the center point of the first 3D object found.\nThis listener assumes that forward is X+, up is Z+, and right is Y+.\nTherefore, if the object on which the listener is set is unrotated, it must have X+ as forward, Z+ as up, and Y+ as right; otherwise, the sound will not be heard from the correct direction.\nOnly one listener can exist in the scene at any time.\nEach time the scene starts, the listener is automatically set on the base layer’s camera.",
+      "fullName": "👂️Set listener for object",
+      "functionType": "Action",
+      "group": "3D sound",
+      "name": "SetListenerForObject",
+      "sentence": "👂️Set listener for object (_PARAM1_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (objects.length == 0) {\r",
+            "    return;\r",
+            "}\r",
+            "if (!gdjs._A3F.AudioListener) {\r",
+            "    return;\r",
+            "}\r",
+            "const Object2D = objects[0];\r",
+            "const Object3D = Object2D.get3DRendererObject();\r",
+            "Object3D.add(gdjs._A3F.AudioListener);\r",
+            "gdjs._A3F.AudioListener.rotation.set(gdjs.toRad(90), gdjs.toRad(0), gdjs.toRad(-90),\"ZYX\");\r",
+            "\r",
+            ""
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object",
+          "name": "Object",
+          "type": "objectList"
+        },
+        {
+          "description": "3D capability",
+          "name": "Capability3d",
+          "supplementaryInformation": "Scene3D::Base3DBehavior",
+          "type": "behavior"
+        }
+      ],
+      "objectGroups": []
     }
   ],
   "eventsBasedBehaviors": [
@@ -2723,126 +2966,6 @@
                     "",
                     "Object",
                     "Capability3d",
-                    ""
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "BooleanVariable"
-                  },
-                  "parameters": [
-                    "CastShadow",
-                    "True",
-                    ""
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "BooleanVariable"
-                  },
-                  "parameters": [
-                    "ReceiveShadow",
-                    "False",
-                    ""
-                  ]
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "value": "A3F::ChangeShadow"
-                  },
-                  "parameters": [
-                    "",
-                    "Object",
-                    "Capability3d",
-                    "yes",
-                    "",
-                    ""
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "BooleanVariable"
-                  },
-                  "parameters": [
-                    "CastShadow",
-                    "False",
-                    ""
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "BooleanVariable"
-                  },
-                  "parameters": [
-                    "ReceiveShadow",
-                    "True",
-                    ""
-                  ]
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "value": "A3F::ChangeShadow"
-                  },
-                  "parameters": [
-                    "",
-                    "Object",
-                    "Capability3d",
-                    "no",
-                    "yes",
-                    ""
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [
-                {
-                  "type": {
-                    "value": "BooleanVariable"
-                  },
-                  "parameters": [
-                    "CastShadow",
-                    "True",
-                    ""
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "BooleanVariable"
-                  },
-                  "parameters": [
-                    "ReceiveShadow",
-                    "True",
-                    ""
-                  ]
-                }
-              ],
-              "actions": [
-                {
-                  "type": {
-                    "value": "A3F::ChangeShadow"
-                  },
-                  "parameters": [
-                    "",
-                    "Object",
-                    "Capability3d",
-                    "yes",
-                    "yes",
                     ""
                   ]
                 }
@@ -2908,6 +3031,141 @@
                   ]
                 }
               ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Deprecated"
+            },
+            {
+              "disabled": true,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "CastShadow",
+                    "True",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "ReceiveShadow",
+                    "False",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "A3F::ChangeShadow"
+                  },
+                  "parameters": [
+                    "",
+                    "Object",
+                    "Capability3d",
+                    "yes",
+                    "",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "disabled": true,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "CastShadow",
+                    "False",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "ReceiveShadow",
+                    "True",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "A3F::ChangeShadow"
+                  },
+                  "parameters": [
+                    "",
+                    "Object",
+                    "Capability3d",
+                    "no",
+                    "yes",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "disabled": true,
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "CastShadow",
+                    "True",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "ReceiveShadow",
+                    "True",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "A3F::ChangeShadow"
+                  },
+                  "parameters": [
+                    "",
+                    "Object",
+                    "Capability3d",
+                    "yes",
+                    "yes",
+                    ""
+                  ]
+                }
+              ]
             }
           ],
           "parameters": [
@@ -2934,6 +3192,7 @@
           "extraInformation": [
             "Scene3D::Base3DBehavior"
           ],
+          "choices": [],
           "name": "Capability3d"
         },
         {
@@ -2949,12 +3208,27 @@
           "label": "Blend mode",
           "description": "This affects all 3d objects that use the same material.",
           "group": "Effect",
-          "extraInformation": [
-            "Keep model blend mode",
-            "Normal",
-            "Additive",
-            "Subtractive",
-            "Multiply"
+          "choices": [
+            {
+              "label": "Keep model blend mode",
+              "value": "Keep model blend mode"
+            },
+            {
+              "label": "Normal",
+              "value": "Normal"
+            },
+            {
+              "label": "Additive",
+              "value": "Additive"
+            },
+            {
+              "label": "Subtractive",
+              "value": "Subtractive"
+            },
+            {
+              "label": "Multiply",
+              "value": "Multiply"
+            }
           ],
           "name": "Blend"
         },
@@ -2969,21 +3243,60 @@
         {
           "value": "false",
           "type": "Boolean",
-          "label": "Cast Shadow",
-          "description": "If both \"Cast Shadow\" and \"Receive Shadow\" are enabled, striped patterns are likely to occur in the shadow.",
+          "label": "⚠ Cast Shadow",
+          "description": "This property is deprecated and no longer works. Please use the Shadow casting property of the object's lighting instead. If both \"Cast Shadow\" and \"Receive Shadow\" are enabled, striped patterns are likely to occur in the shadow.",
           "group": "Effect",
+          "deprecated": true,
           "name": "CastShadow"
         },
         {
           "value": "false",
           "type": "Boolean",
-          "label": "Receive Shadow",
-          "description": "If both \"Cast Shadow\" and \"Receive Shadow\" are enabled, striped patterns are likely to occur in the shadow.",
+          "label": "⚠ Receive Shadow",
+          "description": "This property is deprecated and no longer works. Please use the Shadow receiving property of the object's lighting instead. If both \"Cast Shadow\" and \"Receive Shadow\" are enabled, striped patterns are likely to occur in the shadow.",
           "group": "Effect",
+          "deprecated": true,
           "name": "ReceiveShadow"
         }
       ],
-      "sharedPropertyDescriptors": []
+      "propertiesFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "propertyName": "Capability3d"
+          },
+          {
+            "folderName": "Visibility",
+            "children": [
+              {
+                "propertyName": "Opacity"
+              }
+            ]
+          },
+          {
+            "folderName": "Effect",
+            "children": [
+              {
+                "propertyName": "Blend"
+              },
+              {
+                "propertyName": "CastShadow"
+              },
+              {
+                "propertyName": "ReceiveShadow"
+              }
+            ]
+          },
+          {
+            "folderName": "Debug",
+            "children": [
+              {
+                "propertyName": "AxesHelper"
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "description": "⚠️ 3D Lights are highly loaded.",
@@ -3400,16 +3713,26 @@
           "extraInformation": [
             "Scene3D::Base3DBehavior"
           ],
+          "choices": [],
           "name": "Capability3d"
         },
         {
           "value": "Directional Light",
           "type": "Choice",
           "label": "Type",
-          "extraInformation": [
-            "Directional Light",
-            "Point Light",
-            "Spot Light"
+          "choices": [
+            {
+              "label": "Directional Light",
+              "value": "Directional Light"
+            },
+            {
+              "label": "Point Light",
+              "value": "Point Light"
+            },
+            {
+              "label": "Spot Light",
+              "value": "Spot Light"
+            }
           ],
           "name": "Type"
         },
@@ -3460,12 +3783,27 @@
           "label": "Shadow Map Size",
           "description": "The larger the map, the better the shadow quality, but the greater the load.",
           "group": "Shadow",
-          "extraInformation": [
-            "128px",
-            "256px",
-            "512px",
-            "1024px",
-            "2048px"
+          "choices": [
+            {
+              "label": "128px",
+              "value": "128px"
+            },
+            {
+              "label": "256px",
+              "value": "256px"
+            },
+            {
+              "label": "512px",
+              "value": "512px"
+            },
+            {
+              "label": "1024px",
+              "value": "1024px"
+            },
+            {
+              "label": "2048px",
+              "value": "2048px"
+            }
           ],
           "name": "ShadowMapSize"
         },
@@ -3508,7 +3846,297 @@
           "name": "ShadowHelper"
         }
       ],
-      "sharedPropertyDescriptors": []
+      "propertiesFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "propertyName": "Capability3d"
+          },
+          {
+            "propertyName": "Type"
+          },
+          {
+            "propertyName": "Color"
+          },
+          {
+            "propertyName": "Intensity"
+          },
+          {
+            "propertyName": "Distance"
+          },
+          {
+            "propertyName": "SpotAngle"
+          },
+          {
+            "propertyName": "SpotPenumbra"
+          },
+          {
+            "folderName": "Shadow",
+            "children": [
+              {
+                "propertyName": "CastShadow"
+              },
+              {
+                "propertyName": "ShadowMapSize"
+              },
+              {
+                "propertyName": "ShadowRange"
+              }
+            ]
+          },
+          {
+            "folderName": "Shadow Bias",
+            "children": [
+              {
+                "propertyName": "ShadowDepthBias"
+              },
+              {
+                "propertyName": "ShadowNormalBias"
+              }
+            ]
+          },
+          {
+            "folderName": "Helper",
+            "children": [
+              {
+                "propertyName": "LightHelper"
+              },
+              {
+                "propertyName": "ShadowHelper"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "Use this when you want to play sound from a 3D object.",
+      "fullName": "Advanced 3D Sound",
+      "name": "A3S",
+      "objectType": "",
+      "eventsFunctions": [
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onCreated",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const Object2D = objects[0];\r",
+                "const Object3D = Object2D.get3DRendererObject();\r",
+                "Object3D.userData.audios = [];\r",
+                "\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "A3F::A3S",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onDestroy",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const Object2D = objects[0];",
+                "const Object3D = Object2D.get3DRendererObject();",
+                "for (const A of Object3D.userData.audios) {",
+                "    A.stop();",
+                "    A.disconnect();",
+                "}",
+                "Object3D.userData.audios.length = 0;",
+                "",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "A3F::A3S",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Play sound from object center point.",
+          "fullName": "🔊Play sound",
+          "functionType": "Action",
+          "name": "Play",
+          "sentence": "🔊Play sound (_PARAM0_, Sound: _PARAM2_, Volume: _PARAM3_, Loop: _PARAM4_, Range: _PARAM5_)",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const Object2D = objects[0];\r",
+                "const Object3D = Object2D.get3DRendererObject();\r",
+                "const Sound = eventsFunctionContext.getArgument(\"Sound\");\r",
+                "const Volume = eventsFunctionContext.getArgument(\"Volume\") * 0.01;\r",
+                "const Loop = eventsFunctionContext.getArgument(\"Loop\");\r",
+                "const Range = eventsFunctionContext.getArgument(\"Range\");\r",
+                "//\r",
+                "const AudioListener = gdjs._A3F.AudioListener;\r",
+                "if (!AudioListener) {\r",
+                "    return;\r",
+                "}\r",
+                "// 既存確認（同一ソース・再生完了を探す）\r",
+                "for (const A of Object3D.userData.audios) {\r",
+                "    if (!A.isPlaying) {\r",
+                "        if (A.userData.sourceFile == Sound) {\r",
+                "            // 再利用\r",
+                "            A.setMaxDistance(Range);\r",
+                "            A.setVolume(Volume);\r",
+                "            A.setLoop(Loop);\r",
+                "            A.play();\r",
+                "            return;\r",
+                "        }\r",
+                "    }\r",
+                "}\r",
+                "// 新PositionalAudio生成\r",
+                "const PositionalAudio = new THREE.PositionalAudio(AudioListener);\r",
+                "PositionalAudio.setDistanceModel('linear');// 'linear' | 'inverse' | 'exponential'\r",
+                "// PositionalAudio.setRefDistance(1);// この距離あたりを基準に聞こえる\r",
+                "// PositionalAudio.setRolloffFactor(1);// 距離減衰の強さ\r",
+                "PositionalAudio.setMaxDistance(Range);\r",
+                "PositionalAudio.setVolume(Volume);\r",
+                "PositionalAudio.setLoop(Loop);\r",
+                "PositionalAudio.userData.sourceFile = Sound;\r",
+                "//\r",
+                "Object3D.add(PositionalAudio);\r",
+                "Object3D.userData.audios.push(PositionalAudio);\r",
+                "// キャッシュ確認\r",
+                "if (gdjs._A3F.AudioBufferCache.has(Sound)) {\r",
+                "    // キャッシュを利用\r",
+                "    PositionalAudio.setBuffer(gdjs._A3F.AudioBufferCache.get(Sound));\r",
+                "    PositionalAudio.play();\r",
+                "    return;\r",
+                "}\r",
+                "// three.jsでサウンドを読み込む\r",
+                "const Resource = runtimeScene.getGame().getResourceLoader().getResource(Sound);\r",
+                "new THREE.AudioLoader().load(Resource.file, (Buffer) => {\r",
+                "    PositionalAudio.setBuffer(Buffer);\r",
+                "    PositionalAudio.play();\r",
+                "    gdjs._A3F.AudioBufferCache.set(Sound, Buffer);\r",
+                "});\r",
+                "\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "A3F::A3S",
+              "type": "behavior"
+            },
+            {
+              "description": "Sound",
+              "name": "Sound",
+              "type": "audioResource"
+            },
+            {
+              "description": "Volume",
+              "longDescription": "From 0 to 100, 100 by default.",
+              "name": "Volume",
+              "type": "expression"
+            },
+            {
+              "description": "Loop",
+              "name": "Loop",
+              "type": "yesorno"
+            },
+            {
+              "description": "Range",
+              "name": "Range",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Stop all sounds emitted by this object.",
+          "fullName": "🔊Stop all sounds of object",
+          "functionType": "Action",
+          "name": "StopAll",
+          "sentence": "🔊Stop all sounds of object (_PARAM0_)",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const Object2D = objects[0];\r",
+                "const Object3D = Object2D.get3DRendererObject();\r",
+                "//\r",
+                "for (const A of Object3D.userData.audios) {\r",
+                "    A.stop();\r",
+                "}\r",
+                "\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "A3F::A3S",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        }
+      ],
+      "propertyDescriptors": [],
+      "propertiesFolderStructure": {
+        "folderName": "__ROOT"
+      }
     }
   ],
   "eventsBasedObjects": []
