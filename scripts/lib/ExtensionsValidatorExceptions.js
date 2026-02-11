@@ -392,6 +392,15 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: ['_objectStackExtension'],
       javaScriptObjectAllowedProperties: [],
     },
+    PanelSpriteButton: {
+      gdjsAllowedProperties: [
+        'TextRuntimeObject',
+        'BitmapTextRuntimeObject',
+      ],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     ParticleEmitter3D: {
       gdjsAllowedProperties: [
         '__particleEmmiter3DExtension',
