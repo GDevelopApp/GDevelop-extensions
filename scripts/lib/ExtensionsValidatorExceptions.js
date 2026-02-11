@@ -393,10 +393,7 @@ const extensionsAllowedProperties = {
       javaScriptObjectAllowedProperties: [],
     },
     PanelSpriteButton: {
-      gdjsAllowedProperties: [
-        'TextRuntimeObject',
-        'BitmapTextRuntimeObject',
-      ],
+      gdjsAllowedProperties: ['TextRuntimeObject', 'BitmapTextRuntimeObject'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
