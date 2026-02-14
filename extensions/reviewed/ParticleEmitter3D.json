@@ -9,7 +9,7 @@
   "name": "ParticleEmitter3D",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/f2e5a34bf465f781866677762d385d6c8e9e8d203383f2df9a3b7e0fad6a2cb5_fire.svg",
   "shortDescription": "Display a large number of particles in 3D to create visual effects in a 3D game.",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": [
     "3D particle emitters let you create and display many small particles to simulate visual effects in your game — like fire, explosions, smoke, or dust.",
     "",
@@ -213,13 +213,76 @@
             "     * @param colorOverLife {ColorOverLife}",
             "     * @param sizeOverLife {SizeOverLife}",
             "     * @param applyForce {ApplyForce}",
+            "     * @param applyForce {ApplyForce}",
+            "     * @param widthOverLength {WidthOverLength}",
             "     */",
-            "    constructor(particleSystem, colorOverLife, sizeOverLife, applyForce) {",
+            "    constructor(particleSystem, colorOverLife, sizeOverLife, applyForce, widthOverLength) {",
             "        this.particleSystem = particleSystem;",
             "        this.colorOverLife = colorOverLife;",
             "        this.sizeOverLife = sizeOverLife;",
             "        this.applyForce = applyForce;",
+            "        this.widthOverLength = widthOverLength;",
             "    }",
+            "",
+            "    /**",
+            "     * @param renderMode {'Billboard' | 'Trail'}",
+            "     */",
+            "    setRenderMode(renderMode) {",
+            "        switch (renderMode) {",
+            "            case \"BillBoard\":",
+            "                this.particleSystem.renderMode = RenderMode.BillBoard;",
+            "                break;",
+            "            case \"Trail\":",
+            "                this.particleSystem.renderMode = RenderMode.Trail;",
+            "                this.particleSystem.rendererEmitterSettings.startLength = new IntervalValue(30, 30);",
+            "                break;",
+            "        }",
+            "    }",
+            "",
+            "    /**",
+            "     * @param startLengthMin {number}",
+            "     */",
+            "    setTrailStartLengthMin(startLengthMin) {",
+            "        const startLength = this.particleSystem.rendererEmitterSettings.startLength;",
+            "        if (!startLength) {",
+            "            return;",
+            "        }",
+            "        startLength.a = startLengthMin;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param startLengthMax {number}",
+            "     */",
+            "    setTrailStartLengthMax(startLengthMax) {",
+            "        const startLength = this.particleSystem.rendererEmitterSettings.startLength;",
+            "        if (!startLength) {",
+            "            return;",
+            "        }",
+            "        startLength.b = startLengthMax;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param followLocalOrigin {boolean}",
+            "     */",
+            "    setTrailFollowingLocalOrigin(followLocalOrigin) {",
+            "        this.particleSystem.rendererEmitterSettings.followLocalOrigin = followLocalOrigin;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param trailEndWidthRatio {number}",
+            "     */",
+            "    setTrailEndWidthRatio(trailEndWidthRatio) {",
+            "        // Check this comment in the lib code:",
+            "        // We added a multiplication with size because it's more convenient for the extension.",
+            "",
+            "        /** @type Bezier */",
+            "        const bezier = this.widthOverLength.width.functions[0][0];",
+            "        bezier.p[0] = 1;",
+            "        bezier.p[1] = gdjs.evtTools.common.lerp(1, trailEndWidthRatio, 1 / 3);",
+            "        bezier.p[2] = gdjs.evtTools.common.lerp(1, trailEndWidthRatio, 2 / 3);",
+            "        bezier.p[3] = trailEndWidthRatio;",
+            "    }",
+            "",
             "",
             "    /**",
             "     * @param startColor {string}",
@@ -1630,7 +1693,8 @@
             "            const iter = particle.previous.values();",
             "            for (let i = 0; i < particle.previous.length; i++) {",
             "                const cur = iter.next();",
-            "                cur.value.size = this.width.genValue((particle.previous.length - i) / particle.length);",
+            "                // We added a multiplication with size because it's more convenient for the extension.",
+            "                cur.value.size = this.width.genValue((particle.previous.length - i) / particle.length) * particle.size;",
             "            }",
             "        }",
             "    }",
@@ -6923,6 +6987,7 @@
           "ambientLightColorB": 200,
           "ambientLightColorG": 200,
           "ambientLightColorR": 200,
+          "camera2DPlaneMaxDrawingDistance": 5000,
           "camera3DFarPlaneDistance": 10000,
           "camera3DFieldOfView": 45,
           "camera3DNearPlaneDistance": 3,
@@ -6949,6 +7014,7 @@
         }
       ],
       "instances": [],
+      "editionSettings": [],
       "eventsFunctions": [
         {
           "fullName": "",
@@ -6986,6 +7052,7 @@
                 "    ColorOverLife,",
                 "    SizeOverLife,",
                 "    ApplyForce,",
+                "    WidthOverLength,",
                 "    Gradient,",
                 "    PiecewiseBezier,",
                 "    Bezier,",
@@ -7079,10 +7146,12 @@
                 "particleSystem.addBehavior(sizeOverLife);",
                 "const applyForce = new ApplyForce(new THREE.Vector3(0, 0, -1), new ConstantValue(0));",
                 "particleSystem.addBehavior(applyForce);",
+                "const widthOverLength = new WidthOverLength(new PiecewiseBezier([[new Bezier(1, 2 / 3, 1 / 3, 0), 0]]));",
+                "particleSystem.addBehavior(widthOverLength);",
                 "",
                 "particleSystem.emitter.name = object.getName() + object.getNameId();",
                 "",
-                "object.__particleEmitterAdapter = new ParticleEmitterAdapter(particleSystem, colorOverLife, sizeOverLife, applyForce);",
+                "object.__particleEmitterAdapter = new ParticleEmitterAdapter(particleSystem, colorOverLife, sizeOverLife, applyForce, widthOverLength);",
                 "object.__particleSystem = particleSystem;",
                 "",
                 "// This is a hack that may break in future releases.",
@@ -7283,6 +7352,50 @@
                 },
                 {
                   "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetRenderMode"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "RenderMode",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetTrailStartLengthMin"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "TrailStartLengthMin",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetTrailStartLengthMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "TrailStartLengthMax",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetTrailEndWidthRatio"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "TrailEndWidthRatio",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
                     "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartColor"
                   },
                   "parameters": [
@@ -7468,6 +7581,61 @@
                 }
               ],
               "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "inverted": true,
+                        "value": "BooleanVariable"
+                      },
+                      "parameters": [
+                        "IsTrailFollowingLocalOrigin",
+                        "True",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "ParticleEmitter3D::ParticleEmitter3D::SetIsTrailFollowingLocalOrigin"
+                      },
+                      "parameters": [
+                        "Object",
+                        "=",
+                        "TrailStartLengthMax"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "BooleanVariable"
+                      },
+                      "parameters": [
+                        "IsTrailFollowingLocalOrigin",
+                        "True",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "ParticleEmitter3D::ParticleEmitter3D::SetIsTrailFollowingLocalOrigin"
+                      },
+                      "parameters": [
+                        "Object",
+                        "yes",
+                        "TrailStartLengthMax"
+                      ]
+                    }
+                  ]
+                },
                 {
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [
@@ -7722,7 +7890,10 @@
                     "    for (const layerName of layerNames) {",
                     "        const layer = gameScene.getLayer(layerName);",
                     "        if (layer.__particleEmmiter3DExtension) {",
-                    "            layer.__particleEmmiter3DExtension.batchSystem.update(layer.getElapsedTime() / 1000);",
+                    "            const timeDelta = layer.getElapsedTime() / 1000;",
+                    "            if (timeDelta > 0) {",
+                    "                layer.__particleEmmiter3DExtension.batchSystem.update(timeDelta);",
+                    "            }",
                     "        }",
                     "    }",
                     "}"
@@ -8147,7 +8318,7 @@
                     "value": "SetReturnString"
                   },
                   "parameters": [
-                    "Object.PropertyStartColor()"
+                    "StartColor"
                   ]
                 }
               ]
@@ -8229,7 +8400,7 @@
                     "value": "SetReturnString"
                   },
                   "parameters": [
-                    "Object.PropertyEndColor()"
+                    "EndColor"
                   ]
                 }
               ]
@@ -8311,7 +8482,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.PropertyStartOpacity()"
+                    "StartOpacity"
                   ]
                 }
               ]
@@ -8393,7 +8564,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.PropertyEndOpacity()"
+                    "EndOpacity"
                   ]
                 }
               ]
@@ -8475,7 +8646,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.PropertyFlow()"
+                    "Flow"
                   ]
                 }
               ]
@@ -8558,7 +8729,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.PropertyStartSizeMin()"
+                    "StartSizeMin"
                   ]
                 }
               ]
@@ -8640,7 +8811,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.PropertyStartSizeMax()"
+                    "StartSizeMax"
                   ]
                 }
               ]
@@ -8723,7 +8894,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.PropertyEndScale()"
+                    "EndScale"
                   ]
                 }
               ]
@@ -8806,7 +8977,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.PropertyStartSpeedMin()"
+                    "StartSpeedMin"
                   ]
                 }
               ]
@@ -8888,7 +9059,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.PropertyStartSpeedMax()"
+                    "StartSpeedMax"
                   ]
                 }
               ]
@@ -8970,7 +9141,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.PropertyLifespanMin()"
+                    "LifespanMin"
                   ]
                 }
               ]
@@ -9053,7 +9224,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.PropertyLifespanMax()"
+                    "LifespanMax"
                   ]
                 }
               ]
@@ -9136,7 +9307,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.PropertyDuration()"
+                    "Duration"
                   ]
                 }
               ]
@@ -9357,7 +9528,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.PropertySpayConeAngle()"
+                    "SpayConeAngle"
                   ]
                 }
               ]
@@ -9440,7 +9611,7 @@
                     "value": "SetReturnString"
                   },
                   "parameters": [
-                    "Object.PropertyBlending()"
+                    "Blending"
                   ]
                 }
               ]
@@ -9525,7 +9696,7 @@
                     "value": "SetReturnString"
                   },
                   "parameters": [
-                    "Object.PropertyGravityTop()"
+                    "GravityTop"
                   ]
                 }
               ]
@@ -9609,7 +9780,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "Object.PropertyGravity()"
+                    "Gravity"
                   ]
                 }
               ]
@@ -9796,6 +9967,524 @@
               "name": "Value",
               "optional": true,
               "type": "yesorno"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the start min trail length of the object.",
+          "fullName": "Start min trail length",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter trail configuration",
+          "name": "TrailStartLengthMin",
+          "sentence": "the start min trail length",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "TrailStartLengthMin"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "TrailStartLengthMin",
+          "name": "SetTrailStartLengthMin",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "TrailStartLengthMin",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__particleEmitterAdapter.setTrailStartLengthMin(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the start max trail length of the object.",
+          "fullName": "Start max trail length",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter trail configuration",
+          "name": "TrailStartLengthMax",
+          "sentence": "the start max trail length",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "TrailStartLengthMax"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "TrailStartLengthMax",
+          "name": "SetTrailStartLengthMax",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "TrailStartLengthMax",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__particleEmitterAdapter.setTrailStartLengthMax(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if the trail should follow the object.",
+          "fullName": "Trail following the object",
+          "functionType": "Condition",
+          "group": "3D particle emitter trail configuration",
+          "name": "IsTrailFollowingLocalOrigin",
+          "sentence": "The trail is following _PARAM0_ ",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "IsTrailFollowingLocalOrigin",
+                    "True",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change if the trail should follow the object or not.",
+          "fullName": "Make the trail follow",
+          "functionType": "Action",
+          "group": "3D particle emitter trail configuration",
+          "name": "SetIsTrailFollowingLocalOrigin",
+          "sentence": "Make the trail follow _PARAM0_: _PARAM1_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "Value",
+                    "False",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetBooleanVariable"
+                  },
+                  "parameters": [
+                    "IsTrailFollowingLocalOrigin",
+                    "False",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "Value",
+                    "True",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetBooleanVariable"
+                  },
+                  "parameters": [
+                    "IsTrailFollowingLocalOrigin",
+                    "True",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__particleEmitterAdapter.setTrailFollowingLocalOrigin(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            },
+            {
+              "defaultValue": "yes",
+              "description": "IsTrailFollowingLocalOrigin",
+              "name": "Value",
+              "optional": true,
+              "type": "yesorno"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the tail end width ratio of the object.",
+          "fullName": "Tail end width ratio",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter trail configuration",
+          "name": "TrailEndWidthRatio",
+          "sentence": "the tail end width ratio",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "TrailEndWidthRatio"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "TrailEndWidthRatio",
+          "name": "SetTrailEndWidthRatio",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "TrailEndWidthRatio",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__particleEmitterAdapter.setTrailEndWidthRatio(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the render mode of the object.",
+          "fullName": "Render mode",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter configuration",
+          "name": "RenderMode",
+          "private": true,
+          "sentence": "the render mode",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnString"
+                  },
+                  "parameters": [
+                    "RenderMode"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "supplementaryInformation": "[\"Billboard\",\"Trail\"]",
+            "type": "stringWithSelector"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "RenderMode",
+          "name": "SetRenderMode",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetStringVariable"
+                  },
+                  "parameters": [
+                    "RenderMode",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__particleEmitterAdapter.setRenderMode(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Update the trail properties because the RenderMode setter reset them"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "StringVariable"
+                  },
+                  "parameters": [
+                    "RenderMode",
+                    "=",
+                    "\"Trail\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetTrailStartLengthMin"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "TrailStartLengthMin",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetTrailStartLengthMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "TrailStartLengthMax",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
             }
           ],
           "objectGroups": []
@@ -10009,8 +10698,174 @@
           "group": "Position",
           "hidden": true,
           "name": "RotationY"
+        },
+        {
+          "value": "120",
+          "type": "Number",
+          "unit": "Pixel",
+          "label": "Start min length",
+          "group": "Trail",
+          "advanced": true,
+          "name": "TrailStartLengthMin"
+        },
+        {
+          "value": "120",
+          "type": "Number",
+          "unit": "Pixel",
+          "label": "Start max length",
+          "group": "Trail",
+          "advanced": true,
+          "name": "TrailStartLengthMax"
+        },
+        {
+          "value": "Billboard",
+          "type": "Choice",
+          "label": "Render mode",
+          "choices": [
+            {
+              "label": "Image facing the camera",
+              "value": "Billboard"
+            },
+            {
+              "label": "Image following a trail",
+              "value": "Trail"
+            }
+          ],
+          "advanced": true,
+          "name": "RenderMode"
+        },
+        {
+          "value": "",
+          "type": "Boolean",
+          "label": "Follow the object",
+          "group": "Trail",
+          "advanced": true,
+          "name": "IsTrailFollowingLocalOrigin"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Tail end width ratio",
+          "group": "Trail",
+          "advanced": true,
+          "name": "TrailEndWidthRatio"
         }
-      ]
+      ],
+      "propertiesFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "propertyName": "Flow"
+          },
+          {
+            "propertyName": "LifespanMin"
+          },
+          {
+            "propertyName": "LifespanMax"
+          },
+          {
+            "propertyName": "Duration"
+          },
+          {
+            "propertyName": "ShouldAutodestruct"
+          },
+          {
+            "propertyName": "RenderMode"
+          },
+          {
+            "folderName": "Color",
+            "children": [
+              {
+                "propertyName": "StartColor"
+              },
+              {
+                "propertyName": "EndColor"
+              },
+              {
+                "propertyName": "StartOpacity"
+              },
+              {
+                "propertyName": "EndOpacity"
+              },
+              {
+                "propertyName": "Blending"
+              }
+            ]
+          },
+          {
+            "folderName": "Size",
+            "children": [
+              {
+                "propertyName": "StartSizeMin"
+              },
+              {
+                "propertyName": "StartSizeMax"
+              },
+              {
+                "propertyName": "EndScale"
+              }
+            ]
+          },
+          {
+            "folderName": "Trail",
+            "children": [
+              {
+                "propertyName": "TrailStartLengthMin"
+              },
+              {
+                "propertyName": "TrailStartLengthMax"
+              },
+              {
+                "propertyName": "TrailEndWidthRatio"
+              },
+              {
+                "propertyName": "IsTrailFollowingLocalOrigin"
+              }
+            ]
+          },
+          {
+            "folderName": "Speed",
+            "children": [
+              {
+                "propertyName": "StartSpeedMin"
+              },
+              {
+                "propertyName": "StartSpeedMax"
+              },
+              {
+                "propertyName": "AreParticlesRelative"
+              },
+              {
+                "propertyName": "GravityTop"
+              },
+              {
+                "propertyName": "Gravity"
+              }
+            ]
+          },
+          {
+            "folderName": "Position",
+            "children": [
+              {
+                "propertyName": "SpayConeAngle"
+              },
+              {
+                "propertyName": "Z"
+              },
+              {
+                "propertyName": "RotationX"
+              },
+              {
+                "propertyName": "RotationY"
+              }
+            ]
+          },
+          {
+            "propertyName": "ParentOrigin"
+          }
+        ]
+      }
     }
   ]
 }
