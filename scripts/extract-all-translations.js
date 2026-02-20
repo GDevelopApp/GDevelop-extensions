@@ -54,8 +54,9 @@ try {
       if (data[key]) {
         /** @type {string[]} */
         const values = Array.isArray(data[key]) ? data[key] : [data[key]];
-        values.forEach((value) => {
-          if (value.trim()) {
+        values.forEach((rawValue) => {
+          const value = rawValue.trim();
+          if (value) {
             if (!translationsMap.has(value)) {
               translationsMap.set(value, []);
             }
@@ -201,9 +202,9 @@ try {
 
   console.log('ℹ️ Creating .POT content...');
   // Step 3: Build POT content
+  const generatedMsgids = new Set();
   translationsMap.forEach((files, value) => {
     const uniqueFiles = [...new Set(files)];
-    potContent += uniqueFiles.map((file) => `#: ${file}`).join('\n') + '\n';
 
     // Handle multi-line strings
     const escapedValue = value
@@ -213,14 +214,27 @@ try {
     /** @type {string[]} */
     let lines = escapedValue.split('\n');
     lines = lines.filter((line) => line.trim());
-    potContent +=
-      'msgid ' +
-      lines
-        .map((line, index) =>
-          index === lines.length - 1 ? `"${line}"` : `"${line}\\n"`
-        )
-        .join('\n') +
-      '\n';
+    const msgidContent = lines
+      .map((line, index) =>
+        index === lines.length - 1 ? `"${line}"` : `"${line}\\n"`
+      )
+      .join('\n');
+
+    // Skip if this msgid was already generated (safety net for edge cases
+    // where two different source strings produce the same msgid after escaping).
+    if (generatedMsgids.has(msgidContent)) {
+      console.warn(
+        `⚠️ Skipping duplicate msgid ${msgidContent.slice(
+          0,
+          60
+        )} (from: ${uniqueFiles.join(', ')})`
+      );
+      return;
+    }
+    generatedMsgids.add(msgidContent);
+
+    potContent += uniqueFiles.map((file) => `#: ${file}`).join('\n') + '\n';
+    potContent += 'msgid ' + msgidContent + '\n';
     potContent += 'msgstr ""\n\n';
   });
 
