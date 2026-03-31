@@ -511,6 +511,21 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    SpotLight3D: {
+      gdjsAllowedProperties: [
+        '__spotLight3DExtension',
+        'CustomRuntimeObject',
+        'CustomRuntimeObjectInstanceContainer',
+        'CustomRuntimeObject3DRenderer',
+        'CustomRuntimeObject3D',
+        'registerRuntimeScenePreEventsCallback',
+        'registerInGameEditorPostStepCallback',
+        'scene3d',
+      ],
+      gdjsEvtToolsAllowedProperties: ['camera'],
+      runtimeSceneAllowedProperties: ['__spotLight3DExtension'],
+      javaScriptObjectAllowedProperties: ['getPrototypeOf'],
+    },
     SpriteMultitouchJoystick: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: ['input'],
