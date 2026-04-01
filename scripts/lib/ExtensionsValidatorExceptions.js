@@ -521,9 +521,14 @@ const extensionsAllowedProperties = {
         'registerRuntimeScenePreEventsCallback',
         'registerInGameEditorPostStepCallback',
         'scene3d',
+        'RuntimeScene',
       ],
       gdjsEvtToolsAllowedProperties: ['camera'],
-      runtimeSceneAllowedProperties: ['__spotLight3DExtension'],
+      runtimeSceneAllowedProperties: [
+        '__spotLight3DExtension',
+        'getScene',
+        '__spotLightManager',
+      ],
       javaScriptObjectAllowedProperties: ['getPrototypeOf'],
     },
     SpriteMultitouchJoystick: {
