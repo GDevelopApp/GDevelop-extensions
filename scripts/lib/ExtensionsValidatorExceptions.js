@@ -511,9 +511,9 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
-    SpotLight3D: {
+    Light3D: {
       gdjsAllowedProperties: [
-        '__spotLight3DExtension',
+        '__light3DExtension',
         'CustomRuntimeObject',
         'CustomRuntimeObjectInstanceContainer',
         'CustomRuntimeObject3DRenderer',
@@ -526,8 +526,10 @@ const extensionsAllowedProperties = {
       gdjsEvtToolsAllowedProperties: ['camera'],
       runtimeSceneAllowedProperties: [
         '__spotLight3DExtension',
+        '__pointLight3DExtension',
         'getScene',
         '__spotLightManager',
+        '__pointLightManager',
       ],
       javaScriptObjectAllowedProperties: ['getPrototypeOf'],
     },
