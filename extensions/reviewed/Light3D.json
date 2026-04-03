@@ -279,8 +279,6 @@
             "    }",
             "}",
             "",
-            "",
-            "",
             "//@ts-ignore",
             "gdjs.__light3DExtension.spot = {",
             "    SpotLightAdapter,",
@@ -417,6 +415,7 @@
             "     * @param value {number}",
             "     */",
             "    setRange(value) {",
+            "        const old = this.pointLight.shadow.camera.far;",
             "        this.pointLight.distance = value;",
             "    }",
             "",
@@ -468,11 +467,10 @@
             "     * @param value {number}",
             "     */",
             "    setShadowCameraFarPlane(value) {",
+            "        const old = this.pointLight.shadow.camera.far;",
             "        this.pointLight.shadow.camera.far = value;",
             "    }",
             "}",
-            "",
-            "",
             "",
             "//@ts-ignore",
             "gdjs.__light3DExtension.point = {",
@@ -572,52 +570,37 @@
             "                    isSelected = parentObject === selectedObject;",
             "                }",
             "            }",
-            "            let rootObject = object;",
-            "            while (rootObject.getInstanceContainer()",
-            "                //@ts-ignore",
-            "                .getOwner) {",
-            "                rootObject = rootObject.getInstanceContainer()",
+            "            if (!editor || !editor.areEffectsHidden() || isSelected) {",
+            "                let rootObject = object;",
+            "                while (rootObject.getInstanceContainer()",
             "                    //@ts-ignore",
-            "                    .getOwner();",
+            "                    .getOwner) {",
+            "                    rootObject = rootObject.getInstanceContainer()",
+            "                        //@ts-ignore",
+            "                        .getOwner();",
+            "                }",
+            "                const runtimeScene = rootObject.getRuntimeScene();",
+            "                let distanceSq = 0;",
+            "                if (!isSelected) {",
+            "                    const layerName = rootObject.getLayer();",
+            "                    const cameraX = gdjs.evtTools.camera.getCameraX(runtimeScene, layerName, 0);",
+            "                    const cameraY = gdjs.evtTools.camera.getCameraY(runtimeScene, layerName, 0);",
+            "                    const cameraZ = gdjs.scene3d.camera.getCameraZ(runtimeScene, layerName, 0);",
+            "                    const deltaX = rootObject.getX() - cameraX;",
+            "                    const deltaY = rootObject.getY() - cameraY;",
+            "                    const deltaZ = rootObject.getZ() - cameraZ;",
+            "                    distanceSq = deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ;",
+            "                }",
+            "                getLightManager(",
+            "                    //@ts-ignore",
+            "                    runtimeScene",
+            "                ).applyVisibilityAndShadow(object, distanceSq);",
             "            }",
-            "            const runtimeScene = rootObject.getRuntimeScene();",
-            "            let distanceSq = 0;",
-            "            if (!isSelected) {",
-            "                const layerName = rootObject.getLayer();",
-            "                const cameraX = gdjs.evtTools.camera.getCameraX(runtimeScene, layerName, 0);",
-            "                const cameraY = gdjs.evtTools.camera.getCameraY(runtimeScene, layerName, 0);",
-            "                const cameraZ = gdjs.scene3d.camera.getCameraZ(runtimeScene, layerName, 0);",
-            "                const deltaX = rootObject.getX() - cameraX;",
-            "                const deltaY = rootObject.getY() - cameraY;",
-            "                const deltaZ = rootObject.getZ() - cameraZ;",
-            "                distanceSq = deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ;",
-            "            }",
-            "            getLightManager(",
-            "                //@ts-ignore",
-            "                runtimeScene",
-            "            ).applyVisibilityAndShadow(object, distanceSq);",
             "        }",
             "",
             "        // Force the visibility to be checked every frame",
             "        this._isContainerDirty = true;",
             "    }",
-            "}",
-            "",
-            "gdjs.registerRuntimeScenePreEventsCallback(",
-            "    runtimeScene => {",
-            "        getLightManager(",
-            "            //@ts-ignore",
-            "            runtimeScene.getScene()",
-            "        ).clear();",
-            "    });",
-            "if (gdjs.registerInGameEditorPostStepCallback) {",
-            "    gdjs.registerInGameEditorPostStepCallback(",
-            "        inGameEditor => {",
-            "            getLightManager(",
-            "                //@ts-ignore",
-            "                inGameEditor.getEditedInstanceContainer().getScene()",
-            "            ).clear();",
-            "        });",
             "}",
             "",
             "const editorLightCountMax = {",
@@ -635,6 +618,23 @@
             "const lightShadowCountMax = {",
             "    value: 4",
             "};",
+            "",
+            "gdjs.registerRuntimeScenePreEventsCallback(",
+            "    runtimeScene => {",
+            "        getLightManager(",
+            "            //@ts-ignore",
+            "            runtimeScene.getScene()",
+            "        ).clear();",
+            "    });",
+            "if (gdjs.registerInGameEditorPostStepCallback) {",
+            "    gdjs.registerInGameEditorPostStepCallback(",
+            "        inGameEditor => {",
+            "            getLightManager(",
+            "                //@ts-ignore",
+            "                inGameEditor.getEditedInstanceContainer().getScene()",
+            "            ).clear();",
+            "        });",
+            "}",
             "",
             "/**",
             " * Get the platforms manager of an instance container.",
@@ -2063,6 +2063,23 @@
               "parameterObjects": "Object",
               "useStrict": true,
               "eventsSheetExpanded": false
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::SetConeLength"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "ConeLength",
+                    ""
+                  ]
+                }
+              ]
             }
           ],
           "parameters": [
@@ -2403,21 +2420,18 @@
                     "=",
                     "Value"
                   ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::ApplyShadowCameraFarPlane"
+                  },
+                  "parameters": [
+                    "Object",
+                    "min(Value, ConeLength)",
+                    ""
+                  ]
                 }
               ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::JsCode",
-              "inlineCode": [
-                "const object = objects[0];\r",
-                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
-                "\r",
-                "object.__spotLightAdapter.setShadowCameraFarPlane(value);\r",
-                ""
-              ],
-              "parameterObjects": "Object",
-              "useStrict": true,
-              "eventsSheetExpanded": false
             }
           ],
           "parameters": [
@@ -2486,8 +2500,167 @@
                     "Value"
                   ]
                 }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "BooleanVariable"
+                      },
+                      "parameters": [
+                        "IsCastingShadow",
+                        "=",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "Light3D::SpotLight3D::ApplyConeLength"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Value",
+                        ""
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Comment",
+                  "color": {
+                    "b": 109,
+                    "g": 230,
+                    "r": 255,
+                    "textB": 0,
+                    "textG": 0,
+                    "textR": 0
+                  },
+                  "comment": "When the shadow is disable by culling, the light should not go through."
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "BooleanVariable"
+                      },
+                      "parameters": [
+                        "IsCastingShadow",
+                        "True",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "NumberVariable"
+                          },
+                          "parameters": [
+                            "Value",
+                            "=",
+                            "0"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "Light3D::SpotLight3D::ApplyConeLength"
+                          },
+                          "parameters": [
+                            "Object",
+                            "ShadowCameraFarPlane",
+                            ""
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "NumberVariable"
+                          },
+                          "parameters": [
+                            "Value",
+                            "!=",
+                            "0"
+                          ]
+                        }
+                      ],
+                      "actions": [
+                        {
+                          "type": {
+                            "value": "Light3D::SpotLight3D::ApplyConeLength"
+                          },
+                          "parameters": [
+                            "Object",
+                            "min(Value, ShadowCameraFarPlane)",
+                            ""
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
               ]
             },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Three.js reduces the far plane to match the light range.\nSo, we need to set it again or it will stay at the lowest value the range took.\nWe do the min() on our side to in order:\n- to avoid a side effect when Three.js is upgraded\n- because Three.js keeps the old value in cache and doesn't apply it back unless we set the lower value explicitly ourselves."
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::ApplyShadowCameraFarPlane"
+                  },
+                  "parameters": [
+                    "Object",
+                    "min(Value, ShadowCameraFarPlane)",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Apply cone length",
+          "functionType": "Action",
+          "name": "ApplyConeLength",
+          "private": true,
+          "sentence": "Apply cone length of _PARAM0_ to _PARAM1_",
+          "events": [
             {
               "type": "BuiltinCommonInstructions::JsCode",
               "inlineCode": [
@@ -2508,6 +2681,48 @@
               "name": "Object",
               "supplementaryInformation": "Light3D::SpotLight3D",
               "type": "object"
+            },
+            {
+              "description": "Value",
+              "name": "Value",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Apply shadow camera far plane",
+          "functionType": "Action",
+          "group": "3D spot light shadow configuration",
+          "name": "ApplyShadowCameraFarPlane",
+          "private": true,
+          "sentence": "Apply shadow camera far plane of _PARAM0_ to _PARAM1_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__spotLightAdapter.setShadowCameraFarPlane(value);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            },
+            {
+              "description": "Value",
+              "name": "Value",
+              "type": "expression"
             }
           ],
           "objectGroups": []
@@ -2570,6 +2785,9 @@
             "functionName": "SetConeLength"
           },
           {
+            "functionName": "ApplyConeLength"
+          },
+          {
             "functionName": "ConeAngle"
           },
           {
@@ -2607,6 +2825,9 @@
               },
               {
                 "functionName": "SetShadowCameraFarPlane"
+              },
+              {
+                "functionName": "ApplyShadowCameraFarPlane"
               }
             ]
           }
@@ -3561,6 +3782,17 @@
                   "parameters": [
                     "True"
                   ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::SetRange"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Range",
+                    ""
+                  ]
                 }
               ]
             }
@@ -3823,6 +4055,23 @@
               "parameterObjects": "Object",
               "useStrict": true,
               "eventsSheetExpanded": false
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::SetRange"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Range",
+                    ""
+                  ]
+                }
+              ]
             }
           ],
           "parameters": [
@@ -3892,21 +4141,18 @@
                     "=",
                     "Value"
                   ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::ApplyShadowCameraFarPlane"
+                  },
+                  "parameters": [
+                    "Object",
+                    "min(Value, Range)",
+                    ""
+                  ]
                 }
               ]
-            },
-            {
-              "type": "BuiltinCommonInstructions::JsCode",
-              "inlineCode": [
-                "const object = objects[0];\r",
-                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
-                "\r",
-                "object.__pointLightAdapter.setShadowCameraFarPlane(value);\r",
-                ""
-              ],
-              "parameterObjects": "Object",
-              "useStrict": true,
-              "eventsSheetExpanded": false
             }
           ],
           "parameters": [
@@ -3988,6 +4234,34 @@
               "parameterObjects": "Object",
               "useStrict": true,
               "eventsSheetExpanded": false
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Three.js reduces the far plane to match the light range.\nSo, we need to set it again or it will stay at the lowest value the range took.\nWe do the min() on our side to in order:\n- to avoid a side effect when Three.js is upgraded\n- because Three.js keeps the old value in cache and doesn't apply it back unless we set the lower value explicitly ourselves."
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::ApplyShadowCameraFarPlane"
+                  },
+                  "parameters": [
+                    "Object",
+                    "min(Value, ShadowCameraFarPlane)",
+                    ""
+                  ]
+                }
+              ]
             }
           ],
           "parameters": [
@@ -3996,6 +4270,43 @@
               "name": "Object",
               "supplementaryInformation": "Light3D::PointLight3D",
               "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Apply shadow camera far plane",
+          "functionType": "Action",
+          "group": "3D point light shadow configuration",
+          "name": "ApplyShadowCameraFarPlane",
+          "private": true,
+          "sentence": "Apply shadow camera far plane of _PARAM0_ to _PARAM1_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__pointLightAdapter.setShadowCameraFarPlane(value);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            },
+            {
+              "description": "Value",
+              "name": "Value",
+              "type": "expression"
             }
           ],
           "objectGroups": []
@@ -4069,6 +4380,9 @@
               },
               {
                 "functionName": "SetShadowCameraFarPlane"
+              },
+              {
+                "functionName": "ApplyShadowCameraFarPlane"
               }
             ]
           }
@@ -4141,12 +4455,11 @@
           "name": "ShadowCameraFarPlane"
         },
         {
-          "value": "0",
+          "value": "2000",
           "type": "Number",
           "unit": "Pixel",
           "label": "Range",
           "description": "0 means no limit.",
-          "advanced": true,
           "name": "Range"
         }
       ],
