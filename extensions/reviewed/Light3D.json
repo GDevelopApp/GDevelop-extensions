@@ -223,7 +223,7 @@
             "    }",
             "",
             "    /**",
-            "     * @param shadowQuality {\"Low\" | \"Medium\" | \"High\"}",
+            "     * @param shadowQuality {\"Low\" | \"Medium\" | \"High\" | \"VeryHigh\"}",
             "     */",
             "    setShadowQuality(shadowQuality) {",
             "        let size = 512;",
@@ -271,9 +271,19 @@
             "",
             "    /**",
             "     * @param value {number}",
+            "     * @param quality {\"Low\" | \"Medium\" | \"High\"}",
+            "     * @param coneAngle {number}",
             "     */",
-            "    setShadowBias(value) {",
-            "        this.spotLight.shadow.bias = -value;",
+            "    setShadowBias(value, quality, coneAngle) {",
+            "        const biasMultiplier =",
+            "            quality === 'Low'",
+            "                ? 8",
+            "                : quality === 'Medium'",
+            "                    ? 4",
+            "                    : quality === 'High'",
+            "                        ? 2 : 1;",
+            "        this.spotLight.shadow.bias = -value * biasMultiplier *",
+            "            Math.tan(gdjs.toRad(gdjs.evtTools.common.clamp(coneAngle, 0, 89)));",
             "    }",
             "",
             "    /**",
@@ -337,8 +347,8 @@
             "     * @param {PointLightRuntimeObject} object",
             "\t */",
             "    constructor(object) {",
-            "\t\tconst geometry = new THREE.SphereGeometry( 16, 4, 2 );",
-            "\t\tconst material = new THREE.MeshBasicMaterial( { wireframe: true, fog: false, toneMapped: false } );",
+            "        const geometry = new THREE.SphereGeometry(16, 4, 2);",
+            "        const material = new THREE.MeshBasicMaterial({ wireframe: true, fog: false, toneMapped: false });",
             "        super(geometry, material);",
             "        this.object = object;",
             "        this.update();",
@@ -348,8 +358,8 @@
             "    }",
             "",
             "    dispose() {",
-            "\t\tthis.geometry.dispose();",
-            "\t\tthis.material.dispose();",
+            "        this.geometry.dispose();",
+            "        this.material.dispose();",
             "    }",
             "",
             "    update() {",
@@ -481,9 +491,16 @@
             "",
             "    /**",
             "     * @param value {number}",
+            "     * @param quality {\"Low\" | \"Medium\" | \"High\"}",
             "     */",
-            "    setShadowBias(value) {",
-            "        this.pointLight.shadow.bias = -value;",
+            "    setShadowBias(value, quality) {",
+            "        const biasMultiplier =",
+            "            quality === 'Low'",
+            "                ? 4",
+            "                : quality === 'Medium'",
+            "                    ? 2",
+            "                    : 1;",
+            "        this.pointLight.shadow.bias = -value * biasMultiplier;",
             "    }",
             "}",
             "",
@@ -1620,6 +1637,18 @@
                     "=",
                     "Value"
                   ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::ApplyShadowBias"
+                  },
+                  "parameters": [
+                    "Object",
+                    "ShadowBias",
+                    "ShadowQuality",
+                    "ConeAngle",
+                    ""
+                  ]
                 }
               ]
             },
@@ -2279,6 +2308,18 @@
                     "=",
                     "Value"
                   ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::ApplyShadowBias"
+                  },
+                  "parameters": [
+                    "Object",
+                    "ShadowBias",
+                    "ShadowQuality",
+                    "ConeAngle",
+                    ""
+                  ]
                 }
               ]
             },
@@ -2676,16 +2717,49 @@
                     "=",
                     "Value"
                   ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::ApplyShadowBias"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Value",
+                    "ShadowQuality",
+                    "ConeAngle",
+                    ""
+                  ]
                 }
               ]
-            },
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Apply shadow bias",
+          "functionType": "Action",
+          "group": "3D spot light shadow configuration",
+          "name": "ApplyShadowBias",
+          "private": true,
+          "sentence": "Apply shadow bias of _PARAM0_ to _PARAM1_ for a _PARAM2_ quality and cone angle _PARAM3_",
+          "events": [
             {
               "type": "BuiltinCommonInstructions::JsCode",
               "inlineCode": [
                 "const object = objects[0];\r",
                 "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "const quality = eventsFunctionContext.getArgument(\"Quality\");\r",
+                "const coneAngle = eventsFunctionContext.getArgument(\"Angle\");\r",
                 "\r",
-                "object.__spotLightAdapter.setShadowBias(value);\r",
+                "object.__spotLightAdapter.setShadowBias(value, quality, coneAngle);\r",
                 ""
               ],
               "parameterObjects": "Object",
@@ -2699,6 +2773,21 @@
               "name": "Object",
               "supplementaryInformation": "Light3D::SpotLight3D",
               "type": "object"
+            },
+            {
+              "description": "Value",
+              "name": "Value",
+              "type": "expression"
+            },
+            {
+              "description": "Quality",
+              "name": "Quality",
+              "type": "string"
+            },
+            {
+              "description": "Cone angle",
+              "name": "Angle",
+              "type": "expression"
             }
           ],
           "objectGroups": []
@@ -2807,6 +2896,9 @@
               },
               {
                 "functionName": "SetShadowBias"
+              },
+              {
+                "functionName": "ApplyShadowBias"
               }
             ]
           }
@@ -3962,6 +4054,17 @@
                     "=",
                     "Value"
                   ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::ApplyShadowBias"
+                  },
+                  "parameters": [
+                    "Object",
+                    "ShadowBias",
+                    "ShadowQuality",
+                    ""
+                  ]
                 }
               ]
             },
@@ -4373,16 +4476,47 @@
                     "=",
                     "Value"
                   ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::ApplyShadowBias"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Value",
+                    "ShadowQuality",
+                    ""
+                  ]
                 }
               ]
-            },
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Apply shadow bias",
+          "functionType": "Action",
+          "group": "3D point light shadow configuration",
+          "name": "ApplyShadowBias",
+          "private": true,
+          "sentence": "Apply shadow bias of _PARAM0_ to _PARAM1_ for a _PARAM2_ quality",
+          "events": [
             {
               "type": "BuiltinCommonInstructions::JsCode",
               "inlineCode": [
                 "const object = objects[0];\r",
                 "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "const quality = eventsFunctionContext.getArgument(\"Quality\");\r",
                 "\r",
-                "object.__pointLightAdapter.setShadowBias(value);\r",
+                "object.__pointLightAdapter.setShadowBias(value, quality);\r",
                 ""
               ],
               "parameterObjects": "Object",
@@ -4396,6 +4530,16 @@
               "name": "Object",
               "supplementaryInformation": "Light3D::PointLight3D",
               "type": "object"
+            },
+            {
+              "description": "Value",
+              "name": "Value",
+              "type": "expression"
+            },
+            {
+              "description": "Quality",
+              "name": "Quality",
+              "type": "string"
             }
           ],
           "objectGroups": []
@@ -4478,6 +4622,9 @@
               },
               {
                 "functionName": "SetShadowBias"
+              },
+              {
+                "functionName": "ApplyShadowBias"
               }
             ]
           }
