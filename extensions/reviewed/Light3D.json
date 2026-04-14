@@ -1,0 +1,4759 @@
+{
+  "author": "",
+  "category": "Visual effect",
+  "dimension": "3D",
+  "extensionNamespace": "",
+  "fullName": "3D lights",
+  "gdevelopVersion": ">=5.5.222",
+  "helpPath": "/objects/3d-light",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWxpZ2h0YnVsYi1vbi1vdXRsaW5lIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTIwLDExSDIzVjEzSDIwVjExTTEsMTFINFYxM0gxVjExTTEzLDFWNEgxMVYxSDEzTTQuOTIsMy41TDcuMDUsNS42NEw1LjYzLDcuMDVMMy41LDQuOTNMNC45MiwzLjVNMTYuOTUsNS42M0wxOS4wNywzLjVMMjAuNSw0LjkzTDE4LjM3LDcuMDVMMTYuOTUsNS42M00xMiw2QTYsNiAwIDAsMSAxOCwxMkMxOCwxNC4yMiAxNi43OSwxNi4xNiAxNSwxNy4yVjE5QTEsMSAwIDAsMSAxNCwyMEgxMEExLDEgMCAwLDEgOSwxOVYxNy4yQzcuMjEsMTYuMTYgNiwxNC4yMiA2LDEyQTYsNiAwIDAsMSAxMiw2TTE0LDIxVjIyQTEsMSAwIDAsMSAxMywyM0gxMUExLDEgMCAwLDEgMTAsMjJWMjFIMTRNMTEsMThIMTNWMTUuODdDMTQuNzMsMTUuNDMgMTYsMTMuODYgMTYsMTJBNCw0IDAgMCwwIDEyLDhBNCw0IDAgMCwwIDgsMTJDOCwxMy44NiA5LjI3LDE1LjQzIDExLDE1Ljg3VjE4WiIgLz48L3N2Zz4=",
+  "name": "Light3D",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/f237ae4e3b857c556846c7b2c0b132556fd4bcdeff217034b4d9c97dc1aab1d6_lightbulb-on-outline.svg",
+  "shortDescription": "A collection of light object for 3D.",
+  "version": "1.0.0",
+  "description": "A collection of light object for 3D.",
+  "tags": [
+    "3d",
+    "light"
+  ],
+  "authorIds": [
+    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
+  ],
+  "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
+  "eventsFunctions": [
+    {
+      "description": "Define spot light helper classes JavaScript code.",
+      "fullName": "Define spot light helper classes",
+      "functionType": "Action",
+      "name": "DefineSpotLightHelperClasses",
+      "private": true,
+      "sentence": "Define spot light helper classes JavaScript code",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "//@ts-ignore",
+            "if (gdjs.__light3DExtension.spot) {",
+            "    //@ts-ignore",
+            "    return;",
+            "}",
+            "",
+            "/**",
+            " * @typedef {gdjs.CustomRuntimeObject3D & {__cameraDistance: number, __light3D: THREE.SpotLight, _getIsCastingShadow: () => boolean, _getConeAngle: () => number, _getColor: () => string}} SpotLightRuntimeObject",
+            " */",
+            "",
+            "const game = runtimeScene.getGame();",
+            "",
+            "const coneLength = 64;",
+            "",
+            "class SpotLightHelper extends THREE.Object3D {",
+            "    /** @type {SpotLightRuntimeObject} */",
+            "    object;",
+            "    /** @type {THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>} */",
+            "    cone;",
+            "    /** @type {THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>} */",
+            "    centerLine;",
+            "    /** @type {THREE.Mesh<THREE.BoxGeometry, THREE.MeshBasicMaterial>} */",
+            "    originBox;",
+            "",
+            "\t/**",
+            "     * @param {SpotLightRuntimeObject} object",
+            "\t */",
+            "    constructor(object) {",
+            "        super();",
+            "        this.object = object;",
+            "        this.type = 'SpotLightHelper';",
+            "",
+            "        const coneGeometry = new THREE.BufferGeometry();",
+            "        const conePositions = [",
+            "            0, 0, 0, 1, 0, 0,",
+            "            0, 0, 0, 1, 1, 0,",
+            "            0, 0, 0, 1, - 1, 0,",
+            "            0, 0, 0, 1, 0, 1,",
+            "            0, 0, 0, 1, 0, - 1",
+            "        ];",
+            "        for (let i = 0, j = 1, l = 32; i < l; i++ , j++) {",
+            "            const p1 = (i / l) * Math.PI * 2;",
+            "            const p2 = (j / l) * Math.PI * 2;",
+            "            conePositions.push(",
+            "                1, Math.cos(p1), Math.sin(p1),",
+            "                1, Math.cos(p2), Math.sin(p2)",
+            "            );",
+            "        }",
+            "        coneGeometry.setAttribute('position', new THREE.Float32BufferAttribute(conePositions, 3));",
+            "        this.cone = new THREE.LineSegments(",
+            "            coneGeometry,",
+            "            new THREE.LineBasicMaterial({ fog: false, toneMapped: false })",
+            "        );",
+            "        this.add(this.cone);",
+            "        const centerLineGeometry = new THREE.BufferGeometry();",
+            "        centerLineGeometry.setAttribute('position', new THREE.Float32BufferAttribute([",
+            "            0, 0, 0, coneLength, 0, 0",
+            "        ], 3));",
+            "        this.centerLine = new THREE.LineSegments(",
+            "            centerLineGeometry,",
+            "            new THREE.LineBasicMaterial({ fog: false, toneMapped: false })",
+            "        );",
+            "        this.add(this.centerLine);",
+            "",
+            "        this.originBox = new THREE.Mesh(",
+            "            new THREE.BoxGeometry(16, 16, 16),",
+            "            new THREE.MeshBasicMaterial({ fog: false, toneMapped: false })",
+            "        );",
+            "        this.add(this.originBox);",
+            "        this.update();",
+            "",
+            "        //@ts-ignore",
+            "        this.originBox.gdjsRuntimeObject = object;",
+            "    }",
+            "",
+            "    dispose() {",
+            "        this.cone.geometry.dispose();",
+            "        this.cone.material.dispose();",
+            "        this.centerLine.geometry.dispose();",
+            "        this.centerLine.material.dispose();",
+            "        this.originBox.geometry.dispose();",
+            "        this.originBox.material.dispose();",
+            "    }",
+            "",
+            "    update() {",
+            "        /** @type {number} */",
+            "        const coneAngle = gdjs.toRad(this.object._getConeAngle());",
+            "        const coneWidth = coneLength * Math.sin(coneAngle);",
+            "        const coneHeight = coneLength * Math.cos(coneAngle);",
+            "        this.cone.scale.set(coneHeight, coneWidth, coneWidth);",
+            "        const color = gdjs.rgbOrHexStringToNumber(this.object._getColor());",
+            "        this.cone.material.color.set(color);",
+            "        this.centerLine.material.color.set(color);",
+            "        this.originBox.material.color.set(color);",
+            "    }",
+            "}",
+            "",
+            "/**",
+            " * @param {string} colorString",
+            " * @param {THREE.Color} threeColor",
+            " */",
+            "const setThreeColor = (colorString, threeColor) => {",
+            "    const integerColor = gdjs.rgbOrHexToRGBColor(colorString);",
+            "    threeColor.r = integerColor[0] / 255;",
+            "    threeColor.g = integerColor[1] / 255;",
+            "    threeColor.b = integerColor[2] / 255;",
+            "};",
+            "",
+            "class SpotLightAdapter {",
+            "    /**",
+            "     * @param object {gdjs.CustomRuntimeObject3D}",
+            "     * @param spotLight {THREE.SpotLight}",
+            "     */",
+            "    constructor(object, spotLight) {",
+            "        this.object = object;",
+            "        this.spotLight = spotLight;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param targetX {number}",
+            "     * @param targetY {number}",
+            "     * @param targetZ {number}",
+            "     */",
+            "    lookAtPosition(targetX, targetY, targetZ) {",
+            "        // Remove from the parent to avoid the scene scale of -1 on Y to mess with the formula.",
+            "        const parent = this.spotLight.parent;",
+            "        this.spotLight.parent = null;",
+            "        this.spotLight.lookAt(targetX, targetY, targetZ);",
+            "        this.spotLight.parent = parent;",
+            "",
+            "        // Angle setters update Three.js angles, so we save them first.",
+            "        const rotationX = gdjs.toDegrees(this.spotLight.rotation.x);",
+            "        const rotationY = gdjs.toDegrees(this.spotLight.rotation.y);",
+            "        const rotationZ = gdjs.toDegrees(this.spotLight.rotation.z);",
+            "        this.object.setRotationX(rotationX);",
+            "        this.object.setRotationY(rotationY);",
+            "        this.object.setAngle(rotationZ + 90);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param color {string}",
+            "     */",
+            "    setColor(color) {",
+            "        setThreeColor(color, this.spotLight.color);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param intensity {number}",
+            "     */",
+            "    setIntensity(intensity) {",
+            "        this.spotLight.intensity = intensity;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param decay {number}",
+            "     */",
+            "    setDecay(decay) {",
+            "        this.spotLight.decay = decay;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param value {number}",
+            "     */",
+            "    setConeLength(value) {",
+            "        this.spotLight.distance = value;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param coneAngle {number}",
+            "     */",
+            "    setConeAngle(coneAngle) {",
+            "        this.spotLight.angle = coneAngle * Math.PI / 180;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param smoothing {number}",
+            "     */",
+            "    setSmoothing(smoothing) {",
+            "        this.spotLight.penumbra = smoothing;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param isCastingShadow {boolean}",
+            "     */",
+            "    setCastingShadow(isCastingShadow) {",
+            "        // This is applied by applyVisibilityAndShadow",
+            "    }",
+            "",
+            "    /**",
+            "     * @param shadowQuality {\"Low\" | \"Medium\" | \"High\" | \"VeryHigh\"}",
+            "     */",
+            "    setShadowQuality(shadowQuality) {",
+            "        let size = 512;",
+            "        switch (shadowQuality) {",
+            "            case \"Low\":",
+            "                size = 256;",
+            "                break;",
+            "            case \"Medium\":",
+            "                size = 512;",
+            "                break;",
+            "            case \"High\":",
+            "                size = 1024;",
+            "                break;",
+            "            case \"VeryHigh\":",
+            "                size = 2048;",
+            "                break;",
+            "        }",
+            "        const shadow = this.spotLight.shadow;",
+            "        const mapSize = shadow.mapSize;",
+            "        if (mapSize.width !== size) {",
+            "            mapSize.set(size, size);",
+            "",
+            "            // Force the recreation of the shadow map texture:",
+            "            if (shadow.map) {",
+            "                shadow.map.dispose();",
+            "                shadow.map = null;",
+            "            }",
+            "            shadow.needsUpdate = true;",
+            "        }",
+            "    }",
+            "",
+            "    /**",
+            "     * @param value {number}",
+            "     */",
+            "    setShadowCameraNearPlane(value) {",
+            "        this.spotLight.shadow.camera.near = value;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param value {number}",
+            "     */",
+            "    setShadowCameraFarPlane(value) {",
+            "        this.spotLight.shadow.camera.far = value;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param value {number}",
+            "     * @param quality {\"Low\" | \"Medium\" | \"High\" | \"VeryHigh\"}",
+            "     * @param coneAngle {number}",
+            "     */",
+            "    setShadowBias(value, quality, coneAngle) {",
+            "        const biasMultiplier =",
+            "            quality === 'Low'",
+            "                ? 8",
+            "                : quality === 'Medium'",
+            "                    ? 4",
+            "                    : quality === 'High'",
+            "                        ? 2 : 1;",
+            "        // Multiply by 0.125 to make values around 0.001 work best.",
+            "        this.spotLight.shadow.bias = -value * 0.125 * biasMultiplier *",
+            "            Math.tan(gdjs.toRad(gdjs.evtTools.common.clamp(coneAngle, 0, 89)));",
+            "    }",
+            "",
+            "    /**",
+            "     * @param resourceName {string}",
+            "     */",
+            "    setImage(resourceName) {",
+            "        if (!resourceName) {",
+            "            this.spotLight.map = null;",
+            "            return;",
+            "        }",
+            "        const texture = game.getImageManager().getThreeTexture(resourceName);",
+            "        this.spotLight.map = texture;",
+            "    }",
+            "}",
+            "",
+            "//@ts-ignore",
+            "gdjs.__light3DExtension.spot = {",
+            "    SpotLightAdapter,",
+            "    SpotLightHelper,",
+            "}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Define point light helper classes JavaScript code.",
+      "fullName": "Define point light helper classes",
+      "functionType": "Action",
+      "name": "DefinePointLightHelperClasses",
+      "private": true,
+      "sentence": "Define point light helper classes JavaScript code",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "//@ts-ignore",
+            "if (gdjs.__light3DExtension.point) {",
+            "    //@ts-ignore",
+            "    return;",
+            "}",
+            "",
+            "/**",
+            " * @typedef {gdjs.CustomRuntimeObject3D & {__cameraDistance: number, __light3D: THREE.PointLight, _getIsCastingShadow: () => boolean, _getColor: () => string}} PointLightRuntimeObject",
+            " */",
+            "",
+            "const game = runtimeScene.getGame();",
+            "",
+            "/**",
+            " * @extends {THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>}",
+            " */",
+            "class PointLightHelper extends THREE.Mesh {",
+            "    /** @type {PointLightRuntimeObject} */",
+            "    object;",
+            "",
+            "\t/**",
+            "     * @param {PointLightRuntimeObject} object",
+            "\t */",
+            "    constructor(object) {",
+            "        const geometry = new THREE.SphereGeometry(16, 4, 2);",
+            "        const material = new THREE.MeshBasicMaterial({ wireframe: true, fog: false, toneMapped: false });",
+            "        super(geometry, material);",
+            "        this.object = object;",
+            "        this.update();",
+            "",
+            "        //@ts-ignore",
+            "        this.gdjsRuntimeObject = object;",
+            "    }",
+            "",
+            "    dispose() {",
+            "        this.geometry.dispose();",
+            "        this.material.dispose();",
+            "    }",
+            "",
+            "    update() {",
+            "        const color = gdjs.rgbOrHexStringToNumber(this.object._getColor());",
+            "        this.material.color.set(color);",
+            "    }",
+            "}",
+            "",
+            "/**",
+            " * @param {string} colorString",
+            " * @param {THREE.Color} threeColor",
+            " */",
+            "const setThreeColor = (colorString, threeColor) => {",
+            "    const integerColor = gdjs.rgbOrHexToRGBColor(colorString);",
+            "    threeColor.r = integerColor[0] / 255;",
+            "    threeColor.g = integerColor[1] / 255;",
+            "    threeColor.b = integerColor[2] / 255;",
+            "};",
+            "",
+            "class PointLightAdapter {",
+            "    /**",
+            "     * @param object {gdjs.CustomRuntimeObject3D}",
+            "     * @param pointLight {THREE.PointLight}",
+            "     */",
+            "    constructor(object, pointLight) {",
+            "        this.object = object;",
+            "        this.pointLight = pointLight;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param targetX {number}",
+            "     * @param targetY {number}",
+            "     * @param targetZ {number}",
+            "     */",
+            "    lookAtPosition(targetX, targetY, targetZ) {",
+            "        // Remove from the parent to avoid the scene scale of -1 on Y to mess with the formula.",
+            "        const parent = this.pointLight.parent;",
+            "        this.pointLight.parent = null;",
+            "        this.pointLight.lookAt(targetX, targetY, targetZ);",
+            "        this.pointLight.parent = parent;",
+            "",
+            "        // Angle setters update Three.js angles, so we save them first.",
+            "        const rotationX = gdjs.toDegrees(this.pointLight.rotation.x);",
+            "        const rotationY = gdjs.toDegrees(this.pointLight.rotation.y);",
+            "        const rotationZ = gdjs.toDegrees(this.pointLight.rotation.z);",
+            "        this.object.setRotationX(rotationX);",
+            "        this.object.setRotationY(rotationY);",
+            "        this.object.setAngle(rotationZ + 90);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param color {string}",
+            "     */",
+            "    setColor(color) {",
+            "        setThreeColor(color, this.pointLight.color);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param intensity {number}",
+            "     */",
+            "    setIntensity(intensity) {",
+            "        this.pointLight.intensity = intensity;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param decay {number}",
+            "     */",
+            "    setDecay(decay) {",
+            "        this.pointLight.decay = decay;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param value {number}",
+            "     */",
+            "    setRange(value) {",
+            "        this.pointLight.distance = value;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param isCastingShadow {boolean}",
+            "     */",
+            "    setCastingShadow(isCastingShadow) {",
+            "        // This is applied by applyVisibilityAndShadow",
+            "    }",
+            "",
+            "    /**",
+            "     * @param shadowQuality {\"Low\" | \"Medium\" | \"High\"}",
+            "     */",
+            "    setShadowQuality(shadowQuality) {",
+            "        let size = 512;",
+            "        switch (shadowQuality) {",
+            "            case \"Low\":",
+            "                size = 512;",
+            "                break;",
+            "            case \"Medium\":",
+            "                size = 1024;",
+            "                break;",
+            "            case \"High\":",
+            "                size = 2048;",
+            "                break;",
+            "        }",
+            "        const shadow = this.pointLight.shadow;",
+            "        const mapSize = shadow.mapSize;",
+            "        if (mapSize.width !== size) {",
+            "            mapSize.set(size, size);",
+            "",
+            "            // Force the recreation of the shadow map texture:",
+            "            if (shadow.map) {",
+            "                shadow.map.dispose();",
+            "                shadow.map = null;",
+            "            }",
+            "            shadow.needsUpdate = true;",
+            "        }",
+            "    }",
+            "",
+            "    /**",
+            "     * @param value {number}",
+            "     */",
+            "    setShadowCameraNearPlane(value) {",
+            "        this.pointLight.shadow.camera.near = value;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param value {number}",
+            "     */",
+            "    setShadowCameraFarPlane(value) {",
+            "        this.pointLight.shadow.camera.far = value;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param value {number}",
+            "     * @param quality {\"Low\" | \"Medium\" | \"High\"}",
+            "     */",
+            "    setShadowBias(value, quality) {",
+            "        const biasMultiplier =",
+            "            quality === 'Low'",
+            "                ? 4",
+            "                : quality === 'Medium'",
+            "                    ? 2",
+            "                    : 1;",
+            "        this.pointLight.shadow.bias = -value * biasMultiplier;",
+            "    }",
+            "}",
+            "",
+            "//@ts-ignore",
+            "gdjs.__light3DExtension.point = {",
+            "    PointLightAdapter,",
+            "    PointLightHelper,",
+            "}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Define helper classes JavaScript code.",
+      "fullName": "Define helper classes",
+      "functionType": "Action",
+      "name": "DefineHelperClasses",
+      "private": true,
+      "sentence": "Define helper classes JavaScript code",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "//@ts-ignore",
+            "if (gdjs.__light3DExtension) {",
+            "    //@ts-ignore",
+            "    return;",
+            "}",
+            "",
+            "/**",
+            " * @typedef {gdjs.CustomRuntimeObject3D & {__cameraDistance: number, __light3D: THREE.SpotLight | THREE.PointLight, _getIsCastingShadow: () => boolean}} LightRuntimeObject",
+            " */",
+            "",
+            "const game = runtimeScene.getGame();",
+            "const isInGameEdition = game.isInGameEdition && game.isInGameEdition();",
+            "",
+            "",
+            "class Light3DRenderer extends gdjs.CustomRuntimeObject3DRenderer {",
+            "",
+            "    constructor(",
+            "        object,",
+            "        instanceContainer,",
+            "        parent",
+            "    ) {",
+            "        super(object, instanceContainer, parent);",
+            "    }",
+            "",
+            "    _updateThreeGroup() {",
+            "        /** @type {LightRuntimeObject} */",
+            "        //@ts-ignore",
+            "        const object = this._object;",
+            "        const threeObject3D = this.get3DRendererObject();",
+            "",
+            "        threeObject3D.rotation.set(",
+            "            gdjs.toRad(object.getRotationX()),",
+            "            gdjs.toRad(object.getRotationY()),",
+            "            gdjs.toRad(object.angle)",
+            "        );",
+            "",
+            "        threeObject3D.position.set(",
+            "            object.getX(),",
+            "            object.getY(),",
+            "            object.getZ()",
+            "        );",
+            "",
+            "        // Force the scale to 1 because the light doesn't really has a size.",
+            "        threeObject3D.scale.set(",
+            "            object.isFlippedX() ? -1 : 1,",
+            "            object.isFlippedY() ? -1 : 1,",
+            "            object.isFlippedZ() ? -1 : 1",
+            "        );",
+            "",
+            "        threeObject3D.visible = !this._object.hidden;",
+            "",
+            "        const spotLight = object.__light3D;",
+            "",
+            "        const editor = game.getInGameEditor ? game.getInGameEditor() : null;",
+            "",
+            "        spotLight.castShadow = false;",
+            "        spotLight.visible = false;",
+            "",
+            "        if (!object.isHidden()) {",
+            "            let isSelected = false;",
+            "            if (editor) {",
+            "                const selectedObject = editor._selection.getLastSelectedObject();",
+            "                let parentObject = object;",
+            "                isSelected = parentObject === selectedObject;",
+            "                while (!isSelected && parentObject.getInstanceContainer()",
+            "                    //@ts-ignore",
+            "                    .getOwner) {",
+            "                    parentObject = parentObject.getInstanceContainer()",
+            "                        //@ts-ignore",
+            "                        .getOwner();",
+            "                    isSelected = parentObject === selectedObject;",
+            "                }",
+            "            }",
+            "            if (!editor || !editor.areEffectsHidden() || isSelected) {",
+            "                let rootObject = object;",
+            "                while (rootObject.getInstanceContainer()",
+            "                    //@ts-ignore",
+            "                    .getOwner) {",
+            "                    rootObject = rootObject.getInstanceContainer()",
+            "                        //@ts-ignore",
+            "                        .getOwner();",
+            "                }",
+            "                const runtimeScene = rootObject.getRuntimeScene();",
+            "                let distanceSq = 0;",
+            "                if (!isSelected) {",
+            "                    const layerName = rootObject.getLayer();",
+            "                    const cameraX = gdjs.evtTools.camera.getCameraX(runtimeScene, layerName, 0);",
+            "                    const cameraY = gdjs.evtTools.camera.getCameraY(runtimeScene, layerName, 0);",
+            "                    const cameraZ = gdjs.scene3d.camera.getCameraZ(runtimeScene, layerName, 0);",
+            "                    const deltaX = rootObject.getX() - cameraX;",
+            "                    const deltaY = rootObject.getY() - cameraY;",
+            "                    const deltaZ = rootObject.getZ() - cameraZ;",
+            "                    distanceSq = deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ;",
+            "                }",
+            "                getLightManager(",
+            "                    //@ts-ignore",
+            "                    runtimeScene",
+            "                ).applyVisibilityAndShadow(object, distanceSq);",
+            "            }",
+            "        }",
+            "",
+            "        // Force the visibility to be checked every frame",
+            "        this._isContainerDirty = true;",
+            "    }",
+            "}",
+            "",
+            "const editorLightCountMax = {",
+            "    value: 20",
+            "};",
+            "",
+            "const lightCountMax = {",
+            "    value: 20",
+            "};",
+            "",
+            "const editorLightShadowCountMax = {",
+            "    value: 1",
+            "};",
+            "",
+            "const lightShadowCountMax = {",
+            "    value: 4",
+            "};",
+            "",
+            "gdjs.registerRuntimeScenePreEventsCallback(",
+            "    runtimeScene => {",
+            "        getLightManager(",
+            "            //@ts-ignore",
+            "            runtimeScene.getScene()",
+            "        ).clear();",
+            "    });",
+            "if (gdjs.registerInGameEditorPostStepCallback) {",
+            "    gdjs.registerInGameEditorPostStepCallback(",
+            "        inGameEditor => {",
+            "            getLightManager(",
+            "                //@ts-ignore",
+            "                inGameEditor.getEditedInstanceContainer().getScene()",
+            "            ).clear();",
+            "        });",
+            "}",
+            "",
+            "/**",
+            " * Get the platforms manager of an instance container.",
+            " * @param {gdjs.RuntimeScene & {__lightManager: LightManager}} runtimeScene",
+            " */",
+            "function getLightManager(runtimeScene) {",
+            "    if (!runtimeScene.__lightManager) {",
+            "        // Create the shared manager if necessary.",
+            "        runtimeScene.__lightManager = isInGameEdition ?",
+            "            new LightManager(editorLightCountMax, editorLightShadowCountMax) :",
+            "            new LightManager(lightCountMax, lightShadowCountMax);",
+            "    }",
+            "    return runtimeScene.__lightManager;",
+            "}",
+            "",
+            "/** @type {{isInserted: boolean, removedObject: LightRuntimeObject | null}} */",
+            "const sortResult = { isInserted: false, removedObject: null };",
+            "",
+            "class CappedLightList {",
+            "    /** @type {Array<{object: LightRuntimeObject, weight: number}>} */",
+            "    objects = [];",
+            "    /** @type {{value: number}} */",
+            "    capacity;",
+            "    weight = 0;",
+            "    /** @type {(object: LightRuntimeObject) => void} */",
+            "    onInsertion;",
+            "    /** @type {(object: LightRuntimeObject) => void} */",
+            "    onDeletion;",
+            "",
+            "    /**",
+            "     * @param {{value: number}} capacity",
+            "     * @param {(object: LightRuntimeObject) => void} onInsertion",
+            "     * @param {(object: LightRuntimeObject) => void} onDeletion",
+            "     */",
+            "    constructor(capacity, onInsertion, onDeletion) {",
+            "        this.capacity = capacity;",
+            "        this.onInsertion = onInsertion;",
+            "        this.onDeletion = onDeletion;",
+            "    }",
+            "",
+            "    clear() {",
+            "        this.objects.length = 0;",
+            "        this.weight = 0;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param object {LightRuntimeObject}",
+            "     * @param distance {number}",
+            "     * @param weight {number}",
+            "     */",
+            "    insertByDistance(object, distance, weight) {",
+            "        let insertionIndex = 0;",
+            "        for (let index = this.objects.length - 1; index >= 0; index--) {",
+            "            const { object: other } = this.objects[index];",
+            "            const otherDistance = other.__cameraDistance;",
+            "            if (distance >= otherDistance) {",
+            "                insertionIndex = index + 1;",
+            "                break;",
+            "            }",
+            "        }",
+            "        if (insertionIndex === this.objects.length",
+            "            && this.weight + weight > this.capacity.value) {",
+            "            return;",
+            "        }",
+            "        this.weight += weight;",
+            "",
+            "        let deletedPair = null;",
+            "        while (this.objects.length > 0 && this.weight > this.capacity.value) {",
+            "            deletedPair = this.objects.pop();",
+            "            const { object: removedObject, weight: otherWeight } = deletedPair;",
+            "            this.weight -= otherWeight;",
+            "            this.onDeletion(removedObject);",
+            "        }",
+            "",
+            "        let insertedPair;",
+            "        if (deletedPair) {",
+            "            insertedPair = deletedPair;",
+            "            insertedPair.object = object;",
+            "            insertedPair.weight = weight;",
+            "        }",
+            "        else {",
+            "            insertedPair = { object, weight };",
+            "        }",
+            "        this.onInsertion(object);",
+            "        this.objects.splice(insertionIndex, 0, insertedPair);",
+            "        object.__cameraDistance = distance;",
+            "    }",
+            "}",
+            "",
+            "class LightManager {",
+            "    /** @type {CappedLightList} */",
+            "    visibleObjects;",
+            "    /** @type {CappedLightList} */",
+            "    shadowObjects;",
+            "",
+            "    /**",
+            "     * @param maxCount {{value: number}}",
+            "     * @param shadowCount {{value: number}}",
+            "     */",
+            "    constructor(maxCount, shadowCount) {",
+            "        this.visibleObjects = new CappedLightList(",
+            "            maxCount,",
+            "            (object) => { object.__light3D.visible = true; },",
+            "            (object) => { object.__light3D.visible = false; }",
+            "        );",
+            "        this.shadowObjects = new CappedLightList(",
+            "            shadowCount,",
+            "            (object) => { object.__light3D.castShadow = true; },",
+            "            (object) => { object.__light3D.castShadow = false; }",
+            "        );",
+            "    }",
+            "",
+            "    clear() {",
+            "        this.visibleObjects.clear();",
+            "        this.shadowObjects.clear();",
+            "    }",
+            "",
+            "    /**",
+            "     * @param object {LightRuntimeObject}",
+            "     * @param distance {number}",
+            "     */",
+            "    applyVisibilityAndShadow(object, distance) {",
+            "        if (object._getIsCastingShadow()) {",
+            "            this.shadowObjects.insertByDistance(object, distance,",
+            "                //@ts-ignore",
+            "                object.__light3D.map ? 2 : 1);",
+            "        }",
+            "        this.visibleObjects.insertByDistance(object, distance, 1);",
+            "    }",
+            "}",
+            "",
+            "//@ts-ignore",
+            "gdjs.__light3DExtension = {",
+            "    Light3DRenderer,",
+            "    lightCountMax,",
+            "    lightShadowCountMax,",
+            "}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "the maximum number of nearest lights displayed simultaneously.",
+      "fullName": "Max lights count",
+      "functionType": "ExpressionAndCondition",
+      "name": "LightCountMax",
+      "sentence": "max lights count",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "Light3D::DefineHelperClasses"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "eventsFunctionContext.returnValue = gdjs.__light3DExtension.lightCountMax.value;",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "ActionWithOperator",
+      "getterName": "LightCountMax",
+      "name": "SetLightCountMax",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "Light3D::DefineHelperClasses"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const value = eventsFunctionContext.getArgument(\"Value\");",
+            "",
+            "gdjs.__light3DExtension.lightCountMax.value = value;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "the maximum number of nearest lights displayed with shadow simultaneously.",
+      "fullName": "Max lights with shadow count",
+      "functionType": "ExpressionAndCondition",
+      "name": "LightShadowCountMax",
+      "sentence": "max lights with shadow count",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "Light3D::DefineHelperClasses"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "eventsFunctionContext.returnValue = gdjs.__light3DExtension.lightShadowCountMax.value;",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "ActionWithOperator",
+      "getterName": "LightShadowCountMax",
+      "name": "SetLightShadowCountMax",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "Light3D::DefineHelperClasses"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const value = eventsFunctionContext.getArgument(\"Value\");",
+            "",
+            "gdjs.__light3DExtension.lightShadowCountMax.value = value;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    }
+  ],
+  "eventsFunctionsFolderStructure": {
+    "folderName": "__ROOT",
+    "children": [
+      {
+        "functionName": "DefineHelperClasses"
+      },
+      {
+        "functionName": "DefineSpotLightHelperClasses"
+      },
+      {
+        "functionName": "DefinePointLightHelperClasses"
+      },
+      {
+        "functionName": "LightCountMax"
+      },
+      {
+        "functionName": "SetLightCountMax"
+      },
+      {
+        "functionName": "LightShadowCountMax"
+      },
+      {
+        "functionName": "SetLightShadowCountMax"
+      }
+    ]
+  },
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": [
+    {
+      "areaMaxX": 20,
+      "areaMaxY": 20,
+      "areaMaxZ": 20,
+      "areaMinX": -20,
+      "areaMinY": -20,
+      "areaMinZ": -20,
+      "defaultName": "SpotLight",
+      "description": "Light up a cone like a flashlight.",
+      "fullName": "3D spot light",
+      "helpPath": "",
+      "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWZsYXNobGlnaHQiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNOSwxMEw2LDVIMThMMTUsMTBIOU0xOCw0SDZWMkgxOFY0TTksMjJWMTFIMTVWMjJIOU0xMiwxM0ExLDEgMCAwLDAgMTEsMTRBMSwxIDAgMCwwIDEyLDE1QTEsMSAwIDAsMCAxMywxNEExLDEgMCAwLDAgMTIsMTNaIiAvPjwvc3ZnPg==",
+      "is3D": true,
+      "isUsingLegacyInstancesRenderer": false,
+      "name": "SpotLight3D",
+      "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/b627f8e676b3aac26945b2c38db0cfa787d34d2eff23755d4eb1289452f6cd28_flashlight.svg",
+      "objects": [
+        {
+          "assetStoreId": "",
+          "name": "Placeholder",
+          "persistentUuid": "6786eefd-3c18-4fcb-b3ae-95b07f953045",
+          "type": "Scene3D::Cube3DObject",
+          "variables": [],
+          "effects": [],
+          "behaviors": [],
+          "content": {
+            "width": 80,
+            "height": 80,
+            "depth": 80,
+            "enableTextureTransparency": false,
+            "facesOrientation": "Z",
+            "frontFaceResourceName": "",
+            "backFaceResourceName": "",
+            "backFaceUpThroughWhichAxisRotation": "X",
+            "leftFaceResourceName": "",
+            "rightFaceResourceName": "",
+            "topFaceResourceName": "",
+            "bottomFaceResourceName": "",
+            "frontFaceVisible": true,
+            "backFaceVisible": true,
+            "leftFaceVisible": true,
+            "rightFaceVisible": true,
+            "topFaceVisible": true,
+            "bottomFaceVisible": true,
+            "frontFaceResourceRepeat": false,
+            "backFaceResourceRepeat": false,
+            "leftFaceResourceRepeat": false,
+            "rightFaceResourceRepeat": false,
+            "topFaceResourceRepeat": false,
+            "bottomFaceResourceRepeat": false,
+            "materialType": "Basic",
+            "tint": "255;255;255",
+            "isCastingShadow": false,
+            "isReceivingShadow": false
+          }
+        }
+      ],
+      "objectsFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "objectName": "Placeholder"
+          }
+        ]
+      },
+      "objectsGroups": [],
+      "layers": [
+        {
+          "ambientLightColorB": 200,
+          "ambientLightColorG": 200,
+          "ambientLightColorR": 200,
+          "camera2DPlaneMaxDrawingDistance": 5000,
+          "camera3DFarPlaneDistance": 10000,
+          "camera3DFieldOfView": 45,
+          "camera3DNearPlaneDistance": 3,
+          "cameraType": "",
+          "followBaseLayerCamera": false,
+          "isLightingLayer": false,
+          "isLocked": false,
+          "name": "",
+          "renderingType": "",
+          "visibility": true,
+          "cameras": [
+            {
+              "defaultSize": true,
+              "defaultViewport": true,
+              "height": 0,
+              "viewportBottom": 1,
+              "viewportLeft": 0,
+              "viewportRight": 1,
+              "viewportTop": 0,
+              "width": 0
+            }
+          ],
+          "effects": []
+        }
+      ],
+      "instances": [
+        {
+          "angle": 0,
+          "customSize": true,
+          "depth": 40,
+          "height": 40,
+          "layer": "",
+          "name": "Placeholder",
+          "persistentUuid": "1310c768-04d4-4133-98d9-37d836f8a990",
+          "width": 40,
+          "x": -20,
+          "y": -20,
+          "z": -20,
+          "zOrder": 1,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": []
+        }
+      ],
+      "editionSettings": {
+        "grid": false,
+        "gridType": "rectangular",
+        "gridWidth": 32,
+        "gridHeight": 32,
+        "gridDepth": 32,
+        "gridOffsetX": 0,
+        "gridOffsetY": 0,
+        "gridOffsetZ": 0,
+        "gridColor": 10401023,
+        "gridAlpha": 0.8,
+        "snap": false,
+        "zoomFactor": 9.06473532531222,
+        "windowMask": false,
+        "selectedLayer": "",
+        "gameEditorMode": "instances-editor"
+      },
+      "eventsFunctions": [
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onCreated",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::DefineHelperClasses"
+                  },
+                  "parameters": [
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::DefineSpotLightHelperClasses"
+                  },
+                  "parameters": [
+                    "",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const {",
+                "    Light3DRenderer,",
+                "    //@ts-ignore",
+                "} = gdjs.__light3DExtension;",
+                "const {",
+                "    SpotLightAdapter,",
+                "    SpotLightHelper,",
+                "    //@ts-ignore",
+                "} = gdjs.__light3DExtension.spot;",
+                "",
+                "/** @type {gdjs.CustomRuntimeObject3D} */",
+                "//@ts-ignore",
+                "const object = objects[0];",
+                "",
+                "const game = runtimeScene.getGame();",
+                "",
+                "// This is a hack that may break in future releases.",
+                "// Replace the group that would hold children objects by the light.",
+                "const layer = object.getInstanceContainer().getLayer(object.getLayer());",
+                "const group = object.getRenderer()._threeGroup;",
+                "layer.getRenderer().remove3DRendererObject(group);",
+                "",
+                "const spotLight = new THREE.SpotLight(0xffffff);",
+                "spotLight.position.copy(group.position);",
+                "spotLight.rotation.copy(group.rotation);",
+                "spotLight.add(spotLight.target);",
+                "spotLight.target.position.x = 100;",
+                "spotLight.up.set(0, 0, 1);",
+                "spotLight.shadow.camera.up.set(0, 0, 1);",
+                "//@ts-ignore",
+                "object.__light3D = spotLight;",
+                "//@ts-ignore",
+                "object.__spotLightAdapter = new SpotLightAdapter(object, spotLight);",
+                "",
+                "const spotLight3DRenderer = new Light3DRenderer(object, object._instanceContainer, object.getInstanceContainer());",
+                "object._renderer = spotLight3DRenderer;",
+                "if (game.isInGameEdition && game.isInGameEdition()) {",
+                "    const spotLightHelper = new SpotLightHelper(object);",
+                "    spotLightHelper.rotation.order = 'ZYX';",
+                "    spotLightHelper.add(spotLight);",
+                "    spotLight3DRenderer._threeGroup = spotLightHelper;",
+                "    layer.getRenderer().add3DRendererObject(spotLightHelper);",
+                "}",
+                "else {",
+                "    spotLight3DRenderer._threeGroup = spotLight;",
+                "    layer.getRenderer().add3DRendererObject(spotLight);",
+                "}",
+                "",
+                "spotLight.updateMatrixWorld(true);",
+                "",
+                "// Allow to tween the light color.",
+                "//@ts-ignore",
+                "if (!object.setColor && !object.getColor) {",
+                "    const prototype = Object.getPrototypeOf(object);",
+                "    prototype.setColor = function(tint) {",
+                "        this._setColor(tint);",
+                "        this.__spotLightAdapter.setColor(tint);",
+                "    }",
+                "    prototype.getColor = function() {",
+                "        return this._getColor(eventsFunctionContext);",
+                "    }",
+                "}",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::UpdateFromProperties"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onDestroy",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "/** @type {gdjs.CustomRuntimeObject} */",
+                "const object = objects[0];",
+                "// Here runtimeScene is the gdjs.CustomRuntimeObjectInstanceContainer inside the custom object.",
+                "const gameScene = object.getRuntimeScene();",
+                "",
+                "object.__light3D.dispose();",
+                "object.get3DRendererObject().dispose();",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onHotReloading",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::UpdateFromProperties"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Update from properties.",
+          "fullName": "Update from properties",
+          "functionType": "Action",
+          "name": "UpdateFromProperties",
+          "private": true,
+          "sentence": "Update from properties of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::SetColor"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Color",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::SetIntensity"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Intensity",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::SetDecay"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Decay",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::SetConeLength"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "ConeLength",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::SetConeAngle"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "ConeAngle",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::SetSmoothing"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Smoothing",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::SetShadowQuality"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "ShadowQuality",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::SetShadowCameraNearPlane"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "ShadowCameraNearPlane",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::SetShadowCameraFarPlane"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "ShadowCameraFarPlane",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::SetShadowBias"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "ShadowBias",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::UpdateImage"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::UpdateHelper"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "IsCastingShadow",
+                    "=",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::SetCastingShadow"
+                  },
+                  "parameters": [
+                    "Object",
+                    "no",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "IsCastingShadow",
+                    "True",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::SetCastingShadow"
+                  },
+                  "parameters": [
+                    "Object",
+                    "yes",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Update helper",
+          "functionType": "Action",
+          "name": "UpdateHelper",
+          "private": true,
+          "sentence": "Update graphical helper of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const game = runtimeScene.getGame();",
+                "if (game.isInGameEdition && game.isInGameEdition()) {",
+                "    const spotLightHelper = objects[0].get3DRendererObject();",
+                "    spotLightHelper.update();",
+                "}",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Update image",
+          "functionType": "Action",
+          "name": "UpdateImage",
+          "private": true,
+          "sentence": "Update the image of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "/** @type {gdjs.CustomRuntimeObject3D} */\r",
+                "const object = objects[0];\r",
+                "const resourceName = object._getImage();\r",
+                "object.__spotLightAdapter.setImage(resourceName);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the cone angle of the light.",
+          "fullName": "Cone angle",
+          "functionType": "ExpressionAndCondition",
+          "name": "ConeAngle",
+          "sentence": "the cone angle",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "ConeAngle"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "ConeAngle",
+          "name": "SetConeAngle",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "ConeAngle",
+                    "=",
+                    "Value"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::ApplyShadowBias"
+                  },
+                  "parameters": [
+                    "Object",
+                    "ShadowBias",
+                    "ShadowQuality",
+                    "ConeAngle",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const coneAngle = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__spotLightAdapter.setConeAngle(coneAngle);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the color of the light.",
+          "fullName": "Color",
+          "functionType": "ExpressionAndCondition",
+          "name": "Color",
+          "sentence": "the color",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnString"
+                  },
+                  "parameters": [
+                    "Color"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "color"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Color",
+          "name": "SetColor",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetStringVariable"
+                  },
+                  "parameters": [
+                    "Color",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const color = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__spotLightAdapter.setColor(color);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the smoothing of the light. Percent of the spotlight cone that is attenuated due to penumbra (between 0 and 1).",
+          "fullName": "Smoothing",
+          "functionType": "ExpressionAndCondition",
+          "name": "Smoothing",
+          "sentence": "the smoothing",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Smoothing"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Smoothing",
+          "name": "SetSmoothing",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Smoothing",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__spotLightAdapter.setSmoothing(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the intensity of the light.",
+          "fullName": "Intensity",
+          "functionType": "ExpressionAndCondition",
+          "name": "Intensity",
+          "sentence": "the intensity",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Intensity"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Intensity",
+          "name": "SetIntensity",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Intensity",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__spotLightAdapter.setIntensity(value);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the decay of the light. The amount the light dims along the distance of the light.",
+          "fullName": "Decay",
+          "functionType": "ExpressionAndCondition",
+          "name": "Decay",
+          "sentence": "the decay",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Decay"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Decay",
+          "name": "SetDecay",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Decay",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__spotLightAdapter.setDecay(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if the light is casting shadows.",
+          "fullName": "Shadow casting",
+          "functionType": "Condition",
+          "group": "3D spot light shadow configuration",
+          "name": "IsCastingShadow",
+          "sentence": "_PARAM0_ casting shadows",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "IsCastingShadow",
+                    "True",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change if the light is casting shadows.",
+          "fullName": "Shadow casting",
+          "functionType": "Action",
+          "group": "3D spot light shadow configuration",
+          "name": "SetCastingShadow",
+          "sentence": "_PARAM0_ casting shadows: _PARAM1_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "Value",
+                    "False",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetBooleanVariable"
+                  },
+                  "parameters": [
+                    "IsCastingShadow",
+                    "False",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "Value",
+                    "True",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetBooleanVariable"
+                  },
+                  "parameters": [
+                    "IsCastingShadow",
+                    "True",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__spotLightAdapter.setCastingShadow(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::SetConeLength"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "ConeLength",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            },
+            {
+              "defaultValue": "yes",
+              "description": "Shadow casting",
+              "name": "Value",
+              "optional": true,
+              "type": "yesorno"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Rotate the light to light up a position.",
+          "fullName": "Look at position",
+          "functionType": "Action",
+          "group": "Angle",
+          "name": "LookAtPosition",
+          "sentence": "_PARAM0_ look at _PARAM1_ ; _PARAM2_ ; _PARAM3_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const targetX = eventsFunctionContext.getArgument(\"TargetX\");\r",
+                "const targetY = eventsFunctionContext.getArgument(\"TargetY\");\r",
+                "const targetZ = eventsFunctionContext.getArgument(\"TargetZ\");\r",
+                "\r",
+                "object.__spotLightAdapter.lookAtPosition(targetX, targetY, targetZ);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            },
+            {
+              "description": "Target X",
+              "name": "TargetX",
+              "type": "expression"
+            },
+            {
+              "description": "Target Y",
+              "name": "TargetY",
+              "type": "expression"
+            },
+            {
+              "description": "Target Z",
+              "name": "TargetZ",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Rotate the light to light up an object.",
+          "fullName": "Look at object",
+          "functionType": "Action",
+          "group": "Angle",
+          "name": "LookAtObject",
+          "sentence": "_PARAM0_ look at _PARAM1_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::LookAtPosition"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Target.CenterX()",
+                    "Target.CenterY()",
+                    "Target.Object3D::CenterZ()",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            },
+            {
+              "description": "Object",
+              "name": "Target",
+              "type": "objectList"
+            },
+            {
+              "description": "3D capability",
+              "name": "Object3D",
+              "supplementaryInformation": "Scene3D::Base3DBehavior",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the shadow quality of the light.",
+          "fullName": "Shadow quality",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D spot light shadow configuration",
+          "name": "ShadowQuality",
+          "sentence": "the shadow quality",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnString"
+                  },
+                  "parameters": [
+                    "ShadowQuality"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "supplementaryInformation": "[\"Low\",\"Medium\",\"High\"]",
+            "type": "stringWithSelector"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "ShadowQuality",
+          "group": "3D spot light shadow configuration",
+          "name": "SetShadowQuality",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetStringVariable"
+                  },
+                  "parameters": [
+                    "ShadowQuality",
+                    "=",
+                    "Value"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::ApplyShadowBias"
+                  },
+                  "parameters": [
+                    "Object",
+                    "ShadowBias",
+                    "ShadowQuality",
+                    "ConeAngle",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__spotLightAdapter.setShadowQuality(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the shadow camera near plane of the light.",
+          "fullName": "Shadow camera near plane",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D spot light shadow configuration",
+          "name": "ShadowCameraNearPlane",
+          "sentence": "the shadow camera near plane",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "ShadowCameraNearPlane"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "ShadowCameraNearPlane",
+          "group": "3D spot light shadow configuration",
+          "name": "SetShadowCameraNearPlane",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "ShadowCameraNearPlane",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__spotLightAdapter.setShadowCameraNearPlane(value);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the shadow camera far plane of the light.",
+          "fullName": "Shadow camera far plane",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D spot light shadow configuration",
+          "name": "ShadowCameraFarPlane",
+          "sentence": "the shadow camera far plane",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "ShadowCameraFarPlane"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "ShadowCameraFarPlane",
+          "group": "3D spot light shadow configuration",
+          "name": "SetShadowCameraFarPlane",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "ShadowCameraFarPlane",
+                    "=",
+                    "Value"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::ApplyShadowCameraFarPlane"
+                  },
+                  "parameters": [
+                    "Object",
+                    "min(Value, ConeLength)",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the cone length of the light. 0 means no limit.",
+          "fullName": "Cone length",
+          "functionType": "ExpressionAndCondition",
+          "name": "ConeLength",
+          "sentence": "the cone length",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "ConeLength"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "ConeLength",
+          "name": "SetConeLength",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "ConeLength",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::JsCode",
+                  "inlineCode": [
+                    "const object = objects[0];\r",
+                    "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                    "\r",
+                    "object.__spotLightAdapter.setConeLength(value);\r",
+                    ""
+                  ],
+                  "parameterObjects": "Object",
+                  "useStrict": true,
+                  "eventsSheetExpanded": false
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Three.js reduces the far plane to match the light range.\nSo, we need to set it again or it will stay at the lowest value the range took.\nWe do the min() on our side to in order:\n- to avoid a side effect when Three.js is upgraded\n- because Three.js keeps the old value in cache and doesn't apply it back unless we set the lower value explicitly ourselves."
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::ApplyShadowCameraFarPlane"
+                  },
+                  "parameters": [
+                    "Object",
+                    "min(Value, ShadowCameraFarPlane)",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Apply shadow camera far plane",
+          "functionType": "Action",
+          "group": "3D spot light shadow configuration",
+          "name": "ApplyShadowCameraFarPlane",
+          "private": true,
+          "sentence": "Apply shadow camera far plane of _PARAM0_ to _PARAM1_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__spotLightAdapter.setShadowCameraFarPlane(value);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            },
+            {
+              "description": "Value",
+              "name": "Value",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the shadow bias of the light. Use this to avoid \"shadow acne\" due to depth buffer precision. Choose a value small enough like 0.001 to avoid creating distance between shadows and objects but not too small to avoid shadow glitches on low/medium quality. This value is used for high quality, and multiplied by 2 for medium quality and 4 for low quality.",
+          "fullName": "Shadow bias",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D spot light shadow configuration",
+          "name": "ShadowBias",
+          "sentence": "the shadow bias",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "ShadowBias"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "ShadowBias",
+          "group": "3D spot light shadow configuration",
+          "name": "SetShadowBias",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "ShadowBias",
+                    "=",
+                    "Value"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::SpotLight3D::ApplyShadowBias"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Value",
+                    "ShadowQuality",
+                    "ConeAngle",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Apply shadow bias",
+          "functionType": "Action",
+          "group": "3D spot light shadow configuration",
+          "name": "ApplyShadowBias",
+          "private": true,
+          "sentence": "Apply shadow bias of _PARAM0_ to _PARAM1_ for a _PARAM2_ quality and cone angle _PARAM3_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "const quality = eventsFunctionContext.getArgument(\"Quality\");\r",
+                "const coneAngle = eventsFunctionContext.getArgument(\"Angle\");\r",
+                "\r",
+                "object.__spotLightAdapter.setShadowBias(value, quality, coneAngle);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::SpotLight3D",
+              "type": "object"
+            },
+            {
+              "description": "Value",
+              "name": "Value",
+              "type": "expression"
+            },
+            {
+              "description": "Quality",
+              "name": "Quality",
+              "type": "string"
+            },
+            {
+              "description": "Cone angle",
+              "name": "Angle",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        }
+      ],
+      "eventsFunctionsFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "functionName": "onCreated"
+          },
+          {
+            "functionName": "onDestroy"
+          },
+          {
+            "functionName": "onHotReloading"
+          },
+          {
+            "functionName": "UpdateFromProperties"
+          },
+          {
+            "functionName": "UpdateHelper"
+          },
+          {
+            "functionName": "UpdateImage"
+          },
+          {
+            "folderName": "Angle",
+            "children": [
+              {
+                "functionName": "LookAtPosition"
+              },
+              {
+                "functionName": "LookAtObject"
+              }
+            ]
+          },
+          {
+            "functionName": "Color"
+          },
+          {
+            "functionName": "SetColor"
+          },
+          {
+            "functionName": "Intensity"
+          },
+          {
+            "functionName": "SetIntensity"
+          },
+          {
+            "functionName": "Decay"
+          },
+          {
+            "functionName": "SetDecay"
+          },
+          {
+            "functionName": "ConeLength"
+          },
+          {
+            "functionName": "SetConeLength"
+          },
+          {
+            "functionName": "ConeAngle"
+          },
+          {
+            "functionName": "SetConeAngle"
+          },
+          {
+            "functionName": "Smoothing"
+          },
+          {
+            "functionName": "SetSmoothing"
+          },
+          {
+            "folderName": "3D spot light shadow configuration",
+            "children": [
+              {
+                "functionName": "IsCastingShadow"
+              },
+              {
+                "functionName": "SetCastingShadow"
+              },
+              {
+                "functionName": "ShadowQuality"
+              },
+              {
+                "functionName": "SetShadowQuality"
+              },
+              {
+                "functionName": "ShadowCameraNearPlane"
+              },
+              {
+                "functionName": "SetShadowCameraNearPlane"
+              },
+              {
+                "functionName": "ShadowCameraFarPlane"
+              },
+              {
+                "functionName": "SetShadowCameraFarPlane"
+              },
+              {
+                "functionName": "ApplyShadowCameraFarPlane"
+              },
+              {
+                "functionName": "ShadowBias"
+              },
+              {
+                "functionName": "SetShadowBias"
+              },
+              {
+                "functionName": "ApplyShadowBias"
+              }
+            ]
+          }
+        ]
+      },
+      "propertyDescriptors": [
+        {
+          "value": "255;255;255",
+          "type": "Color",
+          "label": "Color",
+          "name": "Color"
+        },
+        {
+          "value": "30",
+          "type": "Number",
+          "unit": "DegreeAngle",
+          "label": "Cone angle",
+          "group": "Cone",
+          "name": "ConeAngle"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "label": "Intensity",
+          "name": "Intensity"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "label": "Smoothing",
+          "description": "Percent of the spotlight cone that is attenuated due to penumbra (between 0 and 1).",
+          "group": "Cone",
+          "name": "Smoothing"
+        },
+        {
+          "value": "2",
+          "type": "Number",
+          "label": "Decay",
+          "description": "The amount the light dims along the distance of the light.",
+          "name": "Decay"
+        },
+        {
+          "value": "",
+          "type": "Resource",
+          "label": "Image",
+          "description": "Shadow casting must be enabled for the image to have any effect.",
+          "group": "Shadow",
+          "extraInformation": [
+            "image"
+          ],
+          "choices": [],
+          "hidden": true,
+          "name": "Image"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "Shadow casting",
+          "group": "Shadow",
+          "name": "IsCastingShadow"
+        },
+        {
+          "value": "Medium",
+          "type": "Choice",
+          "label": "Shadow quality",
+          "group": "Shadow",
+          "choices": [
+            {
+              "label": "Low",
+              "value": "Low"
+            },
+            {
+              "label": "Medium",
+              "value": "Medium"
+            },
+            {
+              "label": "High",
+              "value": "High"
+            },
+            {
+              "label": "Very high",
+              "value": "VeryHigh"
+            }
+          ],
+          "name": "ShadowQuality"
+        },
+        {
+          "value": "20",
+          "type": "Number",
+          "unit": "Pixel",
+          "label": "Shadow camera near plane",
+          "group": "Shadow",
+          "advanced": true,
+          "name": "ShadowCameraNearPlane"
+        },
+        {
+          "value": "2000",
+          "type": "Number",
+          "unit": "Pixel",
+          "label": "Shadow camera far plane",
+          "group": "Shadow",
+          "advanced": true,
+          "name": "ShadowCameraFarPlane"
+        },
+        {
+          "value": "2000",
+          "type": "Number",
+          "unit": "Pixel",
+          "label": "Cone length",
+          "description": "0 means no limit.",
+          "group": "Cone",
+          "name": "ConeLength"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Shadow bias",
+          "description": "Use this to avoid \"shadow acne\" due to depth buffer precision. Choose a value small enough like 0.001 to avoid creating distance between shadows and objects but not too small to avoid shadow glitches on low/medium quality. This value is used for high quality, and multiplied by 2 for medium quality and 4 for low quality.",
+          "group": "Shadow",
+          "advanced": true,
+          "name": "ShadowBias"
+        }
+      ],
+      "propertiesFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "propertyName": "Color"
+          },
+          {
+            "propertyName": "Intensity"
+          },
+          {
+            "propertyName": "Decay"
+          },
+          {
+            "folderName": "Cone",
+            "children": [
+              {
+                "propertyName": "ConeAngle"
+              },
+              {
+                "propertyName": "ConeLength"
+              },
+              {
+                "propertyName": "Smoothing"
+              }
+            ]
+          },
+          {
+            "folderName": "Shadow",
+            "children": [
+              {
+                "propertyName": "IsCastingShadow"
+              },
+              {
+                "propertyName": "ShadowQuality"
+              },
+              {
+                "propertyName": "Image"
+              },
+              {
+                "propertyName": "ShadowCameraNearPlane"
+              },
+              {
+                "propertyName": "ShadowCameraFarPlane"
+              },
+              {
+                "propertyName": "ShadowBias"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "areaMaxX": 20,
+      "areaMaxY": 20,
+      "areaMaxZ": 20,
+      "areaMinX": -20,
+      "areaMinY": -20,
+      "areaMinZ": -20,
+      "defaultName": "PointLight",
+      "description": "Light up in all directions like a fire.",
+      "fullName": "3D point light",
+      "helpPath": "",
+      "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLXRvcmNoIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTguNiA5LjZDOSAxMC4yIDkuNSAxMC43IDEwLjIgMTFIMTQuMkMxNC41IDEwLjkgMTQuNyAxMC43IDE0LjkgMTAuNUMxNS45IDkuNSAxNi4zIDggMTUuOCA2LjdMMTUuNyA2LjVDMTUuNiA2LjIgMTUuNCA2IDE1LjIgNS44QzE1LjEgNS42IDE0LjkgNS41IDE0LjggNS4zQzE0LjQgNSAxNCA0LjcgMTMuNiA0LjNDMTIuNyAzLjQgMTIuNiAyIDEzLjEgMUMxMi42IDEuMSAxMi4xIDEuNCAxMS43IDEuOEMxMC4yIDMgOS42IDUuMSAxMC4zIDdWNy4yQzEwLjMgNy4zIDEwLjIgNy40IDEwLjEgNy41QzEwIDcuNiA5LjggNy41IDkuNyA3LjRMOS42IDcuM0M5IDYuNSA4LjkgNS4zIDkuMyA0LjNDOC40IDUuMSA3LjkgNi40IDggNy43QzggOCA4LjEgOC4zIDguMiA4LjZDOC4yIDguOSA4LjQgOS4zIDguNiA5LjZNMTIuMyA4LjFDMTIuNCA3LjYgMTIuMiA3LjIgMTIuMSA2LjhDMTIgNi40IDEyIDYgMTIuMiA1LjZMMTIuNSA2LjJDMTIuOSA2LjggMTMuNiA3IDEzLjggNy44VjguMUMxMy44IDguNiAxMy42IDkuMSAxMy4zIDkuNEMxMy4xIDkuNSAxMi45IDkuNyAxMi43IDkuN0MxMi4xIDkuOSAxMS40IDkuNiAxMSA5LjJDMTEuOCA5LjIgMTIuMiA4LjYgMTIuMyA4LjFNMTUgMTJWMTRIMTRMMTMgMjJIMTFMMTAgMTRIOVYxMkgxNVoiIC8+PC9zdmc+",
+      "is3D": true,
+      "isUsingLegacyInstancesRenderer": false,
+      "name": "PointLight3D",
+      "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/bf9158c96f4346dabd9e8ae0ddd737809652797812eb50376bae62463ac7fc42_torch.svg",
+      "objects": [
+        {
+          "assetStoreId": "",
+          "name": "Placeholder",
+          "persistentUuid": "6786eefd-3c18-4fcb-b3ae-95b07f953045",
+          "type": "Scene3D::Cube3DObject",
+          "variables": [],
+          "effects": [],
+          "behaviors": [],
+          "content": {
+            "width": 80,
+            "height": 80,
+            "depth": 80,
+            "enableTextureTransparency": false,
+            "facesOrientation": "Z",
+            "frontFaceResourceName": "",
+            "backFaceResourceName": "",
+            "backFaceUpThroughWhichAxisRotation": "X",
+            "leftFaceResourceName": "",
+            "rightFaceResourceName": "",
+            "topFaceResourceName": "",
+            "bottomFaceResourceName": "",
+            "frontFaceVisible": true,
+            "backFaceVisible": true,
+            "leftFaceVisible": true,
+            "rightFaceVisible": true,
+            "topFaceVisible": true,
+            "bottomFaceVisible": true,
+            "frontFaceResourceRepeat": false,
+            "backFaceResourceRepeat": false,
+            "leftFaceResourceRepeat": false,
+            "rightFaceResourceRepeat": false,
+            "topFaceResourceRepeat": false,
+            "bottomFaceResourceRepeat": false,
+            "materialType": "Basic",
+            "tint": "255;255;255",
+            "isCastingShadow": false,
+            "isReceivingShadow": false
+          }
+        }
+      ],
+      "objectsFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "objectName": "Placeholder"
+          }
+        ]
+      },
+      "objectsGroups": [],
+      "layers": [
+        {
+          "ambientLightColorB": 200,
+          "ambientLightColorG": 200,
+          "ambientLightColorR": 200,
+          "camera2DPlaneMaxDrawingDistance": 5000,
+          "camera3DFarPlaneDistance": 10000,
+          "camera3DFieldOfView": 45,
+          "camera3DNearPlaneDistance": 3,
+          "cameraType": "",
+          "followBaseLayerCamera": false,
+          "isLightingLayer": false,
+          "isLocked": false,
+          "name": "",
+          "renderingType": "",
+          "visibility": true,
+          "cameras": [
+            {
+              "defaultSize": true,
+              "defaultViewport": true,
+              "height": 0,
+              "viewportBottom": 1,
+              "viewportLeft": 0,
+              "viewportRight": 1,
+              "viewportTop": 0,
+              "width": 0
+            }
+          ],
+          "effects": []
+        }
+      ],
+      "instances": [
+        {
+          "angle": 0,
+          "customSize": true,
+          "depth": 40,
+          "height": 40,
+          "layer": "",
+          "name": "Placeholder",
+          "persistentUuid": "1310c768-04d4-4133-98d9-37d836f8a990",
+          "width": 40,
+          "x": -20,
+          "y": -20,
+          "z": -20,
+          "zOrder": 1,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": []
+        }
+      ],
+      "editionSettings": {
+        "grid": false,
+        "gridType": "rectangular",
+        "gridWidth": 32,
+        "gridHeight": 32,
+        "gridDepth": 32,
+        "gridOffsetX": 0,
+        "gridOffsetY": 0,
+        "gridOffsetZ": 0,
+        "gridColor": 10401023,
+        "gridAlpha": 0.8,
+        "snap": false,
+        "zoomFactor": 9.06473532531222,
+        "windowMask": false,
+        "selectedLayer": "",
+        "gameEditorMode": "instances-editor"
+      },
+      "eventsFunctions": [
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onCreated",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::DefineHelperClasses"
+                  },
+                  "parameters": [
+                    "",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::DefinePointLightHelperClasses"
+                  },
+                  "parameters": [
+                    "",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const {",
+                "    Light3DRenderer,",
+                "    //@ts-ignore",
+                "} = gdjs.__light3DExtension;",
+                "const {",
+                "    PointLightAdapter,",
+                "    PointLightHelper,",
+                "    //@ts-ignore",
+                "} = gdjs.__light3DExtension.point;",
+                "",
+                "/** @type {gdjs.CustomRuntimeObject3D} */",
+                "//@ts-ignore",
+                "const object = objects[0];",
+                "",
+                "const game = runtimeScene.getGame();",
+                "",
+                "// This is a hack that may break in future releases.",
+                "// Replace the group that would hold children objects by the light.",
+                "const layer = object.getInstanceContainer().getLayer(object.getLayer());",
+                "const group = object.getRenderer()._threeGroup;",
+                "layer.getRenderer().remove3DRendererObject(group);",
+                "",
+                "const pointLight = new THREE.PointLight(0xffffff);",
+                "pointLight.position.copy(group.position);",
+                "pointLight.rotation.copy(group.rotation);",
+                "pointLight.up.set(0, 0, 1);",
+                "pointLight.shadow.camera.up.set(0, 0, 1);",
+                "//@ts-ignore",
+                "object.__light3D = pointLight;",
+                "//@ts-ignore",
+                "object.__pointLightAdapter = new PointLightAdapter(object, pointLight);",
+                "",
+                "const pointLight3DRenderer = new Light3DRenderer(object, object._instanceContainer, object.getInstanceContainer());",
+                "object._renderer = pointLight3DRenderer;",
+                "if (game.isInGameEdition && game.isInGameEdition()) {",
+                "    const pointLightHelper = new PointLightHelper(object);",
+                "    pointLightHelper.rotation.order = 'ZYX';",
+                "    pointLightHelper.add(pointLight);",
+                "    pointLight3DRenderer._threeGroup = pointLightHelper;",
+                "    layer.getRenderer().add3DRendererObject(pointLightHelper);",
+                "}",
+                "else {",
+                "    pointLight3DRenderer._threeGroup = pointLight;",
+                "    layer.getRenderer().add3DRendererObject(pointLight);",
+                "}",
+                "",
+                "pointLight.updateMatrixWorld(true);",
+                "",
+                "// Allow to tween the light color.",
+                "//@ts-ignore",
+                "if (!object.setColor && !object.getColor) {",
+                "    const prototype = Object.getPrototypeOf(object);",
+                "    prototype.setColor = function(tint) {",
+                "        this._setColor(tint);",
+                "        this.__pointLightAdapter.setColor(tint);",
+                "    }",
+                "    prototype.getColor = function() {",
+                "        return this._getColor(eventsFunctionContext);",
+                "    }",
+                "}",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::UpdateFromProperties"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onDestroy",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "/** @type {gdjs.CustomRuntimeObject} */",
+                "const object = objects[0];",
+                "// Here runtimeScene is the gdjs.CustomRuntimeObjectInstanceContainer inside the custom object.",
+                "const gameScene = object.getRuntimeScene();",
+                "",
+                "object.__light3D.dispose();",
+                "object.get3DRendererObject().dispose();",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onHotReloading",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::UpdateFromProperties"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Update from properties.",
+          "fullName": "Update from properties",
+          "functionType": "Action",
+          "name": "UpdateFromProperties",
+          "private": true,
+          "sentence": "Update from properties of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::SetColor"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Color",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::SetIntensity"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Intensity",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::SetDecay"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Decay",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::SetRange"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Range",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::SetShadowQuality"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "ShadowQuality",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::SetShadowCameraNearPlane"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "ShadowCameraNearPlane",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::SetShadowCameraFarPlane"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "ShadowCameraFarPlane",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::SetShadowBias"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "ShadowBias",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::UpdateHelper"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "IsCastingShadow",
+                    "=",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::SetCastingShadow"
+                  },
+                  "parameters": [
+                    "Object",
+                    "no",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "IsCastingShadow",
+                    "True",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::SetCastingShadow"
+                  },
+                  "parameters": [
+                    "Object",
+                    "yes",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Update helper",
+          "functionType": "Action",
+          "name": "UpdateHelper",
+          "private": true,
+          "sentence": "Update graphical helper of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const game = runtimeScene.getGame();",
+                "if (game.isInGameEdition && game.isInGameEdition()) {",
+                "    const pointLightHelper = objects[0].get3DRendererObject();",
+                "    pointLightHelper.update();",
+                "}",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the color of the light.",
+          "fullName": "Color",
+          "functionType": "ExpressionAndCondition",
+          "name": "Color",
+          "sentence": "the color",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnString"
+                  },
+                  "parameters": [
+                    "Color"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "color"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Color",
+          "name": "SetColor",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetStringVariable"
+                  },
+                  "parameters": [
+                    "Color",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const color = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__pointLightAdapter.setColor(color);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the intensity of the light.",
+          "fullName": "Intensity",
+          "functionType": "ExpressionAndCondition",
+          "name": "Intensity",
+          "sentence": "the intensity",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Intensity"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Intensity",
+          "name": "SetIntensity",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Intensity",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__pointLightAdapter.setIntensity(value);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the decay of the light. The amount the light dims along the distance of the light.",
+          "fullName": "Decay",
+          "functionType": "ExpressionAndCondition",
+          "name": "Decay",
+          "sentence": "the decay",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Decay"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Decay",
+          "name": "SetDecay",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Decay",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__pointLightAdapter.setDecay(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if the light is casting shadows.",
+          "fullName": "Shadow casting",
+          "functionType": "Condition",
+          "group": "3D point light shadow configuration",
+          "name": "IsCastingShadow",
+          "sentence": "_PARAM0_ casting shadows",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "IsCastingShadow",
+                    "True",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::SetRange"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Range",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Change if the light is casting shadows.",
+          "fullName": "Shadow casting",
+          "functionType": "Action",
+          "group": "3D point light shadow configuration",
+          "name": "SetCastingShadow",
+          "sentence": "_PARAM0_ casting shadows: _PARAM1_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "Value",
+                    "False",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetBooleanVariable"
+                  },
+                  "parameters": [
+                    "IsCastingShadow",
+                    "False",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "Value",
+                    "True",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetBooleanVariable"
+                  },
+                  "parameters": [
+                    "IsCastingShadow",
+                    "True",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__pointLightAdapter.setCastingShadow(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            },
+            {
+              "defaultValue": "yes",
+              "description": "Shadow casting",
+              "name": "Value",
+              "optional": true,
+              "type": "yesorno"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the shadow quality of the light.",
+          "fullName": "Shadow quality",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D point light shadow configuration",
+          "name": "ShadowQuality",
+          "sentence": "the shadow quality",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnString"
+                  },
+                  "parameters": [
+                    "ShadowQuality"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "supplementaryInformation": "[\"Low\",\"Medium\",\"High\"]",
+            "type": "stringWithSelector"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "ShadowQuality",
+          "group": "3D point light shadow configuration",
+          "name": "SetShadowQuality",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetStringVariable"
+                  },
+                  "parameters": [
+                    "ShadowQuality",
+                    "=",
+                    "Value"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::ApplyShadowBias"
+                  },
+                  "parameters": [
+                    "Object",
+                    "ShadowBias",
+                    "ShadowQuality",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__pointLightAdapter.setShadowQuality(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the shadow camera near plane of the light.",
+          "fullName": "Shadow camera near plane",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D point light shadow configuration",
+          "name": "ShadowCameraNearPlane",
+          "sentence": "the shadow camera near plane",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "ShadowCameraNearPlane"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "ShadowCameraNearPlane",
+          "group": "3D point light shadow configuration",
+          "name": "SetShadowCameraNearPlane",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "ShadowCameraNearPlane",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__pointLightAdapter.setShadowCameraNearPlane(value);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::SetRange"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Range",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the shadow camera far plane of the light.",
+          "fullName": "Shadow camera far plane",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D point light shadow configuration",
+          "name": "ShadowCameraFarPlane",
+          "sentence": "the shadow camera far plane",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "ShadowCameraFarPlane"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "ShadowCameraFarPlane",
+          "group": "3D point light shadow configuration",
+          "name": "SetShadowCameraFarPlane",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "ShadowCameraFarPlane",
+                    "=",
+                    "Value"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::ApplyShadowCameraFarPlane"
+                  },
+                  "parameters": [
+                    "Object",
+                    "min(Value, Range)",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the range of the light. 0 means no limit.",
+          "fullName": "Range",
+          "functionType": "ExpressionAndCondition",
+          "name": "Range",
+          "sentence": "the range",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Range"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Range",
+          "name": "SetRange",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Range",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__pointLightAdapter.setRange(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Three.js reduces the far plane to match the light range.\nSo, we need to set it again or it will stay at the lowest value the range took.\nWe do the min() on our side to in order:\n- to avoid a side effect when Three.js is upgraded\n- because Three.js keeps the old value in cache and doesn't apply it back unless we set the lower value explicitly ourselves."
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::ApplyShadowCameraFarPlane"
+                  },
+                  "parameters": [
+                    "Object",
+                    "min(Value, ShadowCameraFarPlane)",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Apply shadow camera far plane",
+          "functionType": "Action",
+          "group": "3D point light shadow configuration",
+          "name": "ApplyShadowCameraFarPlane",
+          "private": true,
+          "sentence": "Apply shadow camera far plane of _PARAM0_ to _PARAM1_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__pointLightAdapter.setShadowCameraFarPlane(value);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            },
+            {
+              "description": "Value",
+              "name": "Value",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the shadow bias of the light. Use this to avoid \"shadow acne\" due to depth buffer precision. Choose a value small enough like 0.001 to avoid creating distance between shadows and objects but not too small to avoid shadow glitches on low/medium quality. This value is used for high quality, and multiplied by 2 for medium quality and 4 for low quality.",
+          "fullName": "Shadow bias",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D point light shadow configuration",
+          "name": "ShadowBias",
+          "sentence": "the shadow bias",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "ShadowBias"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "ShadowBias",
+          "group": "3D point light shadow configuration",
+          "name": "SetShadowBias",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "ShadowBias",
+                    "=",
+                    "Value"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Light3D::PointLight3D::ApplyShadowBias"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Value",
+                    "ShadowQuality",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Apply shadow bias",
+          "functionType": "Action",
+          "group": "3D point light shadow configuration",
+          "name": "ApplyShadowBias",
+          "private": true,
+          "sentence": "Apply shadow bias of _PARAM0_ to _PARAM1_ for a _PARAM2_ quality",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "const quality = eventsFunctionContext.getArgument(\"Quality\");\r",
+                "\r",
+                "object.__pointLightAdapter.setShadowBias(value, quality);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Light3D::PointLight3D",
+              "type": "object"
+            },
+            {
+              "description": "Value",
+              "name": "Value",
+              "type": "expression"
+            },
+            {
+              "description": "Quality",
+              "name": "Quality",
+              "type": "string"
+            }
+          ],
+          "objectGroups": []
+        }
+      ],
+      "eventsFunctionsFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "functionName": "onCreated"
+          },
+          {
+            "functionName": "onDestroy"
+          },
+          {
+            "functionName": "onHotReloading"
+          },
+          {
+            "functionName": "UpdateFromProperties"
+          },
+          {
+            "functionName": "UpdateHelper"
+          },
+          {
+            "functionName": "Color"
+          },
+          {
+            "functionName": "SetColor"
+          },
+          {
+            "functionName": "Intensity"
+          },
+          {
+            "functionName": "SetIntensity"
+          },
+          {
+            "functionName": "Decay"
+          },
+          {
+            "functionName": "SetDecay"
+          },
+          {
+            "functionName": "Range"
+          },
+          {
+            "functionName": "SetRange"
+          },
+          {
+            "folderName": "3D point light shadow configuration",
+            "children": [
+              {
+                "functionName": "IsCastingShadow"
+              },
+              {
+                "functionName": "SetCastingShadow"
+              },
+              {
+                "functionName": "ShadowQuality"
+              },
+              {
+                "functionName": "SetShadowQuality"
+              },
+              {
+                "functionName": "ShadowCameraNearPlane"
+              },
+              {
+                "functionName": "SetShadowCameraNearPlane"
+              },
+              {
+                "functionName": "ShadowCameraFarPlane"
+              },
+              {
+                "functionName": "SetShadowCameraFarPlane"
+              },
+              {
+                "functionName": "ApplyShadowCameraFarPlane"
+              },
+              {
+                "functionName": "ShadowBias"
+              },
+              {
+                "functionName": "SetShadowBias"
+              },
+              {
+                "functionName": "ApplyShadowBias"
+              }
+            ]
+          }
+        ]
+      },
+      "propertyDescriptors": [
+        {
+          "value": "255;255;255",
+          "type": "Color",
+          "label": "Color",
+          "name": "Color"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "label": "Intensity",
+          "name": "Intensity"
+        },
+        {
+          "value": "2",
+          "type": "Number",
+          "label": "Decay",
+          "description": "The amount the light dims along the distance of the light.",
+          "name": "Decay"
+        },
+        {
+          "value": "true",
+          "type": "Boolean",
+          "label": "Shadow casting",
+          "group": "Shadow",
+          "name": "IsCastingShadow"
+        },
+        {
+          "value": "Medium",
+          "type": "Choice",
+          "label": "Shadow quality",
+          "group": "Shadow",
+          "choices": [
+            {
+              "label": "",
+              "value": "Low"
+            },
+            {
+              "label": "",
+              "value": "Medium"
+            },
+            {
+              "label": "",
+              "value": "High"
+            }
+          ],
+          "name": "ShadowQuality"
+        },
+        {
+          "value": "20",
+          "type": "Number",
+          "unit": "Pixel",
+          "label": "Shadow camera near plane",
+          "group": "Shadow",
+          "advanced": true,
+          "name": "ShadowCameraNearPlane"
+        },
+        {
+          "value": "2000",
+          "type": "Number",
+          "unit": "Pixel",
+          "label": "Shadow camera far plane",
+          "group": "Shadow",
+          "advanced": true,
+          "name": "ShadowCameraFarPlane"
+        },
+        {
+          "value": "2000",
+          "type": "Number",
+          "unit": "Pixel",
+          "label": "Range",
+          "description": "0 means no limit.",
+          "name": "Range"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Shadow Bias",
+          "description": "Use this to avoid \"shadow acne\" due to depth buffer precision. Choose a value small enough like 0.001 to avoid creating distance between shadows and objects but not too small to avoid shadow glitches on low/medium quality. This value is used for high quality, and multiplied by 2 for medium quality and 4 for low quality.",
+          "group": "Shadow",
+          "advanced": true,
+          "name": "ShadowBias"
+        }
+      ],
+      "propertiesFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "propertyName": "Color"
+          },
+          {
+            "propertyName": "Intensity"
+          },
+          {
+            "propertyName": "Decay"
+          },
+          {
+            "propertyName": "Range"
+          },
+          {
+            "folderName": "Shadow",
+            "children": [
+              {
+                "propertyName": "IsCastingShadow"
+              },
+              {
+                "propertyName": "ShadowQuality"
+              },
+              {
+                "propertyName": "ShadowCameraNearPlane"
+              },
+              {
+                "propertyName": "ShadowCameraFarPlane"
+              },
+              {
+                "propertyName": "ShadowBias"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
