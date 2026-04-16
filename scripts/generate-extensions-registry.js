@@ -427,6 +427,8 @@ const filterEventsFunctions = (eventsFunctions) =>
                 behavior
               ),
               requiredExtensions: extension.requiredExtensions,
+              previewIconUrl:
+                behavior.previewIconUrl || registryItem.previewIconUrl,
             })
           )
         );
@@ -444,6 +446,8 @@ const filterEventsFunctions = (eventsFunctions) =>
                   description: object.description,
                   assetStoreTag: object.assetStoreTag || '',
                   requiredExtensions: extension.requiredExtensions,
+                  previewIconUrl:
+                    object.previewIconUrl || registryItem.previewIconUrl,
                 })
               )
             : []

@@ -511,6 +511,27 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Light3D: {
+      gdjsAllowedProperties: [
+        '__light3DExtension',
+        'CustomRuntimeObject',
+        'CustomRuntimeObjectInstanceContainer',
+        'CustomRuntimeObject3DRenderer',
+        'CustomRuntimeObject3D',
+        'registerRuntimeScenePreEventsCallback',
+        'registerInGameEditorPostStepCallback',
+        'scene3d',
+        'RuntimeScene',
+      ],
+      gdjsEvtToolsAllowedProperties: ['camera'],
+      runtimeSceneAllowedProperties: [
+        '__spotLight3DExtension',
+        '__pointLight3DExtension',
+        'getScene',
+        '__lightManager',
+      ],
+      javaScriptObjectAllowedProperties: ['getPrototypeOf'],
+    },
     SpriteMultitouchJoystick: {
       gdjsAllowedProperties: [],
       gdjsEvtToolsAllowedProperties: ['input'],

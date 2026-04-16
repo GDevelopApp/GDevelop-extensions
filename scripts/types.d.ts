@@ -207,6 +207,7 @@ export interface EventsBasedBehavior {
   name: string;
   objectType: string;
   private?: boolean;
+  previewIconUrl?: string;
   eventsFunctions: EventsFunction[];
   propertyDescriptors: PropertyDescriptor[];
 }
@@ -218,6 +219,7 @@ export interface EventsBasedObject {
   defaultName: string;
   assetStoreTag?: string;
   private?: boolean;
+  previewIconUrl?: string;
   eventsFunctions: EventsFunction[];
 }
 
