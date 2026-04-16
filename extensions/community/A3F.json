@@ -1,6 +1,7 @@
 {
   "author": "",
   "category": "General",
+  "dimension": "",
   "extensionNamespace": "",
   "fullName": "Advanced 3D Features",
   "gdevelopVersion": "",
@@ -9,7 +10,7 @@
   "name": "A3F",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/Line Hero Pack/Master/SVG/Graphic Design/f4c71080f9213188ee5556b1acb45ad46fe6e5225947301c363105b080fca008_Graphic Design_3d_cube_isometric.svg",
   "shortDescription": "This extension adds features to the built-in 3D.",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": [
     "3D features added by this extension:  ",
     "- Lighting",
@@ -23,6 +24,7 @@
     "- Linear interpolation",
     "- Look At",
     "- Distance between 3D objects",
+    "- Angle between 3D objects",
     "- Bone control",
     "- Morph target control",
     "- Access child objects of 3D objects",
@@ -1421,7 +1423,7 @@
           "type": "behavior"
         },
         {
-          "description": "Target 3D Object",
+          "description": "Target 3D object",
           "name": "Target",
           "type": "objectList"
         },
@@ -2072,12 +2074,13 @@
       "objectGroups": []
     },
     {
-      "description": "Checks the distance between two objects (origin points) in 3D.",
-      "fullName": "↔️Check the distance between two objects in 3D",
+      "description": "⚠️ Deprecated.\nChecks the distance between two objects (origin points) in 3D.",
+      "fullName": "↔️Check the distance between two objects in 3D V1 (Deprecated)",
       "functionType": "Condition",
       "group": "Position",
       "name": "CheckDistance",
-      "sentence": "↔️Check distance (_PARAM1_, _PARAM3_, _PARAM5_, _PARAM6_)",
+      "private": true,
+      "sentence": "⚠️↔️Check distance (_PARAM1_, _PARAM3_, _PARAM5_, _PARAM6_)",
       "events": [
         {
           "type": "BuiltinCommonInstructions::JsCode",
@@ -2167,11 +2170,12 @@
       "objectGroups": []
     },
     {
-      "description": "Returns the distance between objects in 3D. (Distance between origin points)\nThis expression always returns 0 when a 2D object is selected.",
-      "fullName": "↔️Distance between objects in 3D",
+      "description": "⚠️ Deprecated.\nReturns the distance between objects in 3D. (Distance between origin points)\nThis expression always returns 0 when a 2D object is selected.",
+      "fullName": "↔️Distance between objects in 3D V1 (Deprecated)",
       "functionType": "Expression",
       "group": "Position",
       "name": "DistanceObjects",
+      "private": true,
       "sentence": "↔️Check opacity (_PARAM1_, _PARAM3_, Opacity: _PARAM4_)",
       "events": [
         {
@@ -2913,14 +2917,558 @@
         }
       ],
       "objectGroups": []
+    },
+    {
+      "description": "Return the unsigned angle (in degrees, range 0 to 180) between the object's local X-axis and the direction to the target in 3D space.\nThis expression always returns 0 when a 2D object is selected.",
+      "fullName": "↗️Angle to 3D objects",
+      "functionType": "Expression",
+      "group": "Angle",
+      "name": "AngleToObjects",
+      "sentence": "↗️Angle to 3D object (_PARAM1_, Target: _PARAM2_, _PARAM3_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const Object2D = objects[0];",
+            "const Object3D = Object2D.get3DRendererObject();",
+            "const Targets = eventsFunctionContext.getObjects(\"Target\");",
+            "const TargetPoint = eventsFunctionContext.getArgument(\"TargetPoint\");",
+            "//",
+            "if (Targets.length === 0) {",
+            "    return;",
+            "}",
+            "const Target2D = Targets[0];",
+            "const Target3D = Target2D.get3DRendererObject();",
+            "//",
+            "if (!Object3D || !Target3D) {",
+            "    return;",
+            "}",
+            "//",
+            "let TargetPos;",
+            "if (TargetPoint === \"Center point\") {",
+            "    TargetPos = new THREE.Vector3(Target2D.getCenterXInScene(), -Target2D.getCenterYInScene(), Target2D.getCenterZInScene());",
+            "} else {",
+            "    TargetPos = new THREE.Vector3(Target2D.getX(), -Target2D.getY(), Target2D.getZ());",
+            "}",
+            "const ObjectPos = Object3D.getWorldPosition(new THREE.Vector3());",
+            "const Dir = TargetPos.sub(ObjectPos).normalize();",
+            "// matrixWorld に含まれるGDevelopのY軸反転が transformDirection() に悪影響を与えていたため、",
+            "// クォータニオンで回転のみを取り出す方式に変更。",
+            "const WorldQuaternion = new THREE.Quaternion();",
+            "Object3D.getWorldQuaternion(WorldQuaternion);",
+            "Dir.applyQuaternion(WorldQuaternion.invert());",
+            "//",
+            "eventsFunctionContext.returnValue = gdjs.toDegrees(Math.acos(THREE.MathUtils.clamp(-Dir.x, -1, 1)));",
+            "",
+            ""
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Object",
+          "name": "Object",
+          "type": "objectList"
+        },
+        {
+          "description": "Target 3D object",
+          "name": "Target",
+          "type": "objectList"
+        },
+        {
+          "description": "Points of the target 3D object",
+          "name": "TargetPoint",
+          "supplementaryInformation": "[\"Center point\",\"Origin point\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Returns the distance between objects in 3D.\nThis expression always returns 0 when a 2D object is selected.",
+      "fullName": "↔️Distance between objects in 3D",
+      "functionType": "Expression",
+      "group": "Position",
+      "name": "DistanceObjectsV2",
+      "sentence": "↔️Distance between objects in 3D (_PARAM1_, _PARAM2_, Target: _PARAM3_, _PARAM4_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const ObjectPoint = eventsFunctionContext.getArgument(\"ObjectPoint\");",
+            "const TargetObjects = eventsFunctionContext.getObjects(\"TargetObject\");",
+            "const TargetPoint = eventsFunctionContext.getArgument(\"TargetPoint\");",
+            "if (objects.length == 0 || TargetObjects.length == 0) {",
+            "    return;",
+            "}",
+            "const Object2D = objects[0];",
+            "const Target2D = TargetObjects[0];",
+            "const Object3D = Object2D.get3DRendererObject();",
+            "const Target3D = TargetObject2D.get3DRendererObject();",
+            "let Distance = 0;",
+            "if (Object3D && Target3D) {",
+            "    let ObjectPos;",
+            "    if (ObjectPoint === \"Center point\") {",
+            "        ObjectPos = new THREE.Vector3(Object2D.getCenterXInScene(), Object2D.getCenterYInScene(), Object2D.getCenterZInScene());",
+            "    } else {",
+            "        ObjectPos = new THREE.Vector3(Object2D.getX(), Object2D.getY(), Object2D.getZ());",
+            "    }",
+            "    let TargetPos;",
+            "    if (TargetPoint === \"Center point\") {",
+            "        TargetPos = new THREE.Vector3(Target2D.getCenterXInScene(), Target2D.getCenterYInScene(), Target2D.getCenterZInScene());",
+            "    } else {",
+            "        TargetPos = new THREE.Vector3(Target2D.getX(), Target2D.getY(), Target2D.getZ());",
+            "    }",
+            "    Distance = ObjectPos.distanceTo(TargetPos);",
+            "}",
+            "eventsFunctionContext.returnValue = Distance;",
+            "",
+            ""
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Object",
+          "name": "Object",
+          "type": "objectList"
+        },
+        {
+          "description": "Points of the 3D object",
+          "name": "ObjectPoint",
+          "supplementaryInformation": "[\"Center point\",\"Origin point\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Target 3D object",
+          "name": "TargetObject",
+          "type": "objectList"
+        },
+        {
+          "description": "Points of the target 3D object",
+          "name": "TargetPoint",
+          "supplementaryInformation": "[\"Center point\",\"Origin point\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Checks the unsigned angle (in degrees, range 0 to 180) between the object's local X-axis and the direction to the target in 3D space.",
+      "fullName": "↗️Check angle to 3D objects",
+      "functionType": "Condition",
+      "group": "Angle",
+      "name": "CheckAngleToObjects",
+      "sentence": "↗️Check angle to 3D object (_PARAM1_, _PARAM3_, _PARAM5_, _PARAM6_, _PARAM7_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const Targets = eventsFunctionContext.getObjects(\"Target\");",
+            "if (objects.length == 0 || Targets.length == 0) {",
+            "    return;",
+            "}",
+            "const TargetsLists = eventsFunctionContext.getObjectsLists(\"Target\");",
+            "const ObjectsLists = eventsFunctionContext.getObjectsLists(\"Object\");",
+            "const TargetPoint = eventsFunctionContext.getArgument(\"TargetPoint\");",
+            "const Operator = eventsFunctionContext.getArgument(\"Operator\");",
+            "const Angle = eventsFunctionContext.getArgument(\"Angle\");",
+            "const Arguments = {Poi:TargetPoint, Ope: Operator, Ang: Angle};",
+            "//",
+            "eventsFunctionContext.returnValue = gdjs.evtTools.object.twoListsTest(",
+            "    (Object2D, Target2D, Arg) => {",
+            "        const Object3D = Object2D.get3DRendererObject();",
+            "        // const Target3D = Target2D.get3DRendererObject();",
+            "        //",
+            "        let TargetPos;",
+            "        if (Arg.Poi === \"Center point\") {",
+            "            TargetPos = new THREE.Vector3(Target2D.getCenterXInScene(), -Target2D.getCenterYInScene(), Target2D.getCenterZInScene());",
+            "        } else {",
+            "            TargetPos = new THREE.Vector3(Target2D.getX(), -Target2D.getY(), Target2D.getZ());",
+            "        }",
+            "        const ObjectPos = Object3D.getWorldPosition(new THREE.Vector3());",
+            "        const Dir = TargetPos.sub(ObjectPos).normalize();",
+            "        const WorldQuaternion = new THREE.Quaternion();",
+            "        Object3D.getWorldQuaternion(WorldQuaternion);",
+            "        Dir.applyQuaternion(WorldQuaternion.invert());",
+            "        const Ang = gdjs.toDegrees(Math.acos(THREE.MathUtils.clamp(-Dir.x, -1, 1)));",
+            "        if (Arg.Ope == \"=\") {",
+            "            return (Ang == Arg.Ang);",
+            "        } else if (Arg.Ope == \"<\") {",
+            "            return (Ang < Arg.Ang);",
+            "        } else if (Arg.Ope == \">\") {",
+            "            return (Ang > Arg.Ang);",
+            "        } else if (Arg.Ope == \"≤\") {",
+            "            return (Ang <= Arg.Ang);",
+            "        } else if (Arg.Ope == \"≥\") {",
+            "            return (Ang >= Arg.Ang);",
+            "        } else {",
+            "            // ≠",
+            "            return (Ang != Arg.Ang);",
+            "        }",
+            "    },",
+            "    ObjectsLists,",
+            "    TargetsLists,",
+            "    false,",
+            "    Arguments",
+            ");",
+            "",
+            ""
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object",
+          "name": "Object",
+          "type": "objectList"
+        },
+        {
+          "description": "3D capability",
+          "name": "Capability3d",
+          "supplementaryInformation": "Scene3D::Base3DBehavior",
+          "type": "behavior"
+        },
+        {
+          "description": "Target 3D object",
+          "name": "Target",
+          "type": "objectList"
+        },
+        {
+          "description": "Target 3D capability",
+          "name": "TargetCapability3d",
+          "supplementaryInformation": "Scene3D::Base3DBehavior",
+          "type": "behavior"
+        },
+        {
+          "description": "Points of the target 3D object",
+          "name": "TargetPoint",
+          "supplementaryInformation": "[\"Center point\",\"Origin point\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Operator",
+          "name": "Operator",
+          "supplementaryInformation": "[\"=\",\"<\",\">\",\"≤\",\"≥\",\"≠\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Angle",
+          "name": "Angle",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Checks the distance between two objects in 3D.",
+      "fullName": "↔️Check distance between two objects in 3D",
+      "functionType": "Condition",
+      "group": "Position",
+      "name": "CheckDistanceV2",
+      "sentence": "↔️Check distance (_PARAM1_, _PARAM3_, _PARAM4_, _PARAM6_, _PARAM7_, _PARAM8_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const TargetObjects = eventsFunctionContext.getObjects(\"TargetObject\");",
+            "if (objects.length == 0 || TargetObjects.length == 0) {",
+            "    return;",
+            "}",
+            "const ObjectsLists = eventsFunctionContext.getObjectsLists(\"Object\");",
+            "const ObjectPoint = eventsFunctionContext.getArgument(\"ObjectPoint\");",
+            "const TargetsLists = eventsFunctionContext.getObjectsLists(\"TargetObject\");",
+            "const TargetPoint = eventsFunctionContext.getArgument(\"TargetPoint\");",
+            "const Operator = eventsFunctionContext.getArgument(\"Operator\");",
+            "const Distance = eventsFunctionContext.getArgument(\"Distance\");",
+            "const Arguments = {Ope: Operator, Dis: Distance, ObjP: ObjectPoint, TarP: TargetPoint};",
+            "//",
+            "eventsFunctionContext.returnValue = gdjs.evtTools.object.twoListsTest(",
+            "    (Object2D, Target2D, Arg) => {",
+            "        let ObjectPos;",
+            "        if (Arg.ObjP === \"Center point\") {",
+            "            ObjectPos = new THREE.Vector3(Object2D.getCenterXInScene(), Object2D.getCenterYInScene(), Object2D.getCenterZInScene());",
+            "        } else {",
+            "            ObjectPos = new THREE.Vector3(Object2D.getX(), Object2D.getY(), Object2D.getZ());",
+            "        }",
+            "        let TargetPos;",
+            "        if (Arg.TarP === \"Center point\") {",
+            "            TargetPos = new THREE.Vector3(Target2D.getCenterXInScene(), Target2D.getCenterYInScene(), Target2D.getCenterZInScene());",
+            "        } else {",
+            "            TargetPos = new THREE.Vector3(Target2D.getX(), Target2D.getY(), Target2D.getZ());",
+            "        }",
+            "        const Dis = ObjectPos.distanceTo(TargetPos);",
+            "        if (Arg.Ope == \"=\") {",
+            "            return (Dis == Arg.Dis);",
+            "        } else if (Arg.Ope == \"<\") {",
+            "            return (Dis < Arg.Dis);",
+            "        } else if (Arg.Ope == \">\") {",
+            "            return (Dis > Arg.Dis);",
+            "        } else if (Arg.Ope == \"≤\") {",
+            "            return (Dis <= Arg.Dis);",
+            "        } else if (Arg.Ope == \"≥\") {",
+            "            return (Dis >= Arg.Dis);",
+            "        } else {",
+            "            // ≠",
+            "            return (Dis != Arg.Dis);",
+            "        }",
+            "    },",
+            "    ObjectsLists,",
+            "    TargetsLists,",
+            "    false,",
+            "    Arguments",
+            ");",
+            "",
+            ""
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object",
+          "name": "Object",
+          "type": "objectList"
+        },
+        {
+          "description": "3D capability",
+          "name": "Capability3d",
+          "supplementaryInformation": "Scene3D::Base3DBehavior",
+          "type": "behavior"
+        },
+        {
+          "description": "Points of the 3D object",
+          "name": "ObjectPoint",
+          "supplementaryInformation": "[\"Center point\",\"Origin point\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Target Object",
+          "name": "TargetObject",
+          "type": "objectList"
+        },
+        {
+          "description": "Target 3D capability",
+          "name": "TargetCapability3d",
+          "supplementaryInformation": "Scene3D::Base3DBehavior",
+          "type": "behavior"
+        },
+        {
+          "description": "Points of the target 3D object",
+          "name": "TargetPoint",
+          "supplementaryInformation": "[\"Center point\",\"Origin point\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Operator",
+          "name": "Operator",
+          "supplementaryInformation": "[\"=\",\"<\",\">\",\"≤\",\"≥\",\"≠\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Distance",
+          "name": "Distance",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
     }
   ],
+  "eventsFunctionsFolderStructure": {
+    "folderName": "__ROOT",
+    "children": [
+      {
+        "functionName": "onFirstSceneLoaded"
+      },
+      {
+        "functionName": "onSceneLoaded"
+      },
+      {
+        "functionName": "onSceneUnloading"
+      },
+      {
+        "functionName": "Initialize"
+      },
+      {
+        "functionName": "LocalTranslateCameraDistance"
+      },
+      {
+        "functionName": "LocalTranslateCameraSpeed"
+      },
+      {
+        "functionName": "LocalRotateCameraAngle"
+      },
+      {
+        "functionName": "LocalRotateCameraSpeed"
+      },
+      {
+        "functionName": "LerpCamera"
+      },
+      {
+        "folderName": "Position",
+        "children": [
+          {
+            "functionName": "OverlapObjects"
+          },
+          {
+            "functionName": "OverlapObjectsV2"
+          },
+          {
+            "functionName": "LocalTranslateDistance"
+          },
+          {
+            "functionName": "LocalTranslateSpeed"
+          },
+          {
+            "functionName": "LerpObject"
+          },
+          {
+            "functionName": "CheckDistance"
+          },
+          {
+            "functionName": "CheckDistanceV2"
+          },
+          {
+            "functionName": "DistanceObjects"
+          },
+          {
+            "functionName": "DistanceObjectsV2"
+          },
+          {
+            "functionName": "LerpTowardChild"
+          }
+        ]
+      },
+      {
+        "folderName": "Angle",
+        "children": [
+          {
+            "functionName": "LocalRotateAngle"
+          },
+          {
+            "functionName": "LocalRotateSpeed"
+          },
+          {
+            "functionName": "LookAtPosition"
+          },
+          {
+            "functionName": "LookAtObject"
+          },
+          {
+            "functionName": "ChildRotateAngle"
+          },
+          {
+            "functionName": "ChildRotateSpeed"
+          },
+          {
+            "functionName": "ChangeChildAngle"
+          },
+          {
+            "functionName": "NormalizedDirection"
+          },
+          {
+            "functionName": "CheckAngleToObjects"
+          },
+          {
+            "functionName": "AngleToObjects"
+          }
+        ]
+      },
+      {
+        "folderName": "Debug",
+        "children": [
+          {
+            "functionName": "AddAxesHelper"
+          },
+          {
+            "functionName": "OutputHierarchy"
+          },
+          {
+            "functionName": "OutputMorphTarget"
+          }
+        ]
+      },
+      {
+        "folderName": "Effects",
+        "children": [
+          {
+            "functionName": "ChangeBlendMode"
+          },
+          {
+            "functionName": "ChangeBlendModeV2"
+          },
+          {
+            "functionName": "ChangeShadow"
+          }
+        ]
+      },
+      {
+        "folderName": "Visibility",
+        "children": [
+          {
+            "functionName": "Opacity"
+          },
+          {
+            "functionName": "CheckOpacity"
+          },
+          {
+            "functionName": "ChangeOpacity"
+          },
+          {
+            "functionName": "ChangeOpacityV2"
+          }
+        ]
+      },
+      {
+        "folderName": "Animations and images",
+        "children": [
+          {
+            "functionName": "ChangeMorphTarget"
+          },
+          {
+            "functionName": "ResetMorphTargets"
+          }
+        ]
+      },
+      {
+        "functionName": "SetListenerForCamera"
+      },
+      {
+        "folderName": "3D sound",
+        "children": [
+          {
+            "functionName": "SetListenerForObject"
+          }
+        ]
+      }
+    ]
+  },
   "eventsBasedBehaviors": [
     {
       "description": "Use this when you want to set the initial properties of a 3D object.",
       "fullName": "Advanced 3D Initial Properties",
+      "helpPath": "",
+      "iconUrl": "",
       "name": "A3I",
       "objectType": "",
+      "previewIconUrl": "",
       "eventsFunctions": [
         {
           "fullName": "",
@@ -3184,6 +3732,14 @@
           "objectGroups": []
         }
       ],
+      "eventsFunctionsFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "functionName": "onCreated"
+          }
+        ]
+      },
       "propertyDescriptors": [
         {
           "value": "",
@@ -3301,8 +3857,11 @@
     {
       "description": "⚠️ 3D Lights are highly loaded.",
       "fullName": "Advanced 3D Light",
+      "helpPath": "",
+      "iconUrl": "",
       "name": "A3L",
       "objectType": "",
+      "previewIconUrl": "",
       "eventsFunctions": [
         {
           "fullName": "",
@@ -3705,6 +4264,23 @@
           "objectGroups": []
         }
       ],
+      "eventsFunctionsFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "functionName": "onCreated"
+          },
+          {
+            "functionName": "onDestroy"
+          },
+          {
+            "functionName": "ChangeColor"
+          },
+          {
+            "functionName": "ChangeIntensity"
+          }
+        ]
+      },
       "propertyDescriptors": [
         {
           "value": "",
@@ -3912,8 +4488,11 @@
     {
       "description": "Use this when you want to play sound from a 3D object.",
       "fullName": "Advanced 3D Sound",
+      "helpPath": "",
+      "iconUrl": "",
       "name": "A3S",
       "objectType": "",
+      "previewIconUrl": "",
       "eventsFunctions": [
         {
           "fullName": "",
@@ -4133,6 +4712,23 @@
           "objectGroups": []
         }
       ],
+      "eventsFunctionsFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "functionName": "onCreated"
+          },
+          {
+            "functionName": "onDestroy"
+          },
+          {
+            "functionName": "Play"
+          },
+          {
+            "functionName": "StopAll"
+          }
+        ]
+      },
       "propertyDescriptors": [],
       "propertiesFolderStructure": {
         "folderName": "__ROOT"
