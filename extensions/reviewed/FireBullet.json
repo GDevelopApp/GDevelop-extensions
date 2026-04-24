@@ -1,16 +1,16 @@
 {
   "author": "@4ian",
   "category": "Game mechanic",
+  "dimension": "2D/3D",
   "extensionNamespace": "",
-  "gdevelopVersion": ">=5.5.222",
   "fullName": "Fire bullets",
+  "gdevelopVersion": ">=5.5.222",
   "helpPath": "/extensions/fire-bullet/details",
   "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWJ1bGxldCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xNCwyMkgxMFYyMUgxNFYyMk0xMywxMFY3SDExVjEwTDEwLDExLjVWMjBIMTRWMTEuNUwxMywxME0xMiwyQzEyLDIgMTEsMyAxMSw1VjZIMTNWNUMxMyw1IDEzLDMgMTIsMloiIC8+PC9zdmc+",
   "name": "FireBullet",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/bullet.svg",
   "shortDescription": "Fire bullets with ammo count, reload timer, and overheat management.",
-  "dimension": "2D",
-  "version": "0.9.2",
+  "version": "0.10.0",
   "description": [
     "This extension allows objects to fire bullets. To use it, add the behavior to the object that will shoot, then use the provided action to launch another object as the bullet.",
     "",
@@ -53,13 +53,218 @@
   "dependencies": [],
   "globalVariables": [],
   "sceneVariables": [],
-  "eventsFunctions": [],
+  "eventsFunctions": [
+    {
+      "description": "Define helper classes JavaScript code.",
+      "fullName": "Define helper classes",
+      "functionType": "Action",
+      "name": "DefineHelperClasses",
+      "private": true,
+      "sentence": "Define helper classes JavaScript code",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "//@ts-ignore",
+            "if (gdjs.__fireBulletExtension) {",
+            "    //@ts-ignore",
+            "    return;",
+            "}",
+            "",
+            "class LocalBasis {",
+            "    forward = new THREE.Vector3();",
+            "    up = new THREE.Vector3();",
+            "    right = new THREE.Vector3();",
+            "",
+            "    /**",
+            "     * @param offsetX {number}",
+            "     */",
+            "    getWorldOffsetX(offsetX, offsetY, offsetZ) {",
+            "        return offsetX * this.forward.x +",
+            "            offsetY * this.right.x +",
+            "            offsetZ * this.up.y;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param offsetY {number}",
+            "     */",
+            "    getWorldOffsetY(offsetX, offsetY, offsetZ) {",
+            "        return offsetX * this.forward.y +",
+            "            offsetY * this.right.y +",
+            "            offsetZ * this.up.y;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param offsetX {number}",
+            "     */",
+            "    getWorldOffsetZ(offsetX, offsetY, offsetZ) {",
+            "        return offsetX * this.forward.z +",
+            "            offsetY * this.right.z +",
+            "            offsetZ * this.up.z;",
+            "    }",
+            "}",
+            "",
+            "class CameraLocalBasis extends LocalBasis {",
+            "    /** @type {gdjs.RuntimeObject} */",
+            "    object;",
+            "    rotationMatrix = new THREE.Matrix4();",
+            "",
+            "    /**",
+            "     * @param object {gdjs.RuntimeObject}",
+            "     */",
+            "    constructor(object) {",
+            "        super();",
+            "        this.object = object;",
+            "    }",
+            "",
+            "    update() {",
+            "        const layer = this.object.getInstanceContainer().getLayer(this.object.getLayer());",
+            "        const threeCamera = layer.getRenderer().getThreeCamera();",
+            "        this.rotationMatrix.makeRotationFromEuler(threeCamera.rotation);",
+            "        const elements = this.rotationMatrix.elements;",
+            "",
+            "        this.forward.set(-elements[8], elements[9], -elements[10]);",
+            "        this.right.set(elements[0], -elements[1], elements[2]);",
+            "        this.up.crossVectors(this.forward, this.right);",
+            "",
+            "        // Normalize them, just in case (they should generally be unit vectors).",
+            "        this.forward.normalize();",
+            "        this.right.normalize();",
+            "        this.up.normalize();",
+            "    }",
+            "}",
+            "",
+            "class ObjectLocalBasis extends LocalBasis {",
+            "    /** @type {gdjs.RuntimeObject} */",
+            "    object;",
+            "    rotationMatrix = new THREE.Matrix4();",
+            "",
+            "    /**",
+            "     * @param object {gdjs.RuntimeObject}",
+            "     */",
+            "    constructor(object) {",
+            "        super();",
+            "        this.object = object;",
+            "    }",
+            "",
+            "    update() {",
+            "        const threeObject = this.object.get3DRendererObject();",
+            "        this.rotationMatrix.makeRotationFromEuler(threeObject.rotation);",
+            "        const elements = this.rotationMatrix.elements;",
+            "",
+            "        this.forward.set(elements[0], elements[1], elements[2]);",
+            "        this.up.set(elements[8], elements[9], elements[10]);",
+            "        this.right.crossVectors(this.forward, this.up);",
+            "",
+            "        // Normalize them, just in case (they should generally be unit vectors).",
+            "        this.forward.normalize();",
+            "        this.right.normalize();",
+            "        this.up.normalize();",
+            "    }",
+            "}",
+            "",
+            "/**",
+            " * It can be built the follow:",
+            " * ",
+            " * `objectDefaultRotation.setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI/2);`",
+            " * ",
+            " * `objectDefaultRotation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI/2));`",
+            " * ",
+            " */",
+            "const objectDefaultRotation = new THREE.Quaternion(0.5, 0.5, -0.5, 0.5);",
+            "",
+            "/**",
+            " * @param {gdjs.RuntimeObject3D} object",
+            " */",
+            "function rotateObjectToFaceSameWayAsCamera(object) {",
+            "    const layer = object.getInstanceContainer().getLayer(object.getLayer());",
+            "    const threeCamera = layer.getRenderer().getThreeCamera();",
+            "    const threeObject = object.get3DRendererObject();",
+            "",
+            "    threeObject.rotation.copy(threeCamera.rotation);",
+            "    threeObject.rotation.z = -threeObject.rotation.z;",
+            "    threeObject.rotation.x = -threeObject.rotation.x;",
+            "    threeObject.quaternion.multiply(objectDefaultRotation);",
+            "",
+            "    const {x, y, z } = threeObject.rotation;",
+            "    object.setAngle(gdjs.toDegrees(z));",
+            "    object.setRotationY(gdjs.toDegrees(y));",
+            "    object.setRotationX(gdjs.toDegrees(x));",
+            "}",
+            "",
+            "//@ts-ignore",
+            "gdjs.__fireBulletExtension = {",
+            "    CameraLocalBasis,",
+            "    ObjectLocalBasis,",
+            "    rotateObjectToFaceSameWayAsCamera",
+            "};",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Rotate the same way as camera",
+      "functionType": "Action",
+      "name": "RotateObjectToFaceSameWayAsCamera",
+      "private": true,
+      "sentence": "Rotate _PARAM1_ to look the same way as the camera",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const object = objects[0];",
+            "",
+            "const { rotateObjectToFaceSameWayAsCamera } = gdjs.__fireBulletExtension;",
+            "",
+            "rotateObjectToFaceSameWayAsCamera(object);"
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Object",
+          "name": "Object",
+          "type": "objectList"
+        },
+        {
+          "description": "3D capability",
+          "name": "Object3D",
+          "supplementaryInformation": "Scene3D::Base3DBehavior",
+          "type": "behavior"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsFunctionsFolderStructure": {
+    "folderName": "__ROOT",
+    "children": [
+      {
+        "functionName": "DefineHelperClasses"
+      },
+      {
+        "functionName": "RotateObjectToFaceSameWayAsCamera"
+      }
+    ]
+  },
   "eventsBasedBehaviors": [
     {
       "description": "Fire bullets with built-in cooldown, ammo, reloading, and overheating. Once added to your object that must shoot, use the behavior actions to fire another object as a bullet. These actions check all constraints internally (can be called without conditions, they will only fire when ready) and will make the bullet move (using a permanent force).",
       "fullName": "Fire bullets",
+      "helpPath": "",
+      "iconUrl": "",
       "name": "FireBullet",
       "objectType": "",
+      "previewIconUrl": "",
       "eventsFunctions": [
         {
           "fullName": "",
@@ -99,8 +304,32 @@
                     "=",
                     "ShotsPerReload"
                   ]
+                },
+                {
+                  "type": {
+                    "value": "FireBullet::DefineHelperClasses"
+                  },
+                  "parameters": [
+                    "",
+                    ""
+                  ]
                 }
               ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const { CameraLocalBasis, ObjectLocalBasis } = gdjs.__fireBulletExtension;\r",
+                "const object = objects[0];\r",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));\r",
+                "behavior.__fireBulletExtension = {\r",
+                "    cameraLocalBasis: new CameraLocalBasis(object),\r",
+                "    objectLocalBasis: new ObjectLocalBasis(object)\r",
+                "};"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
             }
           ],
           "parameters": [
@@ -1431,6 +1660,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "FiringArc",
+          "group": "Multi-Fire",
           "name": "SetFiringArcOp",
           "sentence": "",
           "events": [
@@ -1564,6 +1794,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "AngleVariance",
+          "group": "Firing variance",
           "name": "SetAngleVarianceOp",
           "sentence": "",
           "events": [
@@ -1697,6 +1928,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "BulletSpeedVariance",
+          "group": "Firing variance",
           "name": "SetBulletSpeedVarianceOp",
           "sentence": "",
           "events": [
@@ -1830,6 +2062,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "BulletQuantity",
+          "group": "Multi-Fire",
           "name": "SetBulletQuantityOp",
           "sentence": "",
           "events": [
@@ -2180,6 +2413,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "Cooldown",
+          "group": "Firing",
           "name": "SetCooldownOp",
           "sentence": "",
           "events": [
@@ -2313,6 +2547,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "ReloadDuration",
+          "group": "Reload",
           "name": "SetReloadDurationOp",
           "sentence": "",
           "events": [
@@ -2446,6 +2681,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "OverheatDuration",
+          "group": "Overheat",
           "name": "SetOverheatDurationOp",
           "sentence": "",
           "events": [
@@ -2579,6 +2815,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "AmmoQuantity",
+          "group": "Ammo",
           "name": "SetAmmoQuantityOp",
           "sentence": "",
           "events": [
@@ -2712,6 +2949,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "HeatIncreasePerShot",
+          "group": "Overheat",
           "name": "SetHeatPerShotOp",
           "sentence": "",
           "events": [
@@ -2845,6 +3083,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "MaxAmmo",
+          "group": "Ammo",
           "name": "SetMaxAmmoOp",
           "sentence": "",
           "events": [
@@ -3125,6 +3364,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "ShotsPerReload",
+          "group": "Reload",
           "name": "SetShotsPerReloadOp",
           "sentence": "",
           "events": [
@@ -3359,6 +3599,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "LinearCoolingRate",
+          "group": "Overheat",
           "name": "SetLinearCoolingRateOp",
           "sentence": "",
           "events": [
@@ -3492,6 +3733,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "ExponentialCoolingRate",
+          "group": "Overheat",
           "name": "SetExponentialCoolingRateOp",
           "sentence": "",
           "events": [
@@ -4729,8 +4971,1491 @@
             }
           ],
           "objectGroups": []
+        },
+        {
+          "description": "Fire bullets from the object at a specified speed. Call this continuously, the action checks readiness internally — no extra timer or check needed.",
+          "fullName": "Fire bullets from 3D object",
+          "functionType": "Action",
+          "name": "FireForwardObject3D",
+          "sentence": "Fire _PARAM6_ from _PARAM0_ (if ready) with offset _PARAM3_ ; _PARAM4_ ; _PARAM5_  at speed _PARAM9_ px/s",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::IsReadyToShoot"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetBooleanVariable"
+                  },
+                  "parameters": [
+                    "HasJustFired",
+                    "True",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "Bullet",
+                    "0",
+                    "0",
+                    "Object.Layer()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetCenter"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "=",
+                    "Object.CenterX()",
+                    "=",
+                    "Object.CenterY()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Scene3D::Base3DBehavior::SetCenterZ"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "Object3D2",
+                    "=",
+                    "Object.Object3D::CenterZ()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::UpdateObjectLocalBasis"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetX"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "+",
+                    "Object.Behavior::WorldOffsetX(OffsetX, OffsetY, OffsetZ)"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetY"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "+",
+                    "Object.Behavior::WorldOffsetY(OffsetX, OffsetY, OffsetZ)"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Scene3D::Base3DBehavior::SetZ"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "Object3D2",
+                    "+",
+                    "Object.Behavior::WorldOffsetZ(OffsetX, OffsetY, OffsetZ)"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Physics3D::Physics3DBehavior::SetLinearVelocityX"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "Physics3D",
+                    "=",
+                    "Speed * Object.Behavior::ForwardX()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Physics3D::Physics3DBehavior::SetLinearVelocityY"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "Physics3D",
+                    "=",
+                    "Speed * Object.Behavior::ForwardY()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Physics3D::Physics3DBehavior::SetLinearVelocityZ"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "Physics3D",
+                    "=",
+                    "Speed * Object.Behavior::ForwardZ()"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "BooleanVariable"
+                      },
+                      "parameters": [
+                        "RotateBullet",
+                        "True",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetAngle"
+                      },
+                      "parameters": [
+                        "Bullet",
+                        "=",
+                        "Object.Angle()"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "Scene3D::Base3DBehavior::SetRotationY"
+                      },
+                      "parameters": [
+                        "Bullet",
+                        "Object3D2",
+                        "=",
+                        "Object.Object3D::RotationY()"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "Scene3D::Base3DBehavior::SetRotationX"
+                      },
+                      "parameters": [
+                        "Bullet",
+                        "Object3D2",
+                        "=",
+                        "Object.Object3D::RotationX()"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            },
+            {
+              "description": "3D capability",
+              "name": "Object3D",
+              "supplementaryInformation": "Scene3D::Base3DBehavior",
+              "type": "behavior"
+            },
+            {
+              "description": "Forward offset",
+              "longDescription": "Offset on local X axis of the object.",
+              "name": "OffsetX",
+              "type": "expression"
+            },
+            {
+              "description": "Offset to the right",
+              "longDescription": "Offset on local Y axis of the object.",
+              "name": "OffsetY",
+              "type": "expression"
+            },
+            {
+              "description": "Upward offset",
+              "longDescription": "Offset on local Z axis of the object.",
+              "name": "OffsetZ",
+              "type": "expression"
+            },
+            {
+              "description": "The bullet object",
+              "name": "Bullet",
+              "type": "objectListOrEmptyIfJustDeclared"
+            },
+            {
+              "description": "3D capability",
+              "name": "Object3D2",
+              "supplementaryInformation": "Scene3D::Base3DBehavior",
+              "type": "behavior"
+            },
+            {
+              "description": "3D physics engine",
+              "name": "Physics3D",
+              "supplementaryInformation": "Physics3D::Physics3DBehavior",
+              "type": "behavior"
+            },
+            {
+              "description": "Speed of the bullet, in pixels per second",
+              "name": "Speed",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Update camera local basis",
+          "functionType": "Action",
+          "group": "3D Helpers",
+          "name": "UpdateCameraLocalBasis",
+          "private": true,
+          "sentence": "Update camera local basis of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                "const { cameraLocalBasis } = behavior.__fireBulletExtension;",
+                "cameraLocalBasis.update();",
+                "console.log(cameraLocalBasis.forward, cameraLocalBasis.up, cameraLocalBasis.right);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "World offset X",
+          "functionType": "Expression",
+          "group": "3D Helpers",
+          "name": "WorldOffsetX",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                "const { objectLocalBasis } = behavior.__fireBulletExtension;",
+                "",
+                "const offsetX = eventsFunctionContext.getArgument(\"OffsetX\");",
+                "const offsetY = eventsFunctionContext.getArgument(\"OffsetY\");",
+                "const offsetZ = eventsFunctionContext.getArgument(\"OffsetZ\");",
+                "",
+                "eventsFunctionContext.returnValue = objectLocalBasis.getWorldOffsetX(offsetX, offsetY, offsetZ);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            },
+            {
+              "description": "Local offset X",
+              "name": "OffsetX",
+              "type": "expression"
+            },
+            {
+              "description": "Local offset Y",
+              "name": "OffsetY",
+              "type": "expression"
+            },
+            {
+              "description": "Local offset Z",
+              "name": "OffsetZ",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "World offset Y",
+          "functionType": "Expression",
+          "group": "3D Helpers",
+          "name": "WorldOffsetY",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                "const { objectLocalBasis } = behavior.__fireBulletExtension;",
+                "",
+                "const offsetX = eventsFunctionContext.getArgument(\"OffsetX\");",
+                "const offsetY = eventsFunctionContext.getArgument(\"OffsetY\");",
+                "const offsetZ = eventsFunctionContext.getArgument(\"OffsetZ\");",
+                "",
+                "eventsFunctionContext.returnValue = objectLocalBasis.getWorldOffsetY(offsetX, offsetY, offsetZ);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            },
+            {
+              "description": "Local offset X",
+              "name": "OffsetX",
+              "type": "expression"
+            },
+            {
+              "description": "Local offset Y",
+              "name": "OffsetY",
+              "type": "expression"
+            },
+            {
+              "description": "Local offset Z",
+              "name": "OffsetZ",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "World offset Z",
+          "functionType": "Expression",
+          "group": "3D Helpers",
+          "name": "WorldOffsetZ",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                "const { objectLocalBasis } = behavior.__fireBulletExtension;",
+                "",
+                "const offsetX = eventsFunctionContext.getArgument(\"OffsetX\");",
+                "const offsetY = eventsFunctionContext.getArgument(\"OffsetY\");",
+                "const offsetZ = eventsFunctionContext.getArgument(\"OffsetZ\");",
+                "",
+                "eventsFunctionContext.returnValue = objectLocalBasis.getWorldOffsetZ(offsetX, offsetY, offsetZ);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            },
+            {
+              "description": "Local offset X",
+              "name": "OffsetX",
+              "type": "expression"
+            },
+            {
+              "description": "Local offset Y",
+              "name": "OffsetY",
+              "type": "expression"
+            },
+            {
+              "description": "Local offset Z",
+              "name": "OffsetZ",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Forward X",
+          "functionType": "Expression",
+          "group": "3D Helpers",
+          "name": "ForwardX",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                "const { objectLocalBasis } = behavior.__fireBulletExtension;",
+                "",
+                "eventsFunctionContext.returnValue = objectLocalBasis.forward.x;",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Forward Y",
+          "functionType": "Expression",
+          "group": "3D Helpers",
+          "name": "ForwardY",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                "const { objectLocalBasis } = behavior.__fireBulletExtension;",
+                "",
+                "eventsFunctionContext.returnValue = objectLocalBasis.forward.y;",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Forward Z",
+          "functionType": "Expression",
+          "group": "3D Helpers",
+          "name": "ForwardZ",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                "const { objectLocalBasis } = behavior.__fireBulletExtension;",
+                "",
+                "eventsFunctionContext.returnValue = objectLocalBasis.forward.z;",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Update object local basis",
+          "functionType": "Action",
+          "group": "3D Helpers",
+          "name": "UpdateObjectLocalBasis",
+          "private": true,
+          "sentence": "Update local basis of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                "const { objectLocalBasis } = behavior.__fireBulletExtension;",
+                "objectLocalBasis.update();",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Camera forward X",
+          "functionType": "Expression",
+          "group": "3D Helpers",
+          "name": "CameraForwardX",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                "const { cameraLocalBasis } = behavior.__fireBulletExtension;",
+                "",
+                "eventsFunctionContext.returnValue = cameraLocalBasis.forward.x;",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Camera forward Y",
+          "functionType": "Expression",
+          "group": "3D Helpers",
+          "name": "CameraForwardY",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                "const { cameraLocalBasis } = behavior.__fireBulletExtension;",
+                "",
+                "eventsFunctionContext.returnValue = cameraLocalBasis.forward.y;",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "Camera forward Z",
+          "functionType": "Expression",
+          "group": "3D Helpers",
+          "name": "CameraForwardZ",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                "const { cameraLocalBasis } = behavior.__fireBulletExtension;",
+                "",
+                "eventsFunctionContext.returnValue = cameraLocalBasis.forward.z;",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Fire bullets from the camera at a specified speed. Usually, the invisible object with player controls fires the bullets. Call this continuously, the action checks readiness internally — no extra timer or check needed.",
+          "fullName": "Fire bullets from 3D camera",
+          "functionType": "Action",
+          "name": "FireForwardCamera3D",
+          "sentence": "Fire _PARAM6_ from the camera of _PARAM0_ (if ready) with offset _PARAM3_ ; _PARAM4_ ; _PARAM5_  at speed _PARAM9_ px/s",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::IsReadyToShoot"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetBooleanVariable"
+                  },
+                  "parameters": [
+                    "HasJustFired",
+                    "True",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Create"
+                  },
+                  "parameters": [
+                    "",
+                    "Bullet",
+                    "0",
+                    "0",
+                    "Object.Layer()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetCenter"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "=",
+                    "CameraCenterX(Object.Layer())",
+                    "=",
+                    "CameraCenterY(Object.Layer())"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Scene3D::Base3DBehavior::SetCenterZ"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "Object3D2",
+                    "=",
+                    "Scene3D::CameraZ(Object.Layer())"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::UpdateCameraLocalBasis"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetX"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "+",
+                    "Object.Behavior::WorldCameraOffsetX(OffsetX, OffsetY, OffsetZ)"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetY"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "+",
+                    "Object.Behavior::WorldCameraOffsetY(OffsetX, OffsetY, OffsetZ)"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Scene3D::Base3DBehavior::SetZ"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "Object3D2",
+                    "+",
+                    "Object.Behavior::WorldCameraOffsetZ(OffsetX, OffsetY, OffsetZ)"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Physics3D::Physics3DBehavior::SetLinearVelocityX"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "Physics3D",
+                    "=",
+                    "Speed * Object.Behavior::CameraForwardX()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Physics3D::Physics3DBehavior::SetLinearVelocityY"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "Physics3D",
+                    "=",
+                    "Speed * Object.Behavior::CameraForwardY()"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Physics3D::Physics3DBehavior::SetLinearVelocityZ"
+                  },
+                  "parameters": [
+                    "Bullet",
+                    "Physics3D",
+                    "=",
+                    "Speed * Object.Behavior::CameraForwardZ()"
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "BooleanVariable"
+                      },
+                      "parameters": [
+                        "RotateBullet",
+                        "True",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "FireBullet::RotateObjectToFaceSameWayAsCamera"
+                      },
+                      "parameters": [
+                        "",
+                        "Bullet",
+                        "Object3D2",
+                        ""
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            },
+            {
+              "description": "3D capability",
+              "name": "Object3D",
+              "supplementaryInformation": "Scene3D::Base3DBehavior",
+              "type": "behavior"
+            },
+            {
+              "description": "Forward offset",
+              "longDescription": "Offset on local X axis of the camera.",
+              "name": "OffsetX",
+              "type": "expression"
+            },
+            {
+              "description": "Offset to the right",
+              "longDescription": "Offset on local Y axis of the camera.",
+              "name": "OffsetY",
+              "type": "expression"
+            },
+            {
+              "description": "Upward offset",
+              "longDescription": "Offset on local Z axis of the camera.",
+              "name": "OffsetZ",
+              "type": "expression"
+            },
+            {
+              "description": "The bullet object",
+              "name": "Bullet",
+              "type": "objectListOrEmptyIfJustDeclared"
+            },
+            {
+              "description": "3D capability",
+              "name": "Object3D2",
+              "supplementaryInformation": "Scene3D::Base3DBehavior",
+              "type": "behavior"
+            },
+            {
+              "description": "3D physics engine",
+              "name": "Physics3D",
+              "supplementaryInformation": "Physics3D::Physics3DBehavior",
+              "type": "behavior"
+            },
+            {
+              "description": "Speed of the bullet, in pixels per second",
+              "name": "Speed",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "World camera offset X",
+          "functionType": "Expression",
+          "group": "3D Helpers",
+          "name": "WorldCameraOffsetX",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                "const { cameraLocalBasis } = behavior.__fireBulletExtension;",
+                "",
+                "const offsetX = eventsFunctionContext.getArgument(\"OffsetX\");",
+                "const offsetY = eventsFunctionContext.getArgument(\"OffsetY\");",
+                "const offsetZ = eventsFunctionContext.getArgument(\"OffsetZ\");",
+                "",
+                "eventsFunctionContext.returnValue = cameraLocalBasis.getWorldOffsetX(offsetX, offsetY, offsetZ);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            },
+            {
+              "description": "Local offset X",
+              "name": "OffsetX",
+              "type": "expression"
+            },
+            {
+              "description": "Local offset Y",
+              "name": "OffsetY",
+              "type": "expression"
+            },
+            {
+              "description": "Local offset Z",
+              "name": "OffsetZ",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "World camera offset Y",
+          "functionType": "Expression",
+          "group": "3D Helpers",
+          "name": "WorldCameraOffsetY",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                "const { cameraLocalBasis } = behavior.__fireBulletExtension;",
+                "",
+                "const offsetX = eventsFunctionContext.getArgument(\"OffsetX\");",
+                "const offsetY = eventsFunctionContext.getArgument(\"OffsetY\");",
+                "const offsetZ = eventsFunctionContext.getArgument(\"OffsetZ\");",
+                "",
+                "eventsFunctionContext.returnValue = cameraLocalBasis.getWorldOffsetY(offsetX, offsetY, offsetZ);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            },
+            {
+              "description": "Local offset X",
+              "name": "OffsetX",
+              "type": "expression"
+            },
+            {
+              "description": "Local offset Y",
+              "name": "OffsetY",
+              "type": "expression"
+            },
+            {
+              "description": "Local offset Z",
+              "name": "OffsetZ",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "World camera offset Z",
+          "functionType": "Expression",
+          "group": "3D Helpers",
+          "name": "WorldCameraOffsetZ",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behavior = object.getBehavior(eventsFunctionContext.getBehaviorName(\"Behavior\"));",
+                "const { cameraLocalBasis } = behavior.__fireBulletExtension;",
+                "",
+                "const offsetX = eventsFunctionContext.getArgument(\"OffsetX\");",
+                "const offsetY = eventsFunctionContext.getArgument(\"OffsetY\");",
+                "const offsetZ = eventsFunctionContext.getArgument(\"OffsetZ\");",
+                "",
+                "eventsFunctionContext.returnValue = cameraLocalBasis.getWorldOffsetZ(offsetX, offsetY, offsetZ);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            },
+            {
+              "description": "Local offset X",
+              "name": "OffsetX",
+              "type": "expression"
+            },
+            {
+              "description": "Local offset Y",
+              "name": "OffsetY",
+              "type": "expression"
+            },
+            {
+              "description": "Local offset Z",
+              "name": "OffsetZ",
+              "type": "expression"
+            }
+          ],
+          "objectGroups": []
         }
       ],
+      "eventsFunctionsFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "functionName": "onCreated"
+          },
+          {
+            "functionName": "doStepPreEvents"
+          },
+          {
+            "functionName": "FireTowardObject"
+          },
+          {
+            "functionName": "FireTowardPosition"
+          },
+          {
+            "functionName": "Fire"
+          },
+          {
+            "functionName": "FireForwardObject3D"
+          },
+          {
+            "functionName": "FireForwardCamera3D"
+          },
+          {
+            "folderName": "3D Helpers",
+            "children": [
+              {
+                "functionName": "UpdateCameraLocalBasis"
+              },
+              {
+                "functionName": "CameraForwardX"
+              },
+              {
+                "functionName": "CameraForwardY"
+              },
+              {
+                "functionName": "CameraForwardZ"
+              },
+              {
+                "functionName": "WorldCameraOffsetX"
+              },
+              {
+                "functionName": "WorldCameraOffsetY"
+              },
+              {
+                "functionName": "WorldCameraOffsetZ"
+              },
+              {
+                "functionName": "UpdateObjectLocalBasis"
+              },
+              {
+                "functionName": "ForwardX"
+              },
+              {
+                "functionName": "ForwardY"
+              },
+              {
+                "functionName": "ForwardZ"
+              },
+              {
+                "functionName": "WorldOffsetX"
+              },
+              {
+                "functionName": "WorldOffsetY"
+              },
+              {
+                "functionName": "WorldOffsetZ"
+              }
+            ]
+          },
+          {
+            "folderName": "Firing",
+            "children": [
+              {
+                "functionName": "FireSingleBullet"
+              },
+              {
+                "functionName": "HasJustFired"
+              },
+              {
+                "functionName": "BulletRotationEnabled"
+              },
+              {
+                "functionName": "SetAngleVariance"
+              },
+              {
+                "functionName": "SetBulletLayer"
+              },
+              {
+                "functionName": "SetRotateBullet"
+              },
+              {
+                "functionName": "Cooldown"
+              },
+              {
+                "functionName": "SetCooldownOp"
+              },
+              {
+                "functionName": "SetCooldown"
+              },
+              {
+                "functionName": "CooldownTimeLeft"
+              },
+              {
+                "functionName": "IsReadyToShoot"
+              },
+              {
+                "functionName": "IsFiringCooldownActive"
+              }
+            ]
+          },
+          {
+            "functionName": "ReloadAmmo"
+          },
+          {
+            "folderName": "Multi-Fire",
+            "children": [
+              {
+                "functionName": "FiringArc"
+              },
+              {
+                "functionName": "SetFiringArcOp"
+              },
+              {
+                "functionName": "SetFiringArc"
+              },
+              {
+                "functionName": "SetBulletSpeedVariance"
+              },
+              {
+                "functionName": "BulletQuantity"
+              },
+              {
+                "functionName": "SetBulletQuantityOp"
+              },
+              {
+                "functionName": "SetBulletQuantity"
+              },
+              {
+                "functionName": "BulletLayer"
+              }
+            ]
+          },
+          {
+            "folderName": "Firing variance",
+            "children": [
+              {
+                "functionName": "AngleVariance"
+              },
+              {
+                "functionName": "SetAngleVarianceOp"
+              },
+              {
+                "functionName": "BulletSpeedVariance"
+              },
+              {
+                "functionName": "SetBulletSpeedVarianceOp"
+              }
+            ]
+          },
+          {
+            "folderName": "Ammo",
+            "children": [
+              {
+                "functionName": "SetUnlimitedAmmo"
+              },
+              {
+                "functionName": "AmmoQuantity"
+              },
+              {
+                "functionName": "SetAmmoQuantityOp"
+              },
+              {
+                "functionName": "SetAmmoQuantity"
+              },
+              {
+                "functionName": "MaxAmmo"
+              },
+              {
+                "functionName": "SetMaxAmmoOp"
+              },
+              {
+                "functionName": "SetMaxAmmo"
+              },
+              {
+                "functionName": "IsUnlimitedAmmo"
+              },
+              {
+                "functionName": "IsOutOfAmmo"
+              }
+            ]
+          },
+          {
+            "folderName": "Reload",
+            "children": [
+              {
+                "functionName": "ReloadDuration"
+              },
+              {
+                "functionName": "SetReloadDurationOp"
+              },
+              {
+                "functionName": "SetReloadDuration"
+              },
+              {
+                "functionName": "ShotsPerReload"
+              },
+              {
+                "functionName": "SetShotsPerReloadOp"
+              },
+              {
+                "functionName": "SetShotsPerReload"
+              },
+              {
+                "functionName": "SetAutomaticReload"
+              },
+              {
+                "functionName": "ShotsBeforeNextReload"
+              },
+              {
+                "functionName": "ReloadTimeLeft"
+              },
+              {
+                "functionName": "IsReloadInProgress"
+              },
+              {
+                "functionName": "IsAutomaticReloadingEnabled"
+              },
+              {
+                "functionName": "IsReloadNeeded"
+              }
+            ]
+          },
+          {
+            "folderName": "Overheat",
+            "children": [
+              {
+                "functionName": "OverheatDuration"
+              },
+              {
+                "functionName": "SetOverheatDurationOp"
+              },
+              {
+                "functionName": "SetOverheatDuration"
+              },
+              {
+                "functionName": "HeatIncreasePerShot"
+              },
+              {
+                "functionName": "SetHeatPerShotOp"
+              },
+              {
+                "functionName": "SetHeatPerShot"
+              },
+              {
+                "functionName": "LinearCoolingRate"
+              },
+              {
+                "functionName": "SetLinearCoolingRateOp"
+              },
+              {
+                "functionName": "SetLinearCoolingRate"
+              },
+              {
+                "functionName": "ExponentialCoolingRate"
+              },
+              {
+                "functionName": "SetExponentialCoolingRateOp"
+              },
+              {
+                "functionName": "SetExponentialCoolingRate"
+              },
+              {
+                "functionName": "HeatLevel"
+              },
+              {
+                "functionName": "OverheatTimeLeft"
+              },
+              {
+                "functionName": "IsOverheated"
+              }
+            ]
+          },
+          {
+            "folderName": "Stats",
+            "children": [
+              {
+                "functionName": "ResetTotalShotsFired"
+              },
+              {
+                "functionName": "ResetTotalBulletsCreated"
+              },
+              {
+                "functionName": "ResetTotalReloadsCompleted"
+              },
+              {
+                "functionName": "TotalShotsFired"
+              },
+              {
+                "functionName": "TotalBulletsCreated"
+              },
+              {
+                "functionName": "TotalReloadsCompleted"
+              }
+            ]
+          },
+          {
+            "functionName": "IncreaseAmmo"
+          }
+        ]
+      },
       "propertyDescriptors": [
         {
           "value": "0.1",
@@ -4738,17 +6463,12 @@
           "unit": "Second",
           "label": "Firing cooldown",
           "description": "Objects cannot shoot while firing cooldown is active.",
-          "group": "",
-          "extraInformation": [],
           "name": "FireCooldown"
         },
         {
           "value": "",
           "type": "Boolean",
           "label": "",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
           "hidden": true,
           "name": "HasJustFired"
         },
@@ -4756,9 +6476,6 @@
           "value": "true",
           "type": "Boolean",
           "label": "Rotate bullets to match their trajectory",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
           "name": "RotateBullet"
         },
         {
@@ -4768,7 +6485,6 @@
           "label": "Firing arc",
           "description": "Multi-Fire bullets will be evenly spaced inside the firing arc",
           "group": "Multi-Fire",
-          "extraInformation": [],
           "name": "FiringArc"
         },
         {
@@ -4777,7 +6493,6 @@
           "label": "Number of bullets created at once",
           "description": "Multi-Fire bullets will be evenly spaced inside the firing arc",
           "group": "Multi-Fire",
-          "extraInformation": [],
           "name": "BulletQuantity"
         },
         {
@@ -4787,7 +6502,6 @@
           "label": "Angle variance",
           "description": "Make imperfect aim (between 0 and 180 degrees).",
           "group": "Firing variance",
-          "extraInformation": [],
           "advanced": true,
           "name": "AngleVariance"
         },
@@ -4798,7 +6512,6 @@
           "label": "Bullet speed variance",
           "description": "Bullet speed will be adjusted by a random value within this range.",
           "group": "Firing variance",
-          "extraInformation": [],
           "advanced": true,
           "name": "BulletSpeedVariance"
         },
@@ -4806,9 +6519,6 @@
           "value": "0",
           "type": "Number",
           "label": "Ammo quantity (current)",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
           "hidden": true,
           "name": "AmmoQuantity"
         },
@@ -4818,7 +6528,6 @@
           "label": "Shots per reload ",
           "description": "Use 0 to disable reloading.",
           "group": "Reload",
-          "extraInformation": [],
           "advanced": true,
           "name": "ShotsPerReload"
         },
@@ -4829,7 +6538,6 @@
           "label": "Reloading duration",
           "description": "Objects cannot shoot while reloading is in progress.",
           "group": "Reload",
-          "extraInformation": [],
           "advanced": true,
           "name": "ReloadDuration"
         },
@@ -4837,9 +6545,7 @@
           "value": "0",
           "type": "Number",
           "label": "Max ammo ",
-          "description": "",
           "group": "Ammo",
-          "extraInformation": [],
           "advanced": true,
           "name": "MaxAmmo"
         },
@@ -4847,9 +6553,6 @@
           "value": "0",
           "type": "Number",
           "label": "Shots before next reload",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
           "hidden": true,
           "name": "ShotsBeforeNextReload"
         },
@@ -4858,8 +6561,6 @@
           "type": "Number",
           "label": "Total shots fired",
           "description": "Regardless of how many bullets are created, only 1 shot will be counted per frame",
-          "group": "",
-          "extraInformation": [],
           "hidden": true,
           "name": "TotalShotsFired"
         },
@@ -4867,9 +6568,6 @@
           "value": "0",
           "type": "Number",
           "label": "Total bullets created",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
           "hidden": true,
           "name": "TotalBulletsCreated"
         },
@@ -4877,9 +6575,7 @@
           "value": "0",
           "type": "Number",
           "label": "Starting ammo",
-          "description": "",
           "group": "Ammo",
-          "extraInformation": [],
           "advanced": true,
           "name": "StartingAmmo"
         },
@@ -4887,9 +6583,6 @@
           "value": "0",
           "type": "Number",
           "label": "Total reloads completed",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
           "hidden": true,
           "name": "TotalReloadsCompleted"
         },
@@ -4897,9 +6590,7 @@
           "value": "true",
           "type": "Boolean",
           "label": "Unlimited ammo",
-          "description": "",
           "group": "Ammo",
-          "extraInformation": [],
           "advanced": true,
           "name": "UnlimitedAmmo"
         },
@@ -4907,9 +6598,6 @@
           "value": "",
           "type": "Boolean",
           "label": "",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
           "hidden": true,
           "name": "ReloadInProgress"
         },
@@ -4919,7 +6607,6 @@
           "label": "Heat increase per shot (between 0 and 1)",
           "description": " Object is overheated when Heat reaches 1.",
           "group": "Overheat",
-          "extraInformation": [],
           "advanced": true,
           "name": "HeatIncreasePerShot"
         },
@@ -4927,9 +6614,6 @@
           "value": "0",
           "type": "Number",
           "label": "Heat level (Range: 0 to 1)",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
           "hidden": true,
           "name": "HeatLevel"
         },
@@ -4937,9 +6621,7 @@
           "value": "true",
           "type": "Boolean",
           "label": "Reload automatically",
-          "description": "",
           "group": "Reload",
-          "extraInformation": [],
           "advanced": true,
           "name": "AutomaticReloading"
         },
@@ -4950,7 +6632,6 @@
           "label": "Overheat duration",
           "description": "Object cannot shoot while overheat duration is active.",
           "group": "Overheat",
-          "extraInformation": [],
           "advanced": true,
           "name": "OverheatDuration"
         },
@@ -4958,9 +6639,7 @@
           "value": "0.1",
           "type": "Number",
           "label": "Linear cooling rate (per second)",
-          "description": "",
           "group": "Overheat",
-          "extraInformation": [],
           "advanced": true,
           "name": "LinearCoolingRate"
         },
@@ -4974,6 +6653,7 @@
             "Linear",
             "Exponential"
           ],
+          "choices": [],
           "advanced": true,
           "name": "ExponentialCoolingRate"
         },
@@ -4983,7 +6663,6 @@
           "label": "Layer the bullets are created on",
           "description": "Base layer by default.",
           "group": "Shooting configuration",
-          "extraInformation": [],
           "hidden": true,
           "name": "BulletLayer"
         },
@@ -4991,14 +6670,123 @@
           "value": "0",
           "type": "Number",
           "label": "",
-          "description": "",
-          "group": "",
-          "extraInformation": [],
           "hidden": true,
           "name": "RandomizedAngle"
         }
       ],
-      "sharedPropertyDescriptors": []
+      "propertiesFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "propertyName": "FireCooldown"
+          },
+          {
+            "propertyName": "HasJustFired"
+          },
+          {
+            "propertyName": "RotateBullet"
+          },
+          {
+            "folderName": "Multi-Fire",
+            "children": [
+              {
+                "propertyName": "FiringArc"
+              },
+              {
+                "propertyName": "BulletQuantity"
+              }
+            ]
+          },
+          {
+            "folderName": "Firing variance",
+            "children": [
+              {
+                "propertyName": "AngleVariance"
+              },
+              {
+                "propertyName": "BulletSpeedVariance"
+              }
+            ]
+          },
+          {
+            "propertyName": "AmmoQuantity"
+          },
+          {
+            "folderName": "Reload",
+            "children": [
+              {
+                "propertyName": "ShotsPerReload"
+              },
+              {
+                "propertyName": "ReloadDuration"
+              },
+              {
+                "propertyName": "AutomaticReloading"
+              }
+            ]
+          },
+          {
+            "folderName": "Ammo",
+            "children": [
+              {
+                "propertyName": "MaxAmmo"
+              },
+              {
+                "propertyName": "StartingAmmo"
+              },
+              {
+                "propertyName": "UnlimitedAmmo"
+              }
+            ]
+          },
+          {
+            "propertyName": "ShotsBeforeNextReload"
+          },
+          {
+            "propertyName": "TotalShotsFired"
+          },
+          {
+            "propertyName": "TotalBulletsCreated"
+          },
+          {
+            "propertyName": "TotalReloadsCompleted"
+          },
+          {
+            "propertyName": "ReloadInProgress"
+          },
+          {
+            "folderName": "Overheat",
+            "children": [
+              {
+                "propertyName": "HeatIncreasePerShot"
+              },
+              {
+                "propertyName": "OverheatDuration"
+              },
+              {
+                "propertyName": "LinearCoolingRate"
+              },
+              {
+                "propertyName": "ExponentialCoolingRate"
+              }
+            ]
+          },
+          {
+            "propertyName": "HeatLevel"
+          },
+          {
+            "folderName": "Shooting configuration",
+            "children": [
+              {
+                "propertyName": "BulletLayer"
+              }
+            ]
+          },
+          {
+            "propertyName": "RandomizedAngle"
+          }
+        ]
+      }
     }
   ],
   "eventsBasedObjects": []
