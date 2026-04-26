@@ -250,8 +250,8 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
-    FireBullet: {
-      gdjsAllowedProperties: ['__fireBulletExtension', 'RuntimeObject3D'],
+    FlexBox: {
+      gdjsAllowedProperties: ['layoutContainers'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
