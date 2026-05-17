@@ -30,7 +30,14 @@
   "authorIds": [
     "LmDPcZ5ey4WWF4VdoEQcmPVTmFu2"
   ],
-  "dependencies": [],
+  "dependencies": [
+    {
+      "exportName": "cordova.plugins.permissions",
+      "name": "CordovaPermissions",
+      "type": "cordova",
+      "version": "7.2.1"
+    }
+  ],
   "globalVariables": [],
   "sceneVariables": [],
   "eventsFunctions": [
@@ -72,13 +79,46 @@
               "eventsSheetExpanded": false
             }
           ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "SystemInfo::IsNativeMobileApp"
+              },
+              "parameters": []
+            },
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Once"
+              },
+              "parameters": []
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "var permissions = cordova.plugins.permissions;",
+                "permissions.checkPermission(permission, successCallback, errorCallback);",
+                "permissions.requestPermission(permission, successCallback, errorCallback);",
+                "permissions.requestPermissions(permissions, successCallback, errorCallback);",
+                "permissions.requestPermission(permissions.RECORD_AUDIO,)"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ]
         }
       ],
       "parameters": [],
       "objectGroups": []
     },
     {
-      "description": "Starts Recording Audio.",
+      "description": "Starts Recording Audio",
       "fullName": "Start Recording",
       "functionType": "Action",
       "name": "StartREC",
@@ -307,7 +347,7 @@
       "fullName": "Play Base64 Audio",
       "functionType": "Action",
       "name": "PlayBase64Audio",
-      "sentence": "Play Base64 Audio. _PARAM1_,_PARAM2_,_PARAM3_",
+      "sentence": "Play Base64 Audio. _PARAM1_,_PARAM2_,_PARAM3_,_PARAM4_",
       "events": [
         {
           "type": "BuiltinCommonInstructions::Standard",
@@ -324,11 +364,11 @@
             {
               "type": "BuiltinCommonInstructions::JsCode",
               "inlineCode": [
-                "const variableUsed = eventsFunctionContext.getArgument(\"VariableUsed\"); // your Base64 variable",
-                "let volume = eventsFunctionContext.getArgument(\"volume\") || 100;         // 0 to 100",
-                "const pitch = eventsFunctionContext.getArgument(\"pitch\") || 1.0;        // pitch multiplier",
+                "const variableUsed = eventsFunctionContext.getArgument(\"VariableUsed\");",
+                "let volume = eventsFunctionContext.getArgument(\"volume\") || 100;",
+                "const pitch = eventsFunctionContext.getArgument(\"pitch\") || 1.0;",
+                "const sustain = eventsFunctionContext.getArgument(\"sustain\") || 1;",
                 "",
-                "// Map 0–100 volume to 0.0–1.0 for Web Audio API",
                 "volume = Math.max(0, Math.min(volume, 100)) / 100;",
                 "",
                 "const base64data = variableUsed.getAsString();",
@@ -336,26 +376,45 @@
                 "const blob = new Blob([byteArray], { type: \"audio/webm\" });",
                 "const audioURL = URL.createObjectURL(blob);",
                 "",
-                "const audioContext = new (window.AudioContext || window.webkitAudioContext)();",
+                "const audioContext = window.audioContext || new (window.AudioContext || window.webkitAudioContext)();",
+                "window.audioContext = audioContext;",
+                "",
                 "const gainNode = audioContext.createGain();",
-                "gainNode.gain.value = volume;        // now 0–1 scale",
+                "gainNode.gain.value = volume;",
                 "gainNode.connect(audioContext.destination);",
                 "",
-                "// Decode and play",
-                "fetch(audioURL)",
-                "  .then(response => response.arrayBuffer())",
-                "    .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))",
-                "      .then(audioBuffer => {",
-                "            const source = audioContext.createBufferSource();",
-                "                  source.buffer = audioBuffer;",
-                "                        source.playbackRate.value = pitch; // pitch control (affects speed)",
-                "                              source.connect(gainNode);",
-                "                                    source.start(0);",
-                "                                      })",
-                "                                        .catch(err => console.error(\"Audio play error:\", err));",
+                "// echo system (sustain)",
+                "const delay = audioContext.createDelay();",
+                "const feedback = audioContext.createGain();",
+                "const wet = audioContext.createGain();",
                 "",
-                "                                        // Cleanup URL after a bit",
-                "                                        setTimeout(() => URL.revokeObjectURL(audioURL), 5000);"
+                "delay.delayTime.value = 0.25;",
+                "feedback.gain.value = Math.max(0, sustain - 1); // 1 = no echo, >1 = echo",
+                "wet.gain.value = 0.5;",
+                "",
+                "delay.connect(feedback);",
+                "feedback.connect(delay);",
+                "",
+                "audioContext.decodeAudioData(",
+                "  new Uint8Array(byteArray).buffer",
+                "  ).then(audioBuffer => {",
+                "",
+                "      const source = audioContext.createBufferSource();",
+                "          source.buffer = audioBuffer;",
+                "              source.playbackRate.value = pitch;",
+                "",
+                "                  source.connect(gainNode);",
+                "",
+                "                      if (sustain > 1) {",
+                "                              source.connect(delay);",
+                "                                      delay.connect(wet);",
+                "                                              wet.connect(audioContext.destination);",
+                "                                                  }",
+                "",
+                "                                                      source.start(0);",
+                "                                                      }).catch(err => console.error(\"Audio play error:\", err));",
+                "",
+                "                                                      setTimeout(() => URL.revokeObjectURL(audioURL), 5000);"
               ],
               "parameterObjects": "",
               "useStrict": true,
@@ -379,12 +438,18 @@
           "description": "Pitch (1 = default)",
           "name": "pitch",
           "type": "expression"
+        },
+        {
+          "description": "Sustain (1-2)  (echo)",
+          "name": "sustain",
+          "supplementaryInformation": "[\"None\"]",
+          "type": "expression"
         }
       ],
       "objectGroups": []
     },
     {
-      "description": "Linear Amplitude Measure (Volume Of Speaking).",
+      "description": "Linear Amplitude Measure (Volume Of Speaking)",
       "fullName": "Microphone Volume (exports only)",
       "functionType": "Expression",
       "name": "MicVolume",
@@ -452,51 +517,213 @@
       "objectGroups": []
     },
     {
-      "description": "Converts the recording to base64 every second, can be used for transferring audio as string for sound streaming.",
-      "fullName": "Save Recording As Base64 (Streaming)",
+      "description": "Converts the recording to base64 every second, can be used for transferring audio as string for sound streaming!",
+      "fullName": "Save Recording As Base64 (Real-Time)",
       "functionType": "Action",
-      "name": "Function",
-      "sentence": "Save Recording In Variable _PARAM1_;_PARAM2_",
+      "name": "Stream",
+      "sentence": "Save Recording In Variable _PARAM1_",
       "events": [
         {
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": [
-            "// Make sure recording exists and has at least one chunk",
-            "if (window.gdMicSystem && window.gdMicSystem.recordedChunks.length > 0) {",
-            "    // Take the newest chunk (last one in the array)",
-            "        const chunk = window.gdMicSystem.recordedChunks[window.gdMicSystem.recordedChunks.length - 1];",
-            "",
-            "            if (chunk) {",
-            "                    const variableToChange = eventsFunctionContext.getArgument(\"VariableToChange2\");",
-            "                            const reader = new FileReader();",
-            "",
-            "                                    reader.onloadend = function() {",
-            "                                                const base64data = reader.result.split(\",\")[1]; // pure Base64 string",
-            "                                                            variableToChange.setString(base64data); // overwrite the variable",
-            "                                                                    };",
-            "",
-            "                                                                            reader.readAsDataURL(chunk);",
-            "                                                                                }",
-            "                                                                                }"
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Once"
+              },
+              "parameters": []
+            }
           ],
-          "parameterObjects": "",
-          "useStrict": true,
-          "eventsSheetExpanded": false
+          "actions": [
+            {
+              "type": {
+                "value": "AdvancedMicrophone::RequestMC"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "RepeatEveryXSeconds::Repeat"
+              },
+              "parameters": [
+                "",
+                "\"loop1\"",
+                "0.2",
+                ""
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "if (!window.gdMicSystem) window.gdMicSystem = {};",
+                "",
+                "if (window.gdMicSystem.mediaRecorder) return;",
+                "",
+                "const variableUsed = eventsFunctionContext.getArgument(\"VariableUsed\");",
+                "",
+                "navigator.mediaDevices.getUserMedia({ audio: true })",
+                ".then(stream => {",
+                "",
+                "    const mediaRecorder = new MediaRecorder(stream);",
+                "",
+                "        window.gdMicSystem.mediaRecorder = mediaRecorder;",
+                "            window.gdMicSystem.latestChunk = null;",
+                "",
+                "                mediaRecorder.ondataavailable = function(e) {",
+                "                        if (e.data && e.data.size > 0) {",
+                "",
+                "                                    window.gdMicSystem.latestChunk = e.data;",
+                "",
+                "                                                            const reader = new FileReader();",
+                "",
+                "                                                                        reader.onloadend = function() {",
+                "                                                                                        const base64data = reader.result.split(\",\")[1];",
+                "                                                                                                        variableUsed.setString(base64data);",
+                "                                                                                                                    };",
+                "",
+                "                                                                                                                                reader.readAsDataURL(e.data);",
+                "                                                                                                                                        }",
+                "                                                                                                                                            };",
+                "",
+                "                                                                                                                                                mediaRecorder.start(250);",
+                "",
+                "                                                                                                                                                    console.log(\"Recorder started\");",
+                "",
+                "                                                                                                                                                    })",
+                "                                                                                                                                                    .catch(err => {",
+                "                                                                                                                                                        console.error(\"error:\", err);",
+                "                                                                                                                                                        });"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ]
         }
       ],
       "parameters": [
         {
           "description": "Variable To Store",
-          "name": "VariableToChange2",
+          "name": "VariableToChange",
           "type": "variable"
-        },
-        {
-          "description": "Capture Interval (200ms default)",
-          "longDescription": "Lower = more updates\n1000/200 = 5 updates in second.",
-          "name": "CaptureInterval",
-          "type": "expression"
         }
       ],
+      "objectGroups": []
+    },
+    {
+      "description": "Use this for the \"Base64 Real-Time Converter\" To Play It.",
+      "fullName": "Play Base64 Audio (Real-Time)",
+      "functionType": "Action",
+      "name": "Function",
+      "sentence": "Play Base64 Audio (Real-Time) _PARAM1_",
+      "events": [],
+      "parameters": [
+        {
+          "description": "Variable With Base64",
+          "name": "VariableUsed",
+          "type": "variable"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onFirstSceneLoaded",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Or"
+              },
+              "parameters": [],
+              "subInstructions": [
+                {
+                  "type": {
+                    "value": "SystemInfo::IsNativeMobileApp"
+                  },
+                  "parameters": []
+                },
+                {
+                  "type": {
+                    "value": "SystemInfo::IsNativeDesktopApp"
+                  },
+                  "parameters": [
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Once"
+              },
+              "parameters": []
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "cordova plugin add cordova-plugin-android-permissions",
+                "<uses-permission android:name=\"android.permission.RECORD_AUDIO\" />",
+                "var permissions = cordova.plugins.permissions;",
+                "var micPermission = permissions.RECORD_AUDIO;"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Run this in-case you export on mobile (might work on desktop and IOS).",
+      "fullName": "Request Android Permissions",
+      "functionType": "Action",
+      "name": "Function2",
+      "sentence": "Request Android Permissions.",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::Once"
+              },
+              "parameters": []
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": "const variable = eventfun t",
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ]
+        }
+      ],
+      "parameters": [],
       "objectGroups": []
     }
   ],
@@ -525,10 +752,25 @@
         "functionName": "PlayBase64Audio"
       },
       {
+        "functionName": "Stream"
+      },
+      {
         "functionName": "Function"
+      },
+      {
+        "functionName": "onFirstSceneLoaded"
+      },
+      {
+        "functionName": "Function2"
       }
     ]
   },
   "eventsBasedBehaviors": [],
-  "eventsBasedObjects": []
+  "eventsBasedObjects": [],
+  "requiredExtensions": [
+    {
+      "extensionName": "RepeatEveryXSeconds",
+      "extensionVersion": "0.2.1"
+    }
+  ]
 }
