@@ -250,10 +250,15 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
-    FlexBox: {
-      gdjsAllowedProperties: ['layoutContainers'],
+    FoliageSwaying3D: {
+      gdjsAllowedProperties: [
+        '_foliageSwaying3D',
+        'RuntimeScene',
+        'RuntimeBehavior',
+        'RuntimeObject3D',
+      ],
       gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['_foliageSwaying3D', 'getTimeManager'],
       javaScriptObjectAllowedProperties: [],
     },
     GamePixSDK: {
