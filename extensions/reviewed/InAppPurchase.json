@@ -9,7 +9,7 @@
   "name": "InAppPurchase",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Glyphster Pack/Master/SVG/Shopping and Ecommerce/Shopping and Ecommerce_wallet_money_cash.svg",
   "shortDescription": "In-app purchases for Android/iOS: list products, buy, and restore purchases.",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": [
     "> To set up In App Purchase, you'll need a developer account on Google Play Console or Apple App Store Connect. You will also need **real phones/devices** to test IAP, because emulators are not supported.",
     "",
@@ -28,6 +28,8 @@
     "- Display the price and available products in your game,",
     "- When the player clicks on a product, use the action to order it,",
     "- If the purchase is approved (the variable you set up is set to true), give the user what they bought",
+    "",
+    "> ⚠️ Apple requires apps with in-app purchases to offer a **\"Restore purchases\" button**, otherwise they will be **rejected during the App Store review**. Add a button in your game that calls the action *\"Restore purchases\"*, then use the condition *\"Product is owned\"* (or the \"approved\" product events) to unlock what the user paid for.",
     ""
   ],
   "origin": {
@@ -315,6 +317,48 @@
       "objectGroups": []
     },
     {
+      "description": "Replay the user's transactions to restore their previous purchases. This is required by Apple: apps with in-app purchases must offer a button to \"Restore purchases\", otherwise they will be rejected during the App Store review.\n\nWhen the restoration is done, the scene variable is set to true. Restored purchases will also trigger the \"approved\" event of the products, so the unlocking logic set up with the action \"Update a variable when a product event is triggered\" will run again. You can also use the condition \"Product is owned\" to check if a product is owned after restoring.",
+      "fullName": "Restore purchases",
+      "functionType": "Action",
+      "name": "RestorePurchases",
+      "sentence": "Restore the purchases of the user and set scene variable named _PARAM1_ to true when done",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if(!window.CdvPurchase || !window.CdvPurchase.store) return;",
+            "const store = window.CdvPurchase.store;",
+            "",
+            "const variableName = eventsFunctionContext.getArgument(\"variableName\");",
+            "",
+            "store.restorePurchases().then((error) => {",
+            "    if (error) {",
+            "        console.error('Error while restoring purchases:', error);",
+            "        return;",
+            "    }",
+            "    console.info('Purchases restored.');",
+            "    if (variableName) {",
+            "        const variable = runtimeScene.getVariables().get(variableName);",
+            "        variable.setBoolean(true);",
+            "    }",
+            "});",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "The name of the scene variable to set to \"true\" when the restoration is done",
+          "name": "variableName",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
       "description": "Triggers after finalizing the registration. Products can then be retrieved and purchased (you can get data of a product like the price, you can use the action to order a product...).",
       "fullName": "Store is ready",
       "functionType": "Condition",
@@ -335,6 +379,37 @@
         }
       ],
       "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Check if a product is owned by the user (for example a non-consumable product that was purchased, or an active subscription). Useful after restoring the purchases of the user to unlock the content they paid for.\n\nEnsure you use the condition to check if the store is ready and that the product ID has been registered and finalized before using this condition.",
+      "fullName": "Product is owned",
+      "functionType": "Condition",
+      "name": "ProductOwned",
+      "sentence": "Product _PARAM1_ is owned",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if(!window.CdvPurchase || !window.CdvPurchase.store) return;",
+            "const store = window.CdvPurchase.store;",
+            "",
+            "const product = store.get(eventsFunctionContext.getArgument(\"id\"));",
+            "eventsFunctionContext.returnValue = !!(product && product.owned);",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "The id or alias of the product to check",
+          "name": "id",
+          "type": "string"
+        }
+      ],
       "objectGroups": []
     }
   ],
