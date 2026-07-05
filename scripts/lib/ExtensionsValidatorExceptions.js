@@ -256,6 +256,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    PhysicsAirplane3D: {
+      gdjsAllowedProperties: ['RuntimeObject3D'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     FoliageSwaying3D: {
       gdjsAllowedProperties: [
         '_foliageSwaying3D',
