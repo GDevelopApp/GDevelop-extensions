@@ -1,0 +1,191 @@
+{
+  "author": "",
+  "category": "User interface",
+  "dimension": "",
+  "extensionNamespace": "",
+  "fullName": "Convert 3D position to screen position",
+  "gdevelopVersion": "",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAyMy4wLjMsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjxzdmcgdmVyc2lvbj0iMS4xIiBpZD0iSWNvbnMiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4Ig0KCSB2aWV3Qm94PSIwIDAgMzIgMzIiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDMyIDMyOyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPg0KCS5zdDB7ZmlsbDpub25lO3N0cm9rZTojMDAwMDAwO3N0cm9rZS13aWR0aDoyO3N0cm9rZS1saW5lY2FwOnJvdW5kO3N0cm9rZS1saW5lam9pbjpyb3VuZDtzdHJva2UtbWl0ZXJsaW1pdDoxMDt9DQo8L3N0eWxlPg0KPHBhdGggY2xhc3M9InN0MCIgZD0iTTI0LDEwLjljMCw3LTgsMTMuMS04LDEzLjFzLTgtNi4xLTgtMTMuMUM4LDYuNSwxMS42LDMsMTYsM1MyNCw2LjUsMjQsMTAuOXoiLz4NCjxjaXJjbGUgY2xhc3M9InN0MCIgY3g9IjE2IiBjeT0iMTEiIHI9IjIiLz4NCjxwb2x5bGluZSBjbGFzcz0ic3QwIiBwb2ludHM9IjE5LjIsMjEgMjUsMjEgMjksMjkgMywyOSA3LDIxIDEyLjgsMjEgIi8+DQo8L3N2Zz4NCg==",
+  "name": "ProjectToCamera3D",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/Line Hero Pack/Master/SVG/Maps and Navigation/5f308b28df69a05ce442f41f469dbeeae407726098ae481cbc58efb4f3514fe6_Maps and Navigation_location_pin_map.svg",
+  "shortDescription": "Move a 2D object to overlap a 3D position.",
+  "version": "1.0.0",
+  "description": [
+    "It can be useful to:",
+    "- Display a gun sights in a 3rd person view",
+    "- Display point of interest indicators"
+  ],
+  "tags": [
+    "3D"
+  ],
+  "authorIds": [
+    "Zu55H5hcb9YmZTltIVOTAFDJQyB2",
+    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
+  ],
+  "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
+  "eventsFunctions": [
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onFirstSceneLoaded",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "ProjectToCamera3D::DefineHelperClasses"
+              },
+              "parameters": [
+                "",
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Define helper classes JavaScript code.",
+      "fullName": "Define helper classes",
+      "functionType": "Action",
+      "name": "DefineHelperClasses",
+      "private": true,
+      "sentence": "Define helper classes JavaScript code",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (gdjs.__projectToCamera3DExtension) {",
+            "    return;",
+            "}",
+            "",
+            "const vector = new THREE.Vector3();",
+            "const cameraDirection = new THREE.Vector3();",
+            "",
+            "/**",
+            " * @param {Array<gdjs.RuntimeObject>} objects",
+            " * @param {gdjs.RuntimeLayer} layer3D",
+            " * @param {float} x",
+            " * @param {float} y",
+            " * @param {float} z",
+            " */",
+            "function moveToProjectedPoint(objects, layer3D, x, y, z) {",
+            "    const threeCamera = layer3D.getRenderer().getThreeCamera();",
+            "",
+            "    const isPointBehindCamera = vector.set(x, -y, z).sub(threeCamera.position).dot(threeCamera.getWorldDirection(cameraDirection)) < 0;",
+            "    if (isPointBehindCamera) {",
+            "        for (const object of objects) {",
+            "            object.setPosition(-10000, -10000);",
+            "        }",
+            "        return;",
+            "    }",
+            "",
+            "    const gameResolutionWidth = runtimeScene.getGame().getGameResolutionWidth();",
+            "    const gameResolutionHeight = runtimeScene.getGame().getGameResolutionHeight();",
+            "    vector.set(x, -y, z).project(threeCamera);",
+            "    const projectedX = (gameResolutionWidth / 2) * (vector.x + 1);",
+            "    const projectedY = (gameResolutionHeight / 2) * (1 - vector.y);",
+            "",
+            "    for (const object of objects) {",
+            "        object.setPosition(projectedX, projectedY);",
+            "    }",
+            "",
+            "};",
+            "",
+            "gdjs.__projectToCamera3DExtension = {",
+            "    moveToProjectedPoint",
+            "}",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Change the 2D position of an object to make it overlaps the 3D position in a 3D layer.\nObjects must be on a 2D layer which is neither zoomed nor scrolled.",
+      "fullName": "Overlap a 3D point",
+      "functionType": "Action",
+      "group": "Position",
+      "name": "MoveToProjectedPoint",
+      "sentence": "Change the 2D position of _PARAM1_ to overlap _PARAM3_, _PARAM4_, _PARAM5_ from _PARAM2_ layer",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const layer3D = runtimeScene.getLayer(eventsFunctionContext.getArgument(\"Layer3D\"));",
+            "const x = eventsFunctionContext.getArgument(\"PositionX\");",
+            "const y = eventsFunctionContext.getArgument(\"PositionY\");",
+            "const z = eventsFunctionContext.getArgument(\"PositionZ\");",
+            "",
+            "gdjs.__projectToCamera3DExtension.moveToProjectedPoint(objects, layer3D, x, y, z);",
+            ""
+          ],
+          "parameterObjects": "Object",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "2D object",
+          "name": "Object",
+          "type": "objectList"
+        },
+        {
+          "description": "3D layer",
+          "name": "Layer3D",
+          "type": "layer"
+        },
+        {
+          "description": "X position",
+          "name": "PositionX",
+          "type": "expression"
+        },
+        {
+          "description": "Y position",
+          "name": "PositionY",
+          "type": "expression"
+        },
+        {
+          "description": "Z position",
+          "name": "PositionZ",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsFunctionsFolderStructure": {
+    "folderName": "__ROOT",
+    "children": [
+      {
+        "functionName": "onFirstSceneLoaded"
+      },
+      {
+        "functionName": "DefineHelperClasses"
+      },
+      {
+        "folderName": "Position",
+        "children": [
+          {
+            "functionName": "MoveToProjectedPoint"
+          }
+        ]
+      }
+    ]
+  },
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
+}
