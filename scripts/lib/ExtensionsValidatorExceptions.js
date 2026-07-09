@@ -256,6 +256,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    PhysicsAirplane3D: {
+      gdjsAllowedProperties: ['RuntimeObject3D'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     FoliageSwaying3D: {
       gdjsAllowedProperties: [
         '_foliageSwaying3D',
@@ -453,6 +459,12 @@ const extensionsAllowedProperties = {
     },
     PokiGamesSDKHtml: {
       gdjsAllowedProperties: ['_pokiGamesSDKHtmlExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    ProjectToCamera3D: {
+      gdjsAllowedProperties: ['__projectToCamera3DExtension', 'RuntimeLayer'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
