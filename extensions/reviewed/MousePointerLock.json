@@ -1,6 +1,7 @@
 {
   "author": "PANDAKO-GitHub",
   "category": "Input",
+  "dimension": "2D/3D",
   "extensionNamespace": "",
   "fullName": "Mouse Pointer Lock",
   "gdevelopVersion": ">=5.5.222",
@@ -9,7 +10,7 @@
   "name": "MousePointerLock",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Line Hero Pack/Master/SVG/Virtual Reality/Virtual Reality_360_rotate_vr_movement.svg",
   "shortDescription": "Lock and hide mouse pointer for unlimited movement (e.g., FPS mouse look).",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": [
     "This behavior removes the limit on the distance the mouse can move and hides the cursor.",
     "",
@@ -73,40 +74,56 @@
             "class PointerLockHandler {",
             "    movementX = 0;",
             "    movementY = 0;",
+            "    pending = false;",
             "    retried = false;",
-            "    /**",
-            "     * @type {gdjs.RuntimeGame}",
-            "     */",
+            "    /** @type {gdjs.RuntimeGame} */",
             "    game;",
             "",
-            "    /**",
-            "     * @param {gdjs.RuntimeGame} game",
-            "     */",
+            "    /** @param {gdjs.RuntimeGame} game */",
             "    constructor(game) {",
             "        this.game = game;",
             "        const canvas = game.getRenderer().getCanvas();",
             "",
             "        canvas.addEventListener(\"pointermove\", event => {",
-            "            if (!!document.pointerLockElement) {",
+            "            if (document.pointerLockElement) {",
             "                this.movementX += event.movementX || 0;",
             "                this.movementY += event.movementY || 0;",
             "            }",
             "        }, false);",
             "",
-            "        document.addEventListener(\"pointerlockerror\", event => {",
-            "            if (!this.retried) {",
-            "                canvas.requestPointerLock();",
+            "        document.addEventListener(\"pointerlockchange\", () => {",
+            "            this.pending = false;",
+            "        });",
+            "",
+            "        document.addEventListener(\"pointerlockerror\", () => {",
+            "            this.pending = false;",
+            "            if (!this.retried && !document.pointerLockElement) {",
             "                this.retried = true;",
+            "                this._doLock(false);",
             "            }",
             "        });",
             "    }",
             "",
-            "    requestPointerLock() {",
+            "    _doLock(unadjusted) {",
             "        const canvas = this.game.getRenderer().getCanvas();",
-            "        if (canvas.requestPointerLock && !document.pointerLockElement) {",
-            "            this.retried = false;",
-            "            canvas.requestPointerLock({ unadjustedMovement: true });",
+            "        if (!canvas.requestPointerLock) return;",
+            "        if (document.pointerLockElement === canvas || this.pending) return;",
+            "",
+            "        this.pending = true;",
+            "        const result = unadjusted",
+            "            ? canvas.requestPointerLock({ unadjustedMovement: true })",
+            "            : canvas.requestPointerLock();",
+            "",
+            "        if (result && typeof result.then === \"function\") {",
+            "            result",
+            "                .then(() => { this.pending = false; })",
+            "                .catch(() => { this.pending = false; });",
             "        }",
+            "    }",
+            "",
+            "    requestPointerLock() {",
+            "        this.retried = false;",
+            "        this._doLock(true);",
             "    }",
             "",
             "    exitPointerLock() {",
@@ -123,10 +140,9 @@
             "        this.movementX = 0;",
             "        this.movementY = 0;",
             "    }",
-            "};",
+            "}",
             "",
-            "gdjs._MousePointerLockExtension = { handler: new PointerLockHandler(runtimeScene.getGame()) };",
-            ""
+            "gdjs._MousePointerLockExtension = { handler: new PointerLockHandler(runtimeScene.getGame()) };"
           ],
           "parameterObjects": "",
           "useStrict": true,
@@ -778,12 +794,68 @@
       "objectGroups": []
     }
   ],
+  "eventsFunctionsFolderStructure": {
+    "folderName": "__ROOT",
+    "children": [
+      {
+        "functionName": "onFirstSceneLoaded"
+      },
+      {
+        "functionName": "onScenePostEvents"
+      },
+      {
+        "functionName": "RequestPointerLock"
+      },
+      {
+        "functionName": "ExitPointerLock"
+      },
+      {
+        "functionName": "isPointerLocked"
+      },
+      {
+        "functionName": "isPointerActuallyLocked"
+      },
+      {
+        "functionName": "isEmulatingPointerLock"
+      },
+      {
+        "functionName": "IsMoving"
+      },
+      {
+        "functionName": "MovementX"
+      },
+      {
+        "functionName": "SetMovementX"
+      },
+      {
+        "functionName": "MovementY"
+      },
+      {
+        "functionName": "SetMovementY"
+      },
+      {
+        "functionName": "TouchX"
+      },
+      {
+        "functionName": "TouchY"
+      },
+      {
+        "functionName": "TouchSpeedFactor"
+      },
+      {
+        "functionName": "SetTouchSpeedFactor"
+      }
+    ]
+  },
   "eventsBasedBehaviors": [
     {
       "description": "Control camera rotations with a mouse.",
       "fullName": "First person camera mouse mapper",
+      "helpPath": "",
+      "iconUrl": "",
       "name": "FirstPersonPointerMapper",
       "objectType": "",
+      "previewIconUrl": "",
       "eventsFunctions": [
         {
           "fullName": "",
@@ -1058,6 +1130,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "HorizontalSpeed",
+          "group": "First person camera mouse mapper configuration",
           "name": "SetHorizontalSpeed",
           "sentence": "",
           "events": [
@@ -1138,6 +1211,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "VerticalSpeed",
+          "group": "First person camera mouse mapper configuration",
           "name": "SetVerticalSpeed",
           "sentence": "",
           "events": [
@@ -1218,6 +1292,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "VerticalAngleMin",
+          "group": "First person camera mouse mapper configuration",
           "name": "SetVerticalAngleMin",
           "sentence": "",
           "events": [
@@ -1298,6 +1373,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "VerticalAngleMax",
+          "group": "First person camera mouse mapper configuration",
           "name": "SetVerticalAngleMax",
           "sentence": "",
           "events": [
@@ -1378,6 +1454,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "OffsetZ",
+          "group": "First person camera mouse mapper configuration",
           "name": "SetOffsetZ",
           "sentence": "",
           "events": [
@@ -1414,6 +1491,57 @@
           "objectGroups": []
         }
       ],
+      "eventsFunctionsFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "functionName": "doStepPreEvents"
+          },
+          {
+            "folderName": "Layers and cameras",
+            "children": [
+              {
+                "functionName": "LookFromObjectEyes"
+              }
+            ]
+          },
+          {
+            "folderName": "First person camera mouse mapper configuration",
+            "children": [
+              {
+                "functionName": "HorizontalSpeed"
+              },
+              {
+                "functionName": "SetHorizontalSpeed"
+              },
+              {
+                "functionName": "VerticalSpeed"
+              },
+              {
+                "functionName": "SetVerticalSpeed"
+              },
+              {
+                "functionName": "VerticalAngleMin"
+              },
+              {
+                "functionName": "SetVerticalAngleMin"
+              },
+              {
+                "functionName": "VerticalAngleMax"
+              },
+              {
+                "functionName": "SetVerticalAngleMax"
+              },
+              {
+                "functionName": "OffsetZ"
+              },
+              {
+                "functionName": "SetOffsetZ"
+              }
+            ]
+          }
+        ]
+      },
       "propertyDescriptors": [
         {
           "value": "",
@@ -1467,7 +1595,32 @@
           "name": "ShouldLock"
         }
       ],
-      "sharedPropertyDescriptors": []
+      "propertiesFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "propertyName": "Object3D"
+          },
+          {
+            "propertyName": "HorizontalSpeed"
+          },
+          {
+            "propertyName": "VerticalSpeed"
+          },
+          {
+            "propertyName": "VerticalAngleMin"
+          },
+          {
+            "propertyName": "VerticalAngleMax"
+          },
+          {
+            "propertyName": "OffsetZ"
+          },
+          {
+            "propertyName": "ShouldLock"
+          }
+        ]
+      }
     }
   ],
   "eventsBasedObjects": []
