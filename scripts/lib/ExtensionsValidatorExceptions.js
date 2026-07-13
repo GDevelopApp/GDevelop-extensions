@@ -572,6 +572,15 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: ['_stickerExtension'],
       javaScriptObjectAllowedProperties: [],
     },
+    Supabase: {
+      gdjsAllowedProperties: ['__Supabase'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getVariablesForExtension'],
+      javaScriptObjectAllowedProperties: [
+        'getOwnPropertySymbols',
+        'getPrototypeOf',
+      ],
+    },
     Text3D: {
       gdjsAllowedProperties: [
         '__text3DExtension',
