@@ -1,0 +1,369 @@
+{
+  "author": "",
+  "category": "Game mechanic",
+  "extensionNamespace": "",
+  "fullName": "Coin Destroy with Tween Fade and Sound",
+  "gdevelopVersion": "",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWN1cnJlbmN5LXVzZC1jaXJjbGUtb3V0bGluZSIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xMiwyQTEwLDEwIDAgMCwxIDIyLDEyQTEwLDEwIDAgMCwxIDEyLDIyQTEwLDEwIDAgMCwxIDIsMTJBMTAsMTAgMCAwLDEgMTIsMk0xMiw0QTgsOCAwIDAsMCA0LDEyQTgsOCAwIDAsMCAxMiwyMEE4LDggMCAwLDAgMjAsMTJBOCw4IDAgMCwwIDEyLDRNMTEsMTdWMTZIOVYxNEgxM1YxM0gxMEExLDEgMCAwLDEgOSwxMlY5QTEsMSAwIDAsMSAxMCw4SDExVjdIMTNWOEgxNVYxMEgxMVYxMUgxNEExLDEgMCAwLDEgMTUsMTJWMTVBMSwxIDAgMCwxIDE0LDE2SDEzVjE3SDExWiIgLz48L3N2Zz4=",
+  "name": "Coin",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/af9b1fb88a22a37beb06970c360a7ce2860facf6eb5b5d0105181a1ffaeabb29_currency-usd-circle-outline.svg",
+  "shortDescription": "Coin Destroy with Tween Fade and Sound.",
+  "version": "1.0.0",
+  "description": [
+    "Nice Destruction of Coin ( or any other object ) with Tween movement, fade and sound with dynamic pitch change between each deletion.",
+    "",
+    "Add this behavior to an Object, and activate it in the event sheet as an action when you want to delete the coin (Object or Group).",
+    "Use Delete Coin action - (e.g. Player collides with a coin).",
+    ""
+  ],
+  "tags": [
+    "Coin",
+    "Fade",
+    "Sound",
+    "Delete"
+  ],
+  "authorIds": [
+    "1uZgGgHkqobtw1Iueyo7bkqahy92"
+  ],
+  "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
+  "eventsFunctions": [],
+  "eventsBasedBehaviors": [
+    {
+      "description": "Add action to delete objects with tween, fade and sound.",
+      "fullName": "Coin",
+      "name": "Coin",
+      "objectType": "",
+      "eventsFunctions": [
+        {
+          "description": "Delete with  tween fade and sound.",
+          "fullName": "Delete Coin",
+          "functionType": "Action",
+          "name": "DeleteCoin",
+          "sentence": "_PARAM0_ Deleted with tween fade and sound",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Tween , Fade and play sound"
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "if (!objects.length)",
+                "    return;",
+                "",
+                "const obj = objects[0];",
+                "//almost dead , no need to active nothing twice",
+                "if (obj.markAsDead)",
+                "    return;",
+                "obj.markAsDead = true;",
+                "",
+                "//get data from behavior",
+                "const behavior = obj.getBehavior(\"Coin\");",
+                "const soundName = behavior._getSound();",
+                "const volume = behavior._getVolume();",
+                "const time = Math.min(behavior._getTime() * 1000, 1000);  //animation up to 1 second",
+                "const deltaY = behavior._getDeltaY();",
+                "const deltaX = behavior._getDeltaX();",
+                "const deltaPitch = behavior._getDeltaPitch();",
+                "const pitchResetTime = behavior._getPitchRestTime() * 1000;",
+                "",
+                "//check for time is greater then pitchResetTime",
+                "//if so , reset pitch factor to 1.0",
+                "const ctx = gdjs._coinExtension;",
+                "const now = Date.now();",
+                "if (now - ctx.lastTime > pitchResetTime)",
+                "    ctx.coinPitchFactor = 1.0;",
+                "ctx.lastTime = now;",
+                "",
+                "//play sound with the right pitch",
+                "if (soundName.length) {",
+                "    gdjs.evtTools.sound.playSound(runtimeScene, soundName, false, volume, ctx.coinPitchFactor);",
+                "    //increase pitch",
+                "    ctx.coinPitchFactor += deltaPitch;",
+                "}",
+                "",
+                "//generate if needed coin tween animation for move and fade",
+                "if (!obj.hasBehavior(\"CoinTween\")) {",
+                "    const tweenBehavior = new gdjs.TweenRuntimeBehavior(runtimeScene,",
+                "        { type: \"Tween::TweenBehavior\", name: \"CoinTween\" }",
+                "    );",
+                "    obj.addNewBehavior(tweenBehavior);",
+                "}",
+                "const tween = obj.getBehavior(\"CoinTween\");",
+                "if (tween) {",
+                "    //position tween",
+                "    tween.addObjectPositionTween(\"MoveTween\",",
+                "        obj.x + deltaX, obj.y + deltaY, \"easeInOutQuad\", time, false);",
+                "    //fade",
+                "    tween.addObjectOpacityTween(\"Opacity\", 0, \"easeInOutQuad\", time, false);",
+                "}",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            },
+            {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Delete the coin After 1 Second (Max animation time)"
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Wait"
+                  },
+                  "parameters": [
+                    "1"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "Delete"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Coin::Coin",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onCreated",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": []
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "if (gdjs._coinExtension)",
+                "    return;",
+                "",
+                "//init Extension global parameters    ",
+                "gdjs._coinExtension = ",
+                "{",
+                "    coinPitchFactor: 1.0,",
+                "    lastTime: Date.now()",
+                "}"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "Coin::Coin",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        }
+      ],
+      "propertyDescriptors": [
+        {
+          "value": "",
+          "type": "Resource",
+          "label": "Sound",
+          "description": "Sound that will be played once the coin is collected (Empty for no sound)",
+          "group": "Sound",
+          "extraInformation": [
+            "audio"
+          ],
+          "name": "Sound"
+        },
+        {
+          "value": "0.5",
+          "type": "Number",
+          "unit": "Second",
+          "label": "Time",
+          "description": "Time in Seconds for the coin to be dissolved, use values  between 0 - 1.0",
+          "group": "",
+          "extraInformation": [],
+          "advanced": true,
+          "name": "Time"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Pixel",
+          "label": "DeltaX",
+          "description": "Movement offset in X ",
+          "group": "",
+          "extraInformation": [],
+          "advanced": true,
+          "name": "DeltaX"
+        },
+        {
+          "value": "-20",
+          "type": "Number",
+          "unit": "Pixel",
+          "label": "DeltaY",
+          "description": "Movement offset in Y",
+          "group": "",
+          "extraInformation": [],
+          "advanced": true,
+          "name": "DeltaY"
+        },
+        {
+          "value": "80",
+          "type": "Number",
+          "label": "Sound Volume",
+          "description": "Set the volume of the attached sound",
+          "group": "Sound",
+          "extraInformation": [],
+          "advanced": true,
+          "name": "Volume"
+        },
+        {
+          "value": "0.05",
+          "type": "Number",
+          "label": "Delta Pitch",
+          "description": "Change in pitch every time an object is collected",
+          "group": "Sound",
+          "extraInformation": [],
+          "advanced": true,
+          "name": "DeltaPitch"
+        },
+        {
+          "value": "0.3",
+          "type": "Number",
+          "unit": "Second",
+          "label": "Pitch Reset Time",
+          "description": "Time need to elapsed without picking an object ,to reset the Pitch back to default",
+          "group": "Sound",
+          "extraInformation": [],
+          "advanced": true,
+          "name": "PitchRestTime"
+        }
+      ],
+      "sharedPropertyDescriptors": []
+    }
+  ],
+  "eventsBasedObjects": [
+    {
+      "areaMaxX": 64,
+      "areaMaxY": 64,
+      "areaMaxZ": 64,
+      "areaMinX": 0,
+      "areaMinY": 0,
+      "areaMinZ": 0,
+      "defaultName": "",
+      "description": "Dummy object to make sure Engine will keep the Tween Behavior.\nOtherwise, the javascript code cannot create a Tween object dynamically by code.",
+      "fullName": "Coin Tween Dummy Object",
+      "isUsingLegacyInstancesRenderer": false,
+      "name": "CoinTweenDummy",
+      "private": true,
+      "eventsFunctions": [],
+      "propertyDescriptors": [],
+      "objects": [
+        {
+          "adaptCollisionMaskAutomatically": true,
+          "assetStoreId": "",
+          "name": "NewSprite",
+          "type": "Sprite",
+          "updateIfNotVisible": false,
+          "variables": [],
+          "effects": [],
+          "behaviors": [
+            {
+              "name": "Tween",
+              "type": "Tween::TweenBehavior"
+            }
+          ],
+          "animations": []
+        }
+      ],
+      "objectsFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "objectName": "NewSprite"
+          }
+        ]
+      },
+      "objectsGroups": [],
+      "layers": [
+        {
+          "ambientLightColorB": 200,
+          "ambientLightColorG": 200,
+          "ambientLightColorR": 200,
+          "camera3DFarPlaneDistance": 10000,
+          "camera3DFieldOfView": 45,
+          "camera3DNearPlaneDistance": 3,
+          "cameraType": "",
+          "followBaseLayerCamera": false,
+          "isLightingLayer": false,
+          "isLocked": false,
+          "name": "",
+          "renderingType": "",
+          "visibility": true,
+          "cameras": [
+            {
+              "defaultSize": true,
+              "defaultViewport": true,
+              "height": 0,
+              "viewportBottom": 1,
+              "viewportLeft": 0,
+              "viewportRight": 1,
+              "viewportTop": 0,
+              "width": 0
+            }
+          ],
+          "effects": []
+        }
+      ],
+      "instances": []
+    }
+  ]
+}
