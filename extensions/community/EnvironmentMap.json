@@ -1,0 +1,366 @@
+{
+  "author": "",
+  "category": "General",
+  "extensionNamespace": "",
+  "fullName": "Environment Map",
+  "gdevelopVersion": "",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWN1YmUtdW5mb2xkZWQiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNiw5VjRIMTNWOUgyM1YxNkgxOFYyMUgxMVYxNkgxVjlINk0xNiwxNkgxM1YxOUgxNlYxNk04LDlIMTFWNkg4VjlNNiwxNFYxMUgzVjE0SDZNMTgsMTFWMTRIMjFWMTFIMThNMTMsMTFWMTRIMTZWMTFIMTNNOCwxMVYxNEgxMVYxMUg4WiIgLz48L3N2Zz4=",
+  "name": "EnvironmentMap",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/eef369091a068bf2162b0a2a7de21f8645d6fd9183e78a69ed48caa92bb2317c_cube-unfolded.svg",
+  "shortDescription": "Allows to set Environment Map from cube map or hdri like Equirectangular images.",
+  "version": "1.0.0",
+  "description": [
+    "**Why do you need this?**",
+    "3D models with reflective surfaces (metalness/roughness) will reflect this Environment Map.",
+    "Your scene will be illuminated realisticly with this Environment Map.",
+    "Good for creating static Skyboxes that covers entire 360° Scene background.",
+    "",
+    "**How to use this?**",
+    "Cube Map: Use tools like https://matheowis.github.io/HDRI-to-CubeMap/ to create a CubeMap from HDRI images.",
+    "Equirectangular Map: Use HDRI preview images from sites like https://polyhaven.com/",
+    "Make sure to choose \"Keep Model Material\" in 3D model's object properties",
+    "",
+    "**Limitations**",
+    "This is not for realtime reflections, your reflections are gonna be static image.",
+    "Gdevelop doesn't have .hdr file format support, Only image formats (png, jpg etc.) can be used.",
+    "In Gdevelop Threejs scene is Y up oriented. For your Z up game, Cube Map textures needs to be setup manually for desired result.",
+    ""
+  ],
+  "tags": [
+    "3d",
+    "cubemap",
+    "reflection",
+    "background",
+    "skybox"
+  ],
+  "authorIds": [
+    "m8kleQHonagHWsvILDhyJhgVhuF2"
+  ],
+  "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
+  "eventsFunctions": [
+    {
+      "description": "This action should be used At The Beginning Of The Scene.\nCreates 360° image for the scene. PBR materials with reflective surfaces will reflect this image. Color values from the image will light the scene like Ambient Light.\nImage order: Positive X, Negative X, Positive Y, Negative Y, Positive Z, Negative Z.",
+      "fullName": "Create Environment map from Cube Map",
+      "functionType": "Action",
+      "name": "CreateCubeMap",
+      "sentence": "Create a Enviroment map from Cube Map, Tone Map: _PARAM7_ Exposure: _PARAM8_ Background: _PARAM9_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "\"at the beginning of the scene\" is a failsafe, if the user puts this action as without it."
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "DepartScene"
+              },
+              "parameters": [
+                ""
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "    const threeRenderer = runtimeScene.getGame().getRenderer().getThreeRenderer();",
+                "    const threeScene = runtimeScene.getLayer(\"\").getRenderer().getThreeScene();",
+                "    let originalRender = null;",
+                "    let cubeTexture = null; ",
+                "",
+                "    const pxImage = eventsFunctionContext.getArgument(\"positiveX\");",
+                "    const nxImage = eventsFunctionContext.getArgument(\"negativeX\");",
+                "    const pyImage = eventsFunctionContext.getArgument(\"positiveY\");",
+                "    const nyImage = eventsFunctionContext.getArgument(\"negativeY\");",
+                "    const pzImage = eventsFunctionContext.getArgument(\"positiveZ\");",
+                "    const nzImage = eventsFunctionContext.getArgument(\"negativeZ\");",
+                "",
+                "    const selectedToneMappingString = eventsFunctionContext.getArgument(\"toneMappingType\");",
+                "    const exposureValue = eventsFunctionContext.getArgument(\"exposure\");",
+                "    const setAsBackgroundOption = eventsFunctionContext.getArgument(\"setAsBackground\");",
+                "",
+                "    const cubeMapPaths = [",
+                "        pxImage, // Positive X (right)",
+                "        nxImage, // Negative X (left)",
+                "        pyImage, // Positive Y (top)",
+                "        nyImage, // Negative Y (bottom)",
+                "        pzImage, // Positive Z (front)",
+                "        nzImage  // Negative Z (back)",
+                "    ];",
+                "",
+                "    const toneMappingMap = {",
+                "        \"No Tone Mapping\": THREE.NoToneMapping,",
+                "        \"Linear Tone Mapping\": THREE.LinearToneMapping,",
+                "        \"Reinhard Tone Mapping\": THREE.ReinhardToneMapping,",
+                "        \"Cineon Tone Mapping\": THREE.CineonToneMapping,",
+                "        \"ACES Filmic Tone Mapping\": THREE.ACESFilmicToneMapping,",
+                "        \"AgX Tone Mapping\": THREE.AgXToneMapping, ",
+                "        //\"Neutral Tone Mapping\": THREE.NeutralToneMapping // Not supported by current Gdevelop version (5.5.231, threejs r160)",
+                "    };",
+                "",
+                "    if (threeRenderer) {",
+                "        threeRenderer.toneMapping = toneMappingMap[selectedToneMappingString];",
+                "        threeRenderer.toneMappingExposure = exposureValue || 1.0;",
+                "    }",
+                "",
+                "    if (threeRenderer && threeScene) {",
+                "        console.log(\"Successfully accessed Three.js renderer and scene.\");",
+                "",
+                "        const cubeTextureLoader = new THREE.CubeTextureLoader();",
+                "        cubeTextureLoader.load(",
+                "            cubeMapPaths,",
+                "            function (texture) {",
+                "                texture.colorSpace = THREE.SRGBColorSpace;",
+                "                cubeTexture = texture;",
+                "                threeScene.environment = cubeTexture;",
+                "            ",
+                "            },",
+                "            undefined,",
+                "            function (error) {",
+                "                console.error(\"Error loading map\", error);",
+                "            }",
+                "        );",
+                "",
+                "        if (setAsBackgroundOption) {",
+                "            if (!originalRender) {",
+                "                originalRender = threeRenderer.render;",
+                "",
+                "                threeRenderer.render = function(scene, camera) {",
+                "                    if (cubeTexture) {",
+                "                        scene.background = cubeTexture;",
+                "                        scene.environment = cubeTexture;",
+                "                    } else {",
+                "                        scene.background = null;",
+                "                        scene.environment = null;",
+                "                    }",
+                "                    originalRender.call(this, scene, camera);",
+                "                };",
+                "                console.log(\"Three.js renderer's render function overridden to use cubemap as scene.background.\");",
+                "            }",
+                "        }",
+                "",
+                "    } else {",
+                "        console.error(\"Could not access Three.js renderer or scene. Cubemap operations skipped.\");",
+                "    }"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Right side of the scene Positive X (PX)",
+          "name": "positiveX",
+          "supplementaryInformation": "Sprite",
+          "type": "imageResource"
+        },
+        {
+          "description": "Left side of the scene Negative X (NX)",
+          "name": "negativeX",
+          "supplementaryInformation": "scenee",
+          "type": "imageResource"
+        },
+        {
+          "description": "Top side of the scene PositiveY (PY)",
+          "name": "positiveY",
+          "supplementaryInformation": "Sprite",
+          "type": "imageResource"
+        },
+        {
+          "description": "Bottom side of the scene Negative Y (NY)",
+          "name": "negativeY",
+          "supplementaryInformation": "Sprite",
+          "type": "imageResource"
+        },
+        {
+          "description": "Front side of the scene Positive Z (PZ)",
+          "name": "positiveZ",
+          "supplementaryInformation": "Sprite",
+          "type": "imageResource"
+        },
+        {
+          "description": "Back side of the scene Negative Z (NZ)",
+          "name": "negativeZ",
+          "supplementaryInformation": "Sprite",
+          "type": "imageResource"
+        },
+        {
+          "description": "Tone Map for your scene",
+          "longDescription": "\"No Tone Mapping\" exposure can't be changed. Use different Tone Mapping if you want to change the exposure.",
+          "name": "toneMappingType",
+          "supplementaryInformation": "[\"No Tone Mapping\",\"Linear Tone Mapping\",\"Reinhard Tone Mapping\",\"Cineon Tone Mapping\",\"ACES Filmic Tone Mapping\",\"AgX Tone Mapping\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Brightness of the environment map (default value: 1)",
+          "name": "exposure",
+          "type": "expression"
+        },
+        {
+          "defaultValue": "yes",
+          "description": "Show CubeMap Texture as Scene Background",
+          "name": "setAsBackground",
+          "optional": true,
+          "type": "yesorno"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "This action should be used At The Beginning Of The Scene.\nCreates 360° image for the scene. PBR materials with reflective surfaces will reflect this image. Color values from the image will light the scene like Ambient Light.\nImage: Use hdri previews. \n(The environment map will be Y up).",
+      "fullName": "Create Environment map from Equirectangular Map",
+      "functionType": "Action",
+      "name": "CreateEquirectangularMap",
+      "sentence": "Create a Enviroment map from _PARAM1_, Tone Map: _PARAM2_ Exposure: _PARAM3_ Background: _PARAM4_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "\"at the beginning of the scene\" is a failsafe, if the user puts this action as without it."
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "DepartScene"
+              },
+              "parameters": [
+                ""
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "    const threeRenderer = runtimeScene.getGame().getRenderer().getThreeRenderer();",
+                "    const threeScene = runtimeScene.getLayer(\"\").getRenderer().getThreeScene();",
+                "    let originalRender = null;",
+                "    let cubeTexture = null; ",
+                "",
+                "    const image = eventsFunctionContext.getArgument(\"image\")",
+                "    const selectedToneMappingString = eventsFunctionContext.getArgument(\"toneMappingType\");",
+                "    const exposureValue = eventsFunctionContext.getArgument(\"exposure\");",
+                "    const setAsBackgroundOption = eventsFunctionContext.getArgument(\"setAsBackground\");",
+                "",
+                "    const toneMappingMap = {",
+                "        \"No Tone Mapping\": THREE.NoToneMapping,",
+                "        \"Linear Tone Mapping\": THREE.LinearToneMapping,",
+                "        \"Reinhard Tone Mapping\": THREE.ReinhardToneMapping,",
+                "        \"Cineon Tone Mapping\": THREE.CineonToneMapping,",
+                "        \"ACES Filmic Tone Mapping\": THREE.ACESFilmicToneMapping,",
+                "        \"AgX Tone Mapping\": THREE.AgXToneMapping, ",
+                "        //\"Neutral Tone Mapping\": THREE.NeutralToneMapping // Not supported by current Gdevelop version (5.5.231, threejs r160)",
+                "    };",
+                "",
+                "    if (threeRenderer) {",
+                "        threeRenderer.toneMapping = toneMappingMap[selectedToneMappingString];",
+                "        threeRenderer.toneMappingExposure = exposureValue || 1.0;",
+                "    }",
+                "",
+                "    if (threeRenderer && threeScene) {",
+                "        console.log(\"Successfully accessed Three.js renderer and scene.\");",
+                "",
+                "        const textureLoader = new THREE.TextureLoader();",
+                "        textureLoader.load(",
+                "            image,",
+                "            function (texture) {",
+                "                texture.mapping = texture.mapping = THREE.EquirectangularReflectionMapping;",
+                "                texture.colorSpace = THREE.SRGBColorSpace;",
+                "                cubeTexture = texture;",
+                "                threeScene.environment = cubeTexture;",
+                "            ",
+                "            },",
+                "            undefined,",
+                "            function (error) {",
+                "                console.error(\"Error loading map\", error);",
+                "            }",
+                "        );",
+                "",
+                "        if (setAsBackgroundOption) {",
+                "            if (!originalRender) {",
+                "                originalRender = threeRenderer.render;",
+                "",
+                "                threeRenderer.render = function(scene, camera) {",
+                "                    if (cubeTexture) {",
+                "                        scene.background = cubeTexture;",
+                "                        scene.environment = cubeTexture;",
+                "                    } else {",
+                "                        scene.background = null;",
+                "                        scene.environment = null;",
+                "                    }",
+                "                    originalRender.call(this, scene, camera);",
+                "                };",
+                "                console.log(\"Three.js renderer's render function overridden to use cubemap as scene.background.\");",
+                "            }",
+                "        }",
+                "",
+                "    } else {",
+                "        console.error(\"Could not access Three.js renderer or scene. Cubemap operations skipped.\");",
+                "    }"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "An image file",
+          "name": "image",
+          "type": "imageResource"
+        },
+        {
+          "description": "Tone Map for your scene",
+          "longDescription": "\"No Tone Mapping\" exposure can't be changed. Use different Tone Mapping if you want to change the exposure.",
+          "name": "toneMappingType",
+          "supplementaryInformation": "[\"No Tone Mapping\",\"Linear Tone Mapping\",\"Reinhard Tone Mapping\",\"Cineon Tone Mapping\",\"ACES Filmic Tone Mapping\",\"AgX Tone Mapping\"]",
+          "type": "stringWithSelector"
+        },
+        {
+          "description": "Brightness of the environment map (default value: 1)",
+          "name": "exposure",
+          "type": "expression"
+        },
+        {
+          "defaultValue": "yes",
+          "description": "Show CubeMap Texture as Scene Background",
+          "name": "setAsBackground",
+          "optional": true,
+          "type": "yesorno"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
+}
