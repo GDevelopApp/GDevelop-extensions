@@ -1,6 +1,7 @@
 {
   "author": "",
   "category": "Visual effect",
+  "dimension": "3D",
   "extensionNamespace": "",
   "fullName": "3D particle emitter",
   "gdevelopVersion": ">=5.5.222",
@@ -9,8 +10,7 @@
   "name": "ParticleEmitter3D",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/f2e5a34bf465f781866677762d385d6c8e9e8d203383f2df9a3b7e0fad6a2cb5_fire.svg",
   "shortDescription": "Display a large number of particles in 3D to create visual effects in a 3D game.",
-  "dimension": "3D",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": [
     "3D particle emitters let you create and display many small particles to simulate visual effects in your game — like fire, explosions, smoke, or dust.",
     "",
@@ -210,6 +210,7 @@
             "",
             "class ParticleEmitterAdapter {",
             "    /**",
+            "     * @param inverseWorldScale {number}",
             "     * @param particleSystem {ParticleSystem}",
             "     * @param colorOverLife {ColorOverLife}",
             "     * @param sizeOverLife {SizeOverLife}",
@@ -217,7 +218,8 @@
             "     * @param applyForce {ApplyForce}",
             "     * @param widthOverLength {WidthOverLength}",
             "     */",
-            "    constructor(particleSystem, colorOverLife, sizeOverLife, applyForce, widthOverLength) {",
+            "    constructor(inverseWorldScale, particleSystem, colorOverLife, sizeOverLife, applyForce, widthOverLength) {",
+            "        this.inverseWorldScale = inverseWorldScale;",
             "        this.particleSystem = particleSystem;",
             "        this.colorOverLife = colorOverLife;",
             "        this.sizeOverLife = sizeOverLife;",
@@ -248,7 +250,7 @@
             "        if (!startLength) {",
             "            return;",
             "        }",
-            "        startLength.a = startLengthMin;",
+            "        startLength.a = startLengthMin * this.inverseWorldScale;",
             "    }",
             "",
             "    /**",
@@ -259,7 +261,7 @@
             "        if (!startLength) {",
             "            return;",
             "        }",
-            "        startLength.b = startLengthMax;",
+            "        startLength.b = startLengthMax * this.inverseWorldScale;",
             "    }",
             "",
             "    /**",
@@ -350,14 +352,14 @@
             "     * @param startSpeedMin {number}",
             "     */",
             "    setStartSpeedMin(startSpeedMin) {",
-            "        this.particleSystem.startSpeed.a = startSpeedMin;",
+            "        this.particleSystem.startSpeed.a = startSpeedMin * this.inverseWorldScale;",
             "    }",
             "",
             "    /**",
             "     * @param startSpeedMax {number}",
             "     */",
             "    setStartSpeedMax(startSpeedMax) {",
-            "        this.particleSystem.startSpeed.b = startSpeedMax;",
+            "        this.particleSystem.startSpeed.b = startSpeedMax * this.inverseWorldScale;",
             "    }",
             "",
             "    /**",
@@ -424,7 +426,7 @@
             "     * @param gravity {number}",
             "     */",
             "    setGravity(gravity) {",
-            "        this.applyForce.magnitude.value = gravity;",
+            "        this.applyForce.magnitude.value = gravity * this.inverseWorldScale;",
             "    }",
             "",
             "    /**",
@@ -6933,6 +6935,17 @@
       "objectGroups": []
     }
   ],
+  "eventsFunctionsFolderStructure": {
+    "folderName": "__ROOT",
+    "children": [
+      {
+        "functionName": "DefineHelperClasses"
+      },
+      {
+        "functionName": "onScenePreEvents"
+      }
+    ]
+  },
   "eventsBasedBehaviors": [],
   "eventsBasedObjects": [
     {
@@ -6946,9 +6959,12 @@
       "defaultName": "ParticleEmitter",
       "description": "Display a large number of particles to create visual effects.",
       "fullName": "3D particle emitter",
+      "helpPath": "",
+      "iconUrl": "",
       "is3D": true,
       "isUsingLegacyInstancesRenderer": true,
       "name": "ParticleEmitter3D",
+      "previewIconUrl": "",
       "objects": [
         {
           "adaptCollisionMaskAutomatically": true,
@@ -7152,7 +7168,8 @@
                 "",
                 "particleSystem.emitter.name = object.getName() + object.getNameId();",
                 "",
-                "object.__particleEmitterAdapter = new ParticleEmitterAdapter(particleSystem, colorOverLife, sizeOverLife, applyForce, widthOverLength);",
+                "const inverseWorldScale = gameScene.getRenderer3DInverseWorldScale ? gameScene.getRenderer3DInverseWorldScale() : 1;",
+                "object.__particleEmitterAdapter = new ParticleEmitterAdapter(inverseWorldScale, particleSystem, colorOverLife, sizeOverLife, applyForce, widthOverLength);",
                 "object.__particleSystem = particleSystem;",
                 "",
                 "// This is a hack that may break in future releases.",
@@ -7943,7 +7960,8 @@
                 "    layer.__particleEmmiter3DExtension = layer.__particleEmmiter3DExtension || {};",
                 "    if (!layer.__particleEmmiter3DExtension.batchSystem) {",
                 "        const batchSystem = new gdjs.__particleEmmiter3DExtension.BatchedRenderer();",
-                "        batchSystem.scale.y *= -1;",
+                "        const worldScale = gameScene.getRenderer3DWorldScale ? gameScene.getRenderer3DWorldScale() : 1;",
+                "        batchSystem.scale.set(worldScale, -worldScale, worldScale);",
                 "        const threeScene = layer.getRenderer().getThreeScene();",
                 "        if (threeScene) {",
                 "            threeScene.add(batchSystem);",
@@ -8105,6 +8123,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "Z",
+          "group": "Position",
           "name": "SetZ",
           "private": true,
           "sentence": "",
@@ -8177,6 +8196,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "RotationX",
+          "group": "Angle",
           "name": "SetRotationX",
           "private": true,
           "sentence": "",
@@ -8260,6 +8280,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "RotationY",
+          "group": "Angle",
           "name": "SetRotationY",
           "private": true,
           "sentence": "",
@@ -8342,6 +8363,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "StartColor",
+          "group": "3D particle emitter color configuration",
           "name": "SetStartColor",
           "sentence": "",
           "events": [
@@ -8424,6 +8446,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "EndColor",
+          "group": "3D particle emitter color configuration",
           "name": "SetEndColor",
           "sentence": "",
           "events": [
@@ -8506,6 +8529,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "StartOpacity",
+          "group": "3D particle emitter color configuration",
           "name": "SetStartOpacity",
           "sentence": "",
           "events": [
@@ -8588,6 +8612,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "EndOpacity",
+          "group": "3D particle emitter color configuration",
           "name": "SetEndOpacity",
           "sentence": "",
           "events": [
@@ -8670,6 +8695,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "Flow",
+          "group": "3D particle emitter configuration",
           "name": "SetFlow",
           "sentence": "",
           "events": [
@@ -8753,6 +8779,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "StartSizeMin",
+          "group": "3D particle emitter configuration",
           "name": "SetStartSizeMin",
           "sentence": "",
           "events": [
@@ -8835,6 +8862,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "StartSizeMax",
+          "group": "3D particle emitter configuration",
           "name": "SetStartSizeMax",
           "sentence": "",
           "events": [
@@ -8918,6 +8946,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "EndScale",
+          "group": "3D particle emitter configuration",
           "name": "SetEndScale",
           "sentence": "",
           "events": [
@@ -9001,6 +9030,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "StartSpeedMin",
+          "group": "3D particle emitter speed configuration",
           "name": "SetStartSpeedMin",
           "sentence": "",
           "events": [
@@ -9083,6 +9113,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "StartSpeedMax",
+          "group": "3D particle emitter speed configuration",
           "name": "SetStartSpeedMax",
           "sentence": "",
           "events": [
@@ -9165,6 +9196,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "LifespanMin",
+          "group": "3D particle emitter configuration",
           "name": "SetLifespanMin",
           "sentence": "",
           "events": [
@@ -9248,6 +9280,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "LifespanMax",
+          "group": "3D particle emitter configuration",
           "name": "SetLifespanMax",
           "sentence": "",
           "events": [
@@ -9331,6 +9364,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "Duration",
+          "group": "3D particle emitter configuration",
           "name": "SetDuration",
           "sentence": "",
           "events": [
@@ -9552,6 +9586,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "SpayConeAngle",
+          "group": "3D particle emitter configuration",
           "name": "SetSpayConeAngle",
           "sentence": "",
           "events": [
@@ -9636,6 +9671,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "Blending",
+          "group": "3D particle emitter color configuration",
           "name": "SetBlending",
           "private": true,
           "sentence": "",
@@ -9721,6 +9757,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "GravityTop",
+          "group": "3D particle emitter speed configuration",
           "name": "SetGravityTop",
           "sentence": "",
           "events": [
@@ -9804,6 +9841,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "Gravity",
+          "group": "3D particle emitter speed configuration",
           "name": "SetGravity",
           "sentence": "",
           "events": [
@@ -10012,6 +10050,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "TrailStartLengthMin",
+          "group": "3D particle emitter trail configuration",
           "name": "SetTrailStartLengthMin",
           "sentence": "",
           "events": [
@@ -10094,6 +10133,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "TrailStartLengthMax",
+          "group": "3D particle emitter trail configuration",
           "name": "SetTrailStartLengthMax",
           "sentence": "",
           "events": [
@@ -10312,6 +10352,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "TrailEndWidthRatio",
+          "group": "3D particle emitter trail configuration",
           "name": "SetTrailEndWidthRatio",
           "sentence": "",
           "events": [
@@ -10396,6 +10437,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "RenderMode",
+          "group": "3D particle emitter configuration",
           "name": "SetRenderMode",
           "private": true,
           "sentence": "",
@@ -10491,6 +10533,236 @@
           "objectGroups": []
         }
       ],
+      "eventsFunctionsFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "functionName": "onCreated"
+          },
+          {
+            "functionName": "onDestroy"
+          },
+          {
+            "functionName": "onHotReloading"
+          },
+          {
+            "functionName": "UpdateFromProperties"
+          },
+          {
+            "functionName": "UpdateHelper"
+          },
+          {
+            "functionName": "UpdateImage"
+          },
+          {
+            "functionName": "doStepPostEvents"
+          },
+          {
+            "functionName": "RegisterInLayer"
+          },
+          {
+            "functionName": "Delete"
+          },
+          {
+            "functionName": "HasEnded"
+          },
+          {
+            "functionName": "Restart"
+          },
+          {
+            "folderName": "Position",
+            "children": [
+              {
+                "functionName": "Z"
+              },
+              {
+                "functionName": "SetZ"
+              }
+            ]
+          },
+          {
+            "folderName": "Angle",
+            "children": [
+              {
+                "functionName": "RotationX"
+              },
+              {
+                "functionName": "SetRotationX"
+              },
+              {
+                "functionName": "RotationY"
+              },
+              {
+                "functionName": "SetRotationY"
+              }
+            ]
+          },
+          {
+            "folderName": "3D particle emitter color configuration",
+            "children": [
+              {
+                "functionName": "StartColor"
+              },
+              {
+                "functionName": "SetStartColor"
+              },
+              {
+                "functionName": "EndColor"
+              },
+              {
+                "functionName": "SetEndColor"
+              },
+              {
+                "functionName": "StartOpacity"
+              },
+              {
+                "functionName": "SetStartOpacity"
+              },
+              {
+                "functionName": "EndOpacity"
+              },
+              {
+                "functionName": "SetEndOpacity"
+              },
+              {
+                "functionName": "Blending"
+              },
+              {
+                "functionName": "SetBlending"
+              }
+            ]
+          },
+          {
+            "folderName": "3D particle emitter configuration",
+            "children": [
+              {
+                "functionName": "Flow"
+              },
+              {
+                "functionName": "SetFlow"
+              },
+              {
+                "functionName": "StartSizeMin"
+              },
+              {
+                "functionName": "SetStartSizeMin"
+              },
+              {
+                "functionName": "StartSizeMax"
+              },
+              {
+                "functionName": "SetStartSizeMax"
+              },
+              {
+                "functionName": "EndScale"
+              },
+              {
+                "functionName": "SetEndScale"
+              },
+              {
+                "functionName": "LifespanMin"
+              },
+              {
+                "functionName": "SetLifespanMin"
+              },
+              {
+                "functionName": "LifespanMax"
+              },
+              {
+                "functionName": "SetLifespanMax"
+              },
+              {
+                "functionName": "Duration"
+              },
+              {
+                "functionName": "SetDuration"
+              },
+              {
+                "functionName": "SpayConeAngle"
+              },
+              {
+                "functionName": "SetSpayConeAngle"
+              },
+              {
+                "functionName": "ShouldAutodestruct"
+              },
+              {
+                "functionName": "SetShouldAutodestruct"
+              },
+              {
+                "functionName": "RenderMode"
+              },
+              {
+                "functionName": "SetRenderMode"
+              }
+            ]
+          },
+          {
+            "folderName": "3D particle emitter speed configuration",
+            "children": [
+              {
+                "functionName": "StartSpeedMin"
+              },
+              {
+                "functionName": "SetStartSpeedMin"
+              },
+              {
+                "functionName": "StartSpeedMax"
+              },
+              {
+                "functionName": "SetStartSpeedMax"
+              },
+              {
+                "functionName": "AreParticlesRelative"
+              },
+              {
+                "functionName": "SetAreParticlesRelative"
+              },
+              {
+                "functionName": "GravityTop"
+              },
+              {
+                "functionName": "SetGravityTop"
+              },
+              {
+                "functionName": "Gravity"
+              },
+              {
+                "functionName": "SetGravity"
+              }
+            ]
+          },
+          {
+            "folderName": "3D particle emitter trail configuration",
+            "children": [
+              {
+                "functionName": "TrailStartLengthMin"
+              },
+              {
+                "functionName": "SetTrailStartLengthMin"
+              },
+              {
+                "functionName": "TrailStartLengthMax"
+              },
+              {
+                "functionName": "SetTrailStartLengthMax"
+              },
+              {
+                "functionName": "IsTrailFollowingLocalOrigin"
+              },
+              {
+                "functionName": "SetIsTrailFollowingLocalOrigin"
+              },
+              {
+                "functionName": "TrailEndWidthRatio"
+              },
+              {
+                "functionName": "SetTrailEndWidthRatio"
+              }
+            ]
+          }
+        ]
+      },
       "propertyDescriptors": [
         {
           "value": "255;0;0",
