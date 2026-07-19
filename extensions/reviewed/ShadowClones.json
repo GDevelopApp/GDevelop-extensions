@@ -564,6 +564,78 @@
                         "textG": 0,
                         "textR": 0
                       },
+                      "comment": "Clean-up unused history"
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
+                      },
+                      "comment": "When there are no longer values at the end of the array."
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "VarObjet"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Head",
+                            ">=",
+                            "FramesCount - 1"
+                          ]
+                        }
+                      ],
+                      "actions": [],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Comment",
+                          "color": {
+                            "b": 109,
+                            "g": 230,
+                            "r": 255,
+                            "textB": 0,
+                            "textG": 0,
+                            "textR": 0
+                          },
+                          "comment": "We cut the end of the array."
+                        },
+                        {
+                          "type": "BuiltinCommonInstructions::Repeat",
+                          "repeatExpression": "Object.VariableChildCount(History) - (Object.Variable(Head) + 1)",
+                          "conditions": [],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "ObjectVariableRemoveChild"
+                              },
+                              "parameters": [
+                                "Object",
+                                "History",
+                                "ToString(Object.VariableChildCount(History) - 1)"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "BuiltinCommonInstructions::Comment",
+                      "color": {
+                        "b": 109,
+                        "g": 230,
+                        "r": 255,
+                        "textB": 0,
+                        "textG": 0,
+                        "textR": 0
+                      },
                       "comment": "Move the head to the next index\nThe History array is used as a circular buffer (thus the mod)"
                     },
                     {
@@ -578,7 +650,7 @@
                             "Object",
                             "Head",
                             "=",
-                            "mod(Object.Variable(Head) + 1, FramesCount)"
+                            "mod(Object.Variable(Head) + 1, max(FramesCount, Object.VariableChildCount(History)))"
                           ]
                         },
                         {
@@ -593,35 +665,6 @@
                         }
                       ],
                       "events": [
-                        {
-                          "type": "BuiltinCommonInstructions::Comment",
-                          "color": {
-                            "b": 109,
-                            "g": 230,
-                            "r": 255,
-                            "textB": 0,
-                            "textG": 0,
-                            "textR": 0
-                          },
-                          "comment": "Clean-up unused history"
-                        },
-                        {
-                          "type": "BuiltinCommonInstructions::Repeat",
-                          "repeatExpression": "Object.VariableChildCount(History) - FramesCount",
-                          "conditions": [],
-                          "actions": [
-                            {
-                              "type": {
-                                "value": "ObjectVariableRemoveAt"
-                              },
-                              "parameters": [
-                                "Object",
-                                "History",
-                                "Object.VariableChildCount(History) - 1"
-                              ]
-                            }
-                          ]
-                        },
                         {
                           "colorB": 228,
                           "colorG": 176,
@@ -717,8 +760,7 @@
                           "type": "BuiltinCommonInstructions::Group",
                           "events": [
                             {
-                              "type": "BuiltinCommonInstructions::ForEach",
-                              "object": "Clone",
+                              "type": "BuiltinCommonInstructions::Standard",
                               "conditions": [
                                 {
                                   "type": {
@@ -726,93 +768,74 @@
                                   },
                                   "parameters": [
                                     "",
+                                    "Clone",
                                     "Object",
-                                    "Clone"
+                                    ""
                                   ]
                                 }
                               ],
                               "actions": [],
                               "events": [
                                 {
-                                  "type": "BuiltinCommonInstructions::Comment",
-                                  "color": {
-                                    "b": 109,
-                                    "g": 230,
-                                    "r": 255,
-                                    "textB": 0,
-                                    "textG": 0,
-                                    "textR": 0
-                                  },
-                                  "comment": "Delete shadow clone if we have decreased number of shadow clones."
-                                },
-                                {
-                                  "type": "BuiltinCommonInstructions::Standard",
-                                  "conditions": [
-                                    {
-                                      "type": {
-                                        "value": "VarObjet"
-                                      },
-                                      "parameters": [
-                                        "Clone",
-                                        "ShadowCloneOrder",
-                                        ">",
-                                        "ClonesCount"
-                                      ]
-                                    }
-                                  ],
-                                  "actions": [
-                                    {
-                                      "type": {
-                                        "value": "Delete"
-                                      },
-                                      "parameters": [
-                                        "Clone",
-                                        ""
-                                      ]
-                                    },
-                                    {
-                                      "type": {
-                                        "value": "ModVarObjet"
-                                      },
-                                      "parameters": [
-                                        "Object",
-                                        "ClonesCreated",
-                                        "-",
-                                        "1"
-                                      ]
-                                    }
-                                  ]
-                                },
-                                {
-                                  "type": "BuiltinCommonInstructions::Else",
+                                  "type": "BuiltinCommonInstructions::ForEach",
+                                  "object": "Clone",
                                   "conditions": [],
                                   "actions": [],
                                   "events": [
                                     {
+                                      "type": "BuiltinCommonInstructions::Comment",
+                                      "color": {
+                                        "b": 109,
+                                        "g": 230,
+                                        "r": 255,
+                                        "textB": 0,
+                                        "textG": 0,
+                                        "textR": 0
+                                      },
+                                      "comment": "Delete shadow clone if we have decreased number of shadow clones."
+                                    },
+                                    {
                                       "type": "BuiltinCommonInstructions::Standard",
-                                      "conditions": [],
+                                      "conditions": [
+                                        {
+                                          "type": {
+                                            "value": "VarObjet"
+                                          },
+                                          "parameters": [
+                                            "Clone",
+                                            "ShadowCloneOrder",
+                                            ">",
+                                            "ClonesCount"
+                                          ]
+                                        }
+                                      ],
                                       "actions": [
                                         {
                                           "type": {
-                                            "value": "SetNumberVariable"
+                                            "value": "Delete"
                                           },
                                           "parameters": [
-                                            "Index",
-                                            "=",
-                                            "mod(Head - Clone.Variable(ShadowCloneOrder) * FramesGap, FramesCount)"
+                                            "Clone",
+                                            ""
                                           ]
                                         },
                                         {
                                           "type": {
-                                            "value": "SetNumberVariable"
+                                            "value": "ModVarObjet"
                                           },
                                           "parameters": [
-                                            "Ratio",
-                                            "=",
-                                            "Clone.Variable(ShadowCloneOrder) / ClonesCount"
+                                            "Object",
+                                            "ClonesCreated",
+                                            "-",
+                                            "1"
                                           ]
                                         }
-                                      ],
+                                      ]
+                                    },
+                                    {
+                                      "type": "BuiltinCommonInstructions::Else",
+                                      "conditions": [],
+                                      "actions": [],
                                       "events": [
                                         {
                                           "type": "BuiltinCommonInstructions::Standard",
@@ -820,83 +843,65 @@
                                           "actions": [
                                             {
                                               "type": {
-                                                "value": "SetXY"
+                                                "value": "SetNumberVariable"
                                               },
                                               "parameters": [
-                                                "Clone",
+                                                "Index",
                                                 "=",
-                                                "Object.Variable(History[Index].xpos)",
-                                                "=",
-                                                "Object.Variable(History[Index].ypos)"
+                                                "mod(Head - Clone.Variable(ShadowCloneOrder) * FramesGap, FramesCount)"
                                               ]
                                             },
                                             {
                                               "type": {
-                                                "value": "OpacityCapability::OpacityBehavior::SetValue"
+                                                "value": "SetNumberVariable"
                                               },
                                               "parameters": [
-                                                "Clone",
-                                                "Opacity2",
+                                                "Ratio",
                                                 "=",
-                                                "Object.Opacity::Value() * lerp(OpacityStart, OpacityEnd, Ratio)"
-                                              ]
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "BuiltinCommonInstructions::Standard",
-                                          "conditions": [
-                                            {
-                                              "type": {
-                                                "value": "BuiltinCommonInstructions::CompareNumbers"
-                                              },
-                                              "parameters": [
-                                                "ScaleEnd",
-                                                "!=",
-                                                "1"
+                                                "Clone.Variable(ShadowCloneOrder) / ClonesCount"
                                               ]
                                             }
                                           ],
-                                          "actions": [
+                                          "events": [
                                             {
-                                              "type": {
-                                                "value": "ScalableCapability::ScalableBehavior::SetX"
-                                              },
-                                              "parameters": [
-                                                "Clone",
-                                                "Scale2",
-                                                "=",
-                                                "lerp(Object.Scale::X(), ScaleEnd, Ratio)"
+                                              "type": "BuiltinCommonInstructions::Standard",
+                                              "conditions": [],
+                                              "actions": [
+                                                {
+                                                  "type": {
+                                                    "value": "SetXY"
+                                                  },
+                                                  "parameters": [
+                                                    "Clone",
+                                                    "=",
+                                                    "Object.Variable(History[Index].xpos)",
+                                                    "=",
+                                                    "Object.Variable(History[Index].ypos)"
+                                                  ]
+                                                },
+                                                {
+                                                  "type": {
+                                                    "value": "OpacityCapability::OpacityBehavior::SetValue"
+                                                  },
+                                                  "parameters": [
+                                                    "Clone",
+                                                    "Opacity2",
+                                                    "=",
+                                                    "Object.Opacity::Value() * lerp(OpacityStart, OpacityEnd, Ratio)"
+                                                  ]
+                                                }
                                               ]
                                             },
-                                            {
-                                              "type": {
-                                                "value": "ScalableCapability::ScalableBehavior::SetY"
-                                              },
-                                              "parameters": [
-                                                "Clone",
-                                                "Scale2",
-                                                "=",
-                                                "lerp(Object.Scale::Y(), ScaleEnd, Ratio)"
-                                              ]
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "BuiltinCommonInstructions::Else",
-                                          "conditions": [],
-                                          "actions": [],
-                                          "events": [
                                             {
                                               "type": "BuiltinCommonInstructions::Standard",
                                               "conditions": [
                                                 {
                                                   "type": {
-                                                    "value": "NumberVariable"
+                                                    "value": "BuiltinCommonInstructions::CompareNumbers"
                                                   },
                                                   "parameters": [
-                                                    "MatchScaleX",
-                                                    "=",
+                                                    "ScaleEnd",
+                                                    "!=",
                                                     "1"
                                                   ]
                                                 }
@@ -910,7 +915,81 @@
                                                     "Clone",
                                                     "Scale2",
                                                     "=",
-                                                    "Object.Variable(History[Index].xscale)"
+                                                    "lerp(Object.Scale::X(), ScaleEnd, Ratio)"
+                                                  ]
+                                                },
+                                                {
+                                                  "type": {
+                                                    "value": "ScalableCapability::ScalableBehavior::SetY"
+                                                  },
+                                                  "parameters": [
+                                                    "Clone",
+                                                    "Scale2",
+                                                    "=",
+                                                    "lerp(Object.Scale::Y(), ScaleEnd, Ratio)"
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "BuiltinCommonInstructions::Else",
+                                              "conditions": [],
+                                              "actions": [],
+                                              "events": [
+                                                {
+                                                  "type": "BuiltinCommonInstructions::Standard",
+                                                  "conditions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "NumberVariable"
+                                                      },
+                                                      "parameters": [
+                                                        "MatchScaleX",
+                                                        "=",
+                                                        "1"
+                                                      ]
+                                                    }
+                                                  ],
+                                                  "actions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "ScalableCapability::ScalableBehavior::SetX"
+                                                      },
+                                                      "parameters": [
+                                                        "Clone",
+                                                        "Scale2",
+                                                        "=",
+                                                        "Object.Variable(History[Index].xscale)"
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "BuiltinCommonInstructions::Standard",
+                                                  "conditions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "NumberVariable"
+                                                      },
+                                                      "parameters": [
+                                                        "MatchScaleY",
+                                                        "=",
+                                                        "1"
+                                                      ]
+                                                    }
+                                                  ],
+                                                  "actions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "ScalableCapability::ScalableBehavior::SetY"
+                                                      },
+                                                      "parameters": [
+                                                        "Clone",
+                                                        "Scale2",
+                                                        "=",
+                                                        "Object.Variable(History[Index].yscale)"
+                                                      ]
+                                                    }
                                                   ]
                                                 }
                                               ]
@@ -923,7 +1002,7 @@
                                                     "value": "NumberVariable"
                                                   },
                                                   "parameters": [
-                                                    "MatchScaleY",
+                                                    "MatchAngle",
                                                     "=",
                                                     "1"
                                                   ]
@@ -932,153 +1011,12 @@
                                               "actions": [
                                                 {
                                                   "type": {
-                                                    "value": "ScalableCapability::ScalableBehavior::SetY"
+                                                    "value": "SetAngle"
                                                   },
                                                   "parameters": [
                                                     "Clone",
-                                                    "Scale2",
                                                     "=",
-                                                    "Object.Variable(History[Index].yscale)"
-                                                  ]
-                                                }
-                                              ]
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "BuiltinCommonInstructions::Standard",
-                                          "conditions": [
-                                            {
-                                              "type": {
-                                                "value": "NumberVariable"
-                                              },
-                                              "parameters": [
-                                                "MatchAngle",
-                                                "=",
-                                                "1"
-                                              ]
-                                            }
-                                          ],
-                                          "actions": [
-                                            {
-                                              "type": {
-                                                "value": "SetAngle"
-                                              },
-                                              "parameters": [
-                                                "Clone",
-                                                "=",
-                                                "Object.Variable(History[Index].angle)"
-                                              ]
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "BuiltinCommonInstructions::Standard",
-                                          "conditions": [
-                                            {
-                                              "type": {
-                                                "value": "NumberVariable"
-                                              },
-                                              "parameters": [
-                                                "MatchAnimation",
-                                                "=",
-                                                "1"
-                                              ]
-                                            }
-                                          ],
-                                          "actions": [
-                                            {
-                                              "type": {
-                                                "value": "AnimatableCapability::AnimatableBehavior::SetIndex"
-                                              },
-                                              "parameters": [
-                                                "Clone",
-                                                "Animation2",
-                                                "=",
-                                                "Object.Variable(History[Index].animation)"
-                                              ]
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "BuiltinCommonInstructions::Standard",
-                                          "conditions": [
-                                            {
-                                              "type": {
-                                                "value": "NumberVariable"
-                                              },
-                                              "parameters": [
-                                                "MatchAnimationFrame",
-                                                "=",
-                                                "1"
-                                              ]
-                                            }
-                                          ],
-                                          "actions": [
-                                            {
-                                              "type": {
-                                                "value": "AnimatableCapability::AnimatableBehavior::SetElapsedTime"
-                                              },
-                                              "parameters": [
-                                                "Clone",
-                                                "Animation2",
-                                                "=",
-                                                "Object.Variable(History[Index].frame)"
-                                              ]
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "BuiltinCommonInstructions::Standard",
-                                          "conditions": [
-                                            {
-                                              "type": {
-                                                "value": "NumberVariable"
-                                              },
-                                              "parameters": [
-                                                "MatchHorizontalFlip",
-                                                "=",
-                                                "1"
-                                              ]
-                                            }
-                                          ],
-                                          "actions": [
-                                            {
-                                              "type": {
-                                                "value": "ModVarObjet"
-                                              },
-                                              "parameters": [
-                                                "Clone",
-                                                "horizontalflip",
-                                                "=",
-                                                "Object.Variable(History[Index].horizontalflip)"
-                                              ]
-                                            }
-                                          ],
-                                          "events": [
-                                            {
-                                              "type": "BuiltinCommonInstructions::Standard",
-                                              "conditions": [
-                                                {
-                                                  "type": {
-                                                    "value": "ObjectVariableAsBoolean"
-                                                  },
-                                                  "parameters": [
-                                                    "Clone",
-                                                    "horizontalflip",
-                                                    "="
-                                                  ]
-                                                }
-                                              ],
-                                              "actions": [
-                                                {
-                                                  "type": {
-                                                    "value": "FlippableCapability::FlippableBehavior::FlipX"
-                                                  },
-                                                  "parameters": [
-                                                    "Clone",
-                                                    "Flippable2",
-                                                    "no"
+                                                    "Object.Variable(History[Index].angle)"
                                                   ]
                                                 }
                                               ]
@@ -1088,81 +1026,25 @@
                                               "conditions": [
                                                 {
                                                   "type": {
-                                                    "value": "ObjectVariableAsBoolean"
+                                                    "value": "NumberVariable"
                                                   },
                                                   "parameters": [
-                                                    "Clone",
-                                                    "horizontalflip",
-                                                    "True"
+                                                    "MatchAnimation",
+                                                    "=",
+                                                    "1"
                                                   ]
                                                 }
                                               ],
                                               "actions": [
                                                 {
                                                   "type": {
-                                                    "value": "FlippableCapability::FlippableBehavior::FlipX"
+                                                    "value": "AnimatableCapability::AnimatableBehavior::SetIndex"
                                                   },
                                                   "parameters": [
                                                     "Clone",
-                                                    "Flippable2",
-                                                    "yes"
-                                                  ]
-                                                }
-                                              ]
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "type": "BuiltinCommonInstructions::Standard",
-                                          "conditions": [
-                                            {
-                                              "type": {
-                                                "value": "NumberVariable"
-                                              },
-                                              "parameters": [
-                                                "MatchVerticalFlip",
-                                                "=",
-                                                "1"
-                                              ]
-                                            }
-                                          ],
-                                          "actions": [
-                                            {
-                                              "type": {
-                                                "value": "ModVarObjet"
-                                              },
-                                              "parameters": [
-                                                "Clone",
-                                                "verticalflip",
-                                                "=",
-                                                "Object.Variable(History[Index].verticalflip)"
-                                              ]
-                                            }
-                                          ],
-                                          "events": [
-                                            {
-                                              "type": "BuiltinCommonInstructions::Standard",
-                                              "conditions": [
-                                                {
-                                                  "type": {
-                                                    "value": "ObjectVariableAsBoolean"
-                                                  },
-                                                  "parameters": [
-                                                    "Clone",
-                                                    "verticalflip",
-                                                    "="
-                                                  ]
-                                                }
-                                              ],
-                                              "actions": [
-                                                {
-                                                  "type": {
-                                                    "value": "FlippableCapability::FlippableBehavior::FlipY"
-                                                  },
-                                                  "parameters": [
-                                                    "Clone",
-                                                    "Flippable2",
-                                                    "no"
+                                                    "Animation2",
+                                                    "=",
+                                                    "Object.Variable(History[Index].animation)"
                                                   ]
                                                 }
                                               ]
@@ -1172,46 +1054,215 @@
                                               "conditions": [
                                                 {
                                                   "type": {
-                                                    "value": "ObjectVariableAsBoolean"
+                                                    "value": "NumberVariable"
                                                   },
                                                   "parameters": [
-                                                    "Clone",
-                                                    "verticalflip",
-                                                    "True"
+                                                    "MatchAnimationFrame",
+                                                    "=",
+                                                    "1"
                                                   ]
                                                 }
                                               ],
                                               "actions": [
                                                 {
                                                   "type": {
-                                                    "value": "FlippableCapability::FlippableBehavior::FlipY"
+                                                    "value": "AnimatableCapability::AnimatableBehavior::SetElapsedTime"
                                                   },
                                                   "parameters": [
                                                     "Clone",
-                                                    "Flippable2",
-                                                    "yes"
+                                                    "Animation2",
+                                                    "=",
+                                                    "Object.Variable(History[Index].frame)"
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "BuiltinCommonInstructions::Standard",
+                                              "conditions": [
+                                                {
+                                                  "type": {
+                                                    "value": "NumberVariable"
+                                                  },
+                                                  "parameters": [
+                                                    "MatchHorizontalFlip",
+                                                    "=",
+                                                    "1"
+                                                  ]
+                                                }
+                                              ],
+                                              "actions": [
+                                                {
+                                                  "type": {
+                                                    "value": "ModVarObjet"
+                                                  },
+                                                  "parameters": [
+                                                    "Clone",
+                                                    "horizontalflip",
+                                                    "=",
+                                                    "Object.Variable(History[Index].horizontalflip)"
+                                                  ]
+                                                }
+                                              ],
+                                              "events": [
+                                                {
+                                                  "type": "BuiltinCommonInstructions::Standard",
+                                                  "conditions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "ObjectVariableAsBoolean"
+                                                      },
+                                                      "parameters": [
+                                                        "Clone",
+                                                        "horizontalflip",
+                                                        "="
+                                                      ]
+                                                    }
+                                                  ],
+                                                  "actions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "FlippableCapability::FlippableBehavior::FlipX"
+                                                      },
+                                                      "parameters": [
+                                                        "Clone",
+                                                        "Flippable2",
+                                                        "no"
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "BuiltinCommonInstructions::Standard",
+                                                  "conditions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "ObjectVariableAsBoolean"
+                                                      },
+                                                      "parameters": [
+                                                        "Clone",
+                                                        "horizontalflip",
+                                                        "True"
+                                                      ]
+                                                    }
+                                                  ],
+                                                  "actions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "FlippableCapability::FlippableBehavior::FlipX"
+                                                      },
+                                                      "parameters": [
+                                                        "Clone",
+                                                        "Flippable2",
+                                                        "yes"
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "BuiltinCommonInstructions::Standard",
+                                              "conditions": [
+                                                {
+                                                  "type": {
+                                                    "value": "NumberVariable"
+                                                  },
+                                                  "parameters": [
+                                                    "MatchVerticalFlip",
+                                                    "=",
+                                                    "1"
+                                                  ]
+                                                }
+                                              ],
+                                              "actions": [
+                                                {
+                                                  "type": {
+                                                    "value": "ModVarObjet"
+                                                  },
+                                                  "parameters": [
+                                                    "Clone",
+                                                    "verticalflip",
+                                                    "=",
+                                                    "Object.Variable(History[Index].verticalflip)"
+                                                  ]
+                                                }
+                                              ],
+                                              "events": [
+                                                {
+                                                  "type": "BuiltinCommonInstructions::Standard",
+                                                  "conditions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "ObjectVariableAsBoolean"
+                                                      },
+                                                      "parameters": [
+                                                        "Clone",
+                                                        "verticalflip",
+                                                        "="
+                                                      ]
+                                                    }
+                                                  ],
+                                                  "actions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "FlippableCapability::FlippableBehavior::FlipY"
+                                                      },
+                                                      "parameters": [
+                                                        "Clone",
+                                                        "Flippable2",
+                                                        "no"
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "BuiltinCommonInstructions::Standard",
+                                                  "conditions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "ObjectVariableAsBoolean"
+                                                      },
+                                                      "parameters": [
+                                                        "Clone",
+                                                        "verticalflip",
+                                                        "True"
+                                                      ]
+                                                    }
+                                                  ],
+                                                  "actions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "FlippableCapability::FlippableBehavior::FlipY"
+                                                      },
+                                                      "parameters": [
+                                                        "Clone",
+                                                        "Flippable2",
+                                                        "yes"
+                                                      ]
+                                                    }
                                                   ]
                                                 }
                                               ]
                                             }
                                           ]
-                                        }
-                                      ],
-                                      "variables": [
-                                        {
-                                          "name": "Index",
-                                          "persistentUuid": "ef7c6fbd-396c-4538-974e-3a9ef28c3ba5",
-                                          "type": "number",
-                                          "value": 0
-                                        },
-                                        {
-                                          "name": "Ratio",
-                                          "type": "number",
-                                          "value": 0
                                         }
                                       ]
                                     }
                                   ]
+                                }
+                              ],
+                              "variables": [
+                                {
+                                  "name": "Index",
+                                  "persistentUuid": "ed4119b6-5f73-4938-824d-1a69f6c92782",
+                                  "type": "number",
+                                  "value": 0
+                                },
+                                {
+                                  "name": "Ratio",
+                                  "type": "number",
+                                  "value": 0
                                 }
                               ]
                             }
