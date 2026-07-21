@@ -1,6 +1,7 @@
 {
   "author": "",
   "category": "General",
+  "dimension": "3D",
   "extensionNamespace": "",
   "fullName": "3D raycast",
   "gdevelopVersion": ">=5.5.222",
@@ -9,7 +10,7 @@
   "name": "Raycaster3D",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/8419f46b76bce482c14b4c03b4141a64d457e4cdc92686f3470381f5d2694abd_ray-start-arrow.svg",
   "shortDescription": "Find 3D objects that cross a line.",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": [
     "It can be useful to:",
     "- Find 3D objects under the pointer",
@@ -103,7 +104,10 @@
             "        pointer.x = -1 + 2 * pointerX;",
             "        pointer.y = 1 - 2 * pointerY;",
             "        raycaster.setFromCamera(pointer, camera);",
-            "        raycaster.far = distanceMax;",
+            "",
+            "        const scene = object.getRuntimeScene();",
+            "        const inverseWorldScale = scene.getRenderer3DInverseWorldScale ? scene.getRenderer3DInverseWorldScale() : 1;",
+            "        raycaster.far = distanceMax * inverseWorldScale;",
             "",
             "        return this._doRecast(objectsLists, objects);",
             "    }",
@@ -131,11 +135,13 @@
             "        if (objects.length === 0) {",
             "            return false;",
             "        }",
+            "        const scene = objects[0].getRuntimeScene();",
+            "        const inverseWorldScale = scene.getRenderer3DInverseWorldScale ? scene.getRenderer3DInverseWorldScale() : 1;",
             "        const raycaster = this.raycaster;",
             "        raycaster.ray.origin.set(",
-            "            originX,",
-            "            -originY,",
-            "            originZ,",
+            "            originX * inverseWorldScale,",
+            "            -originY * inverseWorldScale,",
+            "            originZ * inverseWorldScale,",
             "        );",
             "        const rotation = rotationAngle * Math.PI / 180;",
             "        const elevation = elevationAngle * Math.PI / 180;",
@@ -145,7 +151,7 @@
             "            -Math.sin(rotation) * cosElevation,",
             "            Math.sin(elevation),",
             "        );",
-            "        raycaster.far = distanceMax;",
+            "        raycaster.far = distanceMax * inverseWorldScale;",
             "",
             "        return this._doRecast(objectsLists, objects);",
             "    }",
@@ -159,7 +165,6 @@
             "     * @param targetX {number}",
             "     * @param targetY {number}",
             "     * @param targetZ {number}",
-            "     * @param distanceMax {number}",
             "     */",
             "    recastBetweenPosition(",
             "        objectsLists,",
@@ -174,11 +179,13 @@
             "        if (objects.length === 0) {",
             "            return false;",
             "        }",
+            "        const scene = objects[0].getRuntimeScene();",
+            "        const inverseWorldScale = scene.getRenderer3DInverseWorldScale ? scene.getRenderer3DInverseWorldScale() : 1;",
             "        const raycaster = this.raycaster;",
             "        raycaster.ray.origin.set(",
-            "            originX,",
-            "            -originY,",
-            "            originZ,",
+            "            originX * inverseWorldScale,",
+            "            -originY * inverseWorldScale,",
+            "            originZ * inverseWorldScale,",
             "        );",
             "        const deltaX = targetX - originX;",
             "        const deltaY = targetY - originY;",
@@ -189,7 +196,7 @@
             "            -deltaY / deltaLength,",
             "            deltaZ / deltaLength,",
             "        );",
-            "        raycaster.far = deltaLength;",
+            "        raycaster.far = deltaLength * inverseWorldScale;",
             "",
             "        return this._doRecast(objectsLists, objects);",
             "    }",
@@ -199,6 +206,8 @@
             "     * @param objects {gdjs.RuntimeObject[]}",
             "     */",
             "    _doRecast(objectsLists, objects) {",
+            "        const scene = objects[0].getRuntimeScene();",
+            "        const worldScale = scene.getRenderer3DWorldScale ? scene.getRenderer3DWorldScale() : 1;",
             "        const raycastResults = this.raycastResults;",
             "        let distanceMin = Number.MAX_VALUE;",
             "        /** @type {gdjs.RuntimeObject | null} */",
@@ -216,10 +225,10 @@
             "                const raycastResult = raycastResults[0];",
             "                distanceMin = raycastResult.distance;",
             "                nearestObject = object;",
-            "                this.lastDistance = raycastResult.distance;",
-            "                this.lastPositionX = raycastResult.point.x;",
-            "                this.lastPositionY = -raycastResult.point.y;",
-            "                this.lastPositionZ = raycastResult.point.z;",
+            "                this.lastDistance = raycastResult.distance * worldScale;",
+            "                this.lastPositionX = raycastResult.point.x * worldScale;",
+            "                this.lastPositionY = -raycastResult.point.y * worldScale;",
+            "                this.lastPositionZ = raycastResult.point.z * worldScale;",
             "                this.lastNormal.copy(raycastResult.normal);",
             "                nearestThreeObject = raycastResult.object;",
             "            }",
@@ -491,6 +500,8 @@
           "inlineCode": [
             "const { camera, input } = gdjs.evtTools;",
             "",
+            "/** @type {string} */",
+            "//@ts-ignore",
             "const layer2D = eventsFunctionContext.getArgument(\"Layer2D\");",
             "",
             "const cameraMinX = camera.getCameraBorderLeft(runtimeScene, layer2D, 0);",
@@ -683,6 +694,58 @@
       "objectGroups": []
     }
   ],
+  "eventsFunctionsFolderStructure": {
+    "folderName": "__ROOT",
+    "children": [
+      {
+        "functionName": "onFirstSceneLoaded"
+      },
+      {
+        "functionName": "DefineHelperClasses"
+      },
+      {
+        "folderName": "Collision",
+        "children": [
+          {
+            "functionName": "RaycastWithAngle"
+          },
+          {
+            "functionName": "RaycastBetweenPosition"
+          },
+          {
+            "functionName": "RaycastFromCameraCenter"
+          },
+          {
+            "functionName": "RaycastFromCameraPoint"
+          },
+          {
+            "functionName": "RaycastFromCameraCursor"
+          }
+        ]
+      },
+      {
+        "functionName": "Distance"
+      },
+      {
+        "functionName": "IntersectionX"
+      },
+      {
+        "functionName": "IntersectionY"
+      },
+      {
+        "functionName": "IntersectionZ"
+      },
+      {
+        "functionName": "NormalX"
+      },
+      {
+        "functionName": "NormalY"
+      },
+      {
+        "functionName": "NormalZ"
+      }
+    ]
+  },
   "eventsBasedBehaviors": [],
   "eventsBasedObjects": []
 }
