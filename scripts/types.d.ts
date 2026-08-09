@@ -227,6 +227,13 @@ export interface Extension
   extends ExtensionAndShortHeaderFields,
     ExtensionAndHeaderFields {
   tags: string | string[];
+  /**
+   * Markdown notes for whoever (usually an AI agent) writes a gameplay test
+   * using this extension. Optional: only extensions with testing specificities
+   * need it. Written verbatim to the extension file of the registry, and read
+   * back by GDevelop when the extension is installed.
+   */
+  gameplayTestingNotes?: string;
   eventsFunctions: EventsFunction[];
   eventsBasedBehaviors: EventsBasedBehavior[];
   eventsBasedObjects?: EventsBasedObject[];

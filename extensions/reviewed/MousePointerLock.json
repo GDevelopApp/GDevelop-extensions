@@ -22,6 +22,30 @@
     "Use `MovementX()` and `MovementY()` instead.",
     ""
   ],
+  "gameplayTestingNotes": [
+    "The mouse deltas are ignored until the game holds the pointer lock: `MovementX()` and",
+    "`MovementY()` stay at 0, so nothing rotates and the test looks broken.",
+    "",
+    "The gameplay test harness fakes the pointer lock as soon as the game requests it, but the",
+    "game usually only requests it on a click. So take the lock first, then look around:",
+    "",
+    "```js",
+    "// Click once: the game runs its \"Request Pointer Lock\" action.",
+    "harness.setMouseButtonPressed('Left', true);",
+    "await harness.stepFrames(1);",
+    "harness.setMouseButtonPressed('Left', false);",
+    "await harness.stepFrames(1);",
+    "// From now on the deltas are read by the extension.",
+    "harness.setMouseDelta(20, 0);",
+    "await harness.stepFrames(1);",
+    "```",
+    "",
+    "- Assert the lock was taken with the \"Pointer is locked\" condition before blaming the camera.",
+    "- Call `setMouseDelta` once per frame: a delta only applies to the frame it is sent on, and is",
+    "  back to 0 on the next one.",
+    "- `CursorX()`/`CursorY()` do not move while the pointer is locked. Read `MovementX()`/",
+    "  `MovementY()`, or the camera angle, instead."
+  ],
   "origin": {
     "identifier": "MousePointerLock",
     "name": "gdevelop-extension-store"
