@@ -68,7 +68,9 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
+            "//@ts-ignore",
             "if (gdjs.__particleEmmiter3DExtension) {",
+            "    //@ts-ignore",
             "    return;",
             "}",
             "",
@@ -116,17 +118,17 @@
             "class ParticleEmitterHelper extends THREE.Object3D {",
             "    /** @type {gdjs.CustomRuntimeObject3D} */",
             "    object;",
-            "    /** @type {THREE.LineSegments} */",
+            "    /** @type {THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>} */",
             "    cone;",
-            "    /** @type {THREE.LineSegments} */",
+            "    /** @type {THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>} */",
             "    centerLine;",
-            "    /** @type {THREE.LineSegments} */",
+            "    /** @type {THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>} */",
             "    zoneCircle;",
-            "    /** @type {THREE.Mesh} */",
+            "    /** @type {THREE.Mesh<THREE.BoxGeometry, THREE.MeshBasicMaterial>} */",
             "    originBox;",
             "",
             "\t/**",
-            "     * @param gdjs.CustomRuntimeObject3D object",
+            "     * @param {gdjs.CustomRuntimeObject3D} object",
             "\t */",
             "    constructor(object) {",
             "        super();",
@@ -189,31 +191,42 @@
             "        this.add(this.originBox);",
             "        this.update();",
             "",
+            "        //@ts-ignore",
             "        this.originBox.gdjsRuntimeObject = object;",
             "    }",
             "",
             "    dispose() {",
             "        this.cone.geometry.dispose();",
+            "        //@ts-ignore",
             "        this.cone.material.dispose();",
             "        this.centerLine.geometry.dispose();",
+            "        //@ts-ignore",
             "        this.centerLine.material.dispose();",
             "        this.zoneCircle.geometry.dispose();",
             "        this.zoneCircle.material.dispose();",
             "        this.originBox.geometry.dispose();",
+            "        //@ts-ignore",
             "        this.originBox.material.dispose();",
             "    }",
             "",
             "    update() {",
-            "        const coneWidth = coneLength * Math.sin(gdjs.toRad(this.object._getSpayConeAngle()));",
-            "        const coneHeight = coneLength * Math.cos(gdjs.toRad(this.object._getSpayConeAngle()));",
+            "        /** @type {number} */",
+            "        //@ts-ignore",
+            "        const sprayConeAngle = this.object._getSpayConeAngle();",
+            "        const coneWidth = coneLength * Math.sin(gdjs.toRad(sprayConeAngle));",
+            "        const coneHeight = coneLength * Math.cos(gdjs.toRad(sprayConeAngle));",
             "        this.cone.scale.set(coneWidth, coneWidth, coneHeight);",
             "        const zoneRadius = this.object._getZoneRadius();",
             "        this.zoneCircle.visible = zoneRadius > 0;",
             "        if (zoneRadius > 0) {",
             "            this.zoneCircle.scale.set(zoneRadius, zoneRadius, 1);",
             "        }",
-            "        const startColor = gdjs.rgbOrHexStringToNumber(this.object._getStartColor())",
-            "        const endColor = gdjs.rgbOrHexStringToNumber(this.object._getEndColor());",
+            "        const startColor = gdjs.rgbOrHexStringToNumber(",
+            "            //@ts-ignore",
+            "            this.object._getStartColor())",
+            "        const endColor = gdjs.rgbOrHexStringToNumber(",
+            "            //@ts-ignore",
+            "            this.object._getEndColor());",
             "        this.cone.material.color.set(endColor);",
             "        this.centerLine.material.color.set(startColor);",
             "        this.originBox.material.color.set(startColor);",
@@ -232,14 +245,19 @@
             "};",
             "",
             "/**",
-            " * @param {string} integerOpacity",
+            " * @param {number} integerOpacity",
             " * @param {THREE.Vector4} threeColor",
             " */",
             "const setThreeOpacity = (integerOpacity, threeColor = new THREE.Vector4()) => {",
             "    threeColor.w = integerOpacity / 255;",
             "};",
             "",
+            "/** @type {Map<string, THREE.BufferGeometry>} */",
+            "const mergedGeometries = new Map();",
+            "",
             "class ParticleEmitterAdapter {",
+            "    geometrySize = 1;",
+            "",
             "    /**",
             "     * @param inverseWorldScale {number}",
             "     * @param particleSystem {ParticleSystem}",
@@ -248,8 +266,19 @@
             "     * @param applyForce {ApplyForce}",
             "     * @param applyForce {ApplyForce}",
             "     * @param widthOverLength {WidthOverLength}",
+            "     * @param rotation3DOverLife {Rotation3DOverLife}",
+            "     * @param rotationOverLife {RotationOverLife}",
             "     */",
-            "    constructor(inverseWorldScale, particleSystem, colorOverLife, sizeOverLife, applyForce, widthOverLength) {",
+            "    constructor(",
+            "        inverseWorldScale,",
+            "        particleSystem,",
+            "        colorOverLife,",
+            "        sizeOverLife,",
+            "        applyForce,",
+            "        widthOverLength,",
+            "        rotation3DOverLife,",
+            "        rotationOverLife,",
+            "    ) {",
             "        this.inverseWorldScale = inverseWorldScale;",
             "        this.particleSystem = particleSystem;",
             "        this.sprayConeAngle = 0;",
@@ -258,21 +287,248 @@
             "        this.sizeOverLife = sizeOverLife;",
             "        this.applyForce = applyForce;",
             "        this.widthOverLength = widthOverLength;",
+            "        this.rotation3DOverLife = rotation3DOverLife;",
+            "        this.rotationOverLife = rotationOverLife;",
             "    }",
             "",
             "    /**",
-            "     * @param renderMode {'Billboard' | 'Trail'}",
+            "     * @param renderMode {'BillBoard' | 'Trail' | 'Model'}",
             "     */",
             "    setRenderMode(renderMode) {",
             "        switch (renderMode) {",
-            "            case \"BillBoard\":",
+            "            case \"Billboard\":",
             "                this.particleSystem.renderMode = RenderMode.BillBoard;",
+            "                this.particleSystem.startRotation = new IntervalValue(0, 0);",
             "                break;",
             "            case \"Trail\":",
             "                this.particleSystem.renderMode = RenderMode.Trail;",
             "                this.particleSystem.rendererEmitterSettings.startLength = new IntervalValue(30, 30);",
+            "            case \"Model\":",
+            "                this.particleSystem.renderMode = RenderMode.Mesh;",
+            "                this.particleSystem.startRotation = new EulerGenerator(",
+            "                    new IntervalValue(0, 0),",
+            "                    new IntervalValue(0, 0),",
+            "                    new IntervalValue(0, 0),",
+            "                    \"ZYX\"",
+            "                );",
             "                break;",
             "        }",
+            "        this.geometrySize = 1;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param resourceName {string}",
+            "     */",
+            "    setImage(resourceName) {",
+            "        const texture = game.getImageManager().getThreeTexture(resourceName);",
+            "        this.particleSystem.texture = texture;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param resourceName {string}",
+            "     */",
+            "    setModel3D(resourceName) {",
+            "        /** @type {THREE_ADDONS.GLTF} */",
+            "        const model = game.getModel3DManager().getModel(resourceName);",
+            "        /** @type {THREE.Object3D<THREE.Object3DEventMap>} */",
+            "        const threeObject = model.scene;",
+            "        /** @type {Array<THREE.BufferGeometry>} */",
+            "        let geometries = [];",
+            "        /** @type {THREE.Material | null} */",
+            "        let material = null;",
+            "        threeObject.traverse(function (object) {",
+            "            //@ts-ignore",
+            "            if (object.isMesh) {",
+            "                /** @type {THREE.Mesh} */",
+            "                //@ts-ignore",
+            "                const mesh = object;",
+            "                geometries.push(mesh.geometry);",
+            "                material = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;",
+            "            }",
+            "        });",
+            "        if (!material) {",
+            "            return;",
+            "        }",
+            "        this.particleSystem.material = material;",
+            "",
+            "        let geometry;",
+            "        if (geometries.length > 1) {",
+            "            geometry = mergedGeometries.get(resourceName);",
+            "            if (!geometry) {",
+            "                geometry = mergeGeometries(geometries);",
+            "                mergedGeometries.set(resourceName, geometry);",
+            "            }",
+            "        }",
+            "        else {",
+            "            geometry = geometries[0];",
+            "        }",
+            "        this.particleSystem.instancingGeometry = geometry;",
+            "        if (!geometry.boundingBox) {",
+            "            geometry.computeBoundingBox();",
+            "        }",
+            "        this.geometrySize = Math.max(",
+            "            geometry.boundingBox.max.x - geometry.boundingBox.min.x,",
+            "            geometry.boundingBox.max.y - geometry.boundingBox.min.y,",
+            "            geometry.boundingBox.max.z - geometry.boundingBox.min.z",
+            "        );",
+            "    }",
+            "",
+            "    /**",
+            "     * @param startRotationXMin {number}",
+            "     */",
+            "    setStartRotationXMin(startRotationXMin) {",
+            "        const startRotationX = this.particleSystem.startRotation.angleX;",
+            "        if (!startRotationX) {",
+            "            return;",
+            "        }",
+            "        startRotationX.a = gdjs.toRad(startRotationXMin);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param startRotationXMax {number}",
+            "     */",
+            "    setStartRotationXMax(startRotationXMax) {",
+            "        const startRotationX = this.particleSystem.startRotation.angleX;",
+            "        if (!startRotationX) {",
+            "            return;",
+            "        }",
+            "        startRotationX.b = gdjs.toRad(startRotationXMax);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param startRotationYMin {number}",
+            "     */",
+            "    setStartRotationYMin(startRotationYMin) {",
+            "        const startRotationY = this.particleSystem.startRotation.angleY;",
+            "        if (!startRotationY) {",
+            "            return;",
+            "        }",
+            "        startRotationY.a = -gdjs.toRad(startRotationYMin);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param startRotationYMax {number}",
+            "     */",
+            "    setStartRotationYMax(startRotationYMax) {",
+            "        const startRotationY = this.particleSystem.startRotation.angleY;",
+            "        if (!startRotationY) {",
+            "            return;",
+            "        }",
+            "        startRotationY.b = -gdjs.toRad(startRotationYMax);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param startRotationZMin {number}",
+            "     */",
+            "    setStartRotationZMin(startRotationZMin) {",
+            "        const startRotation = this.particleSystem.startRotation;",
+            "        if (startRotation.angleZ) {",
+            "            startRotation.angleZ.a = gdjs.toRad(startRotationZMin);",
+            "        }",
+            "        else if (startRotation.a !== undefined) {",
+            "            startRotation.a = -gdjs.toRad(startRotationZMin);",
+            "        }",
+            "    }",
+            "",
+            "    /**",
+            "     * @param startRotationZMax {number}",
+            "     */",
+            "    setStartRotationZMax(startRotationZMax) {",
+            "        const startRotation = this.particleSystem.startRotation;",
+            "        if (startRotation.angleZ) {",
+            "            startRotation.angleZ.b = gdjs.toRad(startRotationZMax);",
+            "        }",
+            "        else if (startRotation.b !== undefined) {",
+            "            startRotation.b = -gdjs.toRad(startRotationZMax);",
+            "        }",
+            "    }",
+            "",
+            "    /**",
+            "     * @param angularVelocityMin {number}",
+            "     */",
+            "    setStartAngularVelocityMin(angularVelocityMin) {",
+            "        const angularVelocity = this.rotationOverLife.angularVelocity;",
+            "        if (angularVelocity.a === undefined) {",
+            "            return;",
+            "        }",
+            "        angularVelocity.a = -gdjs.toRad(angularVelocityMin);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param angularVelocityMax {number}",
+            "     */",
+            "    setStartAngularVelocityMax(angularVelocityMax) {",
+            "        const angularVelocity = this.rotationOverLife.angularVelocity;",
+            "        if (angularVelocity.b === undefined) {",
+            "            return;",
+            "        }",
+            "        angularVelocity.b = -gdjs.toRad(angularVelocityMax);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param angularVelocityXMin {number}",
+            "     */",
+            "    setStartAngularVelocityXMin(angularVelocityXMin) {",
+            "        const angularVelocityX = this.rotation3DOverLife.angularVelocity.angleX;",
+            "        if (!angularVelocityX) {",
+            "            return;",
+            "        }",
+            "        angularVelocityX.a = gdjs.toRad(angularVelocityXMin);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param angularVelocityXMax {number}",
+            "     */",
+            "    setStartAngularVelocityXMax(angularVelocityXMax) {",
+            "        const angularVelocityX = this.rotation3DOverLife.angularVelocity.angleX;",
+            "        if (!angularVelocityX) {",
+            "            return;",
+            "        }",
+            "        angularVelocityX.b = gdjs.toRad(angularVelocityXMax);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param angularVelocityYMin {number}",
+            "     */",
+            "    setStartAngularVelocityYMin(angularVelocityYMin) {",
+            "        const angularVelocityY = this.rotation3DOverLife.angularVelocity.angleY;",
+            "        if (!angularVelocityY) {",
+            "            return;",
+            "        }",
+            "        angularVelocityY.a = -gdjs.toRad(angularVelocityYMin);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param angularVelocityYMax {number}",
+            "     */",
+            "    setStartAngularVelocityYMax(angularVelocityYMax) {",
+            "        const angularVelocityY = this.rotation3DOverLife.angularVelocity.angleY;",
+            "        if (!angularVelocityY) {",
+            "            return;",
+            "        }",
+            "        angularVelocityY.b = -gdjs.toRad(angularVelocityYMax);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param angularVelocityZMin {number}",
+            "     */",
+            "    setStartAngularVelocityZMin(angularVelocityZMin) {",
+            "        const angularVelocityZ = this.rotation3DOverLife.angularVelocity.angleZ;",
+            "        if (!angularVelocityZ) {",
+            "            return;",
+            "        }",
+            "        angularVelocityZ.a = -gdjs.toRad(angularVelocityZMin);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param angularVelocityZMax {number}",
+            "     */",
+            "    setStartAngularVelocityZMax(angularVelocityZMax) {",
+            "        const angularVelocityZ = this.rotation3DOverLife.angularVelocity.angleZ;",
+            "        if (!angularVelocityZ) {",
+            "            return;",
+            "        }",
+            "        angularVelocityZ.b = -gdjs.toRad(angularVelocityZMax);",
             "    }",
             "",
             "    /**",
@@ -319,7 +575,6 @@
             "        bezier.p[3] = trailEndWidthRatio;",
             "    }",
             "",
-            "",
             "    /**",
             "     * @param startColor {string}",
             "     */",
@@ -359,14 +614,14 @@
             "     * @param startMinSize {number}",
             "     */",
             "    setStartMinSize(startMinSize) {",
-            "        this.particleSystem.startSize.a = startMinSize;",
+            "        this.particleSystem.startSize.a = startMinSize;// / this.geometrySize;",
             "    }",
             "",
             "    /**",
             "     * @param startMaxSize {number}",
             "     */",
             "    setStartMaxSize(startMaxSize) {",
-            "        this.particleSystem.startSize.b = startMaxSize;",
+            "        this.particleSystem.startSize.b = startMaxSize;// / this.geometrySize;",
             "    }",
             "",
             "    /**",
@@ -457,7 +712,7 @@
             "    }",
             "",
             "    /**",
-            "     * @param blending {string}",
+            "     * @param blendingString {string}",
             "     */",
             "    setBlending(blendingString) {",
             "        const blending =",
@@ -493,11 +748,174 @@
             "                break;",
             "        }",
             "    }",
+            "}",
             "",
-            "    setImage(resourceName) {",
-            "        const texture = game.getImageManager().getThreeTexture(resourceName);",
-            "        this.particleSystem.texture = texture;",
+            "",
+            "",
+            "/**",
+            " * three.js r160",
+            " * https://github.com/mrdoob/three.js/blob/dev/examples/jsm/utils/BufferGeometryUtils.js",
+            " * The MIT License, Copyright © 2010-2023 three.js authors",
+            " */",
+            "",
+            "/**",
+            " * @param  {Array<THREE.BufferGeometry>} geometries",
+            " * @param  {boolean} useGroups",
+            " * @return {THREE.BufferGeometry}",
+            " */",
+            "function mergeGeometries(geometries, useGroups = false) {",
+            "    const isIndexed = geometries[0].index !== null;",
+            "    const attributesUsed = new Set(Object.keys(geometries[0].attributes));",
+            "    const morphAttributesUsed = new Set(Object.keys(geometries[0].morphAttributes));",
+            "    const attributes = {};",
+            "    const morphAttributes = {};",
+            "    const morphTargetsRelative = geometries[0].morphTargetsRelative;",
+            "    const mergedGeometry = new THREE.BufferGeometry();",
+            "    let offset = 0;",
+            "    for (let i = 0; i < geometries.length; ++i) {",
+            "        const geometry = geometries[i];",
+            "        let attributesCount = 0;",
+            "        // ensure that all geometries are indexed, or none",
+            "        if (isIndexed !== (geometry.index !== null)) {",
+            "            console.error('THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index ' + i + '. All geometries must have compatible attributes; make sure index attribute exists among all geometries, or in none of them.');",
+            "            return null;",
+            "        }",
+            "        // gather attributes, exit early if they're different",
+            "        for (const name in geometry.attributes) {",
+            "            if (!attributesUsed.has(name)) {",
+            "                console.error('THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index ' + i + '. All geometries must have compatible attributes; make sure \"' + name + '\" attribute exists among all geometries, or in none of them.');",
+            "                return null;",
+            "            }",
+            "            if (attributes[name] === undefined) attributes[name] = [];",
+            "            attributes[name].push(geometry.attributes[name]);",
+            "            attributesCount++;",
+            "        }",
+            "        // ensure geometries have the same number of attributes",
+            "        if (attributesCount !== attributesUsed.size) {",
+            "            console.error('THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index ' + i + '. Make sure all geometries have the same number of attributes.');",
+            "            return null;",
+            "        }",
+            "        // gather morph attributes, exit early if they're different",
+            "        if (morphTargetsRelative !== geometry.morphTargetsRelative) {",
+            "            console.error('THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index ' + i + '. .morphTargetsRelative must be consistent throughout all geometries.');",
+            "            return null;",
+            "        }",
+            "        for (const name in geometry.morphAttributes) {",
+            "            if (!morphAttributesUsed.has(name)) {",
+            "                console.error('THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index ' + i + '.  .morphAttributes must be consistent throughout all geometries.');",
+            "                return null;",
+            "            }",
+            "            if (morphAttributes[name] === undefined) morphAttributes[name] = [];",
+            "            morphAttributes[name].push(geometry.morphAttributes[name]);",
+            "        }",
+            "        if (useGroups) {",
+            "            let count;",
+            "            if (isIndexed) {",
+            "                count = geometry.index.count;",
+            "            } else if (geometry.attributes.position !== undefined) {",
+            "                count = geometry.attributes.position.count;",
+            "            } else {",
+            "                console.error('THREE.BufferGeometryUtils: .mergeGeometries() failed with geometry at index ' + i + '. The geometry must have either an index or a position attribute');",
+            "                return null;",
+            "            }",
+            "            mergedGeometry.addGroup(offset, count, i);",
+            "            offset += count;",
+            "        }",
             "    }",
+            "    // merge indices",
+            "    if (isIndexed) {",
+            "        let indexOffset = 0;",
+            "        const mergedIndex = [];",
+            "        for (let i = 0; i < geometries.length; ++i) {",
+            "            const index = geometries[i].index;",
+            "            for (let j = 0; j < index.count; ++j) {",
+            "                mergedIndex.push(index.getX(j) + indexOffset);",
+            "            }",
+            "            indexOffset += geometries[i].attributes.position.count;",
+            "        }",
+            "        mergedGeometry.setIndex(mergedIndex);",
+            "    }",
+            "    // merge attributes",
+            "    for (const name in attributes) {",
+            "        const mergedAttribute = mergeAttributes(attributes[name]);",
+            "        if (!mergedAttribute) {",
+            "            console.error('THREE.BufferGeometryUtils: .mergeGeometries() failed while trying to merge the ' + name + ' attribute.');",
+            "            return null;",
+            "        }",
+            "        mergedGeometry.setAttribute(name, mergedAttribute);",
+            "    }",
+            "    // merge morph attributes",
+            "    for (const name in morphAttributes) {",
+            "        const numMorphTargets = morphAttributes[name][0].length;",
+            "        if (numMorphTargets === 0) break;",
+            "        mergedGeometry.morphAttributes = mergedGeometry.morphAttributes || {};",
+            "        mergedGeometry.morphAttributes[name] = [];",
+            "",
+            "        for (let i = 0; i < numMorphTargets; ++i) {",
+            "            const morphAttributesToMerge = [];",
+            "            for (let j = 0; j < morphAttributes[name].length; ++j) {",
+            "                morphAttributesToMerge.push(morphAttributes[name][j][i]);",
+            "            }",
+            "            const mergedMorphAttribute = mergeAttributes(morphAttributesToMerge);",
+            "            if (!mergedMorphAttribute) {",
+            "                console.error('THREE.BufferGeometryUtils: .mergeGeometries() failed while trying to merge the ' + name + ' morphAttribute.');",
+            "                return null;",
+            "            }",
+            "            mergedGeometry.morphAttributes[name].push(mergedMorphAttribute);",
+            "        }",
+            "    }",
+            "    return mergedGeometry;",
+            "}",
+            "",
+            "/**",
+            " * @param {Array<THREE.BufferAttribute>} attributes",
+            " * @return {THREE.BufferAttribute}",
+            " */",
+            "function mergeAttributes(attributes) {",
+            "    let TypedArray;",
+            "    let itemSize;",
+            "    let normalized;",
+            "    let gpuType = - 1;",
+            "    let arrayLength = 0;",
+            "    for (let i = 0; i < attributes.length; ++i) {",
+            "        const attribute = attributes[i];",
+            "        if (attribute.isInterleavedBufferAttribute) {",
+            "            console.error('THREE.BufferGeometryUtils: .mergeAttributes() failed. InterleavedBufferAttributes are not supported.');",
+            "            return null;",
+            "        }",
+            "        if (TypedArray === undefined) TypedArray = attribute.array.constructor;",
+            "        if (TypedArray !== attribute.array.constructor) {",
+            "            console.error('THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.array must be of consistent array types across matching attributes.');",
+            "            return null;",
+            "        }",
+            "        if (itemSize === undefined) itemSize = attribute.itemSize;",
+            "        if (itemSize !== attribute.itemSize) {",
+            "            console.error('THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.itemSize must be consistent across matching attributes.');",
+            "            return null;",
+            "        }",
+            "        if (normalized === undefined) normalized = attribute.normalized;",
+            "        if (normalized !== attribute.normalized) {",
+            "            console.error('THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.normalized must be consistent across matching attributes.');",
+            "            return null;",
+            "        }",
+            "        if (gpuType === - 1) gpuType = attribute.gpuType;",
+            "        if (gpuType !== attribute.gpuType) {",
+            "            console.error('THREE.BufferGeometryUtils: .mergeAttributes() failed. BufferAttribute.gpuType must be consistent across matching attributes.');",
+            "            return null;",
+            "        }",
+            "        arrayLength += attribute.array.length;",
+            "    }",
+            "    const array = new TypedArray(arrayLength);",
+            "    let offset = 0;",
+            "    for (let i = 0; i < attributes.length; ++i) {",
+            "        array.set(attributes[i].array, offset);",
+            "        offset += attributes[i].array.length;",
+            "    }",
+            "    const result = new THREE.BufferAttribute(array, itemSize, normalized);",
+            "    if (gpuType !== undefined) {",
+            "        result.gpuType = gpuType;",
+            "    }",
+            "    return result;",
             "}",
             "",
             "",
@@ -1555,7 +1973,8 @@
             "            }",
             "            else {",
             "                this.angularVelocity.genValue(this.tempQuat, particle.age / particle.life);",
-            "                this.tempQuat.slerpQuaternions(IdentityQuaternion, this.tempQuat, delta);",
+            "                // Fix the rotation",
+            "                this.tempQuat.slerp(IdentityQuaternion, 1 - delta);",
             "                particle.rotation.multiply(this.tempQuat);",
             "            }",
             "        }",
@@ -6956,6 +7375,11 @@
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": true
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": []
         }
       ],
       "parameters": [],
@@ -7117,6 +7541,8 @@
                 "    ConstantColor,",
                 "    ColorOverLife,",
                 "    SizeOverLife,",
+                "    Rotation3DOverLife,",
+                "    RotationOverLife,",
                 "    ApplyForce,",
                 "    WidthOverLength,",
                 "    Gradient,",
@@ -7124,23 +7550,30 @@
                 "    Bezier,",
                 "    PointEmitter,",
                 "    ConeEmitter,",
-                "    RenderMode",
+                "    RenderMode,",
+                "    EulerGenerator,",
+                "    //@ts-ignore",
                 "} = gdjs.__particleEmmiter3DExtension;",
                 "",
                 "/** @type {gdjs.CustomRuntimeObject} */",
+                "//@ts-ignore",
                 "const object = objects[0];",
                 "// Force the size of the object because it doesn't contain any instance.",
+                "//@ts-ignore",
                 "object._innerArea = {",
                 "      min: [-16, -16, -16],",
                 "      max: [16, 16, 16],",
                 "    };",
                 "const hitbox = new gdjs.Polygon();",
                 "hitbox.vertices = [[-16, -16], [16, -16], [16, 16], [-16, 16]];",
+                "//@ts-ignore",
                 "object._untransformedHitBoxes = [hitbox];",
-                "object._unrotatedAABB.min[0] = -16;",
-                "object._unrotatedAABB.min[1] = -16;",
-                "object._unrotatedAABB.max[0] = 16;",
-                "object._unrotatedAABB.max[1] = 16;",
+                "//@ts-ignore",
+                "const unrotatedAABB = object._unrotatedAABB;",
+                "unrotatedAABB.min[0] = -16;",
+                "unrotatedAABB.min[1] = -16;",
+                "unrotatedAABB.max[0] = 16;",
+                "unrotatedAABB.max[1] = 16;",
                 "object._updateUntransformedHitBoxes = () => {};",
                 "",
                 "// Here runtimeScene is the gdjs.CustomRuntimeObjectInstanceContainer inside the custom object.",
@@ -7150,6 +7583,7 @@
                 "const texture = game.getImageManager().getThreeTexture('');",
                 "",
                 "// Set the blending here because changes are not applied after the emitter creation.",
+                "//@ts-ignore",
                 "const blendingString = object._getBlending();",
                 "const blending =",
                 "    blendingString === \"Additive\" ? THREE.AdditiveBlending :",
@@ -7214,16 +7648,23 @@
                 "particleSystem.addBehavior(applyForce);",
                 "const widthOverLength = new WidthOverLength(new PiecewiseBezier([[new Bezier(1, 2 / 3, 1 / 3, 0), 0]]));",
                 "particleSystem.addBehavior(widthOverLength);",
+                "const rotation3DOverLife = new Rotation3DOverLife(new EulerGenerator(new IntervalValue(0, 0), new IntervalValue(0, 0), new IntervalValue(0,0), \"ZYX\"))",
+                "particleSystem.addBehavior(rotation3DOverLife);",
+                "const rotationOverLife = new RotationOverLife(new IntervalValue(0, 0));",
+                "particleSystem.addBehavior(rotationOverLife);",
                 "",
                 "particleSystem.emitter.name = object.getName() + object.getNameId();",
                 "",
                 "const inverseWorldScale = gameScene.getRenderer3DInverseWorldScale ? gameScene.getRenderer3DInverseWorldScale() : 1;",
-                "object.__particleEmitterAdapter = new ParticleEmitterAdapter(inverseWorldScale, particleSystem, colorOverLife, sizeOverLife, applyForce, widthOverLength);",
+                "//@ts-ignore",
+                "object.__particleEmitterAdapter = new ParticleEmitterAdapter(inverseWorldScale, particleSystem, colorOverLife, sizeOverLife, applyForce, widthOverLength, rotation3DOverLife, rotationOverLife);",
+                "//@ts-ignore",
                 "object.__particleSystem = particleSystem;",
                 "",
                 "// This is a hack that may break in future releases.",
                 "// Replace the group that would hold children objects by the emmiter.",
                 "const layer = object.getInstanceContainer().getLayer(object.getLayer());",
+                "//@ts-ignore",
                 "const group = object.getRenderer()._threeGroup;",
                 "layer.getRenderer().remove3DRendererObject(group);",
                 "particleSystem.emitter.position.copy(group.position);",
@@ -7246,8 +7687,11 @@
                 "",
                 "",
                 "// See doStepPostEvents",
+                "//@ts-ignore",
                 "gameScene.__particleEmmiter3DExtension = gameScene.__particleEmmiter3DExtension || {};",
+                "//@ts-ignore",
                 "gameScene.__particleEmmiter3DExtension.emittersCount = gameScene.__particleEmmiter3DExtension.emittersCount || 0;",
+                "//@ts-ignore",
                 "gameScene.__particleEmmiter3DExtension.emittersCount++;",
                 "",
                 ""
@@ -7425,39 +7869,6 @@
                     "Object",
                     "=",
                     "RenderMode",
-                    ""
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetTrailStartLengthMin"
-                  },
-                  "parameters": [
-                    "Object",
-                    "=",
-                    "TrailStartLengthMin",
-                    ""
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetTrailStartLengthMax"
-                  },
-                  "parameters": [
-                    "Object",
-                    "=",
-                    "TrailStartLengthMax",
-                    ""
-                  ]
-                },
-                {
-                  "type": {
-                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetTrailEndWidthRatio"
-                  },
-                  "parameters": [
-                    "Object",
-                    "=",
-                    "TrailEndWidthRatio",
                     ""
                   ]
                 },
@@ -7650,70 +8061,28 @@
                 },
                 {
                   "type": {
-                    "value": "ParticleEmitter3D::ParticleEmitter3D::UpdateImage"
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartAngularVelocityMin"
                   },
                   "parameters": [
                     "Object",
+                    "=",
+                    "StartAngularVelocityMax",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartAngularVelocityMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "StartAngularVelocityMin",
                     ""
                   ]
                 }
               ],
               "events": [
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "inverted": true,
-                        "value": "BooleanVariable"
-                      },
-                      "parameters": [
-                        "IsTrailFollowingLocalOrigin",
-                        "True",
-                        ""
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "ParticleEmitter3D::ParticleEmitter3D::SetIsTrailFollowingLocalOrigin"
-                      },
-                      "parameters": [
-                        "Object",
-                        "=",
-                        "TrailStartLengthMax"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "BuiltinCommonInstructions::Standard",
-                  "conditions": [
-                    {
-                      "type": {
-                        "value": "BooleanVariable"
-                      },
-                      "parameters": [
-                        "IsTrailFollowingLocalOrigin",
-                        "True",
-                        ""
-                      ]
-                    }
-                  ],
-                  "actions": [
-                    {
-                      "type": {
-                        "value": "ParticleEmitter3D::ParticleEmitter3D::SetIsTrailFollowingLocalOrigin"
-                      },
-                      "parameters": [
-                        "Object",
-                        "yes",
-                        "TrailStartLengthMax"
-                      ]
-                    }
-                  ]
-                },
                 {
                   "type": "BuiltinCommonInstructions::Standard",
                   "conditions": [
@@ -10564,7 +10933,7 @@
             }
           ],
           "expressionType": {
-            "supplementaryInformation": "[\"Billboard\",\"Trail\"]",
+            "supplementaryInformation": "[\"Billboard\",\"Trail\",\"Model\"]",
             "type": "stringWithSelector"
           },
           "parameters": [
@@ -10636,6 +11005,45 @@
                   "parameters": [
                     "RenderMode",
                     "=",
+                    "\"Billboard\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartRotationZMin"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "StartRotationZMin",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartRotationZMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "StartRotationZMax",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "StringVariable"
+                  },
+                  "parameters": [
+                    "RenderMode",
+                    "=",
                     "\"Trail\""
                   ]
                 }
@@ -10662,8 +11070,957 @@
                     "TrailStartLengthMax",
                     ""
                   ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetTrailEndWidthRatio"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "TrailEndWidthRatio",
+                    ""
+                  ]
+                }
+              ],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "inverted": true,
+                        "value": "BooleanVariable"
+                      },
+                      "parameters": [
+                        "IsTrailFollowingLocalOrigin",
+                        "True",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "ParticleEmitter3D::ParticleEmitter3D::SetIsTrailFollowingLocalOrigin"
+                      },
+                      "parameters": [
+                        "Object",
+                        "=",
+                        "TrailStartLengthMax"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "BooleanVariable"
+                      },
+                      "parameters": [
+                        "IsTrailFollowingLocalOrigin",
+                        "True",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "ParticleEmitter3D::ParticleEmitter3D::SetIsTrailFollowingLocalOrigin"
+                      },
+                      "parameters": [
+                        "Object",
+                        "yes",
+                        "TrailStartLengthMax"
+                      ]
+                    }
+                  ]
                 }
               ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "StringVariable"
+                  },
+                  "parameters": [
+                    "RenderMode",
+                    "=",
+                    "\"Model\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetModel3D"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Model3D",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartRotationXMin"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "StartRotationXMin",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartRotationXMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "StartRotationXMax",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartRotationYMin"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "StartRotationYMin",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartRotationYMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "StartRotationYMax",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartRotationZMin"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "StartRotationZMin",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartRotationZMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "StartRotationZMax",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "StringVariable"
+                  },
+                  "parameters": [
+                    "RenderMode",
+                    "!=",
+                    "\"Model\""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::UpdateImage"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the 3D model of the object.",
+          "fullName": "3D model",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter model configuration",
+          "name": "Model3D",
+          "private": true,
+          "sentence": "the 3D model",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnString"
+                  },
+                  "parameters": [
+                    "Model3D"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "string"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Model3D",
+          "group": "3D particle emitter model configuration",
+          "name": "SetModel3D",
+          "private": true,
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetStringVariable"
+                  },
+                  "parameters": [
+                    "Model3D",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "",
+                "const value = eventsFunctionContext.getArgument(\"Value\");",
+                "",
+                "object.__particleEmitterAdapter.setModel3D(value);",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the start min rotation X of the object.",
+          "fullName": "Start min rotation X",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter model configuration",
+          "name": "StartRotationXMin",
+          "sentence": "the start min rotation X",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "StartRotationXMin"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StartRotationXMin",
+          "group": "3D particle emitter model configuration",
+          "name": "SetStartRotationXMin",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "StartRotationXMin",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__particleEmitterAdapter.setStartRotationXMin(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the start max rotation X of the object.",
+          "fullName": "Start max rotation X",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter model configuration",
+          "name": "StartRotationXMax",
+          "sentence": "the start max rotation X",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "StartRotationXMax"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StartRotationXMax",
+          "group": "3D particle emitter model configuration",
+          "name": "SetStartRotationXMax",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "StartRotationXMax",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__particleEmitterAdapter.setStartRotationXMax(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the start min rotation Y of the object.",
+          "fullName": "Start min rotation Y",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter model configuration",
+          "name": "StartRotationYMin",
+          "sentence": "the start min rotation Y",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "StartRotationYMin"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StartRotationYMin",
+          "group": "3D particle emitter model configuration",
+          "name": "SetStartRotationYMin",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "StartRotationYMin",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__particleEmitterAdapter.setStartRotationYMin(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the start max rotation Y of the object.",
+          "fullName": "Start max rotation Y",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter model configuration",
+          "name": "StartRotationYMax",
+          "sentence": "the start max rotation Y",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "StartRotationYMax"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StartRotationYMax",
+          "group": "3D particle emitter model configuration",
+          "name": "SetStartRotationYMax",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "StartRotationYMax",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__particleEmitterAdapter.setStartRotationYMax(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the start min rotation Z of the object.",
+          "fullName": "Start min rotation Z",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter model configuration",
+          "name": "StartRotationZMin",
+          "sentence": "the start min rotation Z",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "StartRotationZMin"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StartRotationZMin",
+          "group": "3D particle emitter model configuration",
+          "name": "SetStartRotationZMin",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "StartRotationZMin",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__particleEmitterAdapter.setStartRotationZMin(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the start max rotation Z of the object.",
+          "fullName": "Start max rotation Z",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter model configuration",
+          "name": "StartRotationZMax",
+          "sentence": "the start max rotation Z",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "StartRotationZMax"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StartRotationZMax",
+          "group": "3D particle emitter model configuration",
+          "name": "SetStartRotationZMax",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "StartRotationZMax",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__particleEmitterAdapter.setStartRotationZMax(value);"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the start min angular velocity of the object.",
+          "fullName": "Start min angular velocity",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter rotation configuration",
+          "name": "StartAngularVelocityMin",
+          "sentence": "the start min angular velocity",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "StartAngularVelocityMin"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StartAngularVelocityMin",
+          "group": "3D particle emitter rotation configuration",
+          "name": "SetStartAngularVelocityMin",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "StartAngularVelocityMin",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "const adapter = object.__particleEmitterAdapter;\r",
+                "adapter.setStartAngularVelocityMin(value);\r",
+                "adapter.setStartAngularVelocityXMin(value * object._getStartAngularVelocityRatioXMin());\r",
+                "adapter.setStartAngularVelocityYMin(value * object._getStartAngularVelocityRatioYMin());\r",
+                "adapter.setStartAngularVelocityZMin(value * object._getStartAngularVelocityRatioZMin());\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the start max angular velocity of the object.",
+          "fullName": "Start max angular velocity",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter rotation configuration",
+          "name": "StartAngularVelocityMax",
+          "sentence": "the start max angular velocity",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "StartAngularVelocityMax"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StartAngularVelocityMax",
+          "group": "3D particle emitter rotation configuration",
+          "name": "SetStartAngularVelocityMax",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "StartAngularVelocityMax",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "const adapter = object.__particleEmitterAdapter;\r",
+                "adapter.setStartAngularVelocityMax(value);\r",
+                "adapter.setStartAngularVelocityXMax(value * object._getStartAngularVelocityRatioXMax());\r",
+                "adapter.setStartAngularVelocityYMax(value * object._getStartAngularVelocityRatioYMax());\r",
+                "adapter.setStartAngularVelocityZMax(value * object._getStartAngularVelocityRatioZMax());\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
             }
           ],
           "parameters": [
@@ -10908,6 +12265,70 @@
               },
               {
                 "functionName": "SetTrailEndWidthRatio"
+              }
+            ]
+          },
+          {
+            "folderName": "3D particle emitter model configuration",
+            "children": [
+              {
+                "functionName": "Model3D"
+              },
+              {
+                "functionName": "SetModel3D"
+              },
+              {
+                "functionName": "StartRotationXMin"
+              },
+              {
+                "functionName": "SetStartRotationXMin"
+              },
+              {
+                "functionName": "StartRotationXMax"
+              },
+              {
+                "functionName": "SetStartRotationXMax"
+              },
+              {
+                "functionName": "StartRotationYMin"
+              },
+              {
+                "functionName": "SetStartRotationYMin"
+              },
+              {
+                "functionName": "StartRotationYMax"
+              },
+              {
+                "functionName": "SetStartRotationYMax"
+              },
+              {
+                "functionName": "StartRotationZMin"
+              },
+              {
+                "functionName": "SetStartRotationZMin"
+              },
+              {
+                "functionName": "StartRotationZMax"
+              },
+              {
+                "functionName": "SetStartRotationZMax"
+              }
+            ]
+          },
+          {
+            "folderName": "3D particle emitter rotation configuration",
+            "children": [
+              {
+                "functionName": "StartAngularVelocityMin"
+              },
+              {
+                "functionName": "SetStartAngularVelocityMin"
+              },
+              {
+                "functionName": "StartAngularVelocityMax"
+              },
+              {
+                "functionName": "SetStartAngularVelocityMax"
               }
             ]
           }
@@ -11171,6 +12592,10 @@
             {
               "label": "Image following a trail",
               "value": "Trail"
+            },
+            {
+              "label": "Simple 3D model",
+              "value": "Model"
             }
           ],
           "advanced": true,
@@ -11191,8 +12616,147 @@
           "unit": "Dimensionless",
           "label": "Tail end width ratio",
           "group": "Trail",
+          "extraInformation": [
+            "model3D"
+          ],
+          "choices": [],
           "advanced": true,
           "name": "TrailEndWidthRatio"
+        },
+        {
+          "value": "",
+          "type": "Resource",
+          "label": "3D model",
+          "description": "Only the 1 material is used.",
+          "group": "Model",
+          "extraInformation": [
+            "model3D"
+          ],
+          "choices": [],
+          "advanced": true,
+          "name": "Model3D"
+        },
+        {
+          "value": "90",
+          "type": "Number",
+          "unit": "DegreeAngle",
+          "label": "Start min rotation X",
+          "group": "Model",
+          "advanced": true,
+          "name": "StartRotationXMin"
+        },
+        {
+          "value": "90",
+          "type": "Number",
+          "unit": "DegreeAngle",
+          "label": "Start max rotation X",
+          "group": "Model",
+          "advanced": true,
+          "name": "StartRotationXMax"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "DegreeAngle",
+          "label": "Start min rotation Y",
+          "group": "Model",
+          "advanced": true,
+          "name": "StartRotationYMin"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "DegreeAngle",
+          "label": "Start min rotation Z",
+          "group": "Rotation",
+          "name": "StartRotationZMin"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "DegreeAngle",
+          "label": "Start max rotation Y",
+          "group": "Model",
+          "advanced": true,
+          "name": "StartRotationYMax"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "DegreeAngle",
+          "label": "Start max rotation Z",
+          "group": "Rotation",
+          "name": "StartRotationZMax"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Min angular velocity X",
+          "group": "Model",
+          "advanced": true,
+          "name": "StartAngularVelocityRatioXMin"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Max angular velocity X",
+          "group": "Model",
+          "advanced": true,
+          "name": "StartAngularVelocityRatioXMax"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "AngularSpeed",
+          "label": "Start min angular velocity",
+          "group": "Rotation",
+          "name": "StartAngularVelocityMin"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "AngularSpeed",
+          "label": "Start max angular velocity",
+          "group": "Rotation",
+          "name": "StartAngularVelocityMax"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Min angular velocity Y",
+          "group": "Model",
+          "advanced": true,
+          "name": "StartAngularVelocityRatioYMin"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Min angular velocity Z",
+          "group": "Model",
+          "advanced": true,
+          "name": "StartAngularVelocityRatioZMin"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Max angular velocity Y",
+          "group": "Model",
+          "advanced": true,
+          "name": "StartAngularVelocityRatioYMax"
+        },
+        {
+          "value": "1",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Max angular velocity Z",
+          "group": "Model",
+          "advanced": true,
+          "name": "StartAngularVelocityRatioZMax"
         }
       ],
       "propertiesFolderStructure": {
@@ -11251,23 +12815,6 @@
             ]
           },
           {
-            "folderName": "Trail",
-            "children": [
-              {
-                "propertyName": "TrailStartLengthMin"
-              },
-              {
-                "propertyName": "TrailStartLengthMax"
-              },
-              {
-                "propertyName": "TrailEndWidthRatio"
-              },
-              {
-                "propertyName": "IsTrailFollowingLocalOrigin"
-              }
-            ]
-          },
-          {
             "folderName": "Speed",
             "children": [
               {
@@ -11288,6 +12835,23 @@
             ]
           },
           {
+            "folderName": "Rotation",
+            "children": [
+              {
+                "propertyName": "StartRotationZMin"
+              },
+              {
+                "propertyName": "StartRotationZMax"
+              },
+              {
+                "propertyName": "StartAngularVelocityMin"
+              },
+              {
+                "propertyName": "StartAngularVelocityMax"
+              }
+            ]
+          },
+          {
             "folderName": "Position",
             "children": [
               {
@@ -11304,6 +12868,61 @@
               },
               {
                 "propertyName": "RotationY"
+              }
+            ]
+          },
+          {
+            "folderName": "Trail",
+            "children": [
+              {
+                "propertyName": "TrailStartLengthMin"
+              },
+              {
+                "propertyName": "TrailStartLengthMax"
+              },
+              {
+                "propertyName": "TrailEndWidthRatio"
+              },
+              {
+                "propertyName": "IsTrailFollowingLocalOrigin"
+              }
+            ]
+          },
+          {
+            "folderName": "Model",
+            "children": [
+              {
+                "propertyName": "Model3D"
+              },
+              {
+                "propertyName": "StartRotationXMin"
+              },
+              {
+                "propertyName": "StartRotationXMax"
+              },
+              {
+                "propertyName": "StartRotationYMin"
+              },
+              {
+                "propertyName": "StartRotationYMax"
+              },
+              {
+                "propertyName": "StartAngularVelocityRatioXMin"
+              },
+              {
+                "propertyName": "StartAngularVelocityRatioXMax"
+              },
+              {
+                "propertyName": "StartAngularVelocityRatioYMin"
+              },
+              {
+                "propertyName": "StartAngularVelocityRatioYMax"
+              },
+              {
+                "propertyName": "StartAngularVelocityRatioZMin"
+              },
+              {
+                "propertyName": "StartAngularVelocityRatioZMax"
               }
             ]
           },
