@@ -1,0 +1,1205 @@
+{
+  "author": "",
+  "category": "Advanced",
+  "extensionNamespace": "",
+  "fullName": "Mirror 3D",
+  "helpPath": "https://github.com/M-II-R/Mirror3D",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLW1pcnJvciIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xMiAxQzE2LjY5IDEgMjAuNSA1LjkzIDIwLjUgMTJDMjAuNSAxOC4wOCAxNi42OSAyMyAxMiAyM0M3LjMxIDIzIDMuNSAxOC4wOCAzLjUgMTJDMy41IDUuOTMgNy4zMSAxIDEyIDFNMTIgM0M4LjQxIDMgNS41IDcuMDMgNS41IDEyQzUuNSAxNi45NyA4LjQxIDIxIDEyIDIxQzE1LjU5IDIxIDE4LjUgMTYuOTcgMTguNSAxMkMxOC41IDcuMDMgMTUuNTkgMyAxMiAzTTguMjkgMTAuMjhMMTEuNTMgNy4wM0wxMi41OSA4LjA5TDkuMzUgMTEuMzRMOC4yOSAxMC4yOE04LjcgMTQuNjFMMTQuMzYgOC45NUwxNS40MiAxMEw5Ljc2IDE1LjY3TDguNyAxNC42MVoiIC8+PC9zdmc+",
+  "name": "Mirrors3D",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/bb6df8b068e73452a7dc9ccf10ceb1aa641511872059fb259561051db8ceccf0_mirror.svg",
+  "shortDescription": "With this extension you can create and manipulate 3d mirrors.",
+  "version": "1.6.0",
+  "description": "This extension allows you to create 3D planes that work as a mirror. They can be moved, rotated, and attached to 3D objects.",
+  "tags": [
+    "3d",
+    "mirror",
+    "graphic"
+  ],
+  "authorIds": [
+    "iCuOTzgvSYOOXr4HW0sFJLIaP082"
+  ],
+  "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [
+    {
+      "name": "Mirrors",
+      "type": "array",
+      "children": []
+    }
+  ],
+  "eventsFunctions": [
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onFirstSceneLoaded",
+      "sentence": "",
+      "events": [
+        {
+          "disabled": true,
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "gdjs._mirr = new Array();",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Create mirror.",
+      "fullName": "Create mirror",
+      "functionType": "Action",
+      "name": "Mirror",
+      "sentence": "Create mirror with X: _PARAM1_, Y: _PARAM2_, Z: _PARAM3_, X rotation: _PARAM4_, Y rotation: _PARAM5_, Z rotation: _PARAM6_, width: _PARAM7_, height: _PARAM8_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "class Mirror extends THREE.Mesh {",
+            "    constructor(geometry, options = {}) {",
+            "        super(geometry);",
+            "",
+            "        const scope = this;",
+            "        const textureWidth = options.textureWidth || 512;",
+            "        const textureHeight = options.textureHeight || 512;",
+            "        const clipBias = options.clipBias || 0.0;",
+            "",
+            "        const mirrorPlane = new THREE.Plane();",
+            "        const normal = new THREE.Vector3();",
+            "        const mirrorWorldPosition = new THREE.Vector3();",
+            "        const cameraWorldPosition = new THREE.Vector3();",
+            "        const rotationMatrix = new THREE.Matrix4();",
+            "        const lookAtPosition = new THREE.Vector3(0, 0, -1);",
+            "        const clipPlane = new THREE.Vector4();",
+            "        const view = new THREE.Vector3();",
+            "        const target = new THREE.Vector3();",
+            "        const q = new THREE.Vector4();",
+            "        const textureMatrix = new THREE.Matrix4();",
+            "        const mirrorCamera = new THREE.PerspectiveCamera();",
+            "        const renderTarget = new THREE.WebGLRenderTarget(textureWidth, textureHeight);",
+            "",
+            "        const mirrorShader = {",
+            "            uniforms: THREE.UniformsUtils.merge([",
+            "                THREE.UniformsLib['fog'],",
+            "                {",
+            "                    'mirrorSampler': { value: null },",
+            "                    'textureMatrix': { value: new THREE.Matrix4() }",
+            "                }",
+            "            ]),",
+            "            vertexShader: `",
+            "                uniform mat4 textureMatrix;",
+            "                varying vec4 mirrorCoord;",
+            "                void main() {",
+            "                    mirrorCoord = textureMatrix * modelMatrix * vec4(position, 1.0);",
+            "                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);",
+            "                }",
+            "            `,",
+            "            fragmentShader: `",
+            "                uniform sampler2D mirrorSampler;",
+            "                varying vec4 mirrorCoord;",
+            "",
+            "                void main() {",
+            "                    // Получаем цвет отражения",
+            "                    vec4 color = texture2D(mirrorSampler, mirrorCoord.xy / mirrorCoord.w);",
+            "",
+            "                    // Увеличиваем яркость (например, в 1.5 раза)",
+            "                    color.rgb *= 1.5;",
+            "",
+            "                    // Добавляем светлый цвет (например, белый с небольшой интенсивностью)",
+            "                    vec3 lightColor = vec3(0.1, 0.1, 0.1); // Светлый цвет (белый)",
+            "                    color.rgb += lightColor;",
+            "",
+            "                    // Убедитесь, что цвет не превышает 1.0",
+            "                    color.rgb = min(color.rgb, vec3(1.0));",
+            "",
+            "                    // Устанавливаем окончательный цвет",
+            "                    gl_FragColor = vec4(color.rgb, 1.0); // Непрозрачный",
+            "                }",
+            "            `",
+            "        };",
+            "",
+            "        const material = new THREE.ShaderMaterial({",
+            "            fragmentShader: mirrorShader.fragmentShader,",
+            "            vertexShader: mirrorShader.vertexShader,",
+            "            uniforms: THREE.UniformsUtils.clone(mirrorShader.uniforms),",
+            "            transparent: false, // Убираем прозрачность",
+            "            side: THREE.DoubleSide,",
+            "            fog: options.fog || false",
+            "        });",
+            "",
+            "        material.uniforms['mirrorSampler'].value = renderTarget.texture;",
+            "        material.uniforms['textureMatrix'].value = textureMatrix;",
+            "",
+            "        scope.material = material;",
+            "",
+            "        scope.onBeforeRender = function (renderer, scene, camera) {",
+            "            mirrorWorldPosition.setFromMatrixPosition(scope.matrixWorld);",
+            "            cameraWorldPosition.setFromMatrixPosition(camera.matrixWorld);",
+            "            rotationMatrix.extractRotation(scope.matrixWorld);",
+            "            normal.set(0, 0, 1);",
+            "            normal.applyMatrix4(rotationMatrix);",
+            "            view.subVectors(mirrorWorldPosition, cameraWorldPosition);",
+            "",
+            "            if (view.dot(normal) > 0) return;",
+            "",
+            "            view.reflect(normal).negate();",
+            "            view.add(mirrorWorldPosition);",
+            "            rotationMatrix.extractRotation(camera.matrixWorld);",
+            "            lookAtPosition.set(0, 0, -1);",
+            "            lookAtPosition.applyMatrix4(rotationMatrix);",
+            "            lookAtPosition.add(cameraWorldPosition);",
+            "            target.subVectors(mirrorWorldPosition, lookAtPosition);",
+            "            target.reflect(normal).negate();",
+            "            target.add(mirrorWorldPosition);",
+            "",
+            "            mirrorCamera.position.copy(view);",
+            "            mirrorCamera.up.set(0, 1, 0);",
+            "            mirrorCamera.up.applyMatrix4(rotationMatrix);",
+            "            mirrorCamera.up.reflect(normal);",
+            "            mirrorCamera.lookAt(target);",
+            "            mirrorCamera.far = camera.far;",
+            "",
+            "            mirrorCamera.updateMatrixWorld();",
+            "            mirrorCamera.projectionMatrix.copy(camera.projectionMatrix);",
+            "",
+            "            textureMatrix.set(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0);",
+            "            textureMatrix.multiply(mirrorCamera.projectionMatrix);",
+            "            textureMatrix.multiply(mirrorCamera.matrixWorldInverse);",
+            "",
+            "            mirrorPlane.setFromNormalAndCoplanarPoint(normal, mirrorWorldPosition);",
+            "            mirrorPlane.applyMatrix4(mirrorCamera.matrixWorldInverse);",
+            "            clipPlane.set(mirrorPlane.normal.x, mirrorPlane.normal.y, mirrorPlane.normal.z, mirrorPlane.constant);",
+            "",
+            "            const projectionMatrix = mirrorCamera.projectionMatrix;",
+            "            q.x = (Math.sign(clipPlane.x) + projectionMatrix.elements[8]) / projectionMatrix.elements[0];",
+            "            q.y = (Math.sign(clipPlane.y) + projectionMatrix.elements[9]) / projectionMatrix.elements[5];",
+            "            q.z = -1.0;",
+            "            q.w = (1.0 + projectionMatrix.elements[10]) / projectionMatrix.elements[14];",
+            "",
+            "            clipPlane.multiplyScalar(2.0 / clipPlane.dot(q));",
+            "",
+            "            projectionMatrix.elements[2] = clipPlane.x;",
+            "            projectionMatrix.elements[6] = clipPlane.y;",
+            "            projectionMatrix.elements[10] = clipPlane.z + 1.0 - clipBias;",
+            "            projectionMatrix.elements[14] = clipPlane.w;",
+            "",
+            "            const currentRenderTarget = renderer.getRenderTarget();",
+            "            const currentXrEnabled = renderer.xr.enabled;",
+            "            const currentShadowAutoUpdate = renderer.shadowMap.autoUpdate;",
+            "",
+            "            scope.visible = false;",
+            "            renderer.xr.enabled = false;",
+            "            renderer.shadowMap.autoUpdate = false;",
+            "",
+            "            renderer.setRenderTarget(renderTarget);",
+            "            renderer.state.buffers.depth.setMask(true);",
+            "",
+            "            if (renderer.autoClear === false) renderer.clear();",
+            "            renderer.render(scene, mirrorCamera);",
+            "            scope.visible = true;",
+            "",
+            "            renderer.xr.enabled = currentXrEnabled;",
+            "            renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;",
+            "            renderer.setRenderTarget(currentRenderTarget);",
+            "",
+            "            const viewport = camera.viewport;",
+            "            if (viewport !== undefined) {",
+            "                renderer.state.viewport(viewport);",
+            "            }",
+            "        };",
+            "    }",
+            "    /*// Метод для получения мировой позиции",
+            "    getWorldPos() {",
+            "        const worldPosition = new THREE.Vector3();",
+            "        this.getWorldPosition(worldPosition);",
+            "        return worldPosition;",
+            "    }",
+            "",
+            "    // Метод для получения мирового вращения (в углах Эйлера)",
+            "    getWorldRotation() {",
+            "        const worldQuaternion = new THREE.Quaternion();",
+            "        this.getWorldQuaternion(worldQuaternion);",
+            "",
+            "        const worldRotation = new THREE.Euler();",
+            "        worldRotation.setFromQuaternion(worldQuaternion);",
+            "        return worldRotation;",
+            "    }*/",
+            "}",
+            "// Получаем рендерер, сцену и камеру из GDevelop",
+            "const renderer = runtimeScene.getGame().getRenderer().getThreeRenderer();",
+            "const scene3D = runtimeScene.getLayer('Base layer').getRenderer().getThreeScene();",
+            "const camera = runtimeScene.getLayer('Base layer').getRenderer().getThreeCamera();",
+            "",
+            "const x = eventsFunctionContext.getArgument(\"X\");",
+            "const y = eventsFunctionContext.getArgument(\"Y\");",
+            "const z = eventsFunctionContext.getArgument(\"Z\");",
+            "const rx = eventsFunctionContext.getArgument(\"RX\");",
+            "const ry = eventsFunctionContext.getArgument(\"RY\");",
+            "const rz = eventsFunctionContext.getArgument(\"RZ\");",
+            "const w = eventsFunctionContext.getArgument(\"Wi\");",
+            "const h = eventsFunctionContext.getArgument(\"He\");",
+            "",
+            "// Создаем геометрию для зеркала",
+            "const mirrorGeometry = new THREE.PlaneGeometry(w, h);",
+            "",
+            "// Создаем зеркало",
+            "const mirror = new Mirror(mirrorGeometry, {",
+            "    textureWidth: 1024,",
+            "    textureHeight: 1024,",
+            "    alpha: 1.0,",
+            "    fog: false",
+            "});",
+            "",
+            "// Позиционируем зеркало",
+            "mirror.rotation.x = rx;  ",
+            "mirror.rotation.y = ry;",
+            "mirror.rotation.z = rz;",
+            "//mirror.position.set(x, y, z); // Устанавливаем позицию зеркала",
+            "mirror.position.x = x;",
+            "mirror.position.y = y;",
+            "mirror.position.z = z;",
+            "",
+            "// Добавляем зеркало в сцену",
+            "scene3D.add(mirror);",
+            "",
+            "// Сохраняем зеркало",
+            "",
+            "const mirrorArray = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\");",
+            "mirrorArray._pushVariable(mirror);",
+            "",
+            "//gdjs._mirr.push(mirror);",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "X",
+          "name": "X",
+          "type": "expression"
+        },
+        {
+          "description": "Y",
+          "name": "Y",
+          "type": "expression"
+        },
+        {
+          "description": "Z",
+          "name": "Z",
+          "type": "expression"
+        },
+        {
+          "description": "Rotation X",
+          "name": "RX",
+          "type": "expression"
+        },
+        {
+          "description": "Rotation Y",
+          "name": "RY",
+          "type": "expression"
+        },
+        {
+          "description": "Rotation Z",
+          "name": "RZ",
+          "type": "expression"
+        },
+        {
+          "description": "Width",
+          "name": "Wi",
+          "type": "expression"
+        },
+        {
+          "description": "Height",
+          "name": "He",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Create round mirror.",
+      "fullName": "Create round mirror",
+      "functionType": "Action",
+      "name": "RoundMirror",
+      "sentence": "Create round mirror with X: _PARAM1_, Y: _PARAM2_, Z: _PARAM3_, X rotation: _PARAM4_, Y rotation: _PARAM5_, Z rotation: _PARAM6_, radius: _PARAM7_, segments: _PARAM8_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "class Mirror extends THREE.Mesh {",
+            "    constructor(geometry, options = {}) {",
+            "        super(geometry);",
+            "",
+            "        const scope = this;",
+            "        const textureWidth = options.textureWidth || 512;",
+            "        const textureHeight = options.textureHeight || 512;",
+            "        const clipBias = options.clipBias || 0.0;",
+            "",
+            "        const mirrorPlane = new THREE.Plane();",
+            "        const normal = new THREE.Vector3();",
+            "        const mirrorWorldPosition = new THREE.Vector3();",
+            "        const cameraWorldPosition = new THREE.Vector3();",
+            "        const rotationMatrix = new THREE.Matrix4();",
+            "        const lookAtPosition = new THREE.Vector3(0, 0, -1);",
+            "        const clipPlane = new THREE.Vector4();",
+            "        const view = new THREE.Vector3();",
+            "        const target = new THREE.Vector3();",
+            "        const q = new THREE.Vector4();",
+            "        const textureMatrix = new THREE.Matrix4();",
+            "        const mirrorCamera = new THREE.PerspectiveCamera();",
+            "        const renderTarget = new THREE.WebGLRenderTarget(textureWidth, textureHeight);",
+            "",
+            "        const mirrorShader = {",
+            "            uniforms: THREE.UniformsUtils.merge([",
+            "                THREE.UniformsLib['fog'],",
+            "                {",
+            "                    'mirrorSampler': { value: null },",
+            "                    'textureMatrix': { value: new THREE.Matrix4() }",
+            "                }",
+            "            ]),",
+            "            vertexShader: `",
+            "                uniform mat4 textureMatrix;",
+            "                varying vec4 mirrorCoord;",
+            "                void main() {",
+            "                    mirrorCoord = textureMatrix * modelMatrix * vec4(position, 1.0);",
+            "                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);",
+            "                }",
+            "            `,",
+            "            fragmentShader: `",
+            "                uniform sampler2D mirrorSampler;",
+            "                varying vec4 mirrorCoord;",
+            "",
+            "                void main() {",
+            "                    // Получаем цвет отражения",
+            "                    vec4 color = texture2D(mirrorSampler, mirrorCoord.xy / mirrorCoord.w);",
+            "",
+            "                    // Увеличиваем яркость (например, в 1.5 раза)",
+            "                    color.rgb *= 1.5;",
+            "",
+            "                    // Добавляем светлый цвет (например, белый с небольшой интенсивностью)",
+            "                    vec3 lightColor = vec3(0.1, 0.1, 0.1); // Светлый цвет (белый)",
+            "                    color.rgb += lightColor;",
+            "",
+            "                    // Убедитесь, что цвет не превышает 1.0",
+            "                    color.rgb = min(color.rgb, vec3(1.0));",
+            "",
+            "                    // Устанавливаем окончательный цвет",
+            "                    gl_FragColor = vec4(color.rgb, 1.0); // Непрозрачный",
+            "                }",
+            "            `",
+            "        };",
+            "",
+            "        const material = new THREE.ShaderMaterial({",
+            "            fragmentShader: mirrorShader.fragmentShader,",
+            "            vertexShader: mirrorShader.vertexShader,",
+            "            uniforms: THREE.UniformsUtils.clone(mirrorShader.uniforms),",
+            "            transparent: false, // Убираем прозрачность",
+            "            side: THREE.DoubleSide,",
+            "            fog: options.fog || false",
+            "        });",
+            "",
+            "        material.uniforms['mirrorSampler'].value = renderTarget.texture;",
+            "        material.uniforms['textureMatrix'].value = textureMatrix;",
+            "",
+            "        scope.material = material;",
+            "",
+            "        scope.onBeforeRender = function (renderer, scene, camera) {",
+            "            mirrorWorldPosition.setFromMatrixPosition(scope.matrixWorld);",
+            "            cameraWorldPosition.setFromMatrixPosition(camera.matrixWorld);",
+            "            rotationMatrix.extractRotation(scope.matrixWorld);",
+            "            normal.set(0, 0, 1);",
+            "            normal.applyMatrix4(rotationMatrix);",
+            "            view.subVectors(mirrorWorldPosition, cameraWorldPosition);",
+            "",
+            "            if (view.dot(normal) > 0) return;",
+            "",
+            "            view.reflect(normal).negate();",
+            "            view.add(mirrorWorldPosition);",
+            "            rotationMatrix.extractRotation(camera.matrixWorld);",
+            "            lookAtPosition.set(0, 0, -1);",
+            "            lookAtPosition.applyMatrix4(rotationMatrix);",
+            "            lookAtPosition.add(cameraWorldPosition);",
+            "            target.subVectors(mirrorWorldPosition, lookAtPosition);",
+            "            target.reflect(normal).negate();",
+            "            target.add(mirrorWorldPosition);",
+            "",
+            "            mirrorCamera.position.copy(view);",
+            "            mirrorCamera.up.set(0, 1, 0);",
+            "            mirrorCamera.up.applyMatrix4(rotationMatrix);",
+            "            mirrorCamera.up.reflect(normal);",
+            "            mirrorCamera.lookAt(target);",
+            "            mirrorCamera.far = camera.far;",
+            "",
+            "            mirrorCamera.updateMatrixWorld();",
+            "            mirrorCamera.projectionMatrix.copy(camera.projectionMatrix);",
+            "",
+            "            textureMatrix.set(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0);",
+            "            textureMatrix.multiply(mirrorCamera.projectionMatrix);",
+            "            textureMatrix.multiply(mirrorCamera.matrixWorldInverse);",
+            "",
+            "            mirrorPlane.setFromNormalAndCoplanarPoint(normal, mirrorWorldPosition);",
+            "            mirrorPlane.applyMatrix4(mirrorCamera.matrixWorldInverse);",
+            "            clipPlane.set(mirrorPlane.normal.x, mirrorPlane.normal.y, mirrorPlane.normal.z, mirrorPlane.constant);",
+            "",
+            "            const projectionMatrix = mirrorCamera.projectionMatrix;",
+            "            q.x = (Math.sign(clipPlane.x) + projectionMatrix.elements[8]) / projectionMatrix.elements[0];",
+            "            q.y = (Math.sign(clipPlane.y) + projectionMatrix.elements[9]) / projectionMatrix.elements[5];",
+            "            q.z = -1.0;",
+            "            q.w = (1.0 + projectionMatrix.elements[10]) / projectionMatrix.elements[14];",
+            "",
+            "            clipPlane.multiplyScalar(2.0 / clipPlane.dot(q));",
+            "",
+            "            projectionMatrix.elements[2] = clipPlane.x;",
+            "            projectionMatrix.elements[6] = clipPlane.y;",
+            "            projectionMatrix.elements[10] = clipPlane.z + 1.0 - clipBias;",
+            "            projectionMatrix.elements[14] = clipPlane.w;",
+            "",
+            "            const currentRenderTarget = renderer.getRenderTarget();",
+            "            const currentXrEnabled = renderer.xr.enabled;",
+            "            const currentShadowAutoUpdate = renderer.shadowMap.autoUpdate;",
+            "",
+            "            scope.visible = false;",
+            "            renderer.xr.enabled = false;",
+            "            renderer.shadowMap.autoUpdate = false;",
+            "",
+            "            renderer.setRenderTarget(renderTarget);",
+            "            renderer.state.buffers.depth.setMask(true);",
+            "",
+            "            if (renderer.autoClear === false) renderer.clear();",
+            "            renderer.render(scene, mirrorCamera);",
+            "            scope.visible = true;",
+            "",
+            "            renderer.xr.enabled = currentXrEnabled;",
+            "            renderer.shadowMap.autoUpdate = currentShadowAutoUpdate;",
+            "            renderer.setRenderTarget(currentRenderTarget);",
+            "",
+            "            const viewport = camera.viewport;",
+            "            if (viewport !== undefined) {",
+            "                renderer.state.viewport(viewport);",
+            "            }",
+            "        };",
+            "    }",
+            "    /*// Метод для получения мировой позиции",
+            "    getWorldPos() {",
+            "        const worldPosition = new THREE.Vector3();",
+            "        this.getWorldPosition(worldPosition);",
+            "        return worldPosition;",
+            "    }",
+            "",
+            "    // Метод для получения мирового вращения (в углах Эйлера)",
+            "    getWorldRotation() {",
+            "        const worldQuaternion = new THREE.Quaternion();",
+            "        this.getWorldQuaternion(worldQuaternion);",
+            "",
+            "        const worldRotation = new THREE.Euler();",
+            "        worldRotation.setFromQuaternion(worldQuaternion);",
+            "        return worldRotation;",
+            "    }*/",
+            "}",
+            "// Получаем рендерер, сцену и камеру из GDevelop",
+            "const renderer = runtimeScene.getGame().getRenderer().getThreeRenderer();",
+            "const scene3D = runtimeScene.getLayer('Base layer').getRenderer().getThreeScene();",
+            "const camera = runtimeScene.getLayer('Base layer').getRenderer().getThreeCamera();",
+            "",
+            "const x = eventsFunctionContext.getArgument(\"X\");",
+            "const y = eventsFunctionContext.getArgument(\"Y\");",
+            "const z = eventsFunctionContext.getArgument(\"Z\");",
+            "const rx = eventsFunctionContext.getArgument(\"RX\");",
+            "const ry = eventsFunctionContext.getArgument(\"RY\");",
+            "const rz = eventsFunctionContext.getArgument(\"RZ\");",
+            "const w = eventsFunctionContext.getArgument(\"Wi\");",
+            "const h = eventsFunctionContext.getArgument(\"He\");",
+            "",
+            "// Создаем геометрию для зеркала",
+            "const mirrorGeometry = new THREE.CircleGeometry(w, h);",
+            "",
+            "// Создаем зеркало",
+            "const mirror = new Mirror(mirrorGeometry, {",
+            "    textureWidth: 1024,",
+            "    textureHeight: 1024,",
+            "    alpha: 1.0,",
+            "    fog: false",
+            "});",
+            "",
+            "// Позиционируем зеркало",
+            "mirror.rotation.x = rx;  ",
+            "mirror.rotation.y = ry;",
+            "mirror.rotation.z = rz;",
+            "//mirror.position.set(x, y, z); // Устанавливаем позицию зеркала",
+            "mirror.position.x = x;",
+            "mirror.position.y = y;",
+            "mirror.position.z = z;",
+            "",
+            "// Добавляем зеркало в сцену",
+            "scene3D.add(mirror);",
+            "",
+            "// Сохраняем зеркало",
+            "const mirrorArray = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\");",
+            "mirrorArray._pushVariable(mirror);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "X",
+          "name": "X",
+          "type": "expression"
+        },
+        {
+          "description": "Y",
+          "name": "Y",
+          "type": "expression"
+        },
+        {
+          "description": "Z",
+          "name": "Z",
+          "type": "expression"
+        },
+        {
+          "description": "Rotation X",
+          "name": "RX",
+          "type": "expression"
+        },
+        {
+          "description": "Rotation Y",
+          "name": "RY",
+          "type": "expression"
+        },
+        {
+          "description": "Rotation Z",
+          "name": "RZ",
+          "type": "expression"
+        },
+        {
+          "description": "Radius",
+          "name": "Wi",
+          "type": "expression"
+        },
+        {
+          "description": "Number of segments. Default: 32",
+          "name": "He",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Remove mirror.",
+      "fullName": "Remove mirror",
+      "functionType": "Action",
+      "name": "Delete",
+      "sentence": "Remove mirror number _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const numb = eventsFunctionContext.getArgument(\"Mirr\");",
+            "const scene3D = runtimeScene.getLayer('Base layer').getRenderer().getThreeScene();",
+            "let mirr = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\");",
+            "let mirror = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\").getChildAt(numb);",
+            "if (mirror) {",
+            "        // Освобождаем ресурсы",
+            "        if (mirror.material.uniforms.mirrorSampler.value) {",
+            "            mirror.material.uniforms.mirrorSampler.value.dispose();",
+            "        }",
+            "        mirror.geometry.dispose();",
+            "        mirror.material.dispose();",
+            "",
+            "        // Удаляем зеркало из сцены",
+            "        scene3D.remove(mirror);",
+            "        mirr.removeAtIndex(numb);",
+            "    }"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Mirror number",
+          "name": "Mirr",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Move the mirror.",
+      "fullName": "Move mirror",
+      "functionType": "Action",
+      "name": "MoveMirror",
+      "sentence": "Move the mirror number _PARAM1_: X: _PARAM2_; Y: _PARAM3_; Z: _PARAM4_. Mode: _PARAM5_",
+      "events": [
+        {
+          "folded": true,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "CompareArgumentAsString"
+              },
+              "parameters": [
+                "\"Mode\"",
+                "=",
+                "\"Set\""
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const x = eventsFunctionContext.getArgument(\"X\").valueOf();\r",
+                "const y = eventsFunctionContext.getArgument(\"Y\").valueOf();\r",
+                "const z = eventsFunctionContext.getArgument(\"Z\").valueOf();\r",
+                "const numb = eventsFunctionContext.getArgument(\"Mirr\").valueOf();\r",
+                "\r",
+                "const mirror = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\").getChildAt(numb);\r",
+                "\r",
+                "mirror.position.x = x;\r",
+                "mirror.position.y = y;\r",
+                "mirror.position.z = z;\r",
+                ""
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ]
+        },
+        {
+          "folded": true,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "CompareArgumentAsString"
+              },
+              "parameters": [
+                "\"Mode\"",
+                "=",
+                "\"Add\""
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const x = eventsFunctionContext.getArgument(\"X\").valueOf();\r",
+                "const y = eventsFunctionContext.getArgument(\"Y\").valueOf();\r",
+                "const z = eventsFunctionContext.getArgument(\"Z\").valueOf();\r",
+                "const numb = eventsFunctionContext.getArgument(\"Mirr\").valueOf();\r",
+                "const mirror = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\").getChildAt(numb);\r",
+                "\r",
+                "mirror.position.x += x;\r",
+                "mirror.position.y += y;\r",
+                "mirror.position.z += z;"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Mirror number",
+          "name": "Mirr",
+          "type": "expression"
+        },
+        {
+          "description": "X",
+          "name": "X",
+          "type": "expression"
+        },
+        {
+          "description": "Y",
+          "name": "Y",
+          "type": "expression"
+        },
+        {
+          "description": "Z",
+          "name": "Z",
+          "type": "expression"
+        },
+        {
+          "description": "Mode",
+          "name": "Mode",
+          "supplementaryInformation": "[\"Add\",\"Set\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Rotate the mirror.",
+      "fullName": "Rotate mirror",
+      "functionType": "Action",
+      "name": "RotateMirror",
+      "sentence": "Rotate the mirror number _PARAM1_: X: _PARAM2_; Y: _PARAM3_; Z: _PARAM4_. Mode: _PARAM5_",
+      "events": [
+        {
+          "folded": true,
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "CompareArgumentAsString"
+              },
+              "parameters": [
+                "\"Mode\"",
+                "=",
+                "\"Set\""
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const x = eventsFunctionContext.getArgument(\"X\").valueOf();\r",
+                "const y = eventsFunctionContext.getArgument(\"Y\").valueOf();\r",
+                "const z = eventsFunctionContext.getArgument(\"Z\").valueOf();\r",
+                "const numb = eventsFunctionContext.getArgument(\"Mirr\").valueOf();\r",
+                "const mirror = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\").getChildAt(numb);\r",
+                "mirror.rotation.x = x;\r",
+                "mirror.rotation.y = y;\r",
+                "mirror.rotation.z = z;"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "CompareArgumentAsString"
+              },
+              "parameters": [
+                "\"Mode\"",
+                "=",
+                "\"Add\""
+              ]
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const x = eventsFunctionContext.getArgument(\"X\").valueOf();\r",
+                "const y = eventsFunctionContext.getArgument(\"Y\").valueOf();\r",
+                "const z = eventsFunctionContext.getArgument(\"Z\").valueOf();\r",
+                "const numb = eventsFunctionContext.getArgument(\"Mirr\").valueOf();\r",
+                "const mirror = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\").getChildAt(numb);\r",
+                "mirror.rotation.x += x;\r",
+                "mirror.rotation.y += y;\r",
+                "mirror.rotation.z += z;"
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Mirror number",
+          "name": "Mirr",
+          "type": "expression"
+        },
+        {
+          "description": "Rotation X",
+          "name": "X",
+          "type": "expression"
+        },
+        {
+          "description": "Rotation Y",
+          "name": "Y",
+          "type": "expression"
+        },
+        {
+          "description": "Rotation Z",
+          "name": "Z",
+          "type": "expression"
+        },
+        {
+          "description": "Mode",
+          "name": "Mode",
+          "supplementaryInformation": "[\"Set\",\"Add\"]",
+          "type": "stringWithSelector"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Add an object to mirror as parent.",
+      "fullName": "Add parent",
+      "functionType": "Action",
+      "name": "Parent",
+      "sentence": "Add an object _PARAM2_ to mirror _PARAM1_ as parent",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const ob = objects[0];",
+            "const obj = objects[0].get3DRendererObject();",
+            "const numb = eventsFunctionContext.getArgument(\"Mirr\");",
+            "const mirror = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\").getChildAt(numb);",
+            "obj.add(mirror);"
+          ],
+          "parameterObjects": "Parent",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Mirror number",
+          "name": "Mirr",
+          "type": "expression"
+        },
+        {
+          "description": "Parent",
+          "name": "Parent",
+          "supplementaryInformation": "Scene3D::Model3DObject",
+          "type": "objectList"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Detach a mirror from parent.",
+      "fullName": "Detach mirror from parent",
+      "functionType": "Action",
+      "name": "Detach",
+      "sentence": "Detach a mirror _PARAM1_ from parent _PARAM2_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const ob = objects[0];",
+            "const obj = objects[0].get3DRendererObject();",
+            "const numb = eventsFunctionContext.getArgument(\"Mirr\");",
+            "const mirror = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\").getChildAt(numb);",
+            "obj.remove(mirror);"
+          ],
+          "parameterObjects": "Parent",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Mirror number",
+          "name": "Mirr",
+          "type": "expression"
+        },
+        {
+          "description": "Parent",
+          "name": "Parent",
+          "supplementaryInformation": "Scene3D::Model3DObject",
+          "type": "objectList"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Return the number of mirrors on the scene.",
+      "fullName": "Number of mirrors",
+      "functionType": "Expression",
+      "name": "NumberOfMirrors",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const mirr = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\");",
+            "eventsFunctionContext.returnValue = mirr.getChildrenCount();"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Get X.",
+      "fullName": "Get X",
+      "functionType": "Expression",
+      "name": "X",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const numb = eventsFunctionContext.getArgument(\"Mirr\").valueOf();\r",
+            "const mirror = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\").getChildAt(numb);\r",
+            "eventsFunctionContext.returnValue = mirror.position.x;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Mirror number",
+          "name": "Mirr",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get Y.",
+      "fullName": "Get Y",
+      "functionType": "Expression",
+      "name": "Y",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const numb = eventsFunctionContext.getArgument(\"Mirr\").valueOf();",
+            "const mirror = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\").getChildAt(numb);",
+            "eventsFunctionContext.returnValue = mirror.position.y;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Mirror number",
+          "name": "Mirr",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get Z.",
+      "fullName": "Get Z",
+      "functionType": "Expression",
+      "name": "Z",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const numb = eventsFunctionContext.getArgument(\"Mirr\").valueOf();",
+            "const mirror = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\").getChildAt(numb);",
+            "eventsFunctionContext.returnValue = mirror.position.z;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Mirror number",
+          "name": "Mirr",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get X rotation.",
+      "fullName": "Get X rotation ",
+      "functionType": "Expression",
+      "name": "RotationX",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const numb = eventsFunctionContext.getArgument(\"Mirr\").valueOf();",
+            "const mirror = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\").getChildAt(numb);",
+            "eventsFunctionContext.returnValue = mirror.rotation.x;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Mirror number",
+          "name": "Mirr",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get Y rotation.",
+      "fullName": "Get Y rotation ",
+      "functionType": "Expression",
+      "name": "RotationY",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const numb = eventsFunctionContext.getArgument(\"Mirr\").valueOf();",
+            "const mirror = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\").getChildAt(numb);",
+            "eventsFunctionContext.returnValue = mirror.rotation.y;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Mirror number",
+          "name": "Mirr",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Get Z rotation.",
+      "fullName": "Get Z rotation ",
+      "functionType": "Expression",
+      "name": "RotationZ",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const numb = eventsFunctionContext.getArgument(\"Mirr\").valueOf();",
+            "const mirror = runtimeScene.getVariablesForExtension(\"Mirrors3D\").get(\"Mirrors\").getChildAt(numb);",
+            "eventsFunctionContext.returnValue = mirror.rotation.z;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Mirror number",
+          "name": "Mirr",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Check if the mirror is existing.",
+      "fullName": "Is existing",
+      "functionType": "Condition",
+      "name": "IsExisting",
+      "sentence": "Mirror number _PARAM1_ is existing",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::CompareNumbers"
+              },
+              "parameters": [
+                "Mirr",
+                ">=",
+                "Mirrors3D::NumberOfMirrors()"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "False"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "BuiltinCommonInstructions::CompareNumbers"
+              },
+              "parameters": [
+                "Mirr",
+                "<",
+                "Mirrors3D::NumberOfMirrors()"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Mirror number",
+          "name": "Mirr",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
+}
