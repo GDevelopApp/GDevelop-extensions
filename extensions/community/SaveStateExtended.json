@@ -1,0 +1,296 @@
+{
+  "author": "",
+  "category": "Game mechanic",
+  "dimension": "",
+  "extensionNamespace": "",
+  "fullName": "Save State Extended",
+  "gdevelopVersion": "",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWNvbnRlbnQtc2F2ZSIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xNSw5SDVWNUgxNU0xMiwxOUEzLDMgMCAwLDEgOSwxNkEzLDMgMCAwLDEgMTIsMTNBMywzIDAgMCwxIDE1LDE2QTMsMyAwIDAsMSAxMiwxOU0xNywzSDVDMy44OSwzIDMsMy45IDMsNVYxOUEyLDIgMCAwLDAgNSwyMUgxOUEyLDIgMCAwLDAgMjEsMTlWN0wxNywzWiIgLz48L3N2Zz4=",
+  "name": "SaveStateExtended",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/ed9dc9aba04820ae44e5adf70bd3b955cd899dec13739488e94ae6ef2b6ef180_content-save.svg",
+  "shortDescription": "Delete, duplicate and list save states created by the Save State extension.",
+  "version": "1.0.0",
+  "description": "Extends the capability of the in-built save state extension by allowing deleting, duplicating and listing of game save. This allows for more complex systems like save slots, etc.",
+  "tags": [
+    "save state",
+    "save"
+  ],
+  "authorIds": [
+    "xvJffE9fNWgfAsTl83YkT0CY4er1"
+  ],
+  "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
+  "eventsFunctions": [
+    {
+      "async": true,
+      "description": "Checks if a save of a game exists.",
+      "fullName": "Save Exists",
+      "functionType": "Action",
+      "name": "SaveStateExists",
+      "sentence": "Check if save named _PARAM1_ exists in game storage and store result in _PARAM2_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const dbName = gdjs.saveState.getIndexedDbDatabaseName();\r",
+            "const storeName = gdjs.saveState.getIndexedDbObjectStore();\r",
+            "const key = gdjs.saveState.getIndexedDbStorageKey(\r",
+            "  eventsFunctionContext.getArgument(\"StorageName\")\r",
+            ");\r",
+            "const result = eventsFunctionContext.getArgument(\"Result\");\r",
+            "const { task } = eventsFunctionContext;\r",
+            "\r",
+            "const request = indexedDB.open(dbName);\r",
+            "request.onsuccess = (e) => {\r",
+            "  const getRequest = e.target.result\r",
+            "    .transaction([storeName], \"readonly\")\r",
+            "    .objectStore(storeName)\r",
+            "    .get(key);\r",
+            "  getRequest.onsuccess = (e) => {\r",
+            "    result.setBoolean(e.target.result !== undefined);\r",
+            "    task.resolve();\r",
+            "  };\r",
+            "  getRequest.onerror = () => {\r",
+            "    result.setBoolean(false);\r",
+            "    task.resolve();\r",
+            "  };\r",
+            "};\r",
+            "request.onerror = (e) => {\r",
+            "  console.error(\"Save Tools Extended - Check failed:\", e.target.error);\r",
+            "  result.setBoolean(false);\r",
+            "  task.resolve();\r",
+            "};"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Storage Name",
+          "name": "StorageName",
+          "type": "string"
+        },
+        {
+          "description": "Result (Boolean)",
+          "name": "Result",
+          "type": "variable"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "async": true,
+      "description": "Get all save states' name in the game and store it as an array.",
+      "fullName": "Get name of all save states",
+      "functionType": "Action",
+      "name": "AllSaveStates",
+      "sentence": "Save all save state names as an array in _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const dbName = gdjs.saveState.getIndexedDbDatabaseName();\r",
+            "const storeName = gdjs.saveState.getIndexedDbObjectStore();\r",
+            "const result = eventsFunctionContext.getArgument(\"Result\");\r",
+            "const { task } = eventsFunctionContext;\r",
+            "\r",
+            "const request = indexedDB.open(dbName);\r",
+            "result.castTo(\"array\");\r",
+            "result.clearChildren();\r",
+            "request.onsuccess = (e) => {\r",
+            "  const db = e.target.result;\r",
+            "  if (!db.objectStoreNames.contains(storeName)) {\r",
+            "    task.resolve();\r",
+            "    return;\r",
+            "  }\r",
+            "  const keysRequest = db\r",
+            "    .transaction([storeName], \"readonly\")\r",
+            "    .objectStore(storeName)\r",
+            "    .getAllKeys();\r",
+            "  keysRequest.onsuccess = (e) => {\r",
+            "    const keys = e.target.result.filter(k => k.startsWith(\"save-\"));\r",
+            "    keys.forEach((k, i) => {\r",
+            "      result.getChildAt(i).setString(k.replace(\"save-\", \"\"));\r",
+            "    });\r",
+            "    task.resolve();\r",
+            "  };\r",
+            "  keysRequest.onerror = () => {\r",
+            "    task.resolve();\r",
+            "  };\r",
+            "};\r",
+            "request.onerror = (e) => {\r",
+            "  console.error(\"Save Tools Extended - List failed:\", e.target.error);\r",
+            "  task.resolve();\r",
+            "};"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Result (Array)",
+          "name": "Result",
+          "type": "variable"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Delete a save state.",
+      "fullName": "Delete save state",
+      "functionType": "Action",
+      "name": "DeleteSaveState",
+      "sentence": "Delete game from device storage named _PARAM1_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const dbName = gdjs.saveState.getIndexedDbDatabaseName();",
+            "const storeName = gdjs.saveState.getIndexedDbObjectStore();",
+            "const key = gdjs.saveState.getIndexedDbStorageKey(",
+            "    eventsFunctionContext.getArgument(\"name\")",
+            ");",
+            "",
+            "const request = indexedDB.open(dbName);",
+            "request.onsuccess = (e) => {",
+            "  e.target.result",
+            "    .transaction([storeName], \"readwrite\")",
+            "    .objectStore(storeName)",
+            "    .delete(key);",
+            "};",
+            "",
+            "request.onerror = (e) => {",
+            "  console.error(\"Save Tools Extended - Delete failed:\", e.target.error);",
+            "};"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Storage Name ",
+          "name": "name",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Delete all save states.",
+      "fullName": "Delete all save states",
+      "functionType": "Action",
+      "name": "DeleteAllSaveStates",
+      "sentence": "Delete all save states from device storage",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const dbName = gdjs.saveState.getIndexedDbDatabaseName();",
+            "const storeName = gdjs.saveState.getIndexedDbObjectStore();",
+            "const request = indexedDB.open(dbName);",
+            "",
+            "request.onsuccess = (e) => {",
+            "  e.target.result",
+            "    .transaction([storeName], \"readwrite\")",
+            "    .objectStore(storeName)",
+            "    .clear()",
+            "};",
+            "",
+            "request.onerror = (e) => {",
+            "  console.error(\"Save Tools Extended - Delete all failed:\", e.target.error);",
+            "};"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "async": true,
+      "description": "Create a duplicate copy of a save state. This will overwrite if it already exists.",
+      "fullName": "Duplicate Save State",
+      "functionType": "Action",
+      "name": "DuplicateSaveState",
+      "sentence": "Duplicate _PARAM1_ game save to _PARAM2_ from device storage (Store success in _PARAM3_)",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const dbName = gdjs.saveState.getIndexedDbDatabaseName();",
+            "const storeName = gdjs.saveState.getIndexedDbObjectStore();",
+            "const { task } = eventsFunctionContext;",
+            "const result = eventsFunctionContext.getArgument(\"result\");",
+            "const sourceKey = gdjs.saveState.getIndexedDbStorageKey(",
+            "    eventsFunctionContext.getArgument(\"Source\")",
+            ");",
+            "const destKey = gdjs.saveState.getIndexedDbStorageKey(",
+            "    eventsFunctionContext.getArgument(\"New\")",
+            ");",
+            "const request = indexedDB.open(dbName);",
+            "const onfail = (err) => {",
+            "  result.setBoolean(false);",
+            "  task.resolve();",
+            "  console.error(\"Save Tools Extended - Duplication:\", err);",
+            "}",
+            "request.onsuccess = (e) => {",
+            "  const store = e.target.result",
+            "    .transaction([storeName], \"readwrite\")",
+            "    .objectStore(storeName)",
+            "  const sourceRequest = store.get(sourceKey)",
+            "  sourceRequest.onsuccess = (e) => {",
+            "    const source = e.target.result",
+            "    if (source === undefined) {",
+            "      onfail(\"Source save not found: \" + sourceKey);",
+            "      return;",
+            "    }",
+            "    const destRequest = store.put(source, destKey)",
+            "    destRequest.onerror = (e) => onfail(e.target.error);",
+            "    destRequest.onsuccess = (e) => {",
+            "      result.setBoolean(true);",
+            "      task.resolve();",
+            "    }",
+            "  }",
+            "  sourceRequest.onerror = (e) => onfail(e.target.error);",
+            "};",
+            "",
+            "request.onerror = (e) => onfail(e.target.error);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Source Save Name (To be copied)",
+          "name": "Source",
+          "type": "string"
+        },
+        {
+          "description": "Destination Save Name (To be duplicated/overwritten)",
+          "name": "New",
+          "type": "string"
+        },
+        {
+          "description": "Variable to change successful (Boolean)",
+          "name": "result",
+          "type": "variable"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
+}
