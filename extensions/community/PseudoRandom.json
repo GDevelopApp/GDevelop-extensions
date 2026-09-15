@@ -1,0 +1,592 @@
+{
+  "author": "",
+  "category": "Advanced",
+  "extensionNamespace": "",
+  "fullName": "Pseudo random",
+  "gdevelopVersion": "",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLXNlZWQtb3V0bGluZSIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik0xNy4yLDVWNUMxNy44LDUgMTguNCw1IDE4LjksNS4xQzE5LjEsNy40IDE5LjEsMTIgMTYuNCwxNS4yQzE0LjQsMTcuNyAxMSwxOSA2LjQsMTlDNiwxOSA1LjUsMTkgNS4xLDE5QzQuOSwxNC40IDUuOCwxMC44IDcuOSw4LjVDMTAuNCw1LjYgMTQuNCw1IDE3LjIsNU0xNy4yLDNDMTEuNywzIDEuNiw1LjEgMy4yLDIwLjhDNC4zLDIwLjkgNS40LDIxIDYuNCwyMUMyNC4zLDIxIDIwLjcsMy4zIDIwLjcsMy4zQzIwLjcsMy4zIDE5LjMsMyAxNy4yLDNNMTcsN0M3LDcgNywxNyA3LDE3QzExLDkgMTcsNyAxNyw3WiIgLz48L3N2Zz4=",
+  "name": "PseudoRandom",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/2a6e6d587c6bdcd43a56925d77bd4a7d96a3a1132e9a0dc0ce324d0858971990_seed-outline.svg",
+  "shortDescription": "Pseudo random number generator based on seed.",
+  "version": "2.1.0",
+  "description": [
+    "This extension will be useful for:",
+    "- Re-creating a randomly generated level.",
+    "- Debugging everything related to randomness in your game.",
+    "- Use in multiplayer so that all players have the same random event without having to synchronize its components.",
+    "",
+    "How to use:",
+    "- Put the action \"Set seed\" with a specific seed in the form of a number, for example \"1\", after that use expressions from this extension, they will return the same numbers every restart until you change the seed.",
+    "",
+    "Example:",
+    "1. Create a new event with the condition \"At the beginning of the scene\" and the action \"Set seed\" and the seed equal to \"1\".",
+    "2. Create a sub-event with the action \"Log message\" and the message \"ToString(PseudoRandom::Random(100))+\";\"+ToString(PseudoRandom::Random(100))+\";\"+ToString(PseudoRandom::Random(100))\".",
+    "3. Look in the console and you will see that the result at each restart will be equal to \"17;21;53\" until you change the seed."
+  ],
+  "tags": [
+    "random",
+    "seed",
+    "pseudo",
+    "generation",
+    "procedual"
+  ],
+  "authorIds": [
+    "dt0tRnf2kHWJnjkrpnzTzNj9Yc63"
+  ],
+  "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
+  "eventsFunctions": [
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onFirstSceneLoaded",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "// Source: https://github.com/davidbau/seedrandom\r",
+            "/*\r",
+            "Copyright 2019 David Bau.\r",
+            "\r",
+            "Permission is hereby granted, free of charge, to any person obtaining\r",
+            "a copy of this software and associated documentation files (the\r",
+            "\"Software\"), to deal in the Software without restriction, including\r",
+            "without limitation the rights to use, copy, modify, merge, publish,\r",
+            "distribute, sublicense, and/or sell copies of the Software, and to\r",
+            "permit persons to whom the Software is furnished to do so, subject to\r",
+            "the following conditions:\r",
+            "\r",
+            "The above copyright notice and this permission notice shall be\r",
+            "included in all copies or substantial portions of the Software.\r",
+            "\r",
+            "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\r",
+            "EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\r",
+            "MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\r",
+            "IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\r",
+            "CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\r",
+            "TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\r",
+            "SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\r",
+            "\r",
+            "*/\r",
+            "\r",
+            "(function (global, pool, math) {\r",
+            "//\r",
+            "// The following constants are related to IEEE 754 limits.\r",
+            "//\r",
+            "\r",
+            "var width = 256,        // each RC4 output is 0 <= x < 256\r",
+            "    chunks = 6,         // at least six RC4 outputs for each double\r",
+            "    digits = 52,        // there are 52 significant digits in a double\r",
+            "    rngname = 'random', // rngname: name for Math.random and Math.seedrandom\r",
+            "    startdenom = math.pow(width, chunks),\r",
+            "    significance = math.pow(2, digits),\r",
+            "    overflow = significance * 2,\r",
+            "    mask = width - 1,\r",
+            "    nodecrypto;         // node.js crypto module, initialized at the bottom.\r",
+            "\r",
+            "//\r",
+            "// seedrandom()\r",
+            "// This is the seedrandom function described above.\r",
+            "//\r",
+            "function seedrandom(seed, options, callback) {\r",
+            "  var key = [];\r",
+            "  options = (options == true) ? { entropy: true } : (options || {});\r",
+            "\r",
+            "  // Flatten the seed string or build one from local entropy if needed.\r",
+            "  var shortseed = mixkey(flatten(\r",
+            "    options.entropy ? [seed, tostring(pool)] :\r",
+            "    (seed == null) ? autoseed() : seed, 3), key);\r",
+            "\r",
+            "  // Use the seed to initialize an ARC4 generator.\r",
+            "  var arc4 = new ARC4(key);\r",
+            "\r",
+            "  // This function returns a random double in [0, 1) that contains\r",
+            "  // randomness in every bit of the mantissa of the IEEE 754 value.\r",
+            "  var prng = function() {\r",
+            "    var n = arc4.g(chunks),             // Start with a numerator n < 2 ^ 48\r",
+            "        d = startdenom,                 //   and denominator d = 2 ^ 48.\r",
+            "        x = 0;                          //   and no 'extra last byte'.\r",
+            "    while (n < significance) {          // Fill up all significant digits by\r",
+            "      n = (n + x) * width;              //   shifting numerator and\r",
+            "      d *= width;                       //   denominator and generating a\r",
+            "      x = arc4.g(1);                    //   new least-significant-byte.\r",
+            "    }\r",
+            "    while (n >= overflow) {             // To avoid rounding up, before adding\r",
+            "      n /= 2;                           //   last byte, shift everything\r",
+            "      d /= 2;                           //   right using integer math until\r",
+            "      x >>>= 1;                         //   we have exactly the desired bits.\r",
+            "    }\r",
+            "    return (n + x) / d;                 // Form the number within [0, 1).\r",
+            "  };\r",
+            "\r",
+            "  prng.int32 = function() { return arc4.g(4) | 0; }\r",
+            "  prng.quick = function() { return arc4.g(4) / 0x100000000; }\r",
+            "  prng.double = prng;\r",
+            "\r",
+            "  // Mix the randomness into accumulated entropy.\r",
+            "  mixkey(tostring(arc4.S), pool);\r",
+            "\r",
+            "  // Calling convention: what to return as a function of prng, seed, is_math.\r",
+            "  return (options.pass || callback ||\r",
+            "      function(prng, seed, is_math_call, state) {\r",
+            "        if (state) {\r",
+            "          // Load the arc4 state from the given state if it has an S array.\r",
+            "          if (state.S) { copy(state, arc4); }\r",
+            "          // Only provide the .state method if requested via options.state.\r",
+            "          prng.state = function() { return copy(arc4, {}); }\r",
+            "        }\r",
+            "\r",
+            "        // If called as a method of Math (Math.seedrandom()), mutate\r",
+            "        // Math.random because that is how seedrandom.js has worked since v1.0.\r",
+            "        if (is_math_call) { math[rngname] = prng; return seed; }\r",
+            "\r",
+            "        // Otherwise, it is a newer calling convention, so return the\r",
+            "        // prng directly.\r",
+            "        else return prng;\r",
+            "      })(\r",
+            "  prng,\r",
+            "  shortseed,\r",
+            "  'global' in options ? options.global : (this == math),\r",
+            "  options.state);\r",
+            "}\r",
+            "\r",
+            "//\r",
+            "// ARC4\r",
+            "//\r",
+            "// An ARC4 implementation.  The constructor takes a key in the form of\r",
+            "// an array of at most (width) integers that should be 0 <= x < (width).\r",
+            "//\r",
+            "// The g(count) method returns a pseudorandom integer that concatenates\r",
+            "// the next (count) outputs from ARC4.  Its return value is a number x\r",
+            "// that is in the range 0 <= x < (width ^ count).\r",
+            "//\r",
+            "function ARC4(key) {\r",
+            "  var t, keylen = key.length,\r",
+            "      me = this, i = 0, j = me.i = me.j = 0, s = me.S = [];\r",
+            "\r",
+            "  // The empty key [] is treated as [0].\r",
+            "  if (!keylen) { key = [keylen++]; }\r",
+            "\r",
+            "  // Set up S using the standard key scheduling algorithm.\r",
+            "  while (i < width) {\r",
+            "    s[i] = i++;\r",
+            "  }\r",
+            "  for (i = 0; i < width; i++) {\r",
+            "    s[i] = s[j = mask & (j + key[i % keylen] + (t = s[i]))];\r",
+            "    s[j] = t;\r",
+            "  }\r",
+            "\r",
+            "  // The \"g\" method returns the next (count) outputs as one number.\r",
+            "  (me.g = function(count) {\r",
+            "    // Using instance members instead of closure state nearly doubles speed.\r",
+            "    var t, r = 0,\r",
+            "        i = me.i, j = me.j, s = me.S;\r",
+            "    while (count--) {\r",
+            "      t = s[i = mask & (i + 1)];\r",
+            "      r = r * width + s[mask & ((s[i] = s[j = mask & (j + t)]) + (s[j] = t))];\r",
+            "    }\r",
+            "    me.i = i; me.j = j;\r",
+            "    return r;\r",
+            "    // For robust unpredictability, the function call below automatically\r",
+            "    // discards an initial batch of values.  This is called RC4-drop[256].\r",
+            "    // See http://google.com/search?q=rsa+fluhrer+response&btnI\r",
+            "  })(width);\r",
+            "}\r",
+            "\r",
+            "//\r",
+            "// copy()\r",
+            "// Copies internal state of ARC4 to or from a plain object.\r",
+            "//\r",
+            "function copy(f, t) {\r",
+            "  t.i = f.i;\r",
+            "  t.j = f.j;\r",
+            "  t.S = f.S.slice();\r",
+            "  return t;\r",
+            "};\r",
+            "\r",
+            "//\r",
+            "// flatten()\r",
+            "// Converts an object tree to nested arrays of strings.\r",
+            "//\r",
+            "function flatten(obj, depth) {\r",
+            "  var result = [], typ = (typeof obj), prop;\r",
+            "  if (depth && typ == 'object') {\r",
+            "    for (prop in obj) {\r",
+            "      try { result.push(flatten(obj[prop], depth - 1)); } catch (e) {}\r",
+            "    }\r",
+            "  }\r",
+            "  return (result.length ? result : typ == 'string' ? obj : obj + '\\0');\r",
+            "}\r",
+            "\r",
+            "//\r",
+            "// mixkey()\r",
+            "// Mixes a string seed into a key that is an array of integers, and\r",
+            "// returns a shortened string seed that is equivalent to the result key.\r",
+            "//\r",
+            "function mixkey(seed, key) {\r",
+            "  var stringseed = seed + '', smear, j = 0;\r",
+            "  while (j < stringseed.length) {\r",
+            "    key[mask & j] =\r",
+            "      mask & ((smear ^= key[mask & j] * 19) + stringseed.charCodeAt(j++));\r",
+            "  }\r",
+            "  return tostring(key);\r",
+            "}\r",
+            "\r",
+            "//\r",
+            "// autoseed()\r",
+            "// Returns an object for autoseeding, using window.crypto and Node crypto\r",
+            "// module if available.\r",
+            "//\r",
+            "function autoseed() {\r",
+            "  try {\r",
+            "    var out;\r",
+            "    if (nodecrypto && (out = nodecrypto.randomBytes)) {\r",
+            "      // The use of 'out' to remember randomBytes makes tight minified code.\r",
+            "      out = out(width);\r",
+            "    } else {\r",
+            "      out = new Uint8Array(width);\r",
+            "      (global.crypto || global.msCrypto).getRandomValues(out);\r",
+            "    }\r",
+            "    return tostring(out);\r",
+            "  } catch (e) {\r",
+            "    var browser = global.navigator,\r",
+            "        plugins = browser && browser.plugins;\r",
+            "    return [+new Date, global, plugins, global.screen, tostring(pool)];\r",
+            "  }\r",
+            "}\r",
+            "\r",
+            "//\r",
+            "// tostring()\r",
+            "// Converts an array of charcodes to a string\r",
+            "//\r",
+            "function tostring(a) {\r",
+            "  return String.fromCharCode.apply(0, a);\r",
+            "}\r",
+            "\r",
+            "//\r",
+            "// When seedrandom.js is loaded, we immediately mix a few bits\r",
+            "// from the built-in RNG into the entropy pool.  Because we do\r",
+            "// not want to interfere with deterministic PRNG state later,\r",
+            "// seedrandom will not call math.random on its own again after\r",
+            "// initialization.\r",
+            "//\r",
+            "mixkey(math.random(), pool);\r",
+            "\r",
+            "//\r",
+            "// Nodejs and AMD support: export the implementation as a module using\r",
+            "// either convention.\r",
+            "//\r",
+            "\r",
+            "// When included as a plain script, set up Math.seedrandom global.\r",
+            "math['seed' + rngname] = seedrandom;\r",
+            "\r",
+            "// End anonymous scope, and pass initial values.\r",
+            "})(\r",
+            "  // global: `self` in browsers (including strict mode and web workers),\r",
+            "  // otherwise `this` in Node and other environments\r",
+            "  (typeof self !== 'undefined') ? self : this,\r",
+            "  [],     // pool: entropy pool starts empty\r",
+            "  Math    // math: package containing random, pow, and seedrandom\r",
+            ");\r",
+            "\r",
+            ""
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [],
+          "actions": [
+            {
+              "type": {
+                "value": "PseudoRandom::SetSeed"
+              },
+              "parameters": [
+                "",
+                "Time(\"timestamp\")",
+                "0",
+                ""
+              ]
+            }
+          ]
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Set seed for pseudo random number generator.",
+      "fullName": "Set seed",
+      "functionType": "Action",
+      "name": "SetSeed",
+      "sentence": "Set seed to  _PARAM1_ with initial step _PARAM2_",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "gdjs.__PseudoRandomExtension = {};\r",
+            "gdjs.__PseudoRandomExtension.seed = eventsFunctionContext.getArgument(\"Seed\");\r",
+            "gdjs.__PseudoRandomExtension.rng = new Math.seedrandom(gdjs.__PseudoRandomExtension.seed);\r",
+            "gdjs.__PseudoRandomExtension.step = eventsFunctionContext.getArgument(\"Step\");\r",
+            "\r",
+            "for (let i = 0; i < gdjs.__PseudoRandomExtension.step; i++) {\r",
+            "  gdjs.__PseudoRandomExtension.rng();\r",
+            "}"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Seed",
+          "name": "Seed",
+          "type": "expression"
+        },
+        {
+          "description": "Start generation at a certain step",
+          "name": "Step",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Returns the last generation step.",
+      "fullName": "Step",
+      "functionType": "Expression",
+      "name": "Step",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "eventsFunctionContext.returnValue = gdjs.__PseudoRandomExtension.step;",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Returns the last used seed.",
+      "fullName": "Seed",
+      "functionType": "Expression",
+      "name": "Seed",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "eventsFunctionContext.returnValue = gdjs.__PseudoRandomExtension.seed;",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "Pseudo random integer.",
+      "fullName": "Pseudo random integer",
+      "functionType": "Expression",
+      "name": "Random",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const max = eventsFunctionContext.getArgument(\"Max\");\r",
+            "\r",
+            "eventsFunctionContext.returnValue = Math.floor(gdjs.__PseudoRandomExtension.rng() * (max + 1));\r",
+            "gdjs.__PseudoRandomExtension.step++;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Maximum value",
+          "name": "Max",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Pseudo random integer in range.",
+      "fullName": "Pseudo random integer in range",
+      "functionType": "Expression",
+      "name": "RandomInRange",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const max = eventsFunctionContext.getArgument(\"Max\");",
+            "const min = eventsFunctionContext.getArgument(\"Min\");",
+            "",
+            "eventsFunctionContext.returnValue = Math.floor(gdjs.__PseudoRandomExtension.rng() * (max - min + 1)) + min;",
+            "gdjs.__PseudoRandomExtension.step++;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Minimum value",
+          "name": "Min",
+          "type": "expression"
+        },
+        {
+          "description": "Maximum value",
+          "name": "Max",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Pseudo random float.",
+      "fullName": "Pseudo random float",
+      "functionType": "Expression",
+      "name": "RandomFloat",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const max = eventsFunctionContext.getArgument(\"Max\");\r",
+            "\r",
+            "eventsFunctionContext.returnValue = gdjs.__PseudoRandomExtension.rng() * max;\r",
+            "gdjs.__PseudoRandomExtension.step++;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Maximum value",
+          "name": "Max",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Pseudo random float in range.",
+      "fullName": "Pseudo random float in range",
+      "functionType": "Expression",
+      "name": "RandomFloatInRange",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const max = eventsFunctionContext.getArgument(\"Max\");",
+            "const min = eventsFunctionContext.getArgument(\"Min\");",
+            "",
+            "eventsFunctionContext.returnValue = gdjs.__PseudoRandomExtension.rng() * (max - min) + min;",
+            "gdjs.__PseudoRandomExtension.step++;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Minimum value",
+          "name": "Min",
+          "type": "expression"
+        },
+        {
+          "description": "Maximum value",
+          "name": "Max",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Pseudo random integer in steps.",
+      "fullName": "Pseudo random integer in steps",
+      "functionType": "Expression",
+      "name": "RandomWithStep",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const max = eventsFunctionContext.getArgument(\"Max\");",
+            "const min = eventsFunctionContext.getArgument(\"Min\");",
+            "const step = eventsFunctionContext.getArgument(\"Step\");",
+            "",
+            "const range = Math.floor((max - min) / step) + 1;",
+            "const randomStepIndex = Math.floor(gdjs.__PseudoRandomExtension.rng() * range);",
+            "",
+            "eventsFunctionContext.returnValue = min + randomStepIndex * step;",
+            "gdjs.__PseudoRandomExtension.step++;"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "expression"
+      },
+      "parameters": [
+        {
+          "description": "Minimum value",
+          "name": "Min",
+          "type": "expression"
+        },
+        {
+          "description": "Maximum value",
+          "name": "Max",
+          "type": "expression"
+        },
+        {
+          "description": "Step",
+          "name": "Step",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
+}
