@@ -1,0 +1,556 @@
+{
+  "author": "",
+  "category": "Advanced",
+  "extensionNamespace": "",
+  "fullName": "Enhanced Yarn Wrap",
+  "gdevelopVersion": "",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLWZvcm1hdC10ZXh0LXdyYXBwaW5nLXdyYXAiIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNNywyMUg1VjNIN1YyMU0xOSwzSDE3VjIxSDE5VjNNMTMsOEg5VjEwSDEyLjk3QzEzLjE0LDEwIDE0LDEwLjE2IDE0LDEyQzE0LDEzLjg0IDEzLjE0LDE0IDEzLDE0SDExVjEyTDgsMTVMMTEsMThWMTZIMTNDMTQuMDQsMTYgMTYsMTUuMTYgMTYsMTJDMTYsOC44NCAxNC4wNCw4IDEzLDhaIiAvPjwvc3ZnPg==",
+  "name": "EnhancedYarnWrap",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/62284c8048c7aa6a577d57d1d4d67911713185f205d17707bf5837d2b5634a51_format-text-wrapping-wrap.svg",
+  "shortDescription": "A helper expression that enhances the Yarn \"ClippedText\" word wrapping.",
+  "version": "0.5.0",
+  "description": [
+    "This extension contains a single expression that uses the Yarn Dialogue \"Clipped Text\" expression, some substring expressions, and math to make word wrap feel cleaner and more like professional dialogue text wrapping.",
+    "",
+    "It requires a maximum character count per line to be manually set, which will vary based off the chosen text font and text size, along with the text object width.",
+    "",
+    "It supports a maximum of 4 lines.",
+    "",
+    "To use this, set up your dialogue events as normal and set your text object's text to the expression from this extension. This replaces using the Yarn Dialogue Clipped Text expression in the normal method of setting up Yarn Dialogue. Do not use with Trigger Once. Should work with all text objects."
+  ],
+  "tags": [
+    "dialogue",
+    "word wrap"
+  ],
+  "authorIds": [
+    "8Ih1aa8f5gWUp4UB2BdhQ2iXWxJ3"
+  ],
+  "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [
+    {
+      "name": "LineCount",
+      "type": "number",
+      "value": 0
+    },
+    {
+      "name": "LineChars",
+      "type": "array",
+      "children": []
+    },
+    {
+      "name": "Loop",
+      "type": "number",
+      "value": 0
+    }
+  ],
+  "eventsFunctions": [
+    {
+      "description": "Use this expression to have Yarn Dialogue Text wrap full words rather than typing partial words before wrapping. Supports up to a maximum of 8 lines.",
+      "fullName": "Yarn Clipped Text",
+      "functionType": "StringExpression",
+      "name": "ClippedText",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "DialogueTree::IsDialogueRunning"
+              },
+              "parameters": []
+            }
+          ],
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "DialogueTree::IsDialogueLineType"
+                  },
+                  "parameters": [
+                    "\"text\""
+                  ]
+                }
+              ],
+              "actions": [],
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Comment",
+                  "color": {
+                    "b": 109,
+                    "g": 230,
+                    "r": 255,
+                    "textB": 0,
+                    "textG": 0,
+                    "textR": 0
+                  },
+                  "comment": "Chars parameter is used to set the maximum amount of characters to display on a single line. This will require the developer to manually count this by testing with the desired font and text size.\nEach LineChars child is finding the proper location to wrap the text by checking for the last \"empty space\" for the current line (Substring of Full Dialogue Line + previous line characters + Chars variable, a +1 is added to account for the replaced space.)\nThe NewLineCount variable is used to get the \"Floor\" of the number of needed newlines."
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "LineCount",
+                        "=",
+                        "StrLength(DialogueTree::LineText())/Chars"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "LineChars[0]",
+                        "=",
+                        "StrFindLastFrom(DialogueTree::LineText(), \" \",(0+ Chars))"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "LineChars[1]",
+                        "=",
+                        "StrFindLastFrom(DialogueTree::LineText(), \" \",((LineChars[0]+1)+ Chars))"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "LineChars[2]",
+                        "=",
+                        "StrFindLastFrom(DialogueTree::LineText(), \" \",((LineChars[1]+1)+ Chars))"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "LineChars[3]",
+                        "=",
+                        "StrFindLastFrom(DialogueTree::LineText(), \" \",((LineChars[2]+1)+ Chars))"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "LineChars[4]",
+                        "=",
+                        "StrFindLastFrom(DialogueTree::LineText(), \" \",((LineChars[3]+1)+ Chars))"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "LineChars[5]",
+                        "=",
+                        "StrFindLastFrom(DialogueTree::LineText(), \" \",((LineChars[4]+1)+ Chars))"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "LineChars[6]",
+                        "=",
+                        "StrFindLastFrom(DialogueTree::LineText(), \" \",((LineChars[5]+1)+ Chars))"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "LineChars[7]",
+                        "=",
+                        "StrFindLastFrom(DialogueTree::LineText(), \" \",((LineChars[6]+1)+ Chars))"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "NewLineCount",
+                        "=",
+                        "(StrLength(DialogueTree::LineText())-floor(LineCount))/Chars"
+                      ]
+                    }
+                  ],
+                  "events": [
+                    {
+                      "type": "BuiltinCommonInstructions::Standard",
+                      "conditions": [
+                        {
+                          "type": {
+                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                          },
+                          "parameters": [
+                            "NewLineCount",
+                            ">=",
+                            "0"
+                          ]
+                        }
+                      ],
+                      "actions": [],
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "NewLineCount",
+                                "<=",
+                                "1"
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetReturnString"
+                              },
+                              "parameters": [
+                                "DialogueTree::ClippedLineText()"
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                              },
+                              "parameters": [
+                                "NewLineCount",
+                                ">",
+                                "1"
+                              ]
+                            }
+                          ],
+                          "actions": [],
+                          "events": [
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [
+                                {
+                                  "type": {
+                                    "value": "BuiltinCommonInstructions::CompareNumbers"
+                                  },
+                                  "parameters": [
+                                    "NewLineCount",
+                                    "<=",
+                                    "2"
+                                  ]
+                                }
+                              ],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "SetReturnString"
+                                  },
+                                  "parameters": [
+                                    "SubStr(DialogueTree::ClippedLineText(),0,LineChars[0]) + NewLine() + SubStr(DialogueTree::ClippedLineText(),LineChars[0]+1,StrLength(DialogueTree::LineText()))"
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [
+                                {
+                                  "type": {
+                                    "value": "BuiltinCommonInstructions::CompareNumbers"
+                                  },
+                                  "parameters": [
+                                    "NewLineCount",
+                                    ">",
+                                    "2"
+                                  ]
+                                }
+                              ],
+                              "actions": [],
+                              "events": [
+                                {
+                                  "type": "BuiltinCommonInstructions::Standard",
+                                  "conditions": [
+                                    {
+                                      "type": {
+                                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                                      },
+                                      "parameters": [
+                                        "NewLineCount",
+                                        "<=",
+                                        "3"
+                                      ]
+                                    }
+                                  ],
+                                  "actions": [
+                                    {
+                                      "type": {
+                                        "value": "SetReturnString"
+                                      },
+                                      "parameters": [
+                                        "SubStr(DialogueTree::ClippedLineText(),0,LineChars[0]) + NewLine() + SubStr(DialogueTree::ClippedLineText(),LineChars[0]+1,LineChars[1]-(LineChars[0]+1)) + NewLine() + SubStr(DialogueTree::ClippedLineText(),LineChars[1]+1,StrLength(DialogueTree::LineText()))"
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "BuiltinCommonInstructions::Standard",
+                                  "conditions": [
+                                    {
+                                      "type": {
+                                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                                      },
+                                      "parameters": [
+                                        "NewLineCount",
+                                        ">",
+                                        "3"
+                                      ]
+                                    }
+                                  ],
+                                  "actions": [],
+                                  "events": [
+                                    {
+                                      "type": "BuiltinCommonInstructions::Standard",
+                                      "conditions": [
+                                        {
+                                          "type": {
+                                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                                          },
+                                          "parameters": [
+                                            "NewLineCount",
+                                            "<=",
+                                            "4"
+                                          ]
+                                        }
+                                      ],
+                                      "actions": [
+                                        {
+                                          "type": {
+                                            "value": "SetReturnString"
+                                          },
+                                          "parameters": [
+                                            "SubStr(DialogueTree::ClippedLineText(),0,LineChars[0]) + NewLine() +\nSubStr(DialogueTree::ClippedLineText(),LineChars[0]+1,LineChars[1]-(LineChars[0]+1)) + NewLine() + SubStr(DialogueTree::ClippedLineText(),LineChars[1]+1,LineChars[2]-(LineChars[1]+1)) + NewLine() + SubStr(DialogueTree::ClippedLineText(),LineChars[2]+1,StrLength(DialogueTree::LineText()))"
+                                          ]
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "type": "BuiltinCommonInstructions::Standard",
+                                      "conditions": [
+                                        {
+                                          "type": {
+                                            "value": "BuiltinCommonInstructions::CompareNumbers"
+                                          },
+                                          "parameters": [
+                                            "NewLineCount",
+                                            ">",
+                                            "4"
+                                          ]
+                                        }
+                                      ],
+                                      "actions": [],
+                                      "events": [
+                                        {
+                                          "type": "BuiltinCommonInstructions::Standard",
+                                          "conditions": [
+                                            {
+                                              "type": {
+                                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                                              },
+                                              "parameters": [
+                                                "NewLineCount",
+                                                "<=",
+                                                "5"
+                                              ]
+                                            }
+                                          ],
+                                          "actions": [
+                                            {
+                                              "type": {
+                                                "value": "SetReturnString"
+                                              },
+                                              "parameters": [
+                                                "SubStr(DialogueTree::ClippedLineText(),0,LineChars[0]) + NewLine() +\nSubStr(DialogueTree::ClippedLineText(),LineChars[0]+1,LineChars[1]-(LineChars[0]+1)) + NewLine() + SubStr(DialogueTree::ClippedLineText(),LineChars[1]+1,LineChars[2]-(LineChars[1]+1)) + NewLine() + SubStr(DialogueTree::ClippedLineText(),LineChars[2]+1,StrLength(DialogueTree::LineText()))"
+                                              ]
+                                            }
+                                          ]
+                                        },
+                                        {
+                                          "type": "BuiltinCommonInstructions::Standard",
+                                          "conditions": [
+                                            {
+                                              "type": {
+                                                "value": "BuiltinCommonInstructions::CompareNumbers"
+                                              },
+                                              "parameters": [
+                                                "NewLineCount",
+                                                ">",
+                                                "5"
+                                              ]
+                                            }
+                                          ],
+                                          "actions": [],
+                                          "events": [
+                                            {
+                                              "type": "BuiltinCommonInstructions::Standard",
+                                              "conditions": [
+                                                {
+                                                  "type": {
+                                                    "value": "BuiltinCommonInstructions::CompareNumbers"
+                                                  },
+                                                  "parameters": [
+                                                    "NewLineCount",
+                                                    "<=",
+                                                    "6"
+                                                  ]
+                                                }
+                                              ],
+                                              "actions": [
+                                                {
+                                                  "type": {
+                                                    "value": "SetReturnString"
+                                                  },
+                                                  "parameters": [
+                                                    "SubStr(DialogueTree::ClippedLineText(),0,LineChars[0]) + NewLine() +\nSubStr(DialogueTree::ClippedLineText(),LineChars[0]+1,LineChars[1]-(LineChars[0]+1)) + NewLine() + SubStr(DialogueTree::ClippedLineText(),LineChars[1]+1,LineChars[2]-(LineChars[1]+1)) + NewLine() + \nSubStr(DialogueTree::ClippedLineText(),LineChars[2]+1,LineChars[3]-(LineChars[2]+1)) + NewLine() + \nSubStr(DialogueTree::ClippedLineText(),LineChars[3]+1,LineChars[4]-(LineChars[3]+1)) + NewLine() + \nSubStr(DialogueTree::ClippedLineText(),LineChars[4]+1,StrLength(DialogueTree::LineText()))"
+                                                  ]
+                                                }
+                                              ]
+                                            },
+                                            {
+                                              "type": "BuiltinCommonInstructions::Standard",
+                                              "conditions": [
+                                                {
+                                                  "type": {
+                                                    "value": "BuiltinCommonInstructions::CompareNumbers"
+                                                  },
+                                                  "parameters": [
+                                                    "NewLineCount",
+                                                    ">",
+                                                    "6"
+                                                  ]
+                                                }
+                                              ],
+                                              "actions": [],
+                                              "events": [
+                                                {
+                                                  "type": "BuiltinCommonInstructions::Standard",
+                                                  "conditions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                                                      },
+                                                      "parameters": [
+                                                        "NewLineCount",
+                                                        "<=",
+                                                        "7"
+                                                      ]
+                                                    }
+                                                  ],
+                                                  "actions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "SetReturnString"
+                                                      },
+                                                      "parameters": [
+                                                        "SubStr(DialogueTree::ClippedLineText(),0,LineChars[0]) + NewLine() +\nSubStr(DialogueTree::ClippedLineText(),LineChars[0]+1,LineChars[1]-(LineChars[0]+1)) + NewLine() + SubStr(DialogueTree::ClippedLineText(),LineChars[1]+1,LineChars[2]-(LineChars[1]+1)) + NewLine() + \nSubStr(DialogueTree::ClippedLineText(),LineChars[2]+1,LineChars[3]-(LineChars[2]+1)) + NewLine() + \nSubStr(DialogueTree::ClippedLineText(),LineChars[3]+1,LineChars[4]-(LineChars[3]+1)) + NewLine() + \nSubStr(DialogueTree::ClippedLineText(),LineChars[4]+1,LineChars[5]-(LineChars[4]+1)) + NewLine() + \nSubStr(DialogueTree::ClippedLineText(),LineChars[5]+1,StrLength(DialogueTree::LineText()))"
+                                                      ]
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "BuiltinCommonInstructions::Standard",
+                                                  "conditions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "BuiltinCommonInstructions::CompareNumbers"
+                                                      },
+                                                      "parameters": [
+                                                        "NewLineCount",
+                                                        ">",
+                                                        "7"
+                                                      ]
+                                                    }
+                                                  ],
+                                                  "actions": [
+                                                    {
+                                                      "type": {
+                                                        "value": "SetReturnString"
+                                                      },
+                                                      "parameters": [
+                                                        "SubStr(DialogueTree::ClippedLineText(),0,LineChars[0]) + NewLine() +\nSubStr(DialogueTree::ClippedLineText(),LineChars[0]+1,LineChars[1]-(LineChars[0]+1)) + NewLine() + SubStr(DialogueTree::ClippedLineText(),LineChars[1]+1,LineChars[2]-(LineChars[1]+1)) + NewLine() + \nSubStr(DialogueTree::ClippedLineText(),LineChars[2]+1,LineChars[3]-(LineChars[2]+1)) + NewLine() + \nSubStr(DialogueTree::ClippedLineText(),LineChars[3]+1,LineChars[4]-(LineChars[3]+1)) + NewLine() + \nSubStr(DialogueTree::ClippedLineText(),LineChars[4]+1,LineChars[5]-(LineChars[4]+1)) + NewLine() + \nSubStr(DialogueTree::ClippedLineText(),LineChars[5]+1,LineChars[6]-(LineChars[5]+1)) + NewLine() + \nSubStr(DialogueTree::ClippedLineText(),LineChars[6]+1,StrLength(DialogueTree::LineText()))"
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "variables": [
+                    {
+                      "name": "NewLineCount",
+                      "type": "number",
+                      "value": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expressionType": {
+        "type": "string"
+      },
+      "parameters": [
+        {
+          "description": "Maximum number of characters per line",
+          "longDescription": "Your maximum number of characters per line will be based off your font choice and size. You will likely need to test this with the normal expressions first and manually count.",
+          "name": "Chars",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
+}
