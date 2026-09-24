@@ -1,0 +1,2299 @@
+{
+  "author": "",
+  "category": "Game mechanic",
+  "extensionNamespace": "",
+  "fullName": "Points for 3D objects",
+  "gdevelopVersion": "",
+  "helpPath": "",
+  "iconUrl": "",
+  "name": "PointsFor3D",
+  "previewIconUrl": "",
+  "shortDescription": "Adds points functionality to a 3d object just like the \"Points\" functionality in 2d sprites is.",
+  "version": "0.1.202505291",
+  "description": [
+    "You can define local coordinates of the object for 4 points.",
+    "The behavior automatically calculates the world positions of the points and saves them into the behavior properties.",
+    "",
+    "You can call the values like this Player.Point3DBehaviour::Translated_X_1()."
+  ],
+  "tags": [
+    "Points",
+    "3D objects"
+  ],
+  "authorIds": [
+    "PEzPAaWHgYgk5UwIPppsL6f2ugp2"
+  ],
+  "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
+  "eventsFunctions": [],
+  "eventsBasedBehaviors": [
+    {
+      "description": "Translates the given points in local space in relation to the parent object so you can place other objects at those points.\nWorks just like \"Points\" in the sprites.\nYou can call the translated information like this: Player.PointsFor3D::Translated_X_4().\n\n\nThank you to Davy (D8H), ZeroX4, Entr0py and Jurfix for the invaluable assistance in understandin how Java Script and behaviours work.",
+      "fullName": "Points for 3D",
+      "name": "PointsFor3D",
+      "objectType": "",
+      "eventsFunctions": [
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "doStepPreEvents",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];",
+                "const behaviorName = eventsFunctionContext.getBehaviorName(\"Behavior\");",
+                "const behavior = object.getBehavior(behaviorName);",
+                "",
+                "const sourceObjects = eventsFunctionContext.getObjects(\"Object\");",
+                "const source = sourceObjects.length > 0 ? sourceObjects[0] : null;",
+                "if (!source) return;",
+                "",
+                "// --- Get source world position and rotation ---",
+                "const sx = source.getX();",
+                "const sy = source.getY();",
+                "const sz = typeof source.getZ === \"function\" ? source.getZ() : 0;",
+                "",
+                "const rotX = typeof source.getRotationX === \"function\" ? source.getRotationX() * Math.PI / 180 : 0;",
+                "const rotY = typeof source.getRotationY === \"function\" ? source.getRotationY() * Math.PI / 180 : 0;",
+                "const rotZ = typeof source.getAngle === \"function\" ? source.getAngle() * Math.PI / 180 : 0;",
+                "",
+                "// --- Rotation helper ---",
+                "function rotateVector([vx, vy, vz], rx, ry, rz) {",
+                "  let cy = Math.cos(rx), sy = Math.sin(rx);",
+                "  [vy, vz] = [vy * cy - vz * sy, vy * sy + vz * cy];",
+                "",
+                "  let cx = Math.cos(ry), sx = Math.sin(ry);",
+                "  [vx, vz] = [vx * cx + vz * sx, -vx * sx + vz * cx];",
+                "",
+                "  let cz = Math.cos(rz), sz = Math.sin(rz);",
+                "  [vx, vy] = [vx * cz - vy * sz, vx * sz + vy * cz];",
+                "",
+                "  return [vx, vy, vz];",
+                "}",
+                "",
+                "",
+                "",
+                "// Store all local points from behavior",
+                "const localPoints = [];",
+                "for (let i = 1; i <= 4; i++) {",
+                "  const x = behavior[`_getPointX_${i}`]();",
+                "  const y = behavior[`_getPointY_${i}`]();",
+                "  const z = behavior[`_getPointZ_${i}`]();",
+                "",
+                "  localPoints.push([x, y, z]);",
+                "}",
+                "",
+                "// Variables of source to store results",
+                "const vars = source.getVariables();",
+                "",
+                "// Process each point: rotate and convert to world space",
+                "for (let i = 1; i <= 4; i++) {",
+                "  const [lx, ly, lz] = localPoints[i - 1];",
+                "",
+                "  const [dx, dy, dz] = rotateVector([lx, ly, lz], rotX, rotY, rotZ);",
+                "",
+                "  const worldX = sx + dx;",
+                "  const worldY = sy + dy;",
+                "  const worldZ = sz + dz;",
+                "",
+                "for (let i = 1; i <= 4; i++) {",
+                "  const [lx, ly, lz] = localPoints[i - 1];",
+                "  const [dx, dy, dz] = rotateVector([lx, ly, lz], rotX, rotY, rotZ);",
+                "  const worldX = sx + dx;",
+                "  const worldY = sy + dy;",
+                "  const worldZ = sz + dz;",
+                "",
+                "  // --- Save to behavior properties instead of object variables ---",
+                "  if (typeof behavior[`_setTranslated_X_${i}`] === \"function\") {",
+                "    behavior[`_setTranslated_X_${i}`](worldX);",
+                "    behavior[`_setTranslated_Y_${i}`](worldY);",
+                "    behavior[`_setTranslated_Z_${i}`](worldZ);",
+                "  }",
+                "}",
+                "}",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": []
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the point X 1 of the object. Define the 1st points X-coordinate in relation to the parent object.",
+          "fullName": "Point X 1",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 1st Point configuration",
+          "name": "PointX_1",
+          "sentence": "the point X 1",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PointX_1"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointX_1",
+          "name": "SetPointX_1",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "PointX_1",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the point Y 1 of the object. Define the 1st points Y-coordinate in relation to the parent object.",
+          "fullName": "Point Y 1",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 1st Point configuration",
+          "name": "PointY_1",
+          "sentence": "the point Y 1",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PointY_1"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointY_1",
+          "name": "SetPointY_1",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "PointY_1",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "The point Z 1 of the object. Define the 1st points Z-coordinate in relation to the parent object.",
+          "fullName": "Point Z 1",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 1st Point configuration",
+          "name": "PointZ_1",
+          "sentence": "the point Z 1",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PointZ_1"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointZ_1",
+          "name": "SetPointZ_1",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "PointZ_1",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the point X 2 of the object. Define the 2ndpoints X-coordinate in relation to the parent object.",
+          "fullName": "Point X 2",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 2nd Point configuration",
+          "name": "PointX_2",
+          "sentence": "the point X 2",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PointX_2"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointX_2",
+          "name": "SetPointX_2",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "PointX_2",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the point Y 2 of the object. Define the 2nd points Y-coordinate in relation to the parent object.",
+          "fullName": "Point Y 2",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 2nd Point configuration",
+          "name": "PointY_2",
+          "sentence": "the point Y 2",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PointY_2"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointY_2",
+          "name": "SetPointY_2",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "PointY_2",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the point Z 2 of the object. Define the 2nd points Z-coordinate in relation to the parent object.",
+          "fullName": "Point Z 2",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 2nd Point configuration",
+          "name": "PointZ_2",
+          "sentence": "the point Z 2",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PointZ_2"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointZ_2",
+          "name": "SetPointZ_2",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "PointZ_2",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the point X 3 of the object. Define the 3rd points X-coordinate in relation to the parent object.",
+          "fullName": "Point X 3",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 3rd Point configuration",
+          "name": "PointX_3",
+          "sentence": "the point X 3",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PointX_3"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointX_3",
+          "name": "SetPointX_3",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "PointX_3",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the point Y 3 of the object. Define the 3rd points Y-coordinate in relation to the parent object.",
+          "fullName": "Point Y 3",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 3rd Point configuration",
+          "name": "PointY_3",
+          "sentence": "the point Y 3",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PointY_3"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointY_3",
+          "name": "SetPointY_3",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "PointY_3",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the point Z 3 of the object. Define the 3rd points Z-coordinate in relation to the parent object.",
+          "fullName": "Point Z 3",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 3rd Point configuration",
+          "name": "PointZ_3",
+          "sentence": "the point Z 3",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PointZ_3"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointZ_3",
+          "name": "SetPointZ_3",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "PointZ_3",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the point X 4 of the object. Define the 4th points X-coordinate in relation to the parent object.",
+          "fullName": "Point X 4",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 4th Point configuration",
+          "name": "PointX_4",
+          "sentence": "the point X 4",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PointX_4"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointX_4",
+          "name": "SetPointX_4",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "PointX_4",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the point Y 4 of the object. Define the 4th points Y-coordinate in relation to the parent object.",
+          "fullName": "Point Y 4",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 4th Point configuration",
+          "name": "PointY_4",
+          "sentence": "the point Y 4",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PointY_4"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointY_4",
+          "name": "SetPointY_4",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "PointY_4",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the point Z 4 of the object. Define the 4th points Z-coordinate in relation to the parent object.",
+          "fullName": "Point Z 4",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 4th Point configuration",
+          "name": "PointZ_4",
+          "sentence": "the point Z 4",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PointZ_4"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointZ_4",
+          "name": "SetPointZ_4",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "PointZ_4",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the transformed X value of 1st point. of the object.",
+          "fullName": "Transformed X value of 1st point",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 1st Point configuration",
+          "name": "Translated_X_1",
+          "sentence": "the transformed X value of 1st point",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Translated_X_1"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Translated_X_1",
+          "name": "SetTranslated_X_1",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Translated_X_1",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the transformed Y value of 1st point. of the object.",
+          "fullName": "Transformed Y value of 1st point",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 1st Point configuration",
+          "name": "Translated_Y_1",
+          "sentence": "the transformed Y value of 1st point",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Translated_Y_1"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Translated_Y_1",
+          "name": "SetTranslated_Y_1",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Translated_Y_1",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the transformed Z value of 1st point. of the object.",
+          "fullName": "Transformed Z value of 1st point",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 1st Point configuration",
+          "name": "Translated_Z_1",
+          "sentence": "the transformed Z value of 1st point",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Translated_Z_1"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Translated_Z_1",
+          "name": "SetTranslated_Z_1",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Translated_Z_1",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the transformed X value of 2nd point. of the object.",
+          "fullName": "Transformed X value of 2nd point",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 2nd Point configuration",
+          "name": "Translated_X_2",
+          "sentence": "the transformed X value of 2nd point",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Translated_X_2"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Translated_X_2",
+          "name": "SetTranslated_X_2",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Translated_X_2",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the transformed Y value of 2nd point. of the object.",
+          "fullName": "Transformed Y value of 2nd point",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 2nd Point configuration",
+          "name": "Translated_Y_2",
+          "sentence": "the transformed Y value of 2nd point",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Translated_Y_2"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Translated_Y_2",
+          "name": "SetTranslated_Y_2",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Translated_Y_2",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the transformed Z value of 2nd point. of the object.",
+          "fullName": "Transformed Z value of 2nd point",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 2nd Point configuration",
+          "name": "Translated_Z_2",
+          "sentence": "the transformed Z value of 2nd point",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Translated_Z_2"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Translated_Z_2",
+          "name": "SetTranslated_Z_2",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Translated_Z_2",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the transformed X value of 3rd point. of the object.",
+          "fullName": "Transformed X value of 3rd point",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 3rd Point configuration",
+          "name": "Translated_X_3",
+          "sentence": "the transformed X value of 3rd point",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Translated_X_3"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Translated_X_3",
+          "name": "SetTranslated_X_3",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Translated_X_3",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the transformed Y value of 3rd point. of the object.",
+          "fullName": "Transformed Y value of 3rd point",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 3rd Point configuration",
+          "name": "Translated_Y_3",
+          "sentence": "the transformed Y value of 3rd point",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Translated_Y_3"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Translated_Y_3",
+          "name": "SetTranslated_Y_3",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Translated_Y_3",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the transformed Z value of 3rd point. of the object.",
+          "fullName": "Transformed Z value of 3rd point",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 3rd Point configuration",
+          "name": "Translated_Z_3",
+          "sentence": "the transformed Z value of 3rd point",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Translated_Z_3"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Translated_Z_3",
+          "name": "SetTranslated_Z_3",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Translated_Z_3",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the transformed X value of 4th point. of the object.",
+          "fullName": "Transformed X value of 4th point",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 4th Point configuration",
+          "name": "Translated_X_4",
+          "sentence": "the transformed X value of 4th point",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Translated_X_4"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Translated_X_4",
+          "name": "SetTranslated_X_4",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Translated_X_4",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the transformed Y value of 4th point. of the object.",
+          "fullName": "Transformed Y value of 4th point",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 4th Point configuration",
+          "name": "Translated_Y_4",
+          "sentence": "the transformed Y value of 4th point",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Translated_Y_4"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Translated_Y_4",
+          "name": "SetTranslated_Y_4",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Translated_Y_4",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the transformed Z value of 4th point. of the object.",
+          "fullName": "Transformed Z value of 4th point",
+          "functionType": "ExpressionAndCondition",
+          "group": "Point 3D 4th Point configuration",
+          "name": "Translated_Z_4",
+          "sentence": "the transformed Z value of 4th point",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Translated_Z_4"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Translated_Z_4",
+          "name": "SetTranslated_Z_4",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Translated_Z_4",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "PointsFor3D::PointsFor3D",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        }
+      ],
+      "propertyDescriptors": [
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Point X 1",
+          "description": "Define the 1st points X-coordinate in relation to the parent object",
+          "group": "1st Point",
+          "extraInformation": [],
+          "name": "PointX_1"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Point Y 1",
+          "description": "Define the 1st points Y-coordinate in relation to the parent object",
+          "group": "1st Point",
+          "extraInformation": [],
+          "name": "PointY_1"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Point Z 1",
+          "description": "Define the 1st points Z-coordinate in relation to the parent object",
+          "group": "1st Point",
+          "extraInformation": [],
+          "name": "PointZ_1"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Point X 2",
+          "description": "Define the 2ndpoints X-coordinate in relation to the parent object",
+          "group": "2nd Point",
+          "extraInformation": [],
+          "name": "PointX_2"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Point Y 2",
+          "description": "Define the 2nd points Y-coordinate in relation to the parent object",
+          "group": "2nd Point",
+          "extraInformation": [],
+          "name": "PointY_2"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Point Z 2",
+          "description": "Define the 2nd points Z-coordinate in relation to the parent object",
+          "group": "2nd Point",
+          "extraInformation": [],
+          "name": "PointZ_2"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Point X 3",
+          "description": "Define the 3rd points X-coordinate in relation to the parent object",
+          "group": "3rd Point",
+          "extraInformation": [],
+          "name": "PointX_3"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Point Y 3",
+          "description": "Define the 3rd points Y-coordinate in relation to the parent object",
+          "group": "3rd Point",
+          "extraInformation": [],
+          "name": "PointY_3"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Point Z 3",
+          "description": "Define the 3rd points Z-coordinate in relation to the parent object",
+          "group": "3rd Point",
+          "extraInformation": [],
+          "name": "PointZ_3"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Point X 4",
+          "description": "Define the 4th points X-coordinate in relation to the parent object",
+          "group": "4th Point",
+          "extraInformation": [],
+          "name": "PointX_4"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Point Y 4",
+          "description": "Define the 4th points Y-coordinate in relation to the parent object",
+          "group": "4th Point",
+          "extraInformation": [],
+          "name": "PointY_4"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Point Z 4",
+          "description": "Define the 4th points Z-coordinate in relation to the parent object",
+          "group": "4th Point",
+          "extraInformation": [],
+          "name": "PointZ_4"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Transformed X value of 1st point.",
+          "description": "",
+          "group": "1st Point",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "Translated_X_1"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Transformed Y value of 1st point.",
+          "description": "",
+          "group": "1st Point",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "Translated_Y_1"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Transformed Z value of 1st point.",
+          "description": "",
+          "group": "1st Point",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "Translated_Z_1"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Transformed X value of 2nd point.",
+          "description": "",
+          "group": "2nd Point",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "Translated_X_2"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Transformed Y value of 2nd point.",
+          "description": "",
+          "group": "2nd Point",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "Translated_Y_2"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Transformed Z value of 2nd point.",
+          "description": "",
+          "group": "2nd Point",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "Translated_Z_2"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Transformed X value of 3rd point.",
+          "description": "",
+          "group": "3rd Point",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "Translated_X_3"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Transformed Y value of 3rd point.",
+          "description": "",
+          "group": "3rd Point",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "Translated_Y_3"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Transformed Z value of 3rd point.",
+          "description": "",
+          "group": "3rd Point",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "Translated_Z_3"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Transformed X value of 4th point.",
+          "description": "",
+          "group": "4th Point",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "Translated_X_4"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Transformed Y value of 4th point.",
+          "description": "",
+          "group": "4th Point",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "Translated_Y_4"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Transformed Z value of 4th point.",
+          "description": "",
+          "group": "4th Point",
+          "extraInformation": [],
+          "hidden": true,
+          "name": "Translated_Z_4"
+        }
+      ],
+      "sharedPropertyDescriptors": []
+    }
+  ],
+  "eventsBasedObjects": []
+}
