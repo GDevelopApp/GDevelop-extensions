@@ -10,11 +10,13 @@
   "name": "ParticleEmitter3D",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/f2e5a34bf465f781866677762d385d6c8e9e8d203383f2df9a3b7e0fad6a2cb5_fire.svg",
   "shortDescription": "Display a large number of particles in 3D to create visual effects in a 3D game.",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "description": [
-    "3D particle emitters let you create and display many small particles to simulate visual effects in your game — like fire, explosions, smoke, or dust.",
+    "3D particle emitters let you create and display many small particles to simulate visual effects in your game — like fire, explosions, smoke, dust, magic, rain or snow.",
     "",
     "The parameters of the object can be configured in multiple different ways to create a specific desired effect. GDevelop will give a set of a pre-configured 3D particle emitters that you should try first.",
+    "",
+    "Particles are emitted along the local Z axis of the emitter: upward by default. Rotate the instance to aim the emission (for instance a rotation of 180° on the X axis emits downward, 90° on the Y axis emits toward X). The size of the instance has no effect: particles are emitted from a single point, or from a disc when the \"Emission zone radius\" property is set (useful for rain or snow falling over a whole area).",
     "",
     "Use these 3D particle emitters in 3D games. For 2D games or particles that appear on a game's 2D user interface, use the 2D particle emitter object instead."
   ],
@@ -29,7 +31,10 @@
     "fire",
     "smoke",
     "splash",
-    "light"
+    "light",
+    "rain",
+    "snow",
+    "weather"
   ],
   "authorIds": [
     "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
@@ -115,6 +120,8 @@
             "    cone;",
             "    /** @type {THREE.LineSegments} */",
             "    centerLine;",
+            "    /** @type {THREE.LineSegments} */",
+            "    zoneCircle;",
             "    /** @type {THREE.Mesh} */",
             "    originBox;",
             "",
@@ -158,6 +165,23 @@
             "        );",
             "        this.add(this.centerLine);",
             "",
+            "        const zoneCircleGeometry = new THREE.BufferGeometry();",
+            "        const zoneCirclePositions = [];",
+            "        for (let i = 0, j = 1, l = 32; i < l; i++ , j++) {",
+            "            const p1 = (i / l) * Math.PI * 2;",
+            "            const p2 = (j / l) * Math.PI * 2;",
+            "            zoneCirclePositions.push(",
+            "                Math.cos(p1), Math.sin(p1), 0,",
+            "                Math.cos(p2), Math.sin(p2), 0",
+            "            );",
+            "        }",
+            "        zoneCircleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(zoneCirclePositions, 3));",
+            "        this.zoneCircle = new THREE.LineSegments(",
+            "            zoneCircleGeometry,",
+            "            new THREE.LineBasicMaterial({ fog: false, toneMapped: false })",
+            "        );",
+            "        this.add(this.zoneCircle);",
+            "",
             "        this.originBox = new THREE.Mesh(",
             "            new THREE.BoxGeometry(16, 16, 16),",
             "            new THREE.MeshBasicMaterial({ fog: false, toneMapped: false })",
@@ -173,6 +197,8 @@
             "        this.cone.material.dispose();",
             "        this.centerLine.geometry.dispose();",
             "        this.centerLine.material.dispose();",
+            "        this.zoneCircle.geometry.dispose();",
+            "        this.zoneCircle.material.dispose();",
             "        this.originBox.geometry.dispose();",
             "        this.originBox.material.dispose();",
             "    }",
@@ -181,6 +207,11 @@
             "        const coneWidth = coneLength * Math.sin(gdjs.toRad(this.object._getSpayConeAngle()));",
             "        const coneHeight = coneLength * Math.cos(gdjs.toRad(this.object._getSpayConeAngle()));",
             "        this.cone.scale.set(coneWidth, coneWidth, coneHeight);",
+            "        const zoneRadius = this.object._getZoneRadius();",
+            "        this.zoneCircle.visible = zoneRadius > 0;",
+            "        if (zoneRadius > 0) {",
+            "            this.zoneCircle.scale.set(zoneRadius, zoneRadius, 1);",
+            "        }",
             "        const startColor = gdjs.rgbOrHexStringToNumber(this.object._getStartColor())",
             "        const endColor = gdjs.rgbOrHexStringToNumber(this.object._getEndColor());",
             "        this.cone.material.color.set(endColor);",
@@ -221,6 +252,8 @@
             "    constructor(inverseWorldScale, particleSystem, colorOverLife, sizeOverLife, applyForce, widthOverLength) {",
             "        this.inverseWorldScale = inverseWorldScale;",
             "        this.particleSystem = particleSystem;",
+            "        this.sprayConeAngle = 0;",
+            "        this.zoneRadius = 0;",
             "        this.colorOverLife = colorOverLife;",
             "        this.sizeOverLife = sizeOverLife;",
             "        this.applyForce = applyForce;",
@@ -394,16 +427,32 @@
             "     * @param sprayConeAngle {number}",
             "     */",
             "    setSprayConeAngle(sprayConeAngle) {",
-            "        if (0 < sprayConeAngle && sprayConeAngle <= 180) {",
-            "            if (!this.particleSystem.emitterShape.angle) {",
+            "        this.sprayConeAngle = sprayConeAngle;",
+            "        this.updateEmitterShape();",
+            "    }",
+            "",
+            "    /**",
+            "     * @param zoneRadius {number}",
+            "     */",
+            "    setZoneRadius(zoneRadius) {",
+            "        this.zoneRadius = zoneRadius;",
+            "        this.updateEmitterShape();",
+            "    }",
+            "",
+            "    updateEmitterShape() {",
+            "        const zoneRadius = Math.max(0, this.zoneRadius) * this.inverseWorldScale;",
+            "        // Without a zone, a spray angle of 0 emits in every direction from a point.",
+            "        // With a zone, it emits straight from every point of the disc.",
+            "        const isCone = this.sprayConeAngle <= 180 && (0 < this.sprayConeAngle || 0 < zoneRadius);",
+            "        if (isCone) {",
+            "            if (this.particleSystem.emitterShape.type !== 'cone') {",
             "                this.particleSystem.emitterShape = new ConeEmitter({ radius: 0.1, angle: Math.PI / 8 });",
             "            }",
-            "            this.particleSystem.emitterShape.angle = sprayConeAngle * Math.PI / 180;",
+            "            this.particleSystem.emitterShape.angle = Math.max(0, this.sprayConeAngle) * Math.PI / 180;",
+            "            this.particleSystem.emitterShape.radius = zoneRadius || 0.1;",
             "        }",
-            "        else {",
-            "            if (this.particleSystem.emitterShape.angle) {",
-            "                this.particleSystem.emitterShape = new PointEmitter();",
-            "            }",
+            "        else if (this.particleSystem.emitterShape.type !== 'point') {",
+            "            this.particleSystem.emitterShape = new PointEmitter();",
             "        }",
             "    }",
             "",
@@ -6957,7 +7006,7 @@
       "areaMinZ": 0,
       "assetStoreTag": "3d particles",
       "defaultName": "ParticleEmitter",
-      "description": "Display a large number of particles to create visual effects.",
+      "description": "Display a large number of particles to create visual effects (fire, explosions, smoke, magic, rain, snow...). Particles are emitted along the emitter's local Z axis (upward by default): rotate the instance to aim them (180° on the X axis emits downward). The instance size has no effect: use the \"Emission zone radius\" property to emit from a whole area.",
       "fullName": "3D particle emitter",
       "helpPath": "",
       "iconUrl": "",
@@ -7563,6 +7612,17 @@
                     "Object",
                     "=",
                     "Object.SpayConeAngle()",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetZoneRadius"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "Object.ZoneRadius()",
                     ""
                   ]
                 },
@@ -9547,12 +9607,12 @@
           "objectGroups": []
         },
         {
-          "description": "the spay cone angle of the object.",
-          "fullName": "Spay cone angle",
+          "description": "the spray cone angle of the object.",
+          "fullName": "Spray cone angle",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter configuration",
           "name": "SpayConeAngle",
-          "sentence": "the spay cone angle",
+          "sentence": "the spray cone angle",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -9613,6 +9673,90 @@
                 "const sprayConeAngle = eventsFunctionContext.getArgument(\"Value\");\r",
                 "\r",
                 "object.__particleEmitterAdapter.setSprayConeAngle(sprayConeAngle);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the emission zone radius of the object: particles are emitted from a disc of this radius (0 emits from a single point).",
+          "fullName": "Emission zone radius",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter configuration",
+          "name": "ZoneRadius",
+          "sentence": "the emission zone radius",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "ZoneRadius"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "ZoneRadius",
+          "group": "3D particle emitter configuration",
+          "name": "SetZoneRadius",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "ZoneRadius",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const zoneRadius = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "object.__particleEmitterAdapter.setZoneRadius(zoneRadius);\r",
                 ""
               ],
               "parameterObjects": "Object",
@@ -10684,6 +10828,12 @@
                 "functionName": "SetSpayConeAngle"
               },
               {
+                "functionName": "ZoneRadius"
+              },
+              {
+                "functionName": "SetZoneRadius"
+              },
+              {
                 "functionName": "ShouldAutodestruct"
               },
               {
@@ -10830,7 +10980,8 @@
           "unit": "PixelSpeed",
           "label": "Start min speed",
           "group": "Speed",
-          "name": "StartSpeedMin"
+          "name": "StartSpeedMin",
+          "description": "Initial speed of the particles, in the emission direction (the local Z axis of the emitter)."
         },
         {
           "value": "100",
@@ -10859,22 +11010,34 @@
           "type": "Number",
           "unit": "Second",
           "label": "Emission duration",
-          "name": "Duration"
+          "name": "Duration",
+          "description": "0 emits forever."
         },
         {
           "value": "",
           "type": "Boolean",
           "label": "Particles move with the emitter",
           "group": "Speed",
-          "name": "AreParticlesRelative"
+          "name": "AreParticlesRelative",
+          "description": "When checked, the particles already emitted follow the emitter when it moves or rotates. Leave it unchecked for rain, snow or smoke that must stay where it was emitted while the emitter follows the camera or a character."
         },
         {
           "value": "30",
           "type": "Number",
           "unit": "DegreeAngle",
-          "label": "Spay cone angle",
+          "label": "Spray cone angle",
           "group": "Position",
-          "name": "SpayConeAngle"
+          "name": "SpayConeAngle",
+          "description": "Spread of the particles around the emission direction, which is the local Z axis of the emitter (upward by default, rotate the instance to aim it). 0 or more than 180 emits in every direction, unless an emission zone radius is set: then 0 emits straight."
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Pixel",
+          "label": "Emission zone radius",
+          "description": "Particles are emitted from a disc of this radius, perpendicular to the emission direction. 0 emits from a single point. Use a large radius (like 1000) for rain or snow falling over a whole area.",
+          "group": "Position",
+          "name": "ZoneRadius"
         },
         {
           "value": "Additive",
@@ -10903,7 +11066,8 @@
               "value": "None"
             }
           ],
-          "name": "Blending"
+          "name": "Blending",
+          "description": "Additive makes particles glow (fire, magic, energy). Use Normal for rain, snow, smoke or dust. Only applied when the object is created."
         },
         {
           "value": "Y-",
@@ -10920,7 +11084,8 @@
               "value": "Z+"
             }
           ],
-          "name": "GravityTop"
+          "name": "GravityTop",
+          "description": "Z+: gravity pulls particles down along the Z axis (the usual choice in 3D games). Y-: gravity pulls particles toward Y+."
         },
         {
           "value": "0",
@@ -10928,13 +11093,15 @@
           "unit": "PixelAcceleration",
           "label": "Gravity",
           "group": "Speed",
-          "name": "Gravity"
+          "name": "Gravity",
+          "description": "Acceleration pulling the particles in the direction given by the gravity top. 0 disables gravity."
         },
         {
           "value": "true",
           "type": "Boolean",
           "label": "Delete when emission ends",
-          "name": "ShouldAutodestruct"
+          "name": "ShouldAutodestruct",
+          "description": "Delete the object once the emission duration is over and every particle disappeared. Uncheck it and set the emission duration to 0 for a continuous effect like fire, rain or snow."
         },
         {
           "value": "Center-center",
@@ -10975,20 +11142,22 @@
         {
           "value": "120",
           "type": "Number",
-          "unit": "Pixel",
+          "unit": "Dimensionless",
           "label": "Start min length",
           "group": "Trail",
           "advanced": true,
-          "name": "TrailStartLengthMin"
+          "name": "TrailStartLengthMin",
+          "description": "Number of past positions kept to draw the trail, one per frame: the visible length is this number multiplied by the distance traveled by the particle each frame."
         },
         {
           "value": "120",
           "type": "Number",
-          "unit": "Pixel",
+          "unit": "Dimensionless",
           "label": "Start max length",
           "group": "Trail",
           "advanced": true,
-          "name": "TrailStartLengthMax"
+          "name": "TrailStartLengthMax",
+          "description": "Number of past positions kept to draw the trail, one per frame: the visible length is this number multiplied by the distance traveled by the particle each frame."
         },
         {
           "value": "Billboard",
@@ -11005,7 +11174,8 @@
             }
           ],
           "advanced": true,
-          "name": "RenderMode"
+          "name": "RenderMode",
+          "description": "\"Image facing the camera\" draws each particle as an image. \"Image following a trail\" stretches the image along the path of each particle (sparks, rain streaks)."
         },
         {
           "value": "",
@@ -11122,6 +11292,9 @@
             "children": [
               {
                 "propertyName": "SpayConeAngle"
+              },
+              {
+                "propertyName": "ZoneRadius"
               },
               {
                 "propertyName": "Z"
