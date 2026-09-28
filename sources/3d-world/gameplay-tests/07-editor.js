@@ -18,25 +18,28 @@ await harness.stepFrames(1);
 // the functions the tools use.
 const savedProperties = [];
 let isLeftButtonCaptured = false;
+let toolbarItems = null;
 const editor = {
   getRuntimeGame: () => game,
   getSelectedObjects: () => [terrainObject],
   captureLeftMouseButton: () => (isLeftButtonCaptured = true),
   updateObjectProperties: (objectName, properties) => savedProperties.push({ objectName, properties }),
+  showToolbar: (toolbarId, items) => (toolbarItems = items),
 };
-// Like the editor, the capture only lasts for a frame.
+// Like the editor, the capture and the toolbar only last for a frame.
 const updateTools = () => {
   isLeftButtonCaptured = false;
+  toolbarItems = null;
   gdjs.callbacksInGameEditorPostStep.forEach((callback) => callback(editor));
 };
 updateTools();
-const panelButtons = Array.from(game.getRenderer().getDomElementContainer().querySelectorAll('button'));
-const raiseButton = panelButtons.find((button) => button.textContent === 'Raise');
+const raiseButton = toolbarItems && toolbarItems.find((item) => item.id === 'Raise');
 harness.assert(!!raiseButton, 'The sculpt tools are shown when a terrain is selected.');
 harness.assert(!isLeftButtonCaptured, 'The editor keeps the mouse while no brush is used.');
-raiseButton.click();
+raiseButton.onClick();
 updateTools();
 harness.assert(isLeftButtonCaptured, 'The left mouse button is used by the brush.');
+harness.assert(toolbarItems.find((item) => item.id === 'Raise').isActive, 'The raise button is shown as active.');
 
 const heightBefore = terrain.getHeightAt(targetX, targetY);
 harness.setMousePositionScreen(game.getGameResolutionWidth() / 2, game.getGameResolutionHeight() / 2);
@@ -69,3 +72,8 @@ updateTools();
 harness.setKeyPressed('Escape', false);
 await harness.stepFrames(1, { onFrame: updateTools });
 harness.assert(!isLeftButtonCaptured, 'Escape gives the mouse back to the editor.');
+
+// Undo gives back the ground before the stroke, and saves it.
+toolbarItems.find((item) => item.id === 'Undo').onClick();
+harness.assert(Math.abs(terrain.getHeightAt(targetX, targetY) - heightBefore) < 0.1, 'Undo gives back the ground before the stroke.');
+harness.assert(savedProperties.length === 2, 'The ground after the undo is saved.');

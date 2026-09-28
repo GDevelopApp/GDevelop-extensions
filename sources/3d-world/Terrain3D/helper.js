@@ -2,6 +2,34 @@ if (gdjs.__terrain3DExtension) {
     return;
 }
 
+/**
+ * Grounds (like terrains) that objects of other extensions (like grass)
+ * follow, without these extensions knowing each other. Each extension using
+ * it has this same code: the first one loaded defines it.
+ *
+ * A ground has: `getVersion()` (changing when the ground changes),
+ * `containsPoint(x, y)`, `getHeightAt(x, y)` (Z position of the ground),
+ * `getSlopeAt(x, y)` (in degrees) and `getLayerWeightAt(x, y, layer)` (how
+ * much a painted layer, from 1 to 4, is there, from 0 to 1).
+ */
+if (!gdjs.__grounds3D) {
+    const groundsByScene = new WeakMap();
+    gdjs.__grounds3D = {
+        /**
+         * @param {gdjs.RuntimeScene} runtimeScene
+         * @returns {Set<object>} The grounds of the scene.
+         */
+        getGrounds(runtimeScene) {
+            let grounds = groundsByScene.get(runtimeScene);
+            if (!grounds) {
+                grounds = new Set();
+                groundsByScene.set(runtimeScene, grounds);
+            }
+            return grounds;
+        },
+    };
+}
+
 // Size of the object inner area. Instances are scaled from it, so these only
 // define the default size of a new terrain.
 const AREA_SIZE = 4096;
@@ -371,6 +399,66 @@ const relief = (() => {
         },
     };
 })();
+
+/**
+ * Edits written in the Edits property: a JSON list of brush strokes, like
+ * `[{"tool": "raise", "x": 0.5, "y": 0.5, "radius": 0.2, "height": 0.3}]`,
+ * applied on the relief or the heightmap. Positions and radius are fractions
+ * of the terrain size, heights and Z positions fractions of its depth: they
+ * are the same for all instances, whatever their size. They are made to be
+ * read and written by people and by AI agents.
+ */
+const edits = {
+    /**
+     * @param {TerrainData} data
+     * @param {string} text
+     */
+    apply(data, text) {
+        if (!text.trim()) return;
+        let editList;
+        try {
+            editList = JSON.parse(text);
+        } catch (error) {
+            console.warn('The edits of a terrain are not valid JSON: ' + error.message);
+            return;
+        }
+        if (!Array.isArray(editList)) {
+            console.warn('The edits of a terrain must be a JSON list (like [{"tool": "raise", ...}]).');
+            return;
+        }
+        const numberOr = (value, defaultValue) => (typeof value === 'number' && isFinite(value) ? value : defaultValue);
+        const changedSamples = new SampleRectangle();
+        for (const edit of editList) {
+            if (!edit || typeof edit !== 'object') continue;
+            const x = numberOr(edit.x, 0.5);
+            const y = numberOr(edit.y, 0.5);
+            const stroke = {
+                cellWidth: 1 / data.resolution,
+                cellHeight: 1 / data.resolution,
+                ax: x,
+                ay: y,
+                bx: numberOr(edit.toX, x),
+                by: numberOr(edit.toY, y),
+                radius: numberOr(edit.radius, 0.1),
+            };
+            const strength = clamp01(numberOr(edit.strength, 1));
+            if (edit.tool === 'raise') {
+                brushes.raise(data, stroke, numberOr(edit.height, 0.1), changedSamples);
+            } else if (edit.tool === 'flatten') {
+                brushes.flatten(data, stroke, numberOr(edit.z, 0), strength, changedSamples);
+            } else if (edit.tool === 'smooth') {
+                // Smoothing the same fraction of the terrain at any resolution.
+                const passes = Math.max(Math.round(((1 + 9 * strength) * data.resolution) / 256), 1);
+                for (let pass = 0; pass < passes; pass++) brushes.smooth(data, stroke, 1, changedSamples);
+            } else if (edit.tool === 'paint') {
+                const layer = clampInteger(numberOr(edit.layer, 1) - 1, 0, LAYER_COUNT - 1);
+                brushes.paint(data, stroke, layer, strength, changedSamples);
+            } else {
+                console.warn('Unknown tool in the edits of a terrain: "' + edit.tool + '" (use raise, flatten, smooth or paint).');
+            }
+        }
+    },
+};
 
 /**
  * Loads heights from an image: black is the lowest, white the highest.
@@ -1295,6 +1383,8 @@ const copyTerrainData = (data) => {
 // for every instance and every hot-reload: the results are kept.
 const baseDataCache = new Map();
 const MAX_CACHED_BASE_DATA = 8;
+// Unique among all terrains: a terrain replaced by another one never has its version.
+let lastGroundVersion = 0;
 
 /**
  * The terrain of a Terrain3D object: its data, how it's drawn and its
@@ -1328,6 +1418,8 @@ class Terrain {
          */
         this.savedSculptData = [];
         this.loadFromProperties();
+        this._transform = '';
+        gdjs.__grounds3D.getGrounds(object.getRuntimeScene()).add(this);
 
         if (gdjs.Physics3DRuntimeBehavior) {
             for (const behavior of object._behaviors) {
@@ -1345,6 +1437,7 @@ class Terrain {
             object._getRelief(),
             object._getSeed(),
             object._getHeightmapImage(),
+            object._getEdits(),
         ].join('|');
     }
 
@@ -1369,19 +1462,20 @@ class Terrain {
      */
     _getBaseData(resolution) {
         const { object } = this;
-        const key = [resolution, object._getRelief(), object._getSeed(), object._getHeightmapImage()].join('|');
+        const key = [resolution, object._getRelief(), object._getSeed(), object._getHeightmapImage(), object._getEdits()].join('|');
         const cachedData = baseDataCache.get(key);
         if (cachedData) return cachedData;
 
         const data = new TerrainData(resolution);
         const heightmapImage = object._getHeightmapImage();
-        if (heightmapImage && loadHeightsFromImage(data, object.getRuntimeScene().getGame(), heightmapImage)) {
-            baseDataCache.set(key, data);
-        } else {
-            // Not kept if the image is missing: it may be loaded later.
+        const isHeightmapLoaded =
+            !!heightmapImage && loadHeightsFromImage(data, object.getRuntimeScene().getGame(), heightmapImage);
+        if (!isHeightmapLoaded) {
             relief.generate(data, object._getRelief(), object._getSeed());
-            if (!heightmapImage) baseDataCache.set(key, data);
         }
+        edits.apply(data, object._getEdits());
+        // Not kept if the image is missing: it may be loaded later.
+        if (isHeightmapLoaded || !heightmapImage) baseDataCache.set(key, data);
         if (baseDataCache.size > MAX_CACHED_BASE_DATA) {
             baseDataCache.delete(baseDataCache.keys().next().value);
         }
@@ -1390,7 +1484,7 @@ class Terrain {
 
     /** @param {TerrainData} data */
     setData(data) {
-        this.version++;
+        this.version = ++lastGroundVersion;
         const hasSameResolution = data.resolution === this.data.resolution && this.renderer.chunks.length > 0;
         this.data = data;
         const allSamples = new SampleRectangle().set(0, 0, data.resolution, data.resolution);
@@ -1407,7 +1501,7 @@ class Terrain {
     onHotReloading() {
         const sculptData = this.object._getSculptData();
         const savedIndex = this.savedSculptData.indexOf(sculptData);
-        if (savedIndex !== -1) {
+        if (savedIndex !== -1 && this._getSourceProperties() === this.loadedFrom) {
             // The terrain already has this data, or newer changes.
             this.savedSculptData.splice(0, savedIndex + 1);
         } else if (sculptData !== this.sculptData || this._getSourceProperties() !== this.loadedFrom) {
@@ -1494,7 +1588,7 @@ class Terrain {
     }
 
     _onSamplesChanged(samples) {
-        this.version++;
+        this.version = ++lastGroundVersion;
         this.changedSamples.add(samples);
         for (const bodyUpdater of this.bodyUpdaters) {
             bodyUpdater.changedSamples.add(samples);
@@ -1606,19 +1700,43 @@ class Terrain {
         this.hasPaintChanged = false;
     }
 
+    /** @returns {number} A number changing each time the ground changes (see `gdjs.__grounds3D`). */
+    getVersion() {
+        return this.version;
+    }
+
     update() {
+        const { object } = this;
+        const transform = [object.getX(), object.getY(), object.getZ(), object.getWidth(), object.getHeight(), object.getDepth()].join(',');
+        if (transform !== this._transform) {
+            this._transform = transform;
+            this.version = ++lastGroundVersion;
+        }
         this.applyChanges();
         const layer = this.object.getInstanceContainer().getLayer(this.object.getLayer());
         this.renderer.updateLevelsOfDetail(layer.getRenderer().getThreeCamera());
     }
 
     dispose() {
+        gdjs.__grounds3D.getGrounds(this.object.getRuntimeScene()).delete(this);
         this.renderer.dispose();
         for (const bodyUpdater of this.bodyUpdaters) {
             bodyUpdater.dispose();
         }
     }
 }
+
+const svgIcon = (content) =>
+    'data:image/svg+xml,' +
+    encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + content + '</svg>');
+const strokes = 'fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
+const toolIcons = {
+    raise: svgIcon('<path ' + strokes + ' d="M3 20h18M6 20c2-6 4-9 6-9s4 3 6 9M12 3v5M9 5l3-3 3 3"/>'),
+    lower: svgIcon('<path ' + strokes + ' d="M3 12h4c2 6 3 8 5 8s3-2 5-8h4M12 2v6M9 5l3 3 3-3"/>'),
+    smooth: svgIcon('<path ' + strokes + ' d="M3 15c3-6 6 2 9-3s6 3 9-3M3 20h18"/>'),
+    flatten: svgIcon('<path ' + strokes + ' d="M3 14h18M3 20h18M8 9V4M16 9V4M5 7l3 2 3-2M13 7l3 2 3-2"/>'),
+    undo: svgIcon('<path ' + strokes + ' d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/>'),
+};
 
 /**
  * The sculpt and paint tools shown in the scene editor when a terrain is
@@ -1638,19 +1756,17 @@ class TerrainEditorTools {
         this.isStroking = false;
         this.flattenHeight = 0;
         this.lastStrokeTime = 0;
-        /** @type {TerrainData[]} */
+        /** @type {{data: TerrainData, baseData: TerrainData}[]} */
         this.undoSteps = [];
-        /** @type {HTMLElement | null} */
-        this.panel = null;
-        /** @type {Record<string, HTMLElement>} */
-        this.buttons = {};
+        this.toolbarItems = this._createToolbarItems();
         this.raycaster = new THREE.Raycaster();
         this.ndc = new THREE.Vector2();
     }
 
     /** @param {gdjs.InGameEditor} editor */
     update(editor) {
-        if (typeof editor.getSelectedObjects !== 'function' || typeof editor.captureLeftMouseButton !== 'function') {
+        if (typeof editor.showToolbar !== 'function') {
+            // Older GDevelop versions: the terrain can only be changed with events.
             return;
         }
         this.editor = editor;
@@ -1663,8 +1779,8 @@ class TerrainEditorTools {
             this.terrain = terrain;
             this.undoSteps.length = 0;
         }
+        if (terrain) this._showToolbar(editor);
         const game = editor.getRuntimeGame();
-        this._updatePanel(game);
         if (!terrain || !this.toolName) {
             if (terrain) terrain.renderer.setBrush(null, 0);
             return;
@@ -1682,7 +1798,8 @@ class TerrainEditorTools {
         const radius = this._getRadius();
         terrain.renderer.setBrush(hit, radius);
 
-        const isPressed = inputManager.isMouseButtonPressed(0);
+        // The button is released outside the canvas when the mouse is on a toolbar.
+        const isPressed = inputManager.isMouseButtonPressed(0) && inputManager.isMouseInsideCanvas();
         if (isPressed && hit && !this.isStroking) {
             this._startStroke(terrain, hit);
         }
@@ -1713,7 +1830,7 @@ class TerrainEditorTools {
         this.isStroking = true;
         this.lastStrokeTime = performance.now();
         this.flattenHeight = this._toScenePosition(terrain, hit).z;
-        this.undoSteps.push(copyTerrainData(terrain.data));
+        this.undoSteps.push({ data: copyTerrainData(terrain.data), baseData: terrain.baseData });
         const maxUndoSteps = Math.max(Math.floor(UNDO_STEPS_SAMPLES / terrain.data.heights.length), 2);
         while (this.undoSteps.length > maxUndoSteps) this.undoSteps.shift();
     }
@@ -1750,12 +1867,12 @@ class TerrainEditorTools {
 
     _undo() {
         const undoStep = this.undoSteps.pop();
-        // The resolution may have changed since the stroke.
-        if (!this.terrain || !undoStep || undoStep.resolution !== this.terrain.baseData.resolution) {
+        // The relief, the edits or the resolution may have changed since the stroke.
+        if (!this.terrain || !undoStep || undoStep.baseData !== this.terrain.baseData) {
             this.undoSteps.length = 0;
             return;
         }
-        this.terrain.setData(undoStep);
+        this.terrain.setData(undoStep.data);
         this._save();
     }
 
@@ -1763,85 +1880,69 @@ class TerrainEditorTools {
         this.toolName = this.toolName === toolName ? '' : toolName;
     }
 
-    /** @param {gdjs.RuntimeGame} game */
-    _updatePanel(game) {
-        const container = game.getRenderer().getDomElementContainer();
-        if (!this.terrain || !container) {
-            if (this.panel) this.panel.style.display = 'none';
-            return;
-        }
-        if (!this.panel) this._createPanel(game);
-        if (this.panel.parentElement !== container) container.appendChild(this.panel);
-        this.panel.style.display = 'flex';
-        for (const toolName in this.buttons) {
-            const isActive = toolName === this.toolName;
-            this.buttons[toolName].style.outline = isActive ? '2px solid #fff' : 'none';
-            this.buttons[toolName].style.opacity = isActive || !this.toolName ? '1' : '0.7';
-        }
+    /** @param {gdjs.InGameEditor} editor */
+    _showToolbar(editor) {
         const { object } = this.terrain;
         const layerColors = [object._getLayer1Color(), object._getLayer2Color(), object._getLayer3Color(), object._getLayer4Color()];
-        layerColors.forEach((color, index) => {
-            const hexColor = '#' + gdjs.rgbOrHexStringToNumber(color).toString(16).padStart(6, '0');
-            this.buttons['Paint' + (index + 1)].style.background = hexColor;
-        });
+        for (const item of this.toolbarItems) {
+            if (item.type !== 'button') continue;
+            item.isActive = item.id === this.toolName;
+            if (item.id.startsWith('Paint')) {
+                const color = layerColors[parseInt(item.id.slice(5), 10) - 1];
+                item.color = '#' + gdjs.rgbOrHexStringToNumber(color).toString(16).padStart(6, '0');
+            }
+        }
+        this.toolbarItems.find((item) => item.id === 'Size').value = this.sizePercent;
+        this.toolbarItems.find((item) => item.id === 'Strength').value = this.strength * 100;
+        editor.showToolbar('Terrain3D', this.toolbarItems);
     }
 
-    /** @param {gdjs.RuntimeGame} game */
-    _createPanel(game) {
-        // The panel is in the page: clicks on it don't reach the game canvas.
-        const panel = document.createElement('div');
-        panel.style.cssText =
-            'position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:4px;' +
-            'align-items:center;padding:6px 8px;border-radius:8px;background:rgba(32,32,44,0.9);' +
-            'color:#eee;font:12px sans-serif;user-select:none;pointer-events:auto;';
-        const makeButton = (toolName, label, title) => {
-            const button = document.createElement('button');
-            button.textContent = label;
-            button.title = title;
-            button.style.cssText =
-                'min-width:28px;height:28px;padding:0 8px;border:none;border-radius:6px;cursor:pointer;' +
-                'background:#4a4a5e;color:#fff;font:12px sans-serif;';
-            button.addEventListener('click', () => this._selectTool(toolName));
-            panel.appendChild(button);
-            this.buttons[toolName] = button;
-            return button;
-        };
-        makeButton('Raise', 'Raise', 'Raise the ground (drag on the terrain)');
-        makeButton('Lower', 'Lower', 'Lower the ground');
-        makeButton('Smooth', 'Smooth', 'Smooth the ground');
-        makeButton('Flatten', 'Flatten', 'Flatten the ground to the height where the drag starts');
-        for (let layer = 1; layer <= LAYER_COUNT; layer++) {
-            makeButton('Paint' + layer, '', 'Paint layer ' + layer);
-        }
-        const makeSlider = (label, min, max, value, onChange) => {
-            const wrapper = document.createElement('label');
-            wrapper.style.cssText = 'display:flex;align-items:center;gap:4px;margin-left:6px;';
-            wrapper.textContent = label;
-            const slider = document.createElement('input');
-            slider.type = 'range';
-            slider.min = String(min);
-            slider.max = String(max);
-            slider.value = String(value);
-            slider.style.width = '80px';
-            slider.addEventListener('input', () => onChange(Number(slider.value)));
-            wrapper.appendChild(slider);
-            panel.appendChild(wrapper);
-        };
-        makeSlider('Size', 1, 100, this.sizePercent, (value) => (this.sizePercent = value));
-        makeSlider('Strength', 5, 100, this.strength * 100, (value) => (this.strength = value / 100));
-        const undoButton = document.createElement('button');
-        undoButton.textContent = 'Undo';
-        undoButton.title = 'Undo the last stroke on this terrain';
-        undoButton.style.cssText =
-            'height:28px;padding:0 8px;margin-left:6px;border:none;border-radius:6px;cursor:pointer;background:#4a4a5e;color:#fff;';
-        undoButton.addEventListener('click', () => this._undo());
-        panel.appendChild(undoButton);
-        // Keep keyboard shortcuts working after a click on the panel.
-        panel.addEventListener('mouseup', () => {
-            const canvas = game.getRenderer().getCanvas();
-            if (canvas) canvas.focus();
+    /** @returns {Array<gdjs.InGameEditorToolbarItem>} */
+    _createToolbarItems() {
+        const toolButton = (toolName, icon, tooltip) => ({
+            type: 'button',
+            id: toolName,
+            iconUrl: toolIcons[icon],
+            tooltip,
+            isActive: false,
+            onClick: () => this._selectTool(toolName),
         });
-        this.panel = panel;
+        const paintButtons = [1, 2, 3, 4].map((layer) => ({
+            type: 'button',
+            id: 'Paint' + layer,
+            color: '#ffffff',
+            tooltip: 'Paint layer ' + layer,
+            isActive: false,
+            onClick: () => this._selectTool('Paint' + layer),
+        }));
+        return [
+            toolButton('Raise', 'raise', 'Raise the ground (drag on the terrain)'),
+            toolButton('Lower', 'lower', 'Lower the ground'),
+            toolButton('Smooth', 'smooth', 'Smooth the ground'),
+            toolButton('Flatten', 'flatten', 'Flatten the ground to the height where the drag starts'),
+            { type: 'divider', id: 'PaintDivider' },
+            ...paintButtons,
+            { type: 'divider', id: 'BrushDivider' },
+            {
+                type: 'slider',
+                id: 'Size',
+                tooltip: 'Brush size',
+                min: 1,
+                max: 100,
+                value: this.sizePercent,
+                onChange: (value) => (this.sizePercent = value),
+            },
+            {
+                type: 'slider',
+                id: 'Strength',
+                tooltip: 'Brush strength',
+                min: 5,
+                max: 100,
+                value: this.strength * 100,
+                onChange: (value) => (this.strength = value / 100),
+            },
+            { type: 'button', id: 'Undo', iconUrl: toolIcons.undo, tooltip: 'Undo the last stroke on this terrain', onClick: () => this._undo() },
+        ];
     }
 }
 
@@ -1857,6 +1958,7 @@ gdjs.__terrain3DExtension = {
     TerrainData,
     SampleRectangle,
     brushes,
+    edits,
     codec,
     relief,
 };

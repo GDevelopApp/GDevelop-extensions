@@ -2,6 +2,34 @@ if (gdjs.__grass3DExtension) {
     return;
 }
 
+/**
+ * Grounds (like terrains) that objects of other extensions (like grass)
+ * follow, without these extensions knowing each other. Each extension using
+ * it has this same code: the first one loaded defines it.
+ *
+ * A ground has: `getVersion()` (changing when the ground changes),
+ * `containsPoint(x, y)`, `getHeightAt(x, y)` (Z position of the ground),
+ * `getSlopeAt(x, y)` (in degrees) and `getLayerWeightAt(x, y, layer)` (how
+ * much a painted layer, from 1 to 4, is there, from 0 to 1).
+ */
+if (!gdjs.__grounds3D) {
+    const groundsByScene = new WeakMap();
+    gdjs.__grounds3D = {
+        /**
+         * @param {gdjs.RuntimeScene} runtimeScene
+         * @returns {Set<object>} The grounds of the scene.
+         */
+        getGrounds(runtimeScene) {
+            let grounds = groundsByScene.get(runtimeScene);
+            if (!grounds) {
+                grounds = new Set();
+                groundsByScene.set(runtimeScene, grounds);
+            }
+            return grounds;
+        },
+    };
+}
+
 // Size of the object inner area: instances are scaled from it. The depth is
 // the height of the grass.
 const AREA_SIZE = 1000;
@@ -12,7 +40,6 @@ const BLADE_WIDTH = 5;
 // The ground or the object can change every frame (while sculpting or moving
 // it in the editor): blades are placed again at most this often.
 const REBUILD_DELAY = 0.3;
-const TERRAINS_SEARCH_DELAY = 1;
 
 /**
  * A blade: a thin, tapered, slightly curved strip. Its height is 1: blades are
@@ -105,7 +132,7 @@ const random = (seed) => {
 /**
  * The grass of a Grass3D object: blades drawn with GPU instancing, in chunks
  * that are hidden when off-screen and thinned out with the distance. They grow
- * on the 3D terrains below (only where a given layer is painted).
+ * on the grounds below, like 3D terrains (only where a given layer is painted).
  */
 class Grass {
     /** @param {gdjs.CustomRuntimeObject3D} object */
@@ -118,9 +145,7 @@ class Grass {
         this.chunks = [];
         this.builtFrom = '';
         this.timeSinceRebuild = 0;
-        /** @type {gdjs.RuntimeObject[]} */
-        this.terrains = [];
-        this.timeSinceTerrainsSearch = TERRAINS_SEARCH_DELAY;
+        this.grounds = gdjs.__grounds3D.getGrounds(object.getRuntimeScene());
         this.uniforms = {
             grassWorldToLocal: { value: new THREE.Matrix3() },
             grassTime: { value: 0 },
@@ -161,33 +186,19 @@ class Grass {
         this.builtFrom = '';
     }
 
-    /** @param {number} elapsedSeconds */
-    _updateTerrains(elapsedSeconds) {
-        this.timeSinceTerrainsSearch += elapsedSeconds;
-        if (this.timeSinceTerrainsSearch < TERRAINS_SEARCH_DELAY) {
-            this.terrains = this.terrains.filter((terrain) => terrain.__terrain3D);
-            return;
-        }
-        this.timeSinceTerrainsSearch = 0;
-        const container = this.object.getInstanceContainer();
-        this.terrains = container.getAdhocListOfAllInstances().filter((instance) => instance.__terrain3D);
-    }
-
     _getBuildKey() {
         const { object } = this;
-        const terrainKeys = this.terrains.map((terrain) =>
-            [terrain.__terrain3D.version, terrain.getX(), terrain.getY(), terrain.getZ(), terrain.getWidth(), terrain.getHeight(), terrain.getDepth()].join(',')
-        );
+        const groundVersions = Array.from(this.grounds, (ground) => ground.getVersion());
         return [
             object.getX(), object.getY(), object.getZ(), object.getWidth(), object.getHeight(), object.getDepth(),
             object._getDensity(), object._getGroundLayer(), object._getMaxSlope(), object._getSeed(),
-            ...terrainKeys,
+            ...groundVersions,
         ].join('|');
     }
 
     /** Place the blades again, for example after the ground or the object changed. */
     rebuild() {
-        const { terrains } = this;
+        const grounds = Array.from(this.grounds);
         for (const chunk of this.chunks) {
             chunk.mesh.removeFromParent();
             chunk.mesh.geometry.dispose();
@@ -226,11 +237,8 @@ class Grass {
                     const sceneX = object.getX() + x;
                     const sceneY = object.getY() + y;
                     let groundZ = object.getZ();
-                    const terrain = terrains.find((terrainObject) =>
-                        terrainObject.__terrain3D.containsPoint(sceneX, sceneY)
-                    );
-                    if (terrain) {
-                        const ground = terrain.__terrain3D;
+                    const ground = grounds.find((ground) => ground.containsPoint(sceneX, sceneY));
+                    if (ground) {
                         if (groundLayer > 0 && growth > ground.getLayerWeightAt(sceneX, sceneY, groundLayer)) continue;
                         if (ground.getSlopeAt(sceneX, sceneY) > maxSlope) continue;
                         groundZ = ground.getHeightAt(sceneX, sceneY);
@@ -298,7 +306,6 @@ class Grass {
      * @param {number} time In seconds, the same for all grass objects.
      */
     update(elapsedSeconds, time, camera) {
-        this._updateTerrains(elapsedSeconds);
         this.timeSinceRebuild += elapsedSeconds;
         if (!this.builtFrom || this.timeSinceRebuild >= REBUILD_DELAY) {
             const buildKey = this._getBuildKey();

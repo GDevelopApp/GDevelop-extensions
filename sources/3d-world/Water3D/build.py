@@ -87,12 +87,18 @@ functions = [
 properties = [
     prop("Color", "Color", "40;120;170", "Color", group="Color"),
     prop("Opacity", "Number", 200, "Opacity", group="Color", description="From 0 (invisible) to 255 (opaque)."),
-    prop("CrestColor", "Color", "140;210;220", "Color of wave crests", group="Color"),
+    prop("CrestColor", "Color", "140;210;220", "Color of wave crests", group="Color",
+         description="Also the color of the sky reflected on the water, seen from the side."),
     prop("Foam", "Number", 0.3, "Foam", group="Color", description="From 0 (no foam) to 1 (a lot)."),
     prop("WaveHeight", "Number", 6, "Wave height", group="Waves", unit="Pixel",
          description="0 for flat water."),
     prop("WaveLength", "Number", 300, "Wave length", group="Waves", unit="Pixel"),
     prop("WaveSpeed", "Number", 1.5, "Wave speed", group="Waves"),
+    prop("NormalMap", "Resource", "", "Ripples normal map", group="Ripples", extra=["image"],
+         description="Optional. A seamless normal map of small waves, moving on the surface to reflect the light "
+                     "like real water."),
+    prop("NormalMapSize", "Number", 600, "Ripples size", group="Ripples", unit="Pixel",
+         description="The size of the normal map on the surface."),
 ]
 
 WATER_ICON = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#3a9bd9" d="M2 9c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2v12H2z"/><path fill="none" stroke="#bfe8ff" stroke-width="1.5" stroke-linecap="round" d="M4 14c1.5 0 1.5-1 3-1s1.5 1 3 1M14 17c1.5 0 1.5-1 3-1s1.5 1 3 1"/></svg>"""
@@ -116,6 +122,7 @@ A 3D water surface for seas, lakes and rivers, with animated waves, light reflec
 - Resize it to cover a sea or a lake: waves follow its size. Put it at the Z position of the water level.
 - **Make objects float** with an action (for objects with the 3D physics behavior), and check if an object is **underwater**.
 - Read the height of the waves anywhere with an expression, for example to move a boat.
+- For more realistic ripples, set a seamless **normal map** of water waves in the properties.
 - Works well with the 3D terrain extension: place the water between hills or around an island.
 """
 
