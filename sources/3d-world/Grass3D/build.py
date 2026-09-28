@@ -9,6 +9,7 @@ OBJECT_TYPE = "Grass3D::Grass3D"
 OUTPUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "..", "extensions", "community", "Grass3D.json")
 
 helper_code = open(os.path.join(HERE, "helper.js")).read()
+check_includes_ground_registry(helper_code)
 
 
 def grass_code(body):

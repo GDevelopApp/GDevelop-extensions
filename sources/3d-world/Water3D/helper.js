@@ -103,6 +103,9 @@ uniform float waterTime;
 uniform float waterRippleTime;
 uniform vec3 waterCrestColor;
 uniform float waterFoam;
+uniform sampler2D waterNormalMap;
+uniform float waterNormalMapSize;
+uniform float waterHasNormalMap;
 varying vec2 vWaterWorldXY;
 varying float vWaterCrest;
 
@@ -121,6 +124,23 @@ float waterNoise(vec2 p) {
 }
 `;
 const fragmentShaderColor = `
+// Ripples bend the light: they are a slope in scene coordinates, used for the
+// normal (and the foam).
+vec2 rippleSlope;
+if (waterHasNormalMap > 0.5) {
+  // Two layers of the normal map moving in different directions never repeat
+  // the same pattern.
+  vec2 rippleUv = vWaterWorldXY / waterNormalMapSize;
+  vec2 slope1 = texture2D(waterNormalMap, rippleUv + vec2(0.013, 0.007) * waterRippleTime).xy * 2.0 - 1.0;
+  vec2 slope2 = texture2D(waterNormalMap, rippleUv * 0.71 + vec2(-0.009, 0.011) * waterRippleTime).xy * 2.0 - 1.0;
+  rippleSlope = (slope1 + slope2) * 0.5;
+} else {
+  vec2 rippleNormalPosition = vWaterWorldXY / 18.0 + vec2(waterRippleTime * 0.4, -waterRippleTime * 0.3);
+  rippleSlope = 0.04 * vec2(
+    waterNoise(rippleNormalPosition) - 0.5,
+    waterNoise(rippleNormalPosition + 7.3) - 0.5
+  );
+}
 // Small ripples moving on top of the waves.
 vec2 ripplePosition = vWaterWorldXY / 30.0;
 float ripples =
@@ -130,19 +150,48 @@ float crest = smoothstep(0.35, 1.0, vWaterCrest + (ripples - 1.0) * 0.35);
 diffuseColor.rgb = mix(diffuseColor.rgb, waterCrestColor, crest * 0.6);
 // Foam only on the highest crests.
 float foam = smoothstep(1.0 - waterFoam * 0.3, 1.05 - waterFoam * 0.3, vWaterCrest * 0.75 + ripples * 0.15);
+// With a normal map, foam is in streaks along the ripples.
+if (waterHasNormalMap > 0.5) foam *= smoothstep(0.1, 0.4, length(rippleSlope));
 diffuseColor.rgb = mix(diffuseColor.rgb, vec3(1.0), foam * 0.8);
 diffuseColor.a = mix(diffuseColor.a, 1.0, foam * 0.8);
 `;
 const fragmentShaderNormal = `
 #include <normal_fragment_maps>
-// Ripples also bend the light.
-vec2 rippleNormalPosition = vWaterWorldXY / 18.0 + vec2(waterRippleTime * 0.4, -waterRippleTime * 0.3);
-normal = normalize(normal + 0.04 * vec3(
-  waterNoise(rippleNormalPosition) - 0.5,
-  waterNoise(rippleNormalPosition + 7.3) - 0.5,
-  0.0
-));
+// The 3D scene is flipped on Y.
+normal = normalize(normal + faceDirection * (viewMatrix * vec4(rippleSlope.x, -rippleSlope.y, 0.0, 0.0)).xyz);
 `;
+const fragmentShaderOpacity = `
+// Water reflects more light when seen from the side (Fresnel effect).
+vec3 waterViewDirection = isOrthographic ? vec3(0.0, 0.0, 1.0) : normalize(vViewPosition);
+float waterFresnel = pow(1.0 - clamp(abs(dot(normal, waterViewDirection)), 0.0, 1.0), 4.0);
+// It reflects the sky, lit like the wave crests.
+outgoingLight = mix(outgoingLight, waterCrestColor, waterFresnel * 0.5);
+diffuseColor.a = mix(diffuseColor.a, 1.0, waterFresnel * 0.7);
+#include <opaque_fragment>
+`;
+
+const normalMapTextures = new WeakMap();
+/**
+ * @param {gdjs.RuntimeGame} game
+ * @param {string} resourceName
+ * @returns {THREE.Texture} A repeated texture read as directions, not colors.
+ */
+const getNormalMapTexture = (game, resourceName) => {
+    const imageTexture = game.getImageManager().getThreeTexture(resourceName);
+    let texture = normalMapTextures.get(imageTexture);
+    if (!texture) {
+        texture = imageTexture.clone();
+        texture.colorSpace = THREE.NoColorSpace;
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.minFilter = THREE.LinearMipmapLinearFilter;
+        texture.generateMipmaps = true;
+        texture.anisotropy = 4;
+        texture.needsUpdate = true;
+        normalMapTextures.set(imageTexture, texture);
+    }
+    return texture;
+};
 
 /**
  * The water of a Water3D object: a surface with waves, drawn transparent.
@@ -162,6 +211,9 @@ class Water {
             waterVertexSpacing: { value: 1 },
             waterCrestColor: { value: new THREE.Color() },
             waterFoam: { value: 0 },
+            waterNormalMap: { value: null },
+            waterNormalMapSize: { value: 1 },
+            waterHasNormalMap: { value: 0 },
         };
         this.material = new THREE.MeshStandardMaterial({
             transparent: true,
@@ -182,7 +234,8 @@ class Water {
             shader.fragmentShader = shader.fragmentShader
                 .replace('#include <common>', '#include <common>\n' + fragmentShaderDeclarations)
                 .replace('#include <color_fragment>', '#include <color_fragment>\n' + fragmentShaderColor)
-                .replace('#include <normal_fragment_maps>', fragmentShaderNormal);
+                .replace('#include <normal_fragment_maps>', fragmentShaderNormal)
+                .replace('#include <opaque_fragment>', fragmentShaderOpacity);
         };
         this.material.customProgramCacheKey = () => 'Water3D';
         this.mesh = new THREE.Mesh(new THREE.BufferGeometry(), this.material);
@@ -200,6 +253,12 @@ class Water {
         this.material.opacity = gdjs.evtTools.common.clamp(object._getOpacity() / 255, 0, 1);
         this.uniforms.waterCrestColor.value.set(gdjs.rgbOrHexStringToNumber(object._getCrestColor()));
         this.uniforms.waterFoam.value = gdjs.evtTools.common.clamp(object._getFoam(), 0, 1);
+        const normalMapName = object._getNormalMap();
+        this.uniforms.waterHasNormalMap.value = normalMapName ? 1 : 0;
+        this.uniforms.waterNormalMap.value = normalMapName
+            ? getNormalMapTexture(object.getRuntimeScene().getGame(), normalMapName)
+            : null;
+        this.uniforms.waterNormalMapSize.value = Math.max(object._getNormalMapSize(), 1);
         this.settings.waveHeight = Math.max(object._getWaveHeight(), 0);
         this.settings.waveLength = Math.max(object._getWaveLength(), 1);
         this.settings.waveSpeed = object._getWaveSpeed();

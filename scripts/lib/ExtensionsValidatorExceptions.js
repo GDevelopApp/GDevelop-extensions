@@ -259,8 +259,10 @@ const extensionsAllowedProperties = {
     Grass3D: {
       gdjsAllowedProperties: [
         '__grass3DExtension',
+        '__grounds3D',
         'CustomRuntimeObject3D',
         'RuntimeObject',
+        'RuntimeScene',
       ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
@@ -625,12 +627,15 @@ const extensionsAllowedProperties = {
     },
     Terrain3D: {
       gdjsAllowedProperties: [
+        '__grounds3D',
         '__terrain3DExtension',
         'CustomRuntimeObject3D',
         'InGameEditor',
+        'InGameEditorToolbarItem',
         'Physics3DRuntimeBehavior',
         'RuntimeGame',
         'RuntimeObject',
+        'RuntimeScene',
         'registerInGameEditorPostStepCallback',
       ],
       gdjsEvtToolsAllowedProperties: [],
@@ -718,6 +723,7 @@ const extensionsAllowedProperties = {
         '__water3DExtension',
         'CustomRuntimeObject3D',
         'Physics3DRuntimeBehavior',
+        'RuntimeGame',
         'RuntimeObject',
       ],
       gdjsEvtToolsAllowedProperties: ['object'],

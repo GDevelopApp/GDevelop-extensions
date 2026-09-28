@@ -70,6 +70,26 @@ assert.strictEqual(flat.getDominantLayer(32, 32), 2);
   for (let k = 0; k < 400; k++) brushes.paint(data, stroke(64, 2048, 2048, 2048, 2048, 300), 1, 0.005, new (gdjs.__terrain3DExtension.SampleRectangle)());
   assert(data.splat[(32 * data.size + 32) * 4 + 1] === 255, 'center fully painted, got ' + data.splat[(32 * data.size + 32) * 4 + 1]);
 }
+// Edits: strokes described in JSON, in fractions of the terrain.
+{
+  const { edits } = gdjs.__terrain3DExtension;
+  const data = new TerrainData(64);
+  edits.apply(data, JSON.stringify([
+    { tool: 'raise', x: 0.5, y: 0.5, radius: 0.2, height: 0.4 },
+    { tool: 'paint', x: 0, y: 0, toX: 1, toY: 1, radius: 0.05, layer: 2 },
+    { tool: 'flatten', x: 0.1, y: 0.9, radius: 0.1, z: 0.2 },
+    { tool: 'smooth', x: 0.5, y: 0.5, radius: 0.3, strength: 0.5 },
+  ]));
+  assert(data.getHeight(32, 32) > 0.3, 'raised at the center');
+  assert(Math.abs(data.getHeight(6, 58) - 0.2) < 0.01, 'flattened');
+  assert.strictEqual(data.getDominantLayer(10, 10), 1, 'painted on the diagonal');
+  assert.strictEqual(data.getDominantLayer(60, 2), 0, 'not painted elsewhere');
+  const untouched = new TerrainData(64);
+  edits.apply(untouched, 'not json');
+  edits.apply(untouched, '{"tool": "raise"}');
+  edits.apply(untouched, '[{"tool": "dig"}, null, 3]');
+  assert(untouched.heights.every((h) => h === 0), 'invalid edits are ignored');
+}
 console.log('All helper tests passed.');
 
 // Height sampling interpolates between samples.

@@ -9,6 +9,7 @@ OBJECT_TYPE = "Terrain3D::Terrain3D"
 OUTPUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "..", "extensions", "community", "Terrain3D.json")
 
 helper_code = open(os.path.join(HERE, "helper.js")).read()
+check_includes_ground_registry(helper_code)
 
 
 def terrain_code(body):
@@ -198,6 +199,14 @@ properties = [
          description="Each seed gives a different terrain with the same relief."),
     prop("HeightmapImage", "Resource", "", "Heightmap image", group="Shape", extra=["image"],
          description="Optional. Replaces the relief: black is the lowest, white the highest (the object depth)."),
+    prop("Edits", "MultilineString", "", "Edits", group="Shape",
+         description="Changes of the relief or heightmap, as a JSON list, for example "
+                     '[{"tool": "raise", "x": 0.3, "y": 0.4, "radius": 0.15, "height": 0.4}, '
+                     '{"tool": "paint", "x": 0.1, "y": 0.9, "toX": 0.8, "toY": 0.2, "radius": 0.02, "layer": 2}]. '
+                     "Tools: raise (height, negative to lower), flatten (z), smooth (strength) and paint (layer, "
+                     "from 1 to 4, and strength). x, y and radius are fractions (0 to 1) of the terrain size, "
+                     "height and z fractions of its depth. Add toX and toY to change the ground along a line "
+                     "(paths, rivers, ridges). Shown in the scene editor."),
     prop("Resolution", "Choice", "256", "Resolution", group="Shape",
          description="The number of cells on each side of the terrain. Higher is more detailed but slower.",
          choices=[("64", "64 x 64"), ("128", "128 x 128"), ("256", "256 x 256"), ("512", "512 x 512"),
@@ -239,6 +248,7 @@ A 3D terrain object for open worlds, adventure or racing games: hills, mountains
 - **Start from a relief** (hills, mountains, island) or **from a heightmap image**.
 - **Steep slopes automatically show rock** (or any layer).
 - **Physics**: add the **3D physics** behavior to the terrain. Characters and objects collide with the ground exactly. The terrain is always static.
+- **Shape it with the Edits property**: a list of raise, flatten, smooth and paint strokes written in JSON, shown in the scene editor. It's readable and can be changed by hand or by an AI agent, like the relief, the heightmap and the other properties. Actions only change the terrain during the game.
 - **Change it during the game** with actions (raise, lower, flatten, smooth, paint, along a line for paths and rivers) and read the ground height, slope or layer with expressions.
 - **Made for large worlds**: the terrain is split in chunks that are hidden when off-screen and simplified when far away, and collisions are updated only where the ground changes.
 """
