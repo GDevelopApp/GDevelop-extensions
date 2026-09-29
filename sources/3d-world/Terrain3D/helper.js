@@ -1643,7 +1643,7 @@ class Terrain {
     /** @param {gdjs.RuntimeObject[]} objects */
     placeOnGround(objects) {
         for (const object of objects) {
-            if (object === this.object || typeof object.getUnrotatedAABBMinZ !== 'function') continue;
+            if (object === this.object || !gdjs.Base3DHandler.is3D(object)) continue;
             const groundZ = this.getHeightAt(object.getCenterXInScene(), object.getCenterYInScene());
             // The origin of the object is not always at its bottom.
             object.setZ(groundZ + object.getZ() - object.getUnrotatedAABBMinZ());
@@ -1731,11 +1731,13 @@ const svgIcon = (content) =>
     encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' + content + '</svg>');
 const strokes = 'fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"';
 const toolIcons = {
-    raise: svgIcon('<path ' + strokes + ' d="M3 20h18M6 20c2-6 4-9 6-9s4 3 6 9M12 3v5M9 5l3-3 3 3"/>'),
-    lower: svgIcon('<path ' + strokes + ' d="M3 12h4c2 6 3 8 5 8s3-2 5-8h4M12 2v6M9 5l3 3 3-3"/>'),
-    smooth: svgIcon('<path ' + strokes + ' d="M3 15c3-6 6 2 9-3s6 3 9-3M3 20h18"/>'),
-    flatten: svgIcon('<path ' + strokes + ' d="M3 14h18M3 20h18M8 9V4M16 9V4M5 7l3 2 3-2M13 7l3 2 3-2"/>'),
-    undo: svgIcon('<path ' + strokes + ' d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/>'),
+    Raise: svgIcon('<path ' + strokes + ' d="M3 20h18M6 20c2-6 4-9 6-9s4 3 6 9M12 3v5M9 5l3-3 3 3"/>'),
+    Lower: svgIcon('<path ' + strokes + ' d="M3 12h4c2 6 3 8 5 8s3-2 5-8h4M12 2v6M9 5l3 3 3-3"/>'),
+    Smooth: svgIcon('<path ' + strokes + ' d="M3 15c3-6 6 2 9-3s6 3 9-3M3 20h18"/>'),
+    Flatten: svgIcon('<path ' + strokes + ' d="M3 14h18M3 20h18M8 9V4M16 9V4M5 7l3 2 3-2M13 7l3 2 3-2"/>'),
+    Size: svgIcon('<circle ' + strokes + ' cx="12" cy="12" r="9"/><circle ' + strokes + ' cx="12" cy="12" r="4"/>'),
+    Strength: svgIcon('<path ' + strokes + ' d="M5 20v-3M10 20v-7M15 20v-11M20 20V4"/>'),
+    Undo: svgIcon('<path ' + strokes + ' d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/>'),
 };
 
 /**
@@ -1748,7 +1750,7 @@ class TerrainEditorTools {
         /** '' when no brush is used. */
         this.toolName = '';
         this.sizePercent = 30;
-        this.strength = 0.5;
+        this.strengthPercent = 50;
         /** @type {Terrain | null} */
         this.terrain = null;
         /** @type {gdjs.InGameEditor | null} */
@@ -1758,7 +1760,6 @@ class TerrainEditorTools {
         this.lastStrokeTime = 0;
         /** @type {{data: TerrainData, baseData: TerrainData}[]} */
         this.undoSteps = [];
-        this.toolbarItems = this._createToolbarItems();
         this.raycaster = new THREE.Raycaster();
         this.ndc = new THREE.Vector2();
     }
@@ -1779,7 +1780,7 @@ class TerrainEditorTools {
             this.terrain = terrain;
             this.undoSteps.length = 0;
         }
-        if (terrain) this._showToolbar(editor);
+        if (terrain) editor.showToolbar('Terrain3D', this._getToolbarItems(terrain));
         const game = editor.getRuntimeGame();
         if (!terrain || !this.toolName) {
             if (terrain) terrain.renderer.setBrush(null, 0);
@@ -1787,9 +1788,9 @@ class TerrainEditorTools {
         }
 
         const inputManager = game.getInputManager();
-        if (inputManager.wasKeyJustPressed(27)) {
+        if (inputManager.wasKeyJustPressed(gdjs.evtTools.input.keysNameToCode.Escape)) {
             this._endStroke();
-            this._selectTool('');
+            this.toolName = '';
             terrain.renderer.setBrush(null, 0);
             return;
         }
@@ -1846,7 +1847,7 @@ class TerrainEditorTools {
         const elapsedSeconds = Math.min((now - this.lastStrokeTime) / 1000, 0.1);
         this.lastStrokeTime = now;
         const { x, y } = this._toScenePosition(terrain, hit);
-        const amount = this.strength * elapsedSeconds;
+        const amount = (this.strengthPercent / 100) * elapsedSeconds;
         const depth = terrain.object.getDepth();
         if (this.toolName === 'Raise') terrain.raise(x, y, x, y, radius, amount * depth * 0.5);
         else if (this.toolName === 'Lower') terrain.raise(x, y, x, y, radius, -amount * depth * 0.5);
@@ -1876,57 +1877,42 @@ class TerrainEditorTools {
         this._save();
     }
 
-    _selectTool(toolName) {
-        this.toolName = this.toolName === toolName ? '' : toolName;
-    }
-
-    /** @param {gdjs.InGameEditor} editor */
-    _showToolbar(editor) {
-        const { object } = this.terrain;
-        const layerColors = [object._getLayer1Color(), object._getLayer2Color(), object._getLayer3Color(), object._getLayer4Color()];
-        for (const item of this.toolbarItems) {
-            if (item.type !== 'button') continue;
-            item.isActive = item.id === this.toolName;
-            if (item.id.startsWith('Paint')) {
-                const color = layerColors[parseInt(item.id.slice(5), 10) - 1];
-                item.color = '#' + gdjs.rgbOrHexStringToNumber(color).toString(16).padStart(6, '0');
-            }
-        }
-        this.toolbarItems.find((item) => item.id === 'Size').value = this.sizePercent;
-        this.toolbarItems.find((item) => item.id === 'Strength').value = this.strength * 100;
-        editor.showToolbar('Terrain3D', this.toolbarItems);
-    }
-
-    /** @returns {Array<gdjs.InGameEditorToolbarItem>} */
-    _createToolbarItems() {
-        const toolButton = (toolName, icon, tooltip) => ({
+    /**
+     * @param {Terrain} terrain
+     * @returns {Array<gdjs.InGameEditorToolbarItem>} The toolbar for the current state (the editor only
+     * updates what changed).
+     */
+    _getToolbarItems(terrain) {
+        const { object } = terrain;
+        const toolButton = (toolName, tooltip, color) => ({
             type: 'button',
             id: toolName,
-            iconUrl: toolIcons[icon],
             tooltip,
-            isActive: false,
-            onClick: () => this._selectTool(toolName),
+            iconUrl: toolIcons[toolName],
+            color,
+            isActive: this.toolName === toolName,
+            onClick: () => (this.toolName = this.toolName === toolName ? '' : toolName),
         });
-        const paintButtons = [1, 2, 3, 4].map((layer) => ({
-            type: 'button',
-            id: 'Paint' + layer,
-            color: '#ffffff',
-            tooltip: 'Paint layer ' + layer,
-            isActive: false,
-            onClick: () => this._selectTool('Paint' + layer),
-        }));
+        const layerColors = [object._getLayer1Color(), object._getLayer2Color(), object._getLayer3Color(), object._getLayer4Color()];
         return [
-            toolButton('Raise', 'raise', 'Raise the ground (drag on the terrain)'),
-            toolButton('Lower', 'lower', 'Lower the ground'),
-            toolButton('Smooth', 'smooth', 'Smooth the ground'),
-            toolButton('Flatten', 'flatten', 'Flatten the ground to the height where the drag starts'),
+            toolButton('Raise', 'Raise the ground (drag on the terrain)'),
+            toolButton('Lower', 'Lower the ground'),
+            toolButton('Smooth', 'Smooth the ground'),
+            toolButton('Flatten', 'Flatten the ground to the height where the drag starts'),
             { type: 'divider', id: 'PaintDivider' },
-            ...paintButtons,
+            ...layerColors.map((color, index) =>
+                toolButton(
+                    'Paint' + (index + 1),
+                    'Paint layer ' + (index + 1),
+                    '#' + gdjs.rgbOrHexStringToNumber(color).toString(16).padStart(6, '0')
+                )
+            ),
             { type: 'divider', id: 'BrushDivider' },
             {
                 type: 'slider',
                 id: 'Size',
                 tooltip: 'Brush size',
+                iconUrl: toolIcons.Size,
                 min: 1,
                 max: 100,
                 value: this.sizePercent,
@@ -1936,12 +1922,13 @@ class TerrainEditorTools {
                 type: 'slider',
                 id: 'Strength',
                 tooltip: 'Brush strength',
+                iconUrl: toolIcons.Strength,
                 min: 5,
                 max: 100,
-                value: this.strength * 100,
-                onChange: (value) => (this.strength = value / 100),
+                value: this.strengthPercent,
+                onChange: (value) => (this.strengthPercent = value),
             },
-            { type: 'button', id: 'Undo', iconUrl: toolIcons.undo, tooltip: 'Undo the last stroke on this terrain', onClick: () => this._undo() },
+            { type: 'button', id: 'Undo', tooltip: 'Undo the last stroke on this terrain', iconUrl: toolIcons.Undo, onClick: () => this._undo() },
         ];
     }
 }

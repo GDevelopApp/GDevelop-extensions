@@ -221,8 +221,9 @@ properties = [
     prop("CastShadow", "Boolean", True, "Cast shadows", group="Rendering"),
     prop("ReceiveShadow", "Boolean", True, "Receive shadows", group="Rendering"),
     prop("SculptData", "String", "", "Sculpted and painted data", advanced=True,
-         description="Written by the sculpt and paint tools of the scene editor. Clear it to go back to the relief "
-                     "or heightmap."),
+         description="Written by the sculpt and paint tools of the scene editor, in a compact format not meant to be "
+                     "read or written by hand: use Edits instead. Clear it to go back to the relief, heightmap and "
+                     "edits."),
 ]
 
 TERRAIN_ICON = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#6dbb58" d="M1 20 L8 9 L12 14 L16 7 L23 20 Z"/><path fill="#fff" d="M8 9 L10 12 L8.6 12.8 L6.9 10.8 Z M16 7 L18.5 11.5 L16.5 12.5 L14.6 10 Z"/></svg>"""

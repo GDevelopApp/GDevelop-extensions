@@ -629,6 +629,7 @@ const extensionsAllowedProperties = {
       gdjsAllowedProperties: [
         '__grounds3D',
         '__terrain3DExtension',
+        'Base3DHandler',
         'CustomRuntimeObject3D',
         'InGameEditor',
         'InGameEditorToolbarItem',
@@ -638,7 +639,7 @@ const extensionsAllowedProperties = {
         'RuntimeScene',
         'registerInGameEditorPostStepCallback',
       ],
-      gdjsEvtToolsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: ['input'],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
@@ -721,6 +722,7 @@ const extensionsAllowedProperties = {
     Water3D: {
       gdjsAllowedProperties: [
         '__water3DExtension',
+        'Base3DHandler',
         'CustomRuntimeObject3D',
         'Physics3DRuntimeBehavior',
         'RuntimeGame',
