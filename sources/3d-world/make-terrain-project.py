@@ -85,7 +85,7 @@ project["resources"]["resources"].append({
     "file": WATER_NORMAL_MAP, "kind": "image", "metadata": "", "name": WATER_NORMAL_MAP,
     "smoothed": True, "userAdded": True,
 })
-add_object("Water", "Water3D::Water3D", {"WaveHeight": 4, "NormalMap": WATER_NORMAL_MAP},
+add_object("Water", "Water3D::Water3D", {"WaveHeight": int(os.environ.get("WAVE_HEIGHT", 4)), "WaveLength": int(os.environ.get("WAVE_LENGTH", 300)), "NormalMap": WATER_NORMAL_MAP},
            {"x": 640 - 4096, "y": 750 - 4096, "z": -38, "width": 8192, "height": 8192, "depth": 1})
 add_object("Grass", "Grass3D::Grass3D", {"Density": 12, "BendingObject": "Player"},
            {"x": 640 - 1024, "y": 750 - 1024, "z": -100, "width": 2048, "height": 2048, "depth": 40})
