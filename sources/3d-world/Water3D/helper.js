@@ -66,6 +66,23 @@ const wavesShaderCode = WAVES.map(([, , relativeLength, relativeSpeed, relativeH
   }`;
 }).join('');
 
+// Waves too short for the vertices are drawn with the light instead: their
+// slope is computed for each pixel (and faded out when smaller than pixels).
+const shortWavesShaderCode = WAVES.map(([, , relativeLength, relativeSpeed, relativeHeight], index) => {
+    const [directionX, directionY] = waveDirections[index];
+    return `
+  {
+    vec2 direction = vec2(${directionX.toFixed(6)}, ${directionY.toFixed(6)});
+    float waveLength = waterWaveLength * ${relativeLength.toFixed(6)};
+    float frequency = 6.2831853 / waveLength;
+    float phase = dot(direction, position) * frequency + waterTime * waterWaveSpeed * ${relativeSpeed.toFixed(6)};
+    float amplitude = waterWaveHeight * ${relativeHeight.toFixed(6)} *
+      (1.0 - smoothstep(0.0, 1.0, clamp((waveLength / waterVertexSpacing - 3.0) / 3.0, 0.0, 1.0))) *
+      clamp(2.0 - fwidth(phase), 0.0, 1.0);
+    slope += direction * cos(phase) * amplitude * frequency;
+  }`;
+}).join('');
+
 const vertexShaderDeclarations = `
 uniform float waterTime;
 uniform float waterWaveHeight;
@@ -100,6 +117,10 @@ vec3 transformed = vec3(position.xy, position.z + waterHeight / max(length(model
 `;
 const fragmentShaderDeclarations = `
 uniform float waterTime;
+uniform float waterWaveHeight;
+uniform float waterWaveLength;
+uniform float waterWaveSpeed;
+uniform float waterVertexSpacing;
 uniform float waterRippleTime;
 uniform vec3 waterCrestColor;
 uniform float waterFoam;
@@ -108,6 +129,14 @@ uniform float waterNormalMapSize;
 uniform float waterHasNormalMap;
 varying vec2 vWaterWorldXY;
 varying float vWaterCrest;
+
+vec2 getWaterShortWavesSlope(vec2 position) {
+  vec2 slope = vec2(0.0);
+  ${shortWavesShaderCode}
+  // Steeper would only give noise.
+  float slopeLength = length(slope);
+  return slopeLength > 1.0 ? slope / slopeLength : slope;
+}
 
 float waterHash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -141,6 +170,7 @@ if (waterHasNormalMap > 0.5) {
     waterNoise(rippleNormalPosition + 7.3) - 0.5
   );
 }
+rippleSlope -= getWaterShortWavesSlope(vWaterWorldXY);
 // Small ripples moving on top of the waves.
 vec2 ripplePosition = vWaterWorldXY / 30.0;
 float ripples =

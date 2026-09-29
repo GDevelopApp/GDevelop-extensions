@@ -91,7 +91,8 @@ properties = [
          description="Also the color of the sky reflected on the water, seen from the side."),
     prop("Foam", "Number", 0.3, "Foam", group="Color", description="From 0 (no foam) to 1 (a lot)."),
     prop("WaveHeight", "Number", 6, "Wave height", group="Waves", unit="Pixel",
-         description="0 for flat water."),
+         description="0 for flat water. Waves shorter than a few times the size of the water divided by 256 "
+                     "don't move the surface: they are only drawn with the light."),
     prop("WaveLength", "Number", 300, "Wave length", group="Waves", unit="Pixel"),
     prop("WaveSpeed", "Number", 1.5, "Wave speed", group="Waves"),
     prop("NormalMap", "Resource", "", "Ripples normal map", group="Ripples", extra=["image"],
