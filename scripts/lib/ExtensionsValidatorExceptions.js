@@ -637,6 +637,8 @@ const extensionsAllowedProperties = {
         'RuntimeGame',
         'RuntimeObject',
         'RuntimeScene',
+        'SurfaceMesh',
+        'SurfaceMeshTriangles',
         'registerInGameEditorPostStepCallback',
       ],
       gdjsEvtToolsAllowedProperties: ['input'],

@@ -90,6 +90,36 @@ add_object("Water", "Water3D::Water3D", {"WaveHeight": 4, "NormalMap": WATER_NOR
 add_object("Grass", "Grass3D::Grass3D", {"Density": 12, "BendingObject": "Player"},
            {"x": 640 - 1024, "y": 750 - 1024, "z": -100, "width": 2048, "height": 2048, "depth": 40})
 
+# Characters finding their way on the terrain (only in tests: examples keep
+# working in GDevelop versions without surface meshes for navigation meshes).
+if not IS_EXAMPLE:
+    def nav_mesh_obstacle(obstacle_only):
+        return {"name": "NavMeshObstacle", "type": "NavMeshPathfinding::NavMeshObstacleBehavior",
+                "shape": "Box", "meshShapeResourceName": "", "obstacleOnly": obstacle_only}
+    for scene_object in scene["objects"]:
+        if scene_object["name"] in ("Terrain", "Water"):
+            scene_object["behaviors"].append(nav_mesh_obstacle(scene_object["name"] == "Water"))
+    walker = json.loads(json.dumps([o for o in scene["objects"] if o["name"] == "Obstacle"][0]))
+    walker.update({"name": "Walker", "persistentUuid": "0a7c3d57-7a53-4e7c-8f55-0d5d7d4e1b01"})
+    walker["behaviors"] = [{
+        "name": "NavMeshCharacter", "type": "NavMeshPathfinding::NavMeshCharacterBehavior",
+        "acceleration": 2000, "maxSpeed": 600, "angularMaxSpeed": 180, "rotateObject": True, "angleOffset": 0,
+        "radius": 0, "avoidanceSightRange": 120,
+    }]
+    scene["objects"].append(walker)
+    scene["behaviorsSharedData"] += [
+        {"name": "NavMeshCharacter", "type": "NavMeshPathfinding::NavMeshCharacterBehavior", "cellSize": 10,
+         "cellDepth": 10, "slopeMaxAngle": 50, "stairHeightMax": 20, "walkableRadius": -1, "walkableDepth": 150,
+         "speedScaleY": 1},
+        {"name": "NavMeshObstacle", "type": "NavMeshPathfinding::NavMeshObstacleBehavior"},
+    ]
+    scene["instances"].append({
+        "angle": 0, "customSize": True, "width": 30, "height": 30, "depth": 60, "layer": "", "name": "Walker",
+        "persistentUuid": "0a7c3d57-7a53-4e7c-8f55-0d5d7d4e1b02", "x": 840, "y": 750, "z": 0, "zOrder": 2,
+        "numberProperties": [], "stringProperties": [], "initialVariables": [],
+    })
+
+
 def replace_in_folders(folder):
     children = folder.get("children", [])
     folder["children"] = [child for child in children if child.get("objectName") != "Ground"]
@@ -99,7 +129,9 @@ def replace_in_folders(folder):
 
 
 replace_in_folders(scene["objectsFolderStructure"])
-scene["objectsFolderStructure"]["children"] += [{"objectName": name} for name in ("Terrain", "Water", "Grass")]
+scene["objectsFolderStructure"]["children"] += [
+    {"objectName": o["name"]} for o in scene["objects"] if o["name"] in ("Terrain", "Water", "Grass", "Walker")
+]
 
 for instance in scene["instances"]:
     if instance["name"] == "Player":
