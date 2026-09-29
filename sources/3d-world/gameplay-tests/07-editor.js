@@ -40,6 +40,9 @@ raiseButton.onClick();
 updateTools();
 harness.assert(isLeftButtonCaptured, 'The left mouse button is used by the brush.');
 harness.assert(toolbarItems.find((item) => item.id === 'Raise').isActive, 'The raise button is shown as active.');
+toolbarItems.find((item) => item.id === 'Size').onChange(40);
+updateTools();
+harness.assert(toolbarItems.find((item) => item.id === 'Size').value === 40, 'The size slider shows the brush size.');
 
 const heightBefore = terrain.getHeightAt(targetX, targetY);
 harness.setMousePositionScreen(game.getGameResolutionWidth() / 2, game.getGameResolutionHeight() / 2);
