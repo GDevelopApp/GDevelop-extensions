@@ -249,6 +249,7 @@ A 3D terrain object for open worlds, adventure or racing games: hills, mountains
 - **Start from a relief** (hills, mountains, island) or **from a heightmap image**.
 - **Steep slopes automatically show rock** (or any layer).
 - **Physics**: add the **3D physics** behavior to the terrain. Characters and objects collide with the ground exactly. The terrain is always static.
+- **Pathfinding**: add the **floor/obstacle for pathfinding (navmesh based)** behavior to the terrain, so that characters with the navmesh pathfinding behavior walk on its hills and around its cliffs (in recent GDevelop versions).
 - **Shape it with the Edits property**: a list of raise, flatten, smooth and paint strokes written in JSON, shown in the scene editor. It's readable and can be changed by hand or by an AI agent, like the relief, the heightmap and the other properties. Actions only change the terrain during the game.
 - **Change it during the game** with actions (raise, lower, flatten, smooth, paint, along a line for paths and rivers) and read the ground height, slope or layer with expressions.
 - **Made for large worlds**: the terrain is split in chunks that are hidden when off-screen and simplified when far away, and collisions are updated only where the ground changes.

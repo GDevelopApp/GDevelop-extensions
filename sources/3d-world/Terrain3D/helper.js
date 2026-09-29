@@ -1405,6 +1405,8 @@ class Terrain {
         this.hasPaintChanged = false;
         /** Increased each time the ground changes, for objects following it (like grass). */
         this.version = 0;
+        /** Increased each time the shape of the ground changes (not its paint), for navigation meshes. */
+        this.surfaceVersion = 0;
         this._stroke = { cellWidth: 1, cellHeight: 1, ax: 0, ay: 0, bx: 0, by: 0, radius: 0 };
         this._strokeChangedSamples = new SampleRectangle();
         /** The properties the data was loaded from, to reload it only if they change. */
@@ -1418,8 +1420,14 @@ class Terrain {
          */
         this.savedSculptData = [];
         this.loadFromProperties();
-        this._transform = '';
+        this._transform = this._getTransform();
         gdjs.__grounds3D.getGrounds(object.getRuntimeScene()).add(this);
+        /**
+         * The shape of the ground, for navigation meshes (not available in older GDevelop versions).
+         * @type {gdjs.SurfaceMesh}
+         */
+        this.surfaceMesh = { getVersion: () => this.surfaceVersion, getTriangles: () => this.getTriangles() };
+        if (typeof object.setSurfaceMesh === 'function') object.setSurfaceMesh(this.surfaceMesh);
 
         if (gdjs.Physics3DRuntimeBehavior) {
             for (const behavior of object._behaviors) {
@@ -1485,6 +1493,7 @@ class Terrain {
     /** @param {TerrainData} data */
     setData(data) {
         this.version = ++lastGroundVersion;
+        this.surfaceVersion = this.version;
         const hasSameResolution = data.resolution === this.data.resolution && this.renderer.chunks.length > 0;
         this.data = data;
         const allSamples = new SampleRectangle().set(0, 0, data.resolution, data.resolution);
@@ -1587,8 +1596,14 @@ class Terrain {
         return stroke;
     }
 
-    _onSamplesChanged(samples) {
+    /**
+     * @param {SampleRectangle} samples
+     * @param {boolean} haveHeightsChanged false when only the paint changed.
+     */
+    _onSamplesChanged(samples, haveHeightsChanged) {
+        if (samples.isEmpty()) return;
         this.version = ++lastGroundVersion;
+        if (haveHeightsChanged) this.surfaceVersion = this.version;
         this.changedSamples.add(samples);
         for (const bodyUpdater of this.bodyUpdaters) {
             bodyUpdater.changedSamples.add(samples);
@@ -1599,7 +1614,7 @@ class Terrain {
     raise(x1, y1, x2, y2, radius, height) {
         const samples = this._strokeChangedSamples;
         brushes.raise(this.data, this._getStroke(x1, y1, x2, y2, radius), height / this.object.getDepth(), samples);
-        this._onSamplesChanged(samples);
+        this._onSamplesChanged(samples, true);
     }
 
     /** @param {number} z The Z position to flatten the ground to. */
@@ -1607,13 +1622,13 @@ class Terrain {
         const samples = this._strokeChangedSamples;
         const targetHeight = (z - this.object.getZ()) / this.object.getDepth();
         brushes.flatten(this.data, this._getStroke(x1, y1, x2, y2, radius), targetHeight, strength, samples);
-        this._onSamplesChanged(samples);
+        this._onSamplesChanged(samples, true);
     }
 
     smooth(x1, y1, x2, y2, radius, strength) {
         const samples = this._strokeChangedSamples;
         brushes.smooth(this.data, this._getStroke(x1, y1, x2, y2, radius), strength, samples);
-        this._onSamplesChanged(samples);
+        this._onSamplesChanged(samples, true);
     }
 
     /** @param {number} layer From 1 to 4. */
@@ -1622,7 +1637,7 @@ class Terrain {
         const samples = this._strokeChangedSamples;
         brushes.paint(this.data, this._getStroke(x1, y1, x2, y2, radius), layerIndex, strength, samples);
         this.hasPaintChanged = true;
-        this._onSamplesChanged(samples);
+        this._onSamplesChanged(samples, false);
     }
 
     generate(reliefName, seed) {
@@ -1705,12 +1720,51 @@ class Terrain {
         return this.version;
     }
 
-    update() {
+    /** @returns {gdjs.SurfaceMeshTriangles} The triangles of the ground, in the scene. */
+    getTriangles() {
+        const { object, data } = this;
+        const { size, heights } = data;
+        const cellWidth = this.getCellWidth();
+        const cellHeight = this.getCellHeight();
+        const depth = object.getDepth();
+        const positions = new Float32Array(size * size * 3);
+        for (let j = 0; j < size; j++) {
+            for (let i = 0; i < size; i++) {
+                const index = j * size + i;
+                positions[index * 3] = object.getX() + i * cellWidth;
+                positions[index * 3 + 1] = object.getY() + j * cellHeight;
+                positions[index * 3 + 2] = object.getZ() + heights[index] * depth;
+            }
+        }
+        const indices = new Uint32Array(data.resolution * data.resolution * 6);
+        let triangleIndex = 0;
+        for (let j = 0; j < data.resolution; j++) {
+            for (let i = 0; i < data.resolution; i++) {
+                const topLeft = j * size + i;
+                const bottomLeft = topLeft + size;
+                // Triangles facing up.
+                indices[triangleIndex++] = topLeft;
+                indices[triangleIndex++] = topLeft + 1;
+                indices[triangleIndex++] = bottomLeft;
+                indices[triangleIndex++] = topLeft + 1;
+                indices[triangleIndex++] = bottomLeft + 1;
+                indices[triangleIndex++] = bottomLeft;
+            }
+        }
+        return { positions, indices };
+    }
+
+    _getTransform() {
         const { object } = this;
-        const transform = [object.getX(), object.getY(), object.getZ(), object.getWidth(), object.getHeight(), object.getDepth()].join(',');
+        return [object.getX(), object.getY(), object.getZ(), object.getWidth(), object.getHeight(), object.getDepth()].join(',');
+    }
+
+    update() {
+        const transform = this._getTransform();
         if (transform !== this._transform) {
             this._transform = transform;
             this.version = ++lastGroundVersion;
+            this.surfaceVersion = this.version;
         }
         this.applyChanges();
         const layer = this.object.getInstanceContainer().getLayer(this.object.getLayer());
@@ -1719,6 +1773,9 @@ class Terrain {
 
     dispose() {
         gdjs.__grounds3D.getGrounds(this.object.getRuntimeScene()).delete(this);
+        if (typeof this.object.setSurfaceMesh === 'function' && this.object.getSurfaceMesh() === this.surfaceMesh) {
+            this.object.setSurfaceMesh(null);
+        }
         this.renderer.dispose();
         for (const bodyUpdater of this.bodyUpdaters) {
             bodyUpdater.dispose();
