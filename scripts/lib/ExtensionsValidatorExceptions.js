@@ -552,6 +552,7 @@ const extensionsAllowedProperties = {
         '__pointLight3DExtension',
         'getScene',
         '__lightManager',
+        'getRenderer3DInverseWorldScale',
       ],
       javaScriptObjectAllowedProperties: ['getPrototypeOf'],
     },
