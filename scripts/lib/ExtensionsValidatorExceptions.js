@@ -295,6 +295,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Flash: {
+      gdjsAllowedProperties: ['SpriteRuntimeObject'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     HedgehogPlatformer: {
       gdjsAllowedProperties: [
         '__hedgehogPlatformerExtension',
@@ -337,6 +343,28 @@ const extensionsAllowedProperties = {
       gdjsEvtToolsAllowedProperties: ['object'],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
+    },
+    Light3D: {
+      gdjsAllowedProperties: [
+        '__light3DExtension',
+        'CustomRuntimeObject',
+        'CustomRuntimeObjectInstanceContainer',
+        'CustomRuntimeObject3DRenderer',
+        'CustomRuntimeObject3D',
+        'registerRuntimeScenePreEventsCallback',
+        'registerInGameEditorPostStepCallback',
+        'scene3d',
+        'RuntimeScene',
+      ],
+      gdjsEvtToolsAllowedProperties: ['camera'],
+      runtimeSceneAllowedProperties: [
+        '__spotLight3DExtension',
+        '__pointLight3DExtension',
+        'getScene',
+        '__lightManager',
+        'getRenderer3DInverseWorldScale',
+      ],
+      javaScriptObjectAllowedProperties: ['getPrototypeOf'],
     },
     LinkTools: {
       gdjsAllowedProperties: ['LinksManager'],
@@ -391,6 +419,12 @@ const extensionsAllowedProperties = {
       gdjsAllowedProperties: ['_extensionNoise', 'randomInRange'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    ObjectPickingTools: {
+      gdjsAllowedProperties: [],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: ['getObjects'],
       javaScriptObjectAllowedProperties: [],
     },
     ObjectSlicer: {
@@ -453,6 +487,22 @@ const extensionsAllowedProperties = {
     },
     PlatformerTrajectory: {
       gdjsAllowedProperties: ['PlatformerObjectRuntimeBehavior'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    PlayerAvatar: {
+      gdjsAllowedProperties: ['_extensionAvatar', 'multiplayerMessageManager'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    PlaygamaBridge: {
+      gdjsAllowedProperties: [
+        '_playgamaBridgeExtension',
+        'registerRuntimeScenePostEventsCallback',
+        'projectData',
+      ],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
@@ -524,6 +574,18 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
+    Share: {
+      gdjsAllowedProperties: ['_shareExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    Sky3D: {
+      gdjsAllowedProperties: ['__Sky3DExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     Sprite3D: {
       gdjsAllowedProperties: [
         '__sprite3DExtension',
@@ -533,28 +595,6 @@ const extensionsAllowedProperties = {
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
-    },
-    Light3D: {
-      gdjsAllowedProperties: [
-        '__light3DExtension',
-        'CustomRuntimeObject',
-        'CustomRuntimeObjectInstanceContainer',
-        'CustomRuntimeObject3DRenderer',
-        'CustomRuntimeObject3D',
-        'registerRuntimeScenePreEventsCallback',
-        'registerInGameEditorPostStepCallback',
-        'scene3d',
-        'RuntimeScene',
-      ],
-      gdjsEvtToolsAllowedProperties: ['camera'],
-      runtimeSceneAllowedProperties: [
-        '__spotLight3DExtension',
-        '__pointLight3DExtension',
-        'getScene',
-        '__lightManager',
-        'getRenderer3DInverseWorldScale',
-      ],
-      javaScriptObjectAllowedProperties: ['getPrototypeOf'],
     },
     SpriteMultitouchJoystick: {
       gdjsAllowedProperties: [],
@@ -663,45 +703,6 @@ const extensionsAllowedProperties = {
     },
     YandexGamesSDK: {
       gdjsAllowedProperties: ['_YandexGamesSDK'],
-      gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
-    },
-    Share: {
-      gdjsAllowedProperties: ['_shareExtension'],
-      gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
-    },
-    Flash: {
-      gdjsAllowedProperties: ['SpriteRuntimeObject'],
-      gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
-    },
-    ObjectPickingTools: {
-      gdjsAllowedProperties: [],
-      gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: ['getObjects'],
-      javaScriptObjectAllowedProperties: [],
-    },
-    PlaygamaBridge: {
-      gdjsAllowedProperties: [
-        '_playgamaBridgeExtension',
-        'registerRuntimeScenePostEventsCallback',
-      ],
-      gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
-    },
-    Sky3D: {
-      gdjsAllowedProperties: ['__Sky3DExtension'],
-      gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
-    },
-    PlayerAvatar: {
-      gdjsAllowedProperties: ['_extensionAvatar', 'multiplayerMessageManager'],
       gdjsEvtToolsAllowedProperties: [],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
