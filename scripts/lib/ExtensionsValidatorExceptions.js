@@ -256,18 +256,6 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
-    Grass3D: {
-      gdjsAllowedProperties: [
-        '__grass3DExtension',
-        '__grounds3D',
-        'CustomRuntimeObject3D',
-        'RuntimeObject',
-        'RuntimeScene',
-      ],
-      gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: [],
-      javaScriptObjectAllowedProperties: [],
-    },
     PhysicsAirplane3D: {
       gdjsAllowedProperties: ['RuntimeObject3D'],
       gdjsEvtToolsAllowedProperties: [],
@@ -588,6 +576,7 @@ const extensionsAllowedProperties = {
       gdjsAllowedProperties: [
         '__grounds3D',
         '__terrain3DExtension',
+        '__terrainGrassExtension',
         'Base3DHandler',
         'CustomRuntimeObject3D',
         'InGameEditor',

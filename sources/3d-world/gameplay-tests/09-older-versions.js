@@ -20,6 +20,21 @@ try {
 }
 await harness.stepFrames(1);
 
+// Versions without a world scale for the 3D renderer: 1 is used.
+const { getRenderer3DWorldScale } = gdjs.RuntimeScene.prototype;
+delete gdjs.RuntimeScene.prototype.getRenderer3DWorldScale;
+try {
+  await harness.stepFrames(2);
+  harness.assert(
+    scene.getObjects('Terrain')[0].__terrain3D.renderer.uniforms.terrainWorldScale.value === 1 &&
+      scene.getObjects('Grass')[0].__terrainGrass.uniforms.grassWorldScale.value === 1 &&
+      scene.getObjects('Water')[0].__water3D.uniforms.waterWorldScale.value === 1,
+    'Without a world scale, 1 is used.'
+  );
+} finally {
+  gdjs.RuntimeScene.prototype.getRenderer3DWorldScale = getRenderer3DWorldScale;
+}
+
 // Versions without toolbars or tools in the scene editor.
 const terrainInEditor = scene.getObjects('Terrain')[0];
 let isLeftButtonCaptured = false;

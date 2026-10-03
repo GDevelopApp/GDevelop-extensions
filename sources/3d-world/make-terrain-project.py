@@ -10,7 +10,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SOURCE = os.environ.get("STARTER", os.path.join(HERE, "..", "..", "..", "GDevelop-examples", "examples", "starting-3D-platformer"))
 DESTINATION = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "terrain-demo")
 EXTENSIONS = sys.argv[2:] or [
-    os.path.join(HERE, "..", "..", "extensions", "community", name + ".json") for name in ("Terrain3D", "Water3D", "Grass3D")
+    os.path.join(HERE, "..", "..", "extensions", "community", name + ".json") for name in ("Terrain3D", "Water3D")
 ]
 
 if not os.path.exists(DESTINATION):
@@ -76,18 +76,28 @@ def add_object(name, object_type, content, instance):
     }, **instance))
 
 
-# A CC0 normal map, made from "Seamless looping waves heightmaps" by zookeeper
-# (https://opengameart.org/content/seamless-looping-waves-heightmaps).
-WATER_NORMAL_MAP = "assets/WaterNormalMap.jpg"
-shutil.copyfile(os.path.join(HERE, "assets", "WaterNormalMap.jpg"),
-                os.path.join(DESTINATION, WATER_NORMAL_MAP))
-project["resources"]["resources"].append({
-    "file": WATER_NORMAL_MAP, "kind": "image", "metadata": "", "name": WATER_NORMAL_MAP,
-    "smoothed": True, "userAdded": True,
-})
+def add_image(file_name):
+    resource_name = "assets/" + file_name
+    shutil.copyfile(os.path.join(HERE, "assets", file_name), os.path.join(DESTINATION, resource_name))
+    project["resources"]["resources"].append({
+        "file": resource_name, "kind": "image", "metadata": "", "name": resource_name,
+        "smoothed": True, "userAdded": True,
+    })
+    return resource_name
+
+
+# CC0 textures: a normal map made from "Seamless looping waves heightmaps" by
+# zookeeper (https://opengameart.org/content/seamless-looping-waves-heightmaps),
+# and grass, dirt and rock from ambientCG (with normal maps made from them).
+WATER_NORMAL_MAP = add_image("WaterNormalMap.jpg")
+for layer, texture_name in (() if os.environ.get("NO_TEXTURES") else ((1, "TerrainGrass"), (2, "TerrainDirt"), (3, "TerrainRock"))):
+    terrain_object["content"]["Layer%dColor" % layer] = "255;255;255"
+    terrain_object["content"]["Layer%dTexture" % layer] = add_image(texture_name + ".jpg")
+    terrain_object["content"]["Layer%dNormalMap" % layer] = add_image(texture_name + "Normal.jpg")
+terrain_object["content"]["TextureSize"] = 300
 add_object("Water", "Water3D::Water3D", {"WaveHeight": int(os.environ.get("WAVE_HEIGHT", 4)), "WaveLength": int(os.environ.get("WAVE_LENGTH", 300)), "NormalMap": WATER_NORMAL_MAP},
            {"x": 640 - 4096, "y": 750 - 4096, "z": -38, "width": 8192, "height": 8192, "depth": 1})
-add_object("Grass", "Grass3D::Grass3D", {"Density": 12, "BendingObject": "Player"},
+add_object("Grass", "Terrain3D::TerrainGrass", {"Density": 12, "BendingObject": "Player"},
            {"x": 640 - 1024, "y": 750 - 1024, "z": -100, "width": 2048, "height": 2048, "depth": 40})
 
 # Characters finding their way on the terrain (only in tests: examples keep

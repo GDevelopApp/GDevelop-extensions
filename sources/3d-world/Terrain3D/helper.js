@@ -3,9 +3,8 @@ if (gdjs.__terrain3DExtension) {
 }
 
 /**
- * Grounds (like terrains) that objects of other extensions (like grass)
- * follow, without these extensions knowing each other. Each extension using
- * it has this same code: the first one loaded defines it.
+ * Grounds (like terrains) that other objects (like the terrain grass, or
+ * objects of other extensions) follow, without knowing what they are.
  *
  * A ground has: `getVersion()` (changing when the ground changes),
  * `containsPoint(x, y)`, `getHeightAt(x, y)` (Z position of the ground),
@@ -733,12 +732,13 @@ const getLodIndex = (chunkCells, step) => {
 
 const vertexShaderDeclarations = `
 varying vec2 vTerrainLocalXY;
+uniform float terrainWorldScale;
 varying vec2 vTerrainWorldXY;
 varying float vTerrainUp;
 `;
 const vertexShaderCode = `
 vTerrainLocalXY = position.xy;
-vTerrainWorldXY = (modelMatrix * vec4(transformed, 1.0)).xy;
+vTerrainWorldXY = (modelMatrix * vec4(transformed, 1.0)).xy * terrainWorldScale;
 vTerrainUp = normalize(transpose(inverse(mat3(modelMatrix))) * objectNormal).z;
 `;
 const fragmentShaderDeclarations = `
@@ -749,6 +749,11 @@ uniform sampler2D terrainLayerMap0;
 uniform sampler2D terrainLayerMap1;
 uniform sampler2D terrainLayerMap2;
 uniform sampler2D terrainLayerMap3;
+uniform sampler2D terrainLayerNormalMap0;
+uniform sampler2D terrainLayerNormalMap1;
+uniform sampler2D terrainLayerNormalMap2;
+uniform sampler2D terrainLayerNormalMap3;
+uniform float terrainHasNormalMaps;
 uniform float terrainTextureSize;
 uniform vec4 terrainCliffLayer;
 uniform vec2 terrainCliffCosines;
@@ -806,6 +811,28 @@ if (terrainBrush.w > 0.5) {
 }
 `;
 
+const fragmentShaderNormalCode = `
+if (terrainHasNormalMaps > 0.5) {
+  vec3 terrainMapNormal =
+    terrainWeights.x * (texture2D(terrainLayerNormalMap0, terrainUv).xyz * 2.0 - 1.0) +
+    terrainWeights.y * (texture2D(terrainLayerNormalMap1, terrainUv).xyz * 2.0 - 1.0) +
+    terrainWeights.z * (texture2D(terrainLayerNormalMap2, terrainUv).xyz * 2.0 - 1.0) +
+    terrainWeights.w * (texture2D(terrainLayerNormalMap3, terrainUv).xyz * 2.0 - 1.0);
+  // The X and Y of textures follow the X and Y of the 3D world, projected on
+  // the ground (the camera space of the normal is used).
+  vec3 terrainTangent = (viewMatrix * vec4(1.0, 0.0, 0.0, 0.0)).xyz;
+  terrainTangent -= normal * dot(normal, terrainTangent);
+  // A ground facing the X axis (a rotated terrain) uses the Y axis instead.
+  if (dot(terrainTangent, terrainTangent) < 0.000001) {
+    terrainTangent = (viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz;
+    terrainTangent -= normal * dot(normal, terrainTangent);
+  }
+  terrainTangent = normalize(terrainTangent);
+  vec3 terrainBitangent = cross(normal, terrainTangent);
+  normal = normalize(mat3(terrainTangent, terrainBitangent, normal) * terrainMapNormal);
+}
+`;
+
 let whiteTexture = null;
 const getWhiteTexture = () => {
     if (!whiteTexture) {
@@ -815,26 +842,39 @@ const getWhiteTexture = () => {
     return whiteTexture;
 };
 
+let flatNormalTexture = null;
+const getFlatNormalTexture = () => {
+    if (!flatNormalTexture) {
+        flatNormalTexture = new THREE.DataTexture(new Uint8Array([128, 128, 255, 255]), 1, 1);
+        flatNormalTexture.needsUpdate = true;
+    }
+    return flatNormalTexture;
+};
+
 const layerTextures = new WeakMap();
+const layerNormalMaps = new WeakMap();
 /**
  * Textures of the image manager have no mipmaps: they would shimmer when
  * repeated in the distance.
  * @param {gdjs.RuntimeGame} game
  * @param {string} resourceName
+ * @param {boolean} isNormalMap Normal maps are directions, not colors.
  */
-const getLayerTexture = (game, resourceName) => {
-    if (!resourceName) return getWhiteTexture();
+const getLayerTexture = (game, resourceName, isNormalMap) => {
+    if (!resourceName) return isNormalMap ? getFlatNormalTexture() : getWhiteTexture();
     const imageTexture = game.getImageManager().getThreeTexture(resourceName);
-    let texture = layerTextures.get(imageTexture);
+    const textures = isNormalMap ? layerNormalMaps : layerTextures;
+    let texture = textures.get(imageTexture);
     if (!texture) {
         texture = imageTexture.clone();
+        if (isNormalMap) texture.colorSpace = THREE.NoColorSpace;
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.minFilter = THREE.LinearMipmapLinearFilter;
         texture.generateMipmaps = true;
         texture.anisotropy = 4;
         texture.needsUpdate = true;
-        layerTextures.set(imageTexture, texture);
+        textures.set(imageTexture, texture);
     }
     return texture;
 };
@@ -862,10 +902,17 @@ class TerrainRenderer {
             terrainLayerMap1: { value: getWhiteTexture() },
             terrainLayerMap2: { value: getWhiteTexture() },
             terrainLayerMap3: { value: getWhiteTexture() },
+            terrainLayerNormalMap0: { value: getFlatNormalTexture() },
+            terrainLayerNormalMap1: { value: getFlatNormalTexture() },
+            terrainLayerNormalMap2: { value: getFlatNormalTexture() },
+            terrainLayerNormalMap3: { value: getFlatNormalTexture() },
+            terrainHasNormalMaps: { value: 0 },
             terrainTextureSize: { value: 256 },
             terrainCliffLayer: { value: new THREE.Vector4() },
             terrainCliffCosines: { value: new THREE.Vector2() },
             terrainBrush: { value: new THREE.Vector4() },
+            // Scene units by 3D world unit.
+            terrainWorldScale: { value: 1 },
         };
         this.material = new THREE.MeshStandardMaterial({ roughness: 1, metalness: 0 });
         this.material.onBeforeCompile = (shader) => {
@@ -875,7 +922,8 @@ class TerrainRenderer {
                 .replace('#include <begin_vertex>', '#include <begin_vertex>\n' + vertexShaderCode);
             shader.fragmentShader = shader.fragmentShader
                 .replace('#include <common>', '#include <common>\n' + fragmentShaderDeclarations)
-                .replace('#include <map_fragment>', fragmentShaderCode);
+                .replace('#include <map_fragment>', fragmentShaderCode)
+                .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\n' + fragmentShaderNormalCode);
         };
         this.material.customProgramCacheKey = () => 'Terrain3D';
         this._cameraPosition = new THREE.Vector3();
@@ -1047,10 +1095,18 @@ class TerrainRenderer {
             object._getLayer3Texture(),
             object._getLayer4Texture(),
         ];
+        const normalMaps = [
+            object._getLayer1NormalMap(),
+            object._getLayer2NormalMap(),
+            object._getLayer3NormalMap(),
+            object._getLayer4NormalMap(),
+        ];
         for (let layer = 0; layer < LAYER_COUNT; layer++) {
             this.uniforms.terrainLayerColors.value[layer].set(gdjs.rgbOrHexStringToNumber(colors[layer]));
-            this.uniforms['terrainLayerMap' + layer].value = getLayerTexture(game, textures[layer]);
+            this.uniforms['terrainLayerMap' + layer].value = getLayerTexture(game, textures[layer], false);
+            this.uniforms['terrainLayerNormalMap' + layer].value = getLayerTexture(game, normalMaps[layer], true);
         }
+        this.uniforms.terrainHasNormalMaps.value = normalMaps.some((normalMap) => !!normalMap) ? 1 : 0;
         this.uniforms.terrainTextureSize.value = Math.max(object._getTextureSize(), 1);
 
         const cliffLayer = parseInt(object._getCliffLayer(), 10);
@@ -1088,7 +1144,8 @@ class TerrainRenderer {
         }
         this.group.updateWorldMatrix(true, false);
         const worldPosition = this._chunkPosition.copy(localPosition).applyMatrix4(this.group.matrixWorld);
-        brush.set(worldPosition.x, worldPosition.y, radius, 1);
+        const worldScale = this.uniforms.terrainWorldScale.value;
+        brush.set(worldPosition.x * worldScale, worldPosition.y * worldScale, radius, 1);
     }
 
     /** @param {THREE.Camera | null} camera */
@@ -1767,6 +1824,7 @@ class Terrain {
             this.surfaceVersion = this.version;
         }
         this.applyChanges();
+        this.renderer.uniforms.terrainWorldScale.value = getWorldScale(this.object);
         const layer = this.object.getInstanceContainer().getLayer(this.object.getLayer());
         this.renderer.updateLevelsOfDetail(layer.getRenderer().getThreeCamera());
     }
@@ -1782,6 +1840,52 @@ class Terrain {
         }
     }
 }
+
+/**
+ * @param {gdjs.RuntimeObject} object
+ * @returns {number} The number of scene units by 3D world unit (1 in GDevelop versions before the world scale).
+ */
+const getWorldScale = (object) => {
+    const scene = object.getRuntimeScene();
+    return typeof scene.getRenderer3DWorldScale === 'function' ? scene.getRenderer3DWorldScale() : 1;
+};
+
+const averageColors = new WeakMap();
+let white = null;
+/**
+ * @param {THREE.Texture} texture
+ * @returns {THREE.Color} The average color of the texture (white when it's not loaded).
+ */
+const getAverageColor = (texture) => {
+    const cachedColor = averageColors.get(texture);
+    if (cachedColor) return cachedColor;
+    const image = texture.image;
+    const isDrawable =
+        typeof document !== 'undefined' &&
+        ((image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0) ||
+            image instanceof HTMLCanvasElement ||
+            (typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap));
+    if (!isDrawable) return white || (white = new THREE.Color(1, 1, 1));
+    const size = 8;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const context = canvas.getContext('2d');
+    context.drawImage(image, 0, 0, size, size);
+    const pixels = context.getImageData(0, 0, size, size).data;
+    let red = 0;
+    let green = 0;
+    let blue = 0;
+    for (let index = 0; index < pixels.length; index += 4) {
+        red += pixels[index];
+        green += pixels[index + 1];
+        blue += pixels[index + 2];
+    }
+    const count = size * size * 255;
+    const color = new THREE.Color().setRGB(red / count, green / count, blue / count, THREE.SRGBColorSpace);
+    averageColors.set(texture, color);
+    return color;
+};
 
 const svgIcon = (content) =>
     'data:image/svg+xml,' +
@@ -1819,6 +1923,7 @@ class TerrainEditorTools {
         this.undoSteps = [];
         this.raycaster = new THREE.Raycaster();
         this.ndc = new THREE.Vector2();
+        this._swatchColor = new THREE.Color();
     }
 
     /** @param {gdjs.InGameEditor} editor */
@@ -1951,18 +2056,21 @@ class TerrainEditorTools {
             onClick: () => (this.toolName = this.toolName === toolName ? '' : toolName),
         });
         const layerColors = [object._getLayer1Color(), object._getLayer2Color(), object._getLayer3Color(), object._getLayer4Color()];
+        // Layers are shown with their color, tinting their texture.
+        const swatchColors = layerColors.map((color, index) =>
+            this._swatchColor
+                .set(gdjs.rgbOrHexStringToNumber(color))
+                .multiply(getAverageColor(terrain.renderer.uniforms['terrainLayerMap' + index].value))
+                .getHexString()
+        );
         return [
             toolButton('Raise', 'Raise the ground (drag on the terrain)'),
             toolButton('Lower', 'Lower the ground'),
             toolButton('Smooth', 'Smooth the ground'),
             toolButton('Flatten', 'Flatten the ground to the height where the drag starts'),
             { type: 'divider', id: 'PaintDivider' },
-            ...layerColors.map((color, index) =>
-                toolButton(
-                    'Paint' + (index + 1),
-                    'Paint layer ' + (index + 1),
-                    '#' + gdjs.rgbOrHexStringToNumber(color).toString(16).padStart(6, '0')
-                )
+            ...swatchColors.map((swatchColor, index) =>
+                toolButton('Paint' + (index + 1), 'Paint layer ' + (index + 1), '#' + swatchColor)
             ),
             { type: 'divider', id: 'BrushDivider' },
             {
@@ -1997,6 +2105,8 @@ if (gdjs.registerInGameEditorPostStepCallback) {
 
 gdjs.__terrain3DExtension = {
     Terrain,
+    // Used by the terrain grass.
+    getWorldScale,
     // Exposed for tests.
     TerrainBodyUpdater,
     TerrainData,

@@ -84,6 +84,7 @@ const shortWavesShaderCode = WAVES.map(([, , relativeLength, relativeSpeed, rela
 }).join('');
 
 const vertexShaderDeclarations = `
+uniform float waterWorldScale;
 uniform float waterTime;
 uniform float waterWaveHeight;
 uniform float waterWaveLength;
@@ -103,7 +104,7 @@ float getWaterWaves(vec2 position, out vec2 slopeOut) {
 `;
 const vertexShaderWaves = `
 // Waves are computed in scene coordinates (the 3D scene is flipped on Y).
-vec2 waterScenePosition = (modelMatrix * vec4(position, 1.0)).xy * vec2(1.0, -1.0);
+vec2 waterScenePosition = (modelMatrix * vec4(position, 1.0)).xy * vec2(waterWorldScale, -waterWorldScale);
 vec2 waterSlope;
 float waterHeight = getWaterWaves(waterScenePosition, waterSlope);
 vWaterCrest = waterWaveHeight > 0.0 ? waterHeight / waterWaveHeight : 0.0;
@@ -113,7 +114,7 @@ const vertexShaderNormal = `
 transformedNormal = normalize((viewMatrix * vec4(-waterSlope.x, waterSlope.y, 1.0, 0.0)).xyz);
 `;
 const vertexShaderPosition = `
-vec3 transformed = vec3(position.xy, position.z + waterHeight / max(length(modelMatrix[2].xyz), 0.0001));
+vec3 transformed = vec3(position.xy, position.z + waterHeight / max(length(modelMatrix[2].xyz) * waterWorldScale, 0.0001));
 `;
 const fragmentShaderDeclarations = `
 uniform float waterTime;
@@ -232,6 +233,8 @@ class Water {
         this.object = object;
         this.time = 0;
         this.uniforms = {
+            // Scene units by 3D world unit.
+            waterWorldScale: { value: 1 },
             waterTime: { value: 0 },
             // Ripples are noise: a small time keeps them precise.
             waterRippleTime: { value: 0 },
@@ -390,6 +393,10 @@ class Water {
     /** @param {number} time In seconds, the same for all water objects. */
     update(time) {
         this.time = time;
+        const scene = this.object.getRuntimeScene();
+        // 1 in GDevelop versions before the world scale.
+        this.uniforms.waterWorldScale.value =
+            typeof scene.getRenderer3DWorldScale === 'function' ? scene.getRenderer3DWorldScale() : 1;
         this.uniforms.waterTime.value = time;
         this.uniforms.waterRippleTime.value = time % 1000;
         this._updateGeometryIfNeeded();

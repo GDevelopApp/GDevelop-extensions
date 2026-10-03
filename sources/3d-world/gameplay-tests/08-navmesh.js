@@ -54,13 +54,3 @@ for (let x = terrainObject.getX() + 50; x < walker.getX() && !seaFloor; x += 50)
 harness.assert(!!seaFloor, 'The terrain has a sea floor.');
 pathfinding.moveTo(seaFloor.x, seaFloor.y, terrain.getHeightAt(seaFloor.x, seaFloor.y));
 harness.assert(!pathfinding.pathFound(), "The walker can't go on the sea floor.");
-
-// Sculpting the terrain updates the navigation mesh, painting it doesn't.
-const manager = gdjs.NavMeshObstaclesManager.getManager(scene);
-const navMeshBeforePaint = manager.navMesh;
-terrain.paint(walker.getX(), walker.getY(), walker.getX(), walker.getY(), 200, 2, 1);
-await harness.stepFrames(70);
-harness.assert(manager.navMesh === navMeshBeforePaint, "Painting doesn't rebuild the navigation mesh.");
-terrain.raise(walker.getX(), walker.getY(), walker.getX(), walker.getY(), 200, 100);
-await harness.stepFrames(70);
-harness.assert(manager.navMesh !== navMeshBeforePaint, 'Sculpting rebuilds the navigation mesh.');

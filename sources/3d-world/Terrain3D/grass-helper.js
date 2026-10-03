@@ -1,48 +1,20 @@
-if (gdjs.__grass3DExtension) {
+if (gdjs.__terrainGrassExtension) {
     return;
 }
+// Blades grow on the grounds of the scene (`gdjs.__grounds3D`, defined with
+// the terrain): 3D terrains, or grounds of other extensions.
 
-/**
- * Grounds (like terrains) that objects of other extensions (like grass)
- * follow, without these extensions knowing each other. Each extension using
- * it has this same code: the first one loaded defines it.
- *
- * A ground has: `getVersion()` (changing when the ground changes),
- * `containsPoint(x, y)`, `getHeightAt(x, y)` (Z position of the ground),
- * `getSlopeAt(x, y)` (in degrees) and `getLayerWeightAt(x, y, layer)` (how
- * much a painted layer, from 1 to 4, is there, from 0 to 1).
- */
-if (!gdjs.__grounds3D) {
-    const groundsByScene = new WeakMap();
-    gdjs.__grounds3D = {
-        /**
-         * @param {gdjs.RuntimeScene} runtimeScene
-         * @returns {Set<object>} The grounds of the scene.
-         */
-        getGrounds(runtimeScene) {
-            let grounds = groundsByScene.get(runtimeScene);
-            if (!grounds) {
-                grounds = new Set();
-                groundsByScene.set(runtimeScene, grounds);
-            }
-            return grounds;
-        },
-    };
-}
-
-// Size of the object inner area: instances are scaled from it. The depth is
-// the height of the grass.
+// Size of the object inner area: instances are scaled from it.
 const AREA_SIZE = 1000;
 const AREA_DEPTH = 40;
 const CHUNK_SIZE = 500;
 const MAX_BENDING_OBJECTS = 8;
-const BLADE_WIDTH = 5;
 // The ground or the object can change every frame (while sculpting or moving
 // it in the editor): blades are placed again at most this often.
 const REBUILD_DELAY = 0.3;
 
 /**
- * A blade: a thin, tapered, slightly curved strip. Its height is 1: blades are
+ * A blade: a thin, tapered strip. Its width and height are 1: blades are
  * scaled by the shader.
  */
 const createBladeGeometry = () => {
@@ -50,8 +22,8 @@ const createBladeGeometry = () => {
     const heights = [0, 0.35, 0.7, 1];
     const positions = [];
     halfWidths.forEach((halfWidth, level) => {
-        positions.push(-halfWidth * BLADE_WIDTH, 0, heights[level]);
-        if (halfWidth > 0) positions.push(halfWidth * BLADE_WIDTH, 0, heights[level]);
+        positions.push(-halfWidth, 0, heights[level]);
+        if (halfWidth > 0) positions.push(halfWidth, 0, heights[level]);
     });
     const indices = [0, 1, 2, 1, 3, 2, 2, 3, 4, 3, 5, 4, 4, 5, 6];
     const geometry = new THREE.InstancedBufferGeometry();
@@ -65,6 +37,8 @@ const vertexShaderDeclarations = `
 attribute vec4 grassRoot;
 attribute vec2 grassShape;
 uniform mat3 grassWorldToLocal;
+uniform float grassWorldScale;
+uniform float grassBladeWidth;
 uniform float grassTime;
 uniform float grassWindStrength;
 uniform float grassWindSpeed;
@@ -74,15 +48,17 @@ uniform vec3 grassTipColor;
 varying vec3 vGrassColor;
 `;
 const vertexShaderPosition = `
-// Blades are shaped in world units, then moved back in the (scaled) object space.
+// Blades are shaped in scene units (with Y flipped like the 3D world), then
+// moved back in the (scaled) object space.
 float bladeHeight = position.z;
 float grassAngle = grassRoot.w;
+float bladeWidth = position.x * grassBladeWidth;
 vec3 blade = vec3(
-  position.x * cos(grassAngle),
-  position.x * sin(grassAngle),
+  bladeWidth * cos(grassAngle),
+  bladeWidth * sin(grassAngle),
   bladeHeight * grassShape.x
 );
-vec3 rootWorld = (modelMatrix * vec4(grassRoot.xyz, 1.0)).xyz;
+vec3 rootWorld = (modelMatrix * vec4(grassRoot.xyz, 1.0)).xyz * grassWorldScale;
 // Tips bend more than the base.
 float bendFactor = bladeHeight * bladeHeight * grassShape.x;
 float gust = sin(grassTime * grassWindSpeed + rootWorld.x * 0.013 + rootWorld.y * 0.011);
@@ -99,7 +75,7 @@ for (int i = 0; i < ${MAX_BENDING_OBJECTS}; i++) {
     blade.z *= 1.0 - push * 0.5;
   }
 }
-vec3 transformed = grassRoot.xyz + grassWorldToLocal * blade;
+vec3 transformed = grassRoot.xyz + grassWorldToLocal * (blade / grassWorldScale);
 vGrassColor = mix(grassBaseColor, grassTipColor, bladeHeight) * (0.85 + 0.3 * grassShape.y);
 `;
 const vertexShaderNormal = `
@@ -119,6 +95,8 @@ normal = normalize(vNormal);
 nonPerturbedNormal = normal;
 `;
 
+const { getWorldScale } = gdjs.__terrain3DExtension;
+
 const random = (seed) => {
     let state = seed >>> 0 || 1;
     return () => {
@@ -130,7 +108,7 @@ const random = (seed) => {
 };
 
 /**
- * The grass of a Grass3D object: blades drawn with GPU instancing, in chunks
+ * The grass of a terrain grass object: blades drawn with GPU instancing, in chunks
  * that are hidden when off-screen and thinned out with the distance. They grow
  * on the grounds below, like 3D terrains (only where a given layer is painted).
  */
@@ -148,6 +126,9 @@ class Grass {
         this.grounds = gdjs.__grounds3D.getGrounds(object.getRuntimeScene());
         this.uniforms = {
             grassWorldToLocal: { value: new THREE.Matrix3() },
+            // Scene units by 3D world unit.
+            grassWorldScale: { value: 1 },
+            grassBladeWidth: { value: 1 },
             grassTime: { value: 0 },
             grassWindStrength: { value: 1 },
             grassWindSpeed: { value: 1 },
@@ -167,7 +148,7 @@ class Grass {
                 .replace('#include <color_fragment>', '#include <color_fragment>\n' + fragmentShaderColor)
                 .replace('#include <normal_fragment_begin>', fragmentShaderNormal);
         };
-        this.material.customProgramCacheKey = () => 'Grass3D';
+        this.material.customProgramCacheKey = () => 'TerrainGrass';
 
         this._matrix = new THREE.Matrix4();
         this._cameraPosition = new THREE.Vector3();
@@ -182,6 +163,7 @@ class Grass {
         this.uniforms.grassTipColor.value.set(gdjs.rgbOrHexStringToNumber(object._getTipColor()));
         this.uniforms.grassWindStrength.value = object._getWindStrength();
         this.uniforms.grassWindSpeed.value = object._getWindSpeed();
+        this.uniforms.grassBladeWidth.value = Math.max(object._getBladeWidth(), 0);
         this.material.needsUpdate = true;
         this.builtFrom = '';
     }
@@ -191,7 +173,8 @@ class Grass {
         const groundVersions = Array.from(this.grounds, (ground) => ground.getVersion());
         return [
             object.getX(), object.getY(), object.getZ(), object.getWidth(), object.getHeight(), object.getDepth(),
-            object._getDensity(), object._getGroundLayer(), object._getMaxSlope(), object._getSeed(),
+            object._getDensity(), object._getBladeHeight(), object._getGroundLayer(), object._getMaxSlope(),
+            object._getSeed(),
             ...groundVersions,
         ].join('|');
     }
@@ -217,6 +200,7 @@ class Grass {
         const chunksX = Math.max(Math.ceil(width / CHUNK_SIZE), 1);
         const chunksY = Math.max(Math.ceil(height / CHUNK_SIZE), 1);
         const nextRandom = random(object._getSeed() * 7919 + 1);
+        const bladeHeight = Math.max(object._getBladeHeight(), 0);
 
         for (let chunkY = 0; chunkY < chunksY; chunkY++) {
             for (let chunkX = 0; chunkX < chunksX; chunkX++) {
@@ -230,7 +214,7 @@ class Grass {
                     const x = (chunkX + nextRandom()) * CHUNK_SIZE;
                     const y = (chunkY + nextRandom()) * CHUNK_SIZE;
                     const angle = nextRandom() * Math.PI * 2;
-                    const bladeHeight = 0.6 + 0.6 * nextRandom();
+                    const heightFactor = 0.6 + 0.8 * nextRandom();
                     const tint = nextRandom();
                     const growth = nextRandom();
                     if (x > width || y > height) continue;
@@ -248,7 +232,7 @@ class Grass {
                     roots[blades * 4 + 1] = y / scaleY;
                     roots[blades * 4 + 2] = localZ;
                     roots[blades * 4 + 3] = angle;
-                    shapes[blades * 2] = bladeHeight * object.getDepth();
+                    shapes[blades * 2] = heightFactor * bladeHeight;
                     shapes[blades * 2 + 1] = tint;
                     minZ = Math.min(minZ, localZ);
                     maxZ = Math.max(maxZ, localZ);
@@ -263,15 +247,19 @@ class Grass {
                 geometry.setAttribute('grassRoot', new THREE.InstancedBufferAttribute(roots.subarray(0, blades * 4), 4));
                 geometry.setAttribute('grassShape', new THREE.InstancedBufferAttribute(shapes.subarray(0, blades * 2), 2));
                 geometry.instanceCount = blades;
-                // Blades lean with the wind, up to about their height.
-                const leanX = (object.getDepth() * 1.5) / scaleX;
-                const leanY = (object.getDepth() * 1.5) / scaleY;
+                // The furthest tips can go with the wind and the bending objects (see the shader).
+                const maxBladeHeight = bladeHeight * 1.4;
+                const lean =
+                    (0.35 * 1.9 * 0.943 * Math.max(object._getWindStrength(), 0) + 0.9) * maxBladeHeight +
+                    Math.max(object._getBladeWidth(), 0) / 2;
+                const leanX = lean / scaleX;
+                const leanY = lean / scaleY;
                 geometry.boundingBox = new THREE.Box3(
                     new THREE.Vector3((chunkX * CHUNK_SIZE) / scaleX - leanX, (chunkY * CHUNK_SIZE) / scaleY - leanY, minZ),
                     new THREE.Vector3(
                         Math.min((chunkX + 1) * CHUNK_SIZE, width) / scaleX + leanX,
                         Math.min((chunkY + 1) * CHUNK_SIZE, height) / scaleY + leanY,
-                        maxZ + AREA_DEPTH * 1.2
+                        maxZ + (bladeHeight * 1.4) / scaleZ
                     )
                 );
                 geometry.boundingSphere = geometry.boundingBox.getBoundingSphere(new THREE.Sphere());
@@ -317,6 +305,7 @@ class Grass {
         }
 
         this.uniforms.grassTime.value = time;
+        this.uniforms.grassWorldScale.value = getWorldScale(this.object);
         // The object transformation is applied just before rendering, it's needed now.
         this.object.getRenderer().ensureUpToDate();
         this.group.updateWorldMatrix(true, false);
@@ -324,8 +313,8 @@ class Grass {
         this._updateBendingObjects();
         if (!camera) return;
 
-        // Far chunks are hidden, and thinned out before.
-        const fadeDistance = Math.max(this.object._getFadeDistance(), 1);
+        // Far chunks are hidden, and thinned out before (in 3D world units).
+        const fadeDistance = Math.max(this.object._getFadeDistance(), 1) / getWorldScale(this.object);
         this._cameraPosition.setFromMatrixPosition(camera.matrixWorld);
         for (const chunk of this.chunks) {
             const distance = this._chunkPosition
@@ -348,4 +337,4 @@ class Grass {
     }
 }
 
-gdjs.__grass3DExtension = { Grass };
+gdjs.__terrainGrassExtension = { Grass };
