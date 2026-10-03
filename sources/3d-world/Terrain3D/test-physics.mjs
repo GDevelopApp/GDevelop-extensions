@@ -22,7 +22,7 @@ const bodyInterface = physicsSystem.GetBodyInterface();
 
 class Physics3DRuntimeBehavior {}
 const gdjs = { Physics3DRuntimeBehavior, toDegrees: (r) => (r * 180) / Math.PI };
-const THREE = { Raycaster: class {}, Vector2: class {} };
+const THREE = { Raycaster: class {}, Vector2: class {}, Color: class {} };
 new Function('gdjs', 'THREE', 'Jolt', fs.readFileSync(new URL('./helper.js', import.meta.url), 'utf8'))(gdjs, THREE, Jolt);
 const { TerrainData, relief } = gdjs.__terrain3DExtension;
 const TerrainBodyUpdater = gdjs.__terrain3DExtension.TerrainBodyUpdater;

@@ -1,5 +1,8 @@
 // The player walks on the slopes of the terrain
 await harness.goToScene('Game Scene');
+// Faster in the software renderer used to run tests (this test is about collisions).
+harness.setGameResolutionSize(160, 90);
+harness.getCurrentRuntimeScene().getObjects('Grass')[0].hide(true);
 harness.watch('Player');
 const getPlayer = () => harness.getObjects('Player')[0];
 const terrain = harness.getRuntimeObject(harness.getObjects('Terrain')[0].id).__terrain3D;

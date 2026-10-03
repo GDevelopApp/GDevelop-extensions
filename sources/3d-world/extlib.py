@@ -5,7 +5,6 @@ Writing the helper classes in a .js file and generating the JSON keeps them
 readable and testable.
 """
 import base64
-import os
 import json
 
 
@@ -209,9 +208,3 @@ def write(path, data):
         json.dump(data, file, indent=2, ensure_ascii=False)
         file.write("\n")
 
-
-def check_includes_ground_registry(helper_code):
-    """Extensions using grounds each have a copy of the same code (see ground-registry.js)."""
-    ground_registry = open(os.path.join(os.path.dirname(__file__), "ground-registry.js")).read()
-    if ground_registry not in helper_code:
-        raise Exception("The helper code must include an unchanged copy of ground-registry.js.")

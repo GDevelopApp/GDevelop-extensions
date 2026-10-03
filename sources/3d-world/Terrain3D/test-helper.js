@@ -2,7 +2,7 @@
 const fs = require('fs');
 const assert = require('assert');
 const gdjs = {};
-const THREE = { Raycaster: class {}, Vector2: class {} };
+const THREE = { Raycaster: class {}, Vector2: class {}, Color: class {} };
 new Function('gdjs', 'THREE', fs.readFileSync(__dirname + '/helper.js', 'utf8'))(gdjs, THREE);
 const { TerrainData, codec, relief } = gdjs.__terrain3DExtension;
 const { brushes } = gdjs.__terrain3DExtension;

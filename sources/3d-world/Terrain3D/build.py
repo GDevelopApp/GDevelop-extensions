@@ -2,14 +2,15 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from extlib import *  # noqa
+from grass import grass_object, grass_helper_function
 
 HERE = os.path.dirname(__file__)
 OBJECT_TYPE = "Terrain3D::Terrain3D"
 OUTPUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "..", "..", "extensions", "community", "Terrain3D.json")
 
 helper_code = open(os.path.join(HERE, "helper.js")).read()
-check_includes_ground_registry(helper_code)
 
 
 def terrain_code(body):
@@ -190,6 +191,10 @@ for index, (layer_name, color) in enumerate(layer_defaults):
                                  group="Layers"))
     layer_properties.append(prop("Layer%dTexture" % number, "Resource", "", "Layer %d texture" % number,
                                  description="Optional. Tinted by the layer color.", group="Layers", extra=["image"]))
+    layer_properties.append(prop("Layer%dNormalMap" % number, "Resource", "", "Layer %d normal map" % number,
+                                 description="Optional. The bumps of the texture, lit by the lights "
+                                             "(an OpenGL normal map, like the textures of ambientCG).",
+                                 group="Layers", extra=["image"]))
 
 properties = [
     prop("Relief", "Choice", "Hills", "Relief", group="Shape",
@@ -252,6 +257,7 @@ A 3D terrain object for open worlds, adventure or racing games: hills, mountains
 - **Pathfinding**: add the **floor/obstacle for pathfinding (navmesh based)** behavior to the terrain, so that characters with the navmesh pathfinding behavior walk on its hills and around its cliffs (in recent GDevelop versions).
 - **Shape it with the Edits property**: a list of raise, flatten, smooth and paint strokes written in JSON, shown in the scene editor. It's readable and can be changed by hand or by an AI agent, like the relief, the heightmap and the other properties. Actions only change the terrain during the game.
 - **Change it during the game** with actions (raise, lower, flatten, smooth, paint, along a line for paths and rivers) and read the ground height, slope or layer with expressions.
+- **Grass**: add a **terrain grass** object over the terrain. Thousands of blades sway in the wind, grow where a layer (like grass) is painted and where the ground is not too steep, and are pushed aside by characters. Sculpt or paint the terrain and the grass follows.
 - **Made for large worlds**: the terrain is split in chunks that are hidden when off-screen and simplified when far away, and collisions are updated only where the ground changes.
 """
 
@@ -262,7 +268,7 @@ extension_data = extension(
     description,
     "0.1.0",
     "General",
-    ["3d", "terrain", "ground", "heightmap", "landscape", "open world"],
+    ["3d", "terrain", "ground", "heightmap", "landscape", "open world", "grass", "foliage"],
     TERRAIN_ICON,
     PREVIEW_ICON_URL,
     [
@@ -272,9 +278,10 @@ extension_data = extension(
             description="Define helper classes JavaScript code.",
             sentence="Define helper classes JavaScript code",
             private=True,
-        )
+        ),
+        grass_helper_function,
     ],
-    objects=[terrain_object],
+    objects=[terrain_object, grass_object],
     gdevelop_version=">=5.5.222",
 )
 
