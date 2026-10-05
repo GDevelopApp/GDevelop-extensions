@@ -10,7 +10,7 @@
   "name": "FoliageSwaying3D",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/732ef90b7fcf5dd9171fe95d0cf262e09159b487304915a4693baa893d9ce16c_grass.svg",
   "shortDescription": "Sway foliage of 3D objects according to the wind.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": [
     "Sway foliage of 3D objects according to wind.",
     "",
@@ -30,12 +30,8 @@
     "* Hot reload supports all basic behavior property changes, excluding Sway settings (`Material to sway`, `Sway type`, `Enable uniform sway toggle`) and `Distance culling`, `Debug output`, `GPU instancing`, and `Custom PBR settings` toggles. However, if PBR settings are enabled as you start the preview, changes to specific PBR values will be updated on hot-reload.<br><br>",
     ""
   ],
-  "origin": {
-    "identifier": "FoliageSwaying3D",
-    "name": "gdevelop-extension-store"
-  },
   "tags": [
-    "3d",
+    "3D",
     "shader",
     "foliage",
     "wind",
@@ -5029,6 +5025,67 @@
           "parameterObjects": "",
           "useStrict": true,
           "eventsSheetExpanded": true
+        },
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "// Prepares the shaders of every foliage material ahead of time, so foliage",
+            "// becoming visible for the first time (often on a camera turn) does not",
+            "// compile its shader on that frame. A foliage material can be drawn by plain",
+            "// and by instanced meshes, which use two different programs: one mesh of each",
+            "// kind is compiled per material. Compilation runs again when a material is",
+            "// added or changes version (new defines, such as wind gusts).",
+            "const sceneState = runtimeScene._foliageSwaying3D;",
+            "const activeMaterials = sceneState && sceneState.activeMaterials;",
+            "if (!activeMaterials || activeMaterials.size === 0) return;",
+            "",
+            "let materialsSignature = '';",
+            "activeMaterials.forEach((material) => {",
+            "    if (material) materialsSignature += material.uuid + ':' + material.version + '|';",
+            "});",
+            "if (sceneState._precompiledMaterialsSignature === materialsSignature) return;",
+            "",
+            "const layerRenderer = runtimeScene.getLayer(\"\").getRenderer();",
+            "const threeScene = layerRenderer && layerRenderer.getThreeScene ? layerRenderer.getThreeScene() : null;",
+            "if (!threeScene) return;",
+            "sceneState._precompiledMaterialsSignature = materialsSignature;",
+            "",
+            "const meshesToCompile = [];",
+            "const foundVariants = new Set();",
+            "threeScene.traverse((object3D) => {",
+            "    if (!object3D.isMesh || !object3D.material) return;",
+            "    const materials = Array.isArray(object3D.material) ? object3D.material : [object3D.material];",
+            "    for (const material of materials) {",
+            "        if (!activeMaterials.has(material)) continue;",
+            "        const variantKey = material.uuid + (object3D.isInstancedMesh ? ':instanced' : ':plain');",
+            "        if (foundVariants.has(variantKey)) continue;",
+            "        foundVariants.add(variantKey);",
+            "        meshesToCompile.push(object3D);",
+            "    }",
+            "});",
+            "if (meshesToCompile.length === 0) return;",
+            "",
+            "// Compiling outside of a render can produce a program variant that differs",
+            "// from the one used to draw (lights and render state are only set up during",
+            "// the render), so the compilation is done at the start of the next render.",
+            "const previousOnBeforeRender = threeScene.onBeforeRender;",
+            "threeScene.onBeforeRender = function (renderer, scene, camera, renderTarget) {",
+            "    threeScene.onBeforeRender = previousOnBeforeRender;",
+            "    if (renderer && renderer.compile) {",
+            "        for (const mesh of meshesToCompile) {",
+            "            // The compiler only collects visible meshes: show this one just for the call.",
+            "            const wasVisible = mesh.visible;",
+            "            mesh.visible = true;",
+            "            try { renderer.compile(mesh, camera, scene); } catch (error) {}",
+            "            mesh.visible = wasVisible;",
+            "        }",
+            "    }",
+            "    if (previousOnBeforeRender) previousOnBeforeRender.apply(this, arguments);",
+            "};"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
         }
       ],
       "parameters": [
@@ -8879,7 +8936,7 @@
           "value": "",
           "type": "Boolean",
           "label": "Use color gradient",
-          "description": "Enables top/bottom gradient tint and color grading (default: off).",
+          "description": "Enables top/bottom gradient tint and color grading (default: off)",
           "group": "Color",
           "name": "UseColorGradient"
         },
@@ -8935,21 +8992,24 @@
           "value": "",
           "type": "String",
           "label": "Material to sway",
-          "description": "Material name to target (empty = auto-pick).",
+          "description": "Material name to target. (empty = auto-pick)",
+          "group": "Sway",
           "name": "MaterialName"
         },
         {
           "value": "true",
           "type": "Boolean",
           "label": "Enable uniform sway",
-          "description": "If enabled, all instances sway similarly. If off, each gets random phase variation (default: on).",
+          "description": "If enabled, all instances sway similarly. If off, each gets random phase variation. (default: on)",
+          "group": "Sway",
           "name": "UseUniformSway"
         },
         {
-          "value": "Grass",
+          "value": "",
           "type": "Choice",
           "label": "Sway type",
           "description": "Wind animation model.",
+          "group": "Sway",
           "choices": [
             {
               "label": "Grass sway",
@@ -8974,7 +9034,7 @@
           "value": "false",
           "type": "Boolean",
           "label": "Debug output",
-          "description": "Prints material/mesh and auto-scale debug info to console (requires object to be in the scene; default: off).",
+          "description": "Prints material/mesh and auto-scale debug info to console. (requires object to be in the scene; default: off)",
           "advanced": true,
           "name": "DebugOutput"
         },
@@ -8982,7 +9042,8 @@
           "value": "0",
           "type": "Number",
           "label": "Sway response",
-          "description": "How much the object is deformed by the wind. For low-poly models use small number around 0.5. (0-200; 0 = auto)",
+          "description": "Sorts unexpected visual behavior. For low-poly models use smaller number. (0-200; 0 = auto)",
+          "group": "Sway",
           "name": "SwayResponse"
         },
         {
@@ -8997,7 +9058,7 @@
           "value": "",
           "type": "Boolean",
           "label": "GPU instancing",
-          "description": "Uses GPU instancing for supported sway types (better performance; default: off).",
+          "description": "Uses GPU instancing for supported sway types. (better performance; default: off).",
           "group": "Instancing",
           "name": "UseGPUInstancing"
         },
@@ -9005,7 +9066,7 @@
           "value": "",
           "type": "Boolean",
           "label": "Distance culling",
-          "description": "Enables distance-based dither fade/culling (default: off).",
+          "description": "Enables distance-based dither fade/culling. (default: off)",
           "group": "Culling",
           "name": "UseDistanceFade"
         },
@@ -9014,7 +9075,7 @@
           "type": "Number",
           "unit": "Pixel",
           "label": "Fade distance start",
-          "description": "Distance where fade-out starts. Requires enabled distance culling (0-100000; default: 1200).",
+          "description": "Distance where fade-out starts. Requires enabled distance culling. (0-100000; default: 1200)",
           "group": "Culling",
           "name": "DistanceFadeStart"
         },
@@ -9023,7 +9084,7 @@
           "type": "Number",
           "unit": "Pixel",
           "label": "Fade distance end",
-          "description": "Distance where fade reaches zero. Requires enabled distance culling (0-100000; default: 1600).",
+          "description": "Distance where fade reaches zero. Requires enabled distance culling. (0-100000; default: 1600)",
           "group": "Culling",
           "name": "DistanceFadeEnd"
         },
@@ -9031,7 +9092,7 @@
           "value": "",
           "type": "Boolean",
           "label": "Custom PBR settings",
-          "description": "Enables custom PBR tuning controls (default: off).",
+          "description": "Enables custom PBR tuning controls. (default: off)",
           "group": "Custom PBR (experimental)",
           "advanced": true,
           "name": "UseCustomPBR"
@@ -9040,7 +9101,7 @@
           "value": "0",
           "type": "Number",
           "label": "Metallic factor",
-          "description": "PBR metallic value (0-1; default: 0).",
+          "description": "PBR metallic value. (0-1; default: 0)",
           "group": "Custom PBR (experimental)",
           "advanced": true,
           "name": "Metallic"
@@ -9049,7 +9110,7 @@
           "value": "1",
           "type": "Number",
           "label": "Roughness factor",
-          "description": "PBR roughness value (0-1; default: 1).",
+          "description": "PBR roughness value. (0-1; default: 1)",
           "group": "Custom PBR (experimental)",
           "advanced": true,
           "name": "Roughness"
@@ -9058,7 +9119,7 @@
           "value": "0.1",
           "type": "Number",
           "label": "Specular factor",
-          "description": "Specular intensity (where supported; 0-1; default: 0.1).",
+          "description": "Specular intensity. (where supported; 0-1; default: 0.1)",
           "group": "Custom PBR (experimental)",
           "advanced": true,
           "name": "Specular"
@@ -9067,7 +9128,7 @@
           "value": "1",
           "type": "Number",
           "label": "Normal strength",
-          "description": "Normal map strength (0-1; default: 1).",
+          "description": "Normal map strength. (0-1; default: 1)",
           "group": "Custom PBR (experimental)",
           "advanced": true,
           "name": "NormalStrength"
@@ -9076,7 +9137,7 @@
           "value": "1",
           "type": "Number",
           "label": "Ambient Occlusion strength",
-          "description": "Ambient occlusion intensity (0-1; default: 1).",
+          "description": "Ambient occlusion intensity. (0-1; default: 1)",
           "group": "Custom PBR (experimental)",
           "advanced": true,
           "name": "AmbientOcclusionStrength"
@@ -9085,13 +9146,13 @@
           "value": "1",
           "type": "Number",
           "label": "Environment strength",
-          "description": "Environment reflection intensity (0-1; default: 1).",
+          "description": "Environment reflection intensity. (0-1; default: 1)",
           "group": "Custom PBR (experimental)",
           "advanced": true,
           "name": "EnvironmentStrength"
         },
         {
-          "value": "UseSource",
+          "value": "",
           "type": "Choice",
           "label": "Culling mode",
           "description": "3D model face culling mode.",
@@ -9116,7 +9177,7 @@
           "value": "true",
           "type": "Boolean",
           "label": "Use two sided lighting",
-          "description": "If enabled, both frontface and backface are lit. Useful for planes/cards (default: on).",
+          "description": "If enabled, both frontface and backface are lit. Useful for planes/cards (default: on)",
           "group": "Color",
           "name": "UseTwoSidedLighting"
         }
@@ -9124,18 +9185,6 @@
       "propertiesFolderStructure": {
         "folderName": "__ROOT",
         "children": [
-          {
-            "propertyName": "SwayType"
-          },
-          {
-            "propertyName": "MaterialName"
-          },
-          {
-            "propertyName": "SwayResponse"
-          },
-          {
-            "propertyName": "UseUniformSway"
-          },
           {
             "folderName": "Color",
             "children": [
@@ -9165,6 +9214,23 @@
               },
               {
                 "propertyName": "IgnoreUV"
+              }
+            ]
+          },
+          {
+            "folderName": "Sway",
+            "children": [
+              {
+                "propertyName": "SwayType"
+              },
+              {
+                "propertyName": "MaterialName"
+              },
+              {
+                "propertyName": "SwayResponse"
+              },
+              {
+                "propertyName": "UseUniformSway"
               }
             ]
           },
