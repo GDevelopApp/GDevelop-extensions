@@ -16,7 +16,7 @@ terrain.raise(hillX, hillY, hillX, hillY, 300, 150);
 const hillZ = terrain.getHeightAt(hillX, hillY);
 harness.assert(Math.abs(hillZ - groundBefore - 150) < 1, 'The ground is raised by 150 at the center.');
 await harness.stepFrames(2);
-harness.setObjectPosition(start.id, hillX - 15, hillY - 15, hillZ + 80);
+harness.setObjectPosition(start.id, hillX - 15, hillY - 15, hillZ + 40);
 await harness.stepUntil(() => getPlayer().behaviors.PhysicsCharacter3D.state.IsOnFloor === false, { maxFrames: 5 });
 const landed = await harness.stepUntil(
   () => getPlayer().behaviors.PhysicsCharacter3D.state.IsOnFloor === true,

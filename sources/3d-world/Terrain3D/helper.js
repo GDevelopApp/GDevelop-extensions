@@ -460,6 +460,18 @@ const edits = {
 };
 
 /**
+ * @param {gdjs.RuntimeGame} game
+ * @param {string} imageResourceName
+ * @returns {CanvasImageSource | null} The image, or null if it's not loaded (yet).
+ */
+const getLoadedImage = (game, imageResourceName) => {
+    const texture = game.getImageManager().getPIXITexture(imageResourceName);
+    const source = texture && texture.baseTexture && texture.baseTexture.getDrawableSource();
+    // An 8 x 8 placeholder is given for images that are not loaded.
+    return source && source.width > 8 && source.height > 8 ? source : null;
+};
+
+/**
  * Loads heights from an image: black is the lowest, white the highest.
  * Heights have 16 bits of precision when the red channel holds the most
  * significant byte and the green one the least significant (a gray image
@@ -470,10 +482,8 @@ const edits = {
  * @returns {boolean} true if the image could be read.
  */
 const loadHeightsFromImage = (data, game, imageResourceName) => {
-    const texture = game.getImageManager().getPIXITexture(imageResourceName);
-    const source = texture && texture.baseTexture && texture.baseTexture.getDrawableSource();
-    // An 8 x 8 placeholder is given for images that are not loaded.
-    if (!source || source.width <= 8 || source.height <= 8) return false;
+    const source = getLoadedImage(game, imageResourceName);
+    if (!source) return false;
 
     const canvas = document.createElement('canvas');
     canvas.width = source.width;
@@ -1468,6 +1478,9 @@ class Terrain {
         this._strokeChangedSamples = new SampleRectangle();
         /** The properties the data was loaded from, to reload it only if they change. */
         this.loadedFrom = '';
+        /** True when the heightmap image was not loaded yet: the relief is used until it is. */
+        this.isWaitingForHeightmap = false;
+        this._framesWaitingForHeightmap = 0;
         /** The last value of the sculpt data property read or saved. */
         this.sculptData = '';
         /**
@@ -1512,6 +1525,7 @@ class Terrain {
         const validResolution = RESOLUTIONS.indexOf(resolution) !== -1 ? resolution : DEFAULT_RESOLUTION;
         this.sculptData = object._getSculptData();
         this.loadedFrom = this._getSourceProperties();
+        this.isWaitingForHeightmap = false;
 
         this.baseData = this._getBaseData(validResolution);
         let data = codec.decode(this.sculptData, (resolution) => copyTerrainData(this._getBaseData(resolution)));
@@ -1537,6 +1551,8 @@ class Terrain {
             !!heightmapImage && loadHeightsFromImage(data, object.getRuntimeScene().getGame(), heightmapImage);
         if (!isHeightmapLoaded) {
             relief.generate(data, object._getRelief(), object._getSeed());
+            // The image can still be loading: it's checked again later (see `update`).
+            if (heightmapImage) this.isWaitingForHeightmap = true;
         }
         edits.apply(data, object._getEdits());
         // Not kept if the image is missing: it may be loaded later.
@@ -1817,6 +1833,10 @@ class Terrain {
     }
 
     update() {
+        if (this.isWaitingForHeightmap && ++this._framesWaitingForHeightmap % 30 === 0) {
+            const game = this.object.getRuntimeScene().getGame();
+            if (getLoadedImage(game, this.object._getHeightmapImage())) this.loadFromProperties();
+        }
         const transform = this._getTransform();
         if (transform !== this._transform) {
             this._transform = transform;
