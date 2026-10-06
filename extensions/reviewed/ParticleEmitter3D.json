@@ -10,7 +10,7 @@
   "name": "ParticleEmitter3D",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/f2e5a34bf465f781866677762d385d6c8e9e8d203383f2df9a3b7e0fad6a2cb5_fire.svg",
   "shortDescription": "Display a large number of particles in 3D to create visual effects in a 3D game.",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "description": [
     "3D particle emitters let you create and display many small particles to simulate visual effects in your game — like fire, explosions, smoke, dust, magic, rain or snow.",
     "",
@@ -360,17 +360,6 @@
             "        geometry = mergedGeometries.get(resourceName);",
             "        if (!geometry) {",
             "            geometry = mergeGeometries(geometries);",
-            "            // Make Z+ as the top",
-            "            for (let index = 0; index < geometry.attributes.position.count; index++) {",
-            "                const x = geometry.attributes.position.getX(index);",
-            "                const y = geometry.attributes.position.getY(index);",
-            "                const z = geometry.attributes.position.getZ(index);",
-            "                geometry.attributes.position.setX(index, z);",
-            "                geometry.attributes.position.setY(index, x);",
-            "                geometry.attributes.position.setZ(index, y);",
-            "            }",
-            "            geometry.attributes.position.needsUpdate = true;",
-            "            geometry.computeVertexNormals();",
             "            geometry.computeBoundingBox();",
             "            mergedGeometries.set(resourceName, geometry);",
             "        }",
@@ -386,44 +375,48 @@
             "     * @param startRotationXMin {number}",
             "     */",
             "    setStartRotationXMin(startRotationXMin) {",
-            "        const startRotationX = this.particleSystem.startRotation.angleX;",
+            "        // X, Y and Z rotation axis are permuted.",
+            "        const startRotationX = this.particleSystem.startRotation.angleZ;",
             "        if (!startRotationX) {",
             "            return;",
             "        }",
-            "        startRotationX.a = gdjs.toRad(startRotationXMin);",
+            "        startRotationX.a = -gdjs.toRad(startRotationXMin);",
             "    }",
             "",
             "    /**",
             "     * @param startRotationXMax {number}",
             "     */",
             "    setStartRotationXMax(startRotationXMax) {",
-            "        const startRotationX = this.particleSystem.startRotation.angleX;",
+            "        // X, Y and Z rotation axis are permuted.",
+            "        const startRotationX = this.particleSystem.startRotation.angleZ;",
             "        if (!startRotationX) {",
             "            return;",
             "        }",
-            "        startRotationX.b = gdjs.toRad(startRotationXMax);",
+            "        startRotationX.b = -gdjs.toRad(startRotationXMax);",
             "    }",
             "",
             "    /**",
             "     * @param startRotationYMin {number}",
             "     */",
             "    setStartRotationYMin(startRotationYMin) {",
-            "        const startRotationY = this.particleSystem.startRotation.angleY;",
+            "        // X, Y and Z rotation axis are permuted.",
+            "        const startRotationY = this.particleSystem.startRotation.angleX;",
             "        if (!startRotationY) {",
             "            return;",
             "        }",
-            "        startRotationY.a = -gdjs.toRad(startRotationYMin);",
+            "        startRotationY.a = gdjs.toRad(startRotationYMin);",
             "    }",
             "",
             "    /**",
             "     * @param startRotationYMax {number}",
             "     */",
             "    setStartRotationYMax(startRotationYMax) {",
-            "        const startRotationY = this.particleSystem.startRotation.angleY;",
+            "        // X, Y and Z rotation axis are permuted.",
+            "        const startRotationY = this.particleSystem.startRotation.angleX;",
             "        if (!startRotationY) {",
             "            return;",
             "        }",
-            "        startRotationY.b = -gdjs.toRad(startRotationYMax);",
+            "        startRotationY.b = gdjs.toRad(startRotationYMax);",
             "    }",
             "",
             "    /**",
@@ -431,8 +424,9 @@
             "     */",
             "    setStartRotationZMin(startRotationZMin) {",
             "        const startRotation = this.particleSystem.startRotation;",
-            "        if (startRotation.angleZ) {",
-            "            startRotation.angleZ.a = gdjs.toRad(startRotationZMin);",
+            "        // X, Y and Z rotation axis are permuted.",
+            "        if (startRotation.angleY) {",
+            "            startRotation.angleY.a = gdjs.toRad(startRotationZMin);",
             "        }",
             "        else if (startRotation.a !== undefined) {",
             "            startRotation.a = -gdjs.toRad(startRotationZMin);",
@@ -444,8 +438,9 @@
             "     */",
             "    setStartRotationZMax(startRotationZMax) {",
             "        const startRotation = this.particleSystem.startRotation;",
-            "        if (startRotation.angleZ) {",
-            "            startRotation.angleZ.b = gdjs.toRad(startRotationZMax);",
+            "        // X, Y and Z rotation axis are permuted.",
+            "        if (startRotation.angleY) {",
+            "            startRotation.angleY.b = gdjs.toRad(startRotationZMax);",
             "        }",
             "        else if (startRotation.b !== undefined) {",
             "            startRotation.b = -gdjs.toRad(startRotationZMax);",
@@ -453,91 +448,87 @@
             "    }",
             "",
             "    /**",
-            "     * @param angularVelocityMin {number}",
-            "     */",
-            "    setStartAngularVelocityMin(angularVelocityMin) {",
-            "        const angularVelocity = this.rotationOverLife.angularVelocity;",
-            "        if (angularVelocity.a === undefined) {",
-            "            return;",
-            "        }",
-            "        angularVelocity.a = -gdjs.toRad(angularVelocityMin);",
-            "    }",
-            "",
-            "    /**",
-            "     * @param angularVelocityMax {number}",
-            "     */",
-            "    setStartAngularVelocityMax(angularVelocityMax) {",
-            "        const angularVelocity = this.rotationOverLife.angularVelocity;",
-            "        if (angularVelocity.b === undefined) {",
-            "            return;",
-            "        }",
-            "        angularVelocity.b = -gdjs.toRad(angularVelocityMax);",
-            "    }",
-            "",
-            "    /**",
             "     * @param angularVelocityXMin {number}",
             "     */",
             "    setStartAngularVelocityXMin(angularVelocityXMin) {",
-            "        const angularVelocityX = this.rotation3DOverLife.angularVelocity.angleX;",
+            "        // X, Y and Z rotation axis are permuted.",
+            "        const angularVelocityX = this.rotation3DOverLife.angularVelocity.angleZ;",
             "        if (!angularVelocityX) {",
             "            return;",
             "        }",
-            "        angularVelocityX.a = gdjs.toRad(angularVelocityXMin);",
+            "        angularVelocityX.a = -gdjs.toRad(angularVelocityXMin);",
             "    }",
             "",
             "    /**",
             "     * @param angularVelocityXMax {number}",
             "     */",
             "    setStartAngularVelocityXMax(angularVelocityXMax) {",
-            "        const angularVelocityX = this.rotation3DOverLife.angularVelocity.angleX;",
+            "        // X, Y and Z rotation axis are permuted.",
+            "        const angularVelocityX = this.rotation3DOverLife.angularVelocity.angleZ;",
             "        if (!angularVelocityX) {",
             "            return;",
             "        }",
-            "        angularVelocityX.b = gdjs.toRad(angularVelocityXMax);",
+            "        angularVelocityX.b = -gdjs.toRad(angularVelocityXMax);",
             "    }",
             "",
             "    /**",
             "     * @param angularVelocityYMin {number}",
             "     */",
             "    setStartAngularVelocityYMin(angularVelocityYMin) {",
-            "        const angularVelocityY = this.rotation3DOverLife.angularVelocity.angleY;",
+            "        // X, Y and Z rotation axis are permuted.",
+            "        const angularVelocityY = this.rotation3DOverLife.angularVelocity.angleX;",
             "        if (!angularVelocityY) {",
             "            return;",
             "        }",
-            "        angularVelocityY.a = -gdjs.toRad(angularVelocityYMin);",
+            "        angularVelocityY.a = gdjs.toRad(angularVelocityYMin);",
             "    }",
             "",
             "    /**",
             "     * @param angularVelocityYMax {number}",
             "     */",
             "    setStartAngularVelocityYMax(angularVelocityYMax) {",
-            "        const angularVelocityY = this.rotation3DOverLife.angularVelocity.angleY;",
+            "        // X, Y and Z rotation axis are permuted.",
+            "        const angularVelocityY = this.rotation3DOverLife.angularVelocity.angleX;",
             "        if (!angularVelocityY) {",
             "            return;",
             "        }",
-            "        angularVelocityY.b = -gdjs.toRad(angularVelocityYMax);",
+            "        angularVelocityY.b = gdjs.toRad(angularVelocityYMax);",
             "    }",
             "",
             "    /**",
             "     * @param angularVelocityZMin {number}",
             "     */",
             "    setStartAngularVelocityZMin(angularVelocityZMin) {",
-            "        const angularVelocityZ = this.rotation3DOverLife.angularVelocity.angleZ;",
+            "        // X, Y and Z rotation axis are permuted.",
+            "        const angularVelocityZ = this.rotation3DOverLife.angularVelocity.angleY;",
             "        if (!angularVelocityZ) {",
             "            return;",
             "        }",
             "        angularVelocityZ.a = -gdjs.toRad(angularVelocityZMin);",
+            "",
+            "        const angularVelocity = this.rotationOverLife.angularVelocity;",
+            "        if (angularVelocity.a === undefined) {",
+            "            return;",
+            "        }",
+            "        angularVelocity.a = -gdjs.toRad(angularVelocityZMin);",
             "    }",
             "",
             "    /**",
             "     * @param angularVelocityZMax {number}",
             "     */",
             "    setStartAngularVelocityZMax(angularVelocityZMax) {",
-            "        const angularVelocityZ = this.rotation3DOverLife.angularVelocity.angleZ;",
+            "        // X, Y and Z rotation axis are permuted.",
+            "        const angularVelocityZ = this.rotation3DOverLife.angularVelocity.angleY;",
             "        if (!angularVelocityZ) {",
             "            return;",
             "        }",
             "        angularVelocityZ.b = -gdjs.toRad(angularVelocityZMax);",
+            "",
+            "        const angularVelocity = this.rotationOverLife.angularVelocity;",
+            "        if (angularVelocity.b === undefined) {",
+            "            return;",
+            "        }",
+            "        angularVelocity.b = -gdjs.toRad(angularVelocityZMax);",
             "    }",
             "",
             "    /**",
@@ -574,7 +565,7 @@
             "     */",
             "    setTrailEndWidthRatio(trailEndWidthRatio) {",
             "        // Check this comment in the lib code:",
-            "        // We added a multiplication with size because it's more convenient for the extension.",
+            "        // Change: We added a multiplication with size because it's more convenient for the extension.",
             "",
             "        /** @type Bezier */",
             "        const bezier = this.widthOverLength.width.functions[0][0];",
@@ -791,21 +782,29 @@
             "    constructor() {",
             "        this.type = 'Rotation3DByDirection';",
             "        this.tempMatrix = new THREE.Matrix4();",
-            "        this.tempVelocity = new THREE.Vector3();",
-            "        this.tempVelocityUnit = new THREE.Vector3();",
-            "        this.tempQuaternion = new THREE.Quaternion();",
+            "        this.zeroVector3 = new THREE.Vector3();",
+            "        this.oldVelocity = new THREE.Vector3();",
+            "        this.velocityQuaternion = new THREE.Quaternion();",
             "    }",
             "    initialize(particle) {",
             "        const rotation = particle.rotation;",
             "        if (rotation instanceof THREE.Quaternion) {",
-            "            // I don't know why, but particles start with a non identity rotation.",
-            "            // So, I set (-1, 0, 0) instead of (1, 0, 0) to conpensate for this.",
-            "            if (particle.previousVelocityUnit) {",
-            "                particle.previousVelocityUnit.set(-1, 0, 0);",
-            "            }",
-            "            else {",
-            "                particle.previousVelocityUnit = new THREE.Vector3(-1, 0, 0);",
-            "            }",
+            "            // Check this comment in the lib code:",
+            "            // Change: Rotation3DByDirection already handle this.",
+            "",
+            "            /** @type {THREE.Quaternion} */",
+            "            const velocityQuaternion = particle.velocityQuaternion || new THREE.Quaternion();",
+            "            particle.velocityQuaternion = velocityQuaternion;",
+            "",
+            "            this.tempMatrix.lookAt(particle.velocity, this.zeroVector3, UP_VEC3);",
+            "            velocityQuaternion.setFromRotationMatrix(this.tempMatrix);",
+            "",
+            "            rotation.premultiply(velocityQuaternion);",
+            "",
+            "            /** @type {THREE.Vector3} */",
+            "            const oldVelocity = particle.oldVelocity || new THREE.Vector3();",
+            "            oldVelocity.copy(particle.velocity);",
+            "            particle.oldVelocity = oldVelocity;",
             "        }",
             "    }",
             "    update(particle, delta) {",
@@ -813,17 +812,22 @@
             "        if (rotation instanceof THREE.Quaternion) {",
             "            /** @type {THREE.Vector3} */",
             "            const velocity = particle.velocity;",
-            "            ",
-            "            this.tempVelocityUnit.copy(velocity).normalize();",
-            "            if (this.tempVelocityUnit.equals(particle.previousVelocityUnit)) {",
+            "            /** @type {THREE.Vector3} */",
+            "            const oldVelocity = particle.oldVelocity;",
+            "            /** @type {THREE.Quaternion} */",
+            "            const velocityQuaternion = particle.velocityQuaternion;",
+            "",
+            "            if (velocity.equals(oldVelocity)) {",
             "                return;",
             "            }",
-            "            this.tempQuaternion.setFromUnitVectors(",
-            "                particle.previousVelocityUnit,",
-            "                this.tempVelocityUnit);",
-            "            rotation.premultiply(this.tempQuaternion);",
+            "            oldVelocity.copy(velocity);",
             "",
-            "            particle.previousVelocityUnit.copy(this.tempVelocityUnit);",
+            "            rotation.premultiply(velocityQuaternion.invert());",
+            "",
+            "            this.tempMatrix.lookAt(velocity, this.zeroVector3, UP_VEC3);",
+            "            velocityQuaternion.setFromRotationMatrix(this.tempMatrix);",
+            "",
+            "            rotation.premultiply(velocityQuaternion);",
             "        }",
             "    }",
             "    toJSON() {",
@@ -1010,7 +1014,8 @@
             "    return result;",
             "}",
             "",
-            "",
+            "// Some part of the lib had to be modified.",
+            "// Take a look at comments starting with \"Change:\".",
             "",
             "/**",
             " * THREE.quarks v0.17.0 build Sun Aug 16 2026",
@@ -3567,7 +3572,7 @@
             "            const iter = particle.previous.values();",
             "            for (let i = 0; i < particle.previous.length; i++) {",
             "                const cur = iter.next();",
-            "                // We added a multiplication with size because it's more convenient for the extension.",
+            "                // Change: We added a multiplication with size because it's more convenient for the extension.",
             "                cur.value.size = this.width.genValue(particle.memory, (particle.previous.length - i) / particle.length) * particle.size.x;",
             "            }",
             "        }",
@@ -5251,9 +5256,10 @@
             "                particle.startSize.z = Math.abs(particle.startSize.z);",
             "                particle.size.copy(particle.startSize);",
             "                particle.velocity.multiply(scale).applyMatrix3(this.normalMatrix);",
-            "                if (particle.rotation && particle.rotation instanceof THREE.Quaternion) {",
-            "                    particle.rotation.multiplyQuaternions(tempQ, particle.rotation);",
-            "                }",
+            "                // Change: Rotation3DByDirection already handle this.",
+            "                // if (particle.rotation && particle.rotation instanceof THREE.Quaternion) {",
+            "                //     particle.rotation.multiplyQuaternions(tempQ, particle.rotation);",
+            "                // }",
             "            }",
             "            else {",
             "                if (this.onlyUsedByOther) {",
@@ -7901,9 +7907,9 @@
                 "particleSystem.addBehavior(applyForce);",
                 "const widthOverLength = new WidthOverLength(new PiecewiseBezier([[new Bezier(1, 2 / 3, 1 / 3, 0), 0]]));",
                 "particleSystem.addBehavior(widthOverLength);",
+                "particleSystem.addBehavior(new Rotation3DByDirection());",
                 "const rotation3DOverLife = new Rotation3DOverLife(new EulerGenerator(new IntervalValue(0, 0), new IntervalValue(0, 0), new IntervalValue(0,0), \"ZYX\"))",
                 "particleSystem.addBehavior(rotation3DOverLife);",
-                "particleSystem.addBehavior(new Rotation3DByDirection());",
                 "const rotationOverLife = new RotationOverLife(new IntervalValue(0, 0));",
                 "particleSystem.addBehavior(rotationOverLife);",
                 "",
@@ -8317,23 +8323,67 @@
                 },
                 {
                   "type": {
-                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartAngularVelocityMin"
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartAngularVelocityXMin"
                   },
                   "parameters": [
                     "Object",
                     "=",
-                    "StartAngularVelocityMin",
+                    "StartAngularVelocityXMin",
                     ""
                   ]
                 },
                 {
                   "type": {
-                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartAngularVelocityMax"
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartAngularVelocityXMax"
                   },
                   "parameters": [
                     "Object",
                     "=",
-                    "StartAngularVelocityMax",
+                    "StartAngularVelocityXMax",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartAngularVelocityYMin"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "StartAngularVelocityYMin",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartAngularVelocityYMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "StartAngularVelocityYMax",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartAngularVelocityZMin"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "StartAngularVelocityZMin",
+                    ""
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "ParticleEmitter3D::ParticleEmitter3D::SetStartAngularVelocityZMax"
+                  },
+                  "parameters": [
+                    "Object",
+                    "=",
+                    "StartAngularVelocityZMax",
                     ""
                   ]
                 }
@@ -9009,7 +9059,7 @@
           "objectGroups": []
         },
         {
-          "description": "the start color of the object.",
+          "description": "the start color of the particle.",
           "fullName": "Start color",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter color configuration",
@@ -9092,7 +9142,7 @@
           "objectGroups": []
         },
         {
-          "description": "the end color of the object.",
+          "description": "the end color of the particle.",
           "fullName": "End color",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter color configuration",
@@ -9175,7 +9225,7 @@
           "objectGroups": []
         },
         {
-          "description": "the start opacity of the object.",
+          "description": "the start opacity of the particle.",
           "fullName": "Start opacity",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter color configuration",
@@ -9258,7 +9308,7 @@
           "objectGroups": []
         },
         {
-          "description": "the end opacity of the object.",
+          "description": "the end opacity of the particle.",
           "fullName": "End opacity",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter color configuration",
@@ -9425,7 +9475,7 @@
           "objectGroups": []
         },
         {
-          "description": "the start min size of the object.",
+          "description": "the start min size of the particle.",
           "fullName": "Start min size",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter configuration",
@@ -9508,7 +9558,7 @@
           "objectGroups": []
         },
         {
-          "description": "the start max size of the object.",
+          "description": "the start max size of the particle.",
           "fullName": "Start max size",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter configuration",
@@ -9592,7 +9642,7 @@
           "objectGroups": []
         },
         {
-          "description": "the end scale of the object.",
+          "description": "the end scale of the particle.",
           "fullName": "End scale",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter configuration",
@@ -9676,7 +9726,7 @@
           "objectGroups": []
         },
         {
-          "description": "the min start speed of the object.",
+          "description": "the min start speed of the particle.",
           "fullName": "Min start speed",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter speed configuration",
@@ -9759,7 +9809,7 @@
           "objectGroups": []
         },
         {
-          "description": "the max start speed of the object.",
+          "description": "the max start speed of the particle.",
           "fullName": "Max start speed",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter speed configuration",
@@ -9842,7 +9892,7 @@
           "objectGroups": []
         },
         {
-          "description": "the min lifespan of the object.",
+          "description": "the min lifespan of the particle.",
           "fullName": "Min lifespan",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter configuration",
@@ -9926,7 +9976,7 @@
           "objectGroups": []
         },
         {
-          "description": "the max lifespan of the object.",
+          "description": "the max lifespan of the particle.",
           "fullName": "Max lifespan",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter configuration",
@@ -10780,7 +10830,7 @@
           "objectGroups": []
         },
         {
-          "description": "the start min trail length of the object.",
+          "description": "the start min trail length of the particle.",
           "fullName": "Start min trail length",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter trail configuration",
@@ -10863,7 +10913,7 @@
           "objectGroups": []
         },
         {
-          "description": "the start max trail length of the object.",
+          "description": "the start max trail length of the particle.",
           "fullName": "Start max trail length",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter trail configuration",
@@ -11082,7 +11132,7 @@
           "objectGroups": []
         },
         {
-          "description": "the tail end width ratio of the object.",
+          "description": "the tail end width ratio of the particle.",
           "fullName": "Tail end width ratio",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter trail configuration",
@@ -11616,7 +11666,7 @@
           "objectGroups": []
         },
         {
-          "description": "the start min rotation X of the object.",
+          "description": "the start min rotation X of the particle.",
           "fullName": "Start min rotation X",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter model configuration",
@@ -11699,7 +11749,7 @@
           "objectGroups": []
         },
         {
-          "description": "the start max rotation X of the object.",
+          "description": "the start max rotation X of the particle.",
           "fullName": "Start max rotation X",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter model configuration",
@@ -11782,7 +11832,7 @@
           "objectGroups": []
         },
         {
-          "description": "the start min rotation Y of the object.",
+          "description": "the start min rotation Y of the particle.",
           "fullName": "Start min rotation Y",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter model configuration",
@@ -11865,7 +11915,7 @@
           "objectGroups": []
         },
         {
-          "description": "the start max rotation Y of the object.",
+          "description": "the start max rotation Y of the particle.",
           "fullName": "Start max rotation Y",
           "functionType": "ExpressionAndCondition",
           "group": "3D particle emitter model configuration",
@@ -11948,10 +11998,10 @@
           "objectGroups": []
         },
         {
-          "description": "the start min rotation Z of the object.",
+          "description": "the start min rotation Z of the particle.",
           "fullName": "Start min rotation Z",
           "functionType": "ExpressionAndCondition",
-          "group": "3D particle emitter model configuration",
+          "group": "3D particle emitter configuration",
           "name": "StartRotationZMin",
           "sentence": "the start min rotation Z",
           "events": [
@@ -11987,7 +12037,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "StartRotationZMin",
-          "group": "3D particle emitter model configuration",
+          "group": "3D particle emitter configuration",
           "name": "SetStartRotationZMin",
           "sentence": "",
           "events": [
@@ -12031,10 +12081,10 @@
           "objectGroups": []
         },
         {
-          "description": "the start max rotation Z of the object.",
+          "description": "the start max rotation Z of the particle.",
           "fullName": "Start max rotation Z",
           "functionType": "ExpressionAndCondition",
-          "group": "3D particle emitter model configuration",
+          "group": "3D particle emitter configuration",
           "name": "StartRotationZMax",
           "sentence": "the start max rotation Z",
           "events": [
@@ -12070,7 +12120,7 @@
           "fullName": "",
           "functionType": "ActionWithOperator",
           "getterName": "StartRotationZMax",
-          "group": "3D particle emitter model configuration",
+          "group": "3D particle emitter configuration",
           "name": "SetStartRotationZMax",
           "sentence": "",
           "events": [
@@ -12114,12 +12164,12 @@
           "objectGroups": []
         },
         {
-          "description": "the start min angular velocity of the object.",
-          "fullName": "Start min angular velocity",
+          "description": "the min angular velocity around Z axis of the particle.",
+          "fullName": "Min angular velocity Z",
           "functionType": "ExpressionAndCondition",
-          "group": "3D particle emitter rotation configuration",
-          "name": "StartAngularVelocityMin",
-          "sentence": "the start min angular velocity",
+          "group": "3D particle emitter configuration",
+          "name": "StartAngularVelocityZMin",
+          "sentence": "the min angular velocity around Z axis",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -12130,7 +12180,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "StartAngularVelocityMin"
+                    "StartAngularVelocityZMin"
                   ]
                 }
               ]
@@ -12152,9 +12202,9 @@
         {
           "fullName": "",
           "functionType": "ActionWithOperator",
-          "getterName": "StartAngularVelocityMin",
-          "group": "3D particle emitter rotation configuration",
-          "name": "SetStartAngularVelocityMin",
+          "getterName": "StartAngularVelocityZMin",
+          "group": "3D particle emitter configuration",
+          "name": "SetStartAngularVelocityZMin",
           "sentence": "",
           "events": [
             {
@@ -12166,7 +12216,7 @@
                     "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "StartAngularVelocityMin",
+                    "StartAngularVelocityZMin",
                     "=",
                     "Value"
                   ]
@@ -12180,15 +12230,12 @@
                 "const value = eventsFunctionContext.getArgument(\"Value\");\r",
                 "\r",
                 "const adapter = object.__particleEmitterAdapter;\r",
-                "adapter.setStartAngularVelocityMin(value);\r",
-                "adapter.setStartAngularVelocityXMin(value * object._getStartAngularVelocityRatioXMin());\r",
-                "adapter.setStartAngularVelocityYMin(value * object._getStartAngularVelocityRatioYMin());\r",
-                "adapter.setStartAngularVelocityZMin(value * object._getStartAngularVelocityRatioZMin());\r",
+                "adapter.setStartAngularVelocityZMin(value);\r",
                 ""
               ],
               "parameterObjects": "Object",
               "useStrict": true,
-              "eventsSheetExpanded": true
+              "eventsSheetExpanded": false
             }
           ],
           "parameters": [
@@ -12202,12 +12249,12 @@
           "objectGroups": []
         },
         {
-          "description": "the start max angular velocity of the object.",
-          "fullName": "Start max angular velocity",
+          "description": "the max angular velocity around Z axis of the particle.",
+          "fullName": "Max angular velocity Z",
           "functionType": "ExpressionAndCondition",
-          "group": "3D particle emitter rotation configuration",
-          "name": "StartAngularVelocityMax",
-          "sentence": "the start max angular velocity",
+          "group": "3D particle emitter configuration",
+          "name": "StartAngularVelocityZMax",
+          "sentence": "the max angular velocity around Z axis",
           "events": [
             {
               "type": "BuiltinCommonInstructions::Standard",
@@ -12218,7 +12265,7 @@
                     "value": "SetReturnNumber"
                   },
                   "parameters": [
-                    "StartAngularVelocityMax"
+                    "StartAngularVelocityZMax"
                   ]
                 }
               ]
@@ -12240,9 +12287,9 @@
         {
           "fullName": "",
           "functionType": "ActionWithOperator",
-          "getterName": "StartAngularVelocityMax",
-          "group": "3D particle emitter rotation configuration",
-          "name": "SetStartAngularVelocityMax",
+          "getterName": "StartAngularVelocityZMax",
+          "group": "3D particle emitter configuration",
+          "name": "SetStartAngularVelocityZMax",
           "sentence": "",
           "events": [
             {
@@ -12254,7 +12301,7 @@
                     "value": "SetNumberVariable"
                   },
                   "parameters": [
-                    "StartAngularVelocityMax",
+                    "StartAngularVelocityZMax",
                     "=",
                     "Value"
                   ]
@@ -12268,15 +12315,352 @@
                 "const value = eventsFunctionContext.getArgument(\"Value\");\r",
                 "\r",
                 "const adapter = object.__particleEmitterAdapter;\r",
-                "adapter.setStartAngularVelocityMax(value);\r",
-                "adapter.setStartAngularVelocityXMax(value * object._getStartAngularVelocityRatioXMax());\r",
-                "adapter.setStartAngularVelocityYMax(value * object._getStartAngularVelocityRatioYMax());\r",
-                "adapter.setStartAngularVelocityZMax(value * object._getStartAngularVelocityRatioZMax());\r",
+                "adapter.setStartAngularVelocityZMax(value);\r",
                 ""
               ],
               "parameterObjects": "Object",
               "useStrict": true,
               "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the min angular velocity around X axis of the particle.",
+          "fullName": "Min angular velocity X",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter model configuration",
+          "name": "StartAngularVelocityXMin",
+          "sentence": "the min angular velocity around X axis",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "StartAngularVelocityXMin"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StartAngularVelocityXMin",
+          "group": "3D particle emitter model configuration",
+          "name": "SetStartAngularVelocityXMin",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "StartAngularVelocityXMin",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "const adapter = object.__particleEmitterAdapter;\r",
+                "adapter.setStartAngularVelocityXMin(value);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the max angular velocity  around X axis of the particle.",
+          "fullName": "Max angular velocity X",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter model configuration",
+          "name": "StartAngularVelocityXMax",
+          "sentence": "the max angular velocity around X axis",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "StartAngularVelocityXMax"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StartAngularVelocityXMax",
+          "group": "3D particle emitter model configuration",
+          "name": "SetStartAngularVelocityXMax",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "StartAngularVelocityXMax",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "const adapter = object.__particleEmitterAdapter;\r",
+                "adapter.setStartAngularVelocityXMax(value);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the min angular velocity around Y axis of the particle.",
+          "fullName": "Min angular velocity Y",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter model configuration",
+          "name": "StartAngularVelocityYMin",
+          "sentence": "the min angular velocity around Y axis",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "StartAngularVelocityYMin"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StartAngularVelocityYMin",
+          "group": "3D particle emitter model configuration",
+          "name": "SetStartAngularVelocityYMin",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "StartAngularVelocityYMin",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "const adapter = object.__particleEmitterAdapter;\r",
+                "adapter.setStartAngularVelocityYMin(value);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the max angular velocity around Y axis of the particle.",
+          "fullName": "Max angular velocity Y",
+          "functionType": "ExpressionAndCondition",
+          "group": "3D particle emitter model configuration",
+          "name": "StartAngularVelocityYMax",
+          "sentence": "the max angular velocity around Y axis",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "StartAngularVelocityYMax"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "ParticleEmitter3D::ParticleEmitter3D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StartAngularVelocityYMax",
+          "group": "3D particle emitter model configuration",
+          "name": "SetStartAngularVelocityYMax",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "StartAngularVelocityYMax",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const object = objects[0];\r",
+                "const value = eventsFunctionContext.getArgument(\"Value\");\r",
+                "\r",
+                "const adapter = object.__particleEmitterAdapter;\r",
+                "adapter.setStartAngularVelocityYMax(value);\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": false
             }
           ],
           "parameters": [
@@ -12453,6 +12837,30 @@
                 "functionName": "SetShouldAutodestruct"
               },
               {
+                "functionName": "StartRotationZMin"
+              },
+              {
+                "functionName": "SetStartRotationZMin"
+              },
+              {
+                "functionName": "StartRotationZMax"
+              },
+              {
+                "functionName": "SetStartRotationZMax"
+              },
+              {
+                "functionName": "StartAngularVelocityZMin"
+              },
+              {
+                "functionName": "SetStartAngularVelocityZMin"
+              },
+              {
+                "functionName": "StartAngularVelocityZMax"
+              },
+              {
+                "functionName": "SetStartAngularVelocityZMax"
+              },
+              {
                 "functionName": "RenderMode"
               },
               {
@@ -12558,33 +12966,28 @@
                 "functionName": "SetStartRotationYMax"
               },
               {
-                "functionName": "StartRotationZMin"
+                "functionName": "StartAngularVelocityXMin"
               },
               {
-                "functionName": "SetStartRotationZMin"
+                "functionName": "SetStartAngularVelocityXMin"
               },
               {
-                "functionName": "StartRotationZMax"
+                "functionName": "StartAngularVelocityXMax"
               },
               {
-                "functionName": "SetStartRotationZMax"
-              }
-            ]
-          },
-          {
-            "folderName": "3D particle emitter rotation configuration",
-            "children": [
-              {
-                "functionName": "StartAngularVelocityMin"
+                "functionName": "SetStartAngularVelocityXMax"
               },
               {
-                "functionName": "SetStartAngularVelocityMin"
+                "functionName": "StartAngularVelocityYMin"
               },
               {
-                "functionName": "StartAngularVelocityMax"
+                "functionName": "SetStartAngularVelocityYMin"
               },
               {
-                "functionName": "SetStartAngularVelocityMax"
+                "functionName": "StartAngularVelocityYMax"
+              },
+              {
+                "functionName": "SetStartAngularVelocityYMax"
               }
             ]
           }
@@ -12893,7 +13296,7 @@
           "name": "Model3D"
         },
         {
-          "value": "90",
+          "value": "0",
           "type": "Number",
           "unit": "DegreeAngle",
           "label": "Start min rotation X",
@@ -12902,7 +13305,7 @@
           "name": "StartRotationXMin"
         },
         {
-          "value": "90",
+          "value": "0",
           "type": "Number",
           "unit": "DegreeAngle",
           "label": "Start max rotation X",
@@ -12947,72 +13350,54 @@
         {
           "value": "0",
           "type": "Number",
-          "unit": "Dimensionless",
+          "unit": "AngularSpeed",
           "label": "Min angular velocity X",
           "group": "Model",
           "advanced": true,
-          "name": "StartAngularVelocityRatioXMin"
+          "name": "StartAngularVelocityXMin"
         },
         {
           "value": "0",
           "type": "Number",
-          "unit": "Dimensionless",
+          "unit": "AngularSpeed",
           "label": "Max angular velocity X",
           "group": "Model",
           "advanced": true,
-          "name": "StartAngularVelocityRatioXMax"
+          "name": "StartAngularVelocityXMax"
         },
         {
           "value": "0",
           "type": "Number",
           "unit": "AngularSpeed",
-          "label": "Start min angular velocity",
+          "label": "Min angular velocity Z",
           "group": "Rotation",
-          "name": "StartAngularVelocityMin"
+          "name": "StartAngularVelocityZMin"
         },
         {
           "value": "0",
           "type": "Number",
           "unit": "AngularSpeed",
-          "label": "Start max angular velocity",
+          "label": "Max angular velocity Z",
           "group": "Rotation",
-          "name": "StartAngularVelocityMax"
+          "name": "StartAngularVelocityZMax"
         },
         {
           "value": "0",
           "type": "Number",
-          "unit": "Dimensionless",
+          "unit": "AngularSpeed",
           "label": "Min angular velocity Y",
           "group": "Model",
           "advanced": true,
-          "name": "StartAngularVelocityRatioYMin"
-        },
-        {
-          "value": "1",
-          "type": "Number",
-          "unit": "Dimensionless",
-          "label": "Min angular velocity Z",
-          "group": "Model",
-          "advanced": true,
-          "name": "StartAngularVelocityRatioZMin"
+          "name": "StartAngularVelocityYMin"
         },
         {
           "value": "0",
           "type": "Number",
-          "unit": "Dimensionless",
+          "unit": "AngularSpeed",
           "label": "Max angular velocity Y",
           "group": "Model",
           "advanced": true,
-          "name": "StartAngularVelocityRatioYMax"
-        },
-        {
-          "value": "1",
-          "type": "Number",
-          "unit": "Dimensionless",
-          "label": "Max angular velocity Z",
-          "group": "Model",
-          "advanced": true,
-          "name": "StartAngularVelocityRatioZMax"
+          "name": "StartAngularVelocityYMax"
         }
       ],
       "propertiesFolderStructure": {
@@ -13100,10 +13485,10 @@
                 "propertyName": "StartRotationZMax"
               },
               {
-                "propertyName": "StartAngularVelocityMin"
+                "propertyName": "StartAngularVelocityZMin"
               },
               {
-                "propertyName": "StartAngularVelocityMax"
+                "propertyName": "StartAngularVelocityZMax"
               }
             ]
           },
@@ -13163,22 +13548,16 @@
                 "propertyName": "StartRotationYMax"
               },
               {
-                "propertyName": "StartAngularVelocityRatioXMin"
+                "propertyName": "StartAngularVelocityXMin"
               },
               {
-                "propertyName": "StartAngularVelocityRatioXMax"
+                "propertyName": "StartAngularVelocityXMax"
               },
               {
-                "propertyName": "StartAngularVelocityRatioYMin"
+                "propertyName": "StartAngularVelocityYMin"
               },
               {
-                "propertyName": "StartAngularVelocityRatioYMax"
-              },
-              {
-                "propertyName": "StartAngularVelocityRatioZMin"
-              },
-              {
-                "propertyName": "StartAngularVelocityRatioZMax"
+                "propertyName": "StartAngularVelocityYMax"
               }
             ]
           },
