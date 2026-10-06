@@ -21,10 +21,13 @@ try {
 await harness.stepFrames(1);
 
 // Versions without a world scale for the 3D renderer: 1 is used.
+// Only the code of the objects is run: the engine itself uses the world scale.
 const { getRenderer3DWorldScale } = gdjs.RuntimeScene.prototype;
 delete gdjs.RuntimeScene.prototype.getRenderer3DWorldScale;
 try {
-  await harness.stepFrames(2);
+  for (const objectName of ['Terrain', 'Grass', 'Water']) {
+    scene.getObjects(objectName)[0].doStepPostEvents(scene);
+  }
   harness.assert(
     scene.getObjects('Terrain')[0].__terrain3D.renderer.uniforms.terrainWorldScale.value === 1 &&
       scene.getObjects('Grass')[0].__terrainGrass.uniforms.grassWorldScale.value === 1 &&
