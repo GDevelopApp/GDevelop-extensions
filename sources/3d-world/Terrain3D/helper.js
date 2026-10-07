@@ -475,10 +475,11 @@ const edits = {
  * @returns {CanvasImageSource | null} The image, or null if it's not loaded (yet).
  */
 const getLoadedImage = (game, imageResourceName) => {
-    const texture = game.getImageManager().getPIXITexture(imageResourceName);
-    const source = texture && texture.baseTexture && texture.baseTexture.getDrawableSource();
-    // An 8 x 8 placeholder is given for images that are not loaded.
-    return source && source.width > 8 && source.height > 8 ? source : null;
+    const imageManager = game.getImageManager();
+    if (typeof imageManager.getImageSource === 'function') return imageManager.getImageSource(imageResourceName);
+    // Older GDevelop versions: a 192 x 192 placeholder is given for images that are not loaded.
+    const texture = imageManager.getPIXITexture(imageResourceName);
+    return texture && texture !== imageManager.getInvalidPIXITexture() ? texture.baseTexture.getDrawableSource() : null;
 };
 
 /**
@@ -1500,9 +1501,9 @@ class Terrain {
         this._strokeChangedSamples = new SampleRectangle();
         /** The properties the data was loaded from, to reload it only if they change. */
         this.loadedFrom = '';
-        /** True when the heightmap image was not loaded yet: the relief is used until it is. */
-        this.isWaitingForHeightmap = false;
-        this._framesWaitingForHeightmap = 0;
+        /** The heightmap image being loaded: the relief is used until it is. */
+        this.loadingHeightmapImage = '';
+        this.isDisposed = false;
         /** The last value of the sculpt data property read or saved. */
         this.sculptData = '';
         /**
@@ -1553,7 +1554,6 @@ class Terrain {
         const validResolution = RESOLUTIONS.indexOf(resolution) !== -1 ? resolution : DEFAULT_RESOLUTION;
         this.sculptData = object._getSculptData();
         this.loadedFrom = this._getSourceProperties();
-        this.isWaitingForHeightmap = false;
 
         this.baseData = this._getBaseData(validResolution);
         let data = codec.decode(this.sculptData, (resolution) => copyTerrainData(this._getBaseData(resolution)));
@@ -1579,8 +1579,7 @@ class Terrain {
             !!heightmapImage && loadHeightsFromImage(data, object.getRuntimeScene().getGame(), heightmapImage);
         if (!isHeightmapLoaded) {
             relief.generate(data, object._getRelief(), object._getSeed());
-            // The image can still be loading: it's checked again later (see `update`).
-            if (heightmapImage) this.isWaitingForHeightmap = true;
+            if (heightmapImage) this._reloadOnceLoaded(heightmapImage);
         }
         edits.apply(data, object._getEdits());
         // Not kept if the image is missing: it may be loaded later.
@@ -1853,11 +1852,22 @@ class Terrain {
         return [object.getX(), object.getY(), object.getZ(), object.getWidth(), object.getHeight(), object.getDepth()].join(',');
     }
 
+    /** @param {string} imageResourceName A heightmap image that is not loaded yet. */
+    _reloadOnceLoaded(imageResourceName) {
+        if (this.loadingHeightmapImage === imageResourceName) return;
+        this.loadingHeightmapImage = imageResourceName;
+        const game = this.object.getRuntimeScene().getGame();
+        game.getImageManager()
+            .loadResource(imageResourceName)
+            .then(() => {
+                if (this.isDisposed || this.loadingHeightmapImage !== imageResourceName) return;
+                this.loadingHeightmapImage = '';
+                if (getLoadedImage(game, imageResourceName)) this.loadFromProperties();
+            })
+            .catch(() => {});
+    }
+
     update() {
-        if (this.isWaitingForHeightmap && ++this._framesWaitingForHeightmap % 30 === 0) {
-            const game = this.object.getRuntimeScene().getGame();
-            if (getLoadedImage(game, this.object._getHeightmapImage())) this.loadFromProperties();
-        }
         const transform = this._getTransform();
         if (transform !== this._transform) {
             this._transform = transform;
@@ -1870,6 +1880,7 @@ class Terrain {
     }
 
     dispose() {
+        this.isDisposed = true;
         getGrounds(this.object.getRuntimeScene()).delete(this);
         if (typeof this.object.setSurface === 'function' && this.object.getSurface() === this.surface) {
             this.object.setSurface(null);

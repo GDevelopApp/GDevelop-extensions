@@ -60,10 +60,12 @@ terrainObject._objectData.SculptData = savedProperties[0].SculptData;
 terrain.loadFromProperties();
 harness.assert(Math.abs(layerWeight() - weightAfter) < 0.02, 'The saved data gives back the paint on the mountains.');
 
-// A heightmap image still loading: the relief is used until the image is there.
+// A heightmap image still loading: the relief is used until the image is loaded.
 const imageManager = game.getImageManager();
-const getPIXITexture = imageManager.getPIXITexture;
-imageManager.getPIXITexture = () => null;
+const { getImageSource, loadResource } = imageManager;
+let finishLoadingImage = () => {};
+imageManager.getImageSource = () => null;
+imageManager.loadResource = () => new Promise((resolve) => (finishLoadingImage = resolve));
 const objectDataWithMountains = scene._objects.get('Terrain');
 const objectDataWithHeightmap = JSON.parse(JSON.stringify(objectDataWithMountains));
 objectDataWithHeightmap.content.HeightmapImage = 'assets/TerrainRock.jpg';
@@ -72,9 +74,13 @@ const mountainsHeight = terrain.getHeightAt(targetX, targetY);
 try {
   terrainObject.updateFromObjectData(objectDataWithMountains, objectDataWithHeightmap);
 } finally {
-  imageManager.getPIXITexture = getPIXITexture;
+  imageManager.getImageSource = getImageSource;
+  imageManager.loadResource = loadResource;
 }
-harness.assert(terrain.isWaitingForHeightmap, 'The terrain waits for the heightmap image.');
-await harness.stepFrames(31);
-harness.assert(!terrain.isWaitingForHeightmap, 'The heightmap image is used once loaded.');
+harness.assert(
+  Math.abs(terrain.getHeightAt(targetX, targetY) - mountainsHeight) < 1,
+  'The relief is used while the heightmap image loads.'
+);
+finishLoadingImage();
+await harness.stepFrames(1);
 harness.assert(Math.abs(terrain.getHeightAt(targetX, targetY) - mountainsHeight) > 1, 'The ground follows the heightmap.');

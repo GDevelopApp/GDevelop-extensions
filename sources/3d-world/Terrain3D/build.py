@@ -209,9 +209,11 @@ properties = [
                      '[{"tool": "raise", "x": 0.3, "y": 0.4, "radius": 0.15, "height": 0.4}, '
                      '{"tool": "paint", "x": 0.1, "y": 0.9, "toX": 0.8, "toY": 0.2, "radius": 0.02, "layer": 2}]. '
                      "Tools: raise (height, negative to lower), flatten (z), smooth (strength) and paint (layer, "
-                     "from 1 to 4, and strength). x, y and radius are fractions (0 to 1) of the terrain size, "
-                     "height and z fractions of its depth. Add toX and toY to change the ground along a line "
-                     "(paths, rivers, ridges). Shown in the scene editor."),
+                     "from 1 to 4, and strength). x, y and radius are fractions (0 to 1) of the terrain size "
+                     "(x is (scene X - terrain X) / terrain width), height and z fractions of its depth. Add toX and "
+                     "toY to change the ground along a line (paths, rivers, ridges). An object put on an area "
+                     "flattened at z stands on the ground at Z = terrain Z + z * terrain depth (useful for "
+                     "buildings). Shown in the scene editor."),
     prop("Resolution", "Choice", "256", "Resolution", group="Shape",
          description="The number of cells on each side of the terrain. Higher is more detailed but slower.",
          choices=[("64", "64 x 64"), ("128", "128 x 128"), ("256", "256 x 256"), ("512", "512 x 512"),
