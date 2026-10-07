@@ -10,7 +10,7 @@
   "name": "PanelSpriteContinuousBar",
   "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/Glyphster Pack/Master/SVG/Interface Elements/ea06363a57846caab544f536b78a952234b68d4941d41c1577852a1d61aefec3_Interface Elements_interface_ui_loading_progress_bar.svg",
   "shortDescription": "A bar that represents a resource in the game (health, mana, ammo, etc).",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": [
     "A bar that represents a resource in the game (health, mana, ammo, etc).",
     "",
@@ -33,7 +33,8 @@
   "authorIds": [
     "IWykYNRvhCZBN3vEgKEbBPOR3Oc2",
     "gqDaZjCfevOOxBYkK6zlhtZnXCg1",
-    "q8ubdigLvIRXLxsJDDTaokO41mc2"
+    "q8ubdigLvIRXLxsJDDTaokO41mc2",
+    "DBaDo3QWkIcsm9711Fe5Uit20CX2"
   ],
   "changelog": [
     {
@@ -52,8 +53,11 @@
     {
       "description": "A bar that represents a resource in the game (health, mana, ammo, etc).",
       "fullName": "Resource bar",
+      "helpPath": "",
+      "iconUrl": "",
       "name": "ResourceBar",
       "objectType": "",
+      "previewIconUrl": "",
       "private": true,
       "eventsFunctions": [
         {
@@ -758,9 +762,12 @@
       "defaultName": "ResourceBar",
       "description": "A bar that represents a resource in the game (health, mana, ammo, etc).",
       "fullName": "Resource bar (continuous)",
+      "helpPath": "",
+      "iconUrl": "",
       "isInnerAreaFollowingParentSize": true,
       "isUsingLegacyInstancesRenderer": false,
       "name": "PanelSpriteContinuousBar",
+      "previewIconUrl": "",
       "objects": [
         {
           "assetStoreId": "",
@@ -775,12 +782,12 @@
           "effects": [],
           "behaviors": [
             {
+              "name": "Anchor",
+              "type": "AnchorBehavior::AnchorBehavior",
               "bottomEdgeAnchor": 2,
               "leftEdgeAnchor": 1,
-              "name": "Anchor",
               "rightEdgeAnchor": 2,
               "topEdgeAnchor": 1,
-              "type": "AnchorBehavior::AnchorBehavior",
               "relativeToOriginalWindowSize": true,
               "useLegacyBottomAndRightAnchors": false
             }
@@ -918,6 +925,7 @@
           ]
         },
         {
+          "assetStoreId": "",
           "name": "BitmapLabel",
           "persistentUuid": "a5ef1543-49f0-4216-9dfb-59e708431536",
           "type": "BitmapText::BitmapTextObject",
@@ -925,12 +933,12 @@
           "effects": [],
           "behaviors": [
             {
+              "name": "Anchor",
+              "type": "AnchorBehavior::AnchorBehavior",
               "bottomEdgeAnchor": 2,
               "leftEdgeAnchor": 1,
-              "name": "Anchor",
               "rightEdgeAnchor": 2,
               "topEdgeAnchor": 1,
-              "type": "AnchorBehavior::AnchorBehavior",
               "relativeToOriginalWindowSize": true,
               "useLegacyBottomAndRightAnchors": false
             }
@@ -2546,8 +2554,31 @@
           "sentence": "Update label of _PARAM0_",
           "events": [
             {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Show the correct display"
+            },
+            {
               "type": "BuiltinCommonInstructions::Standard",
-              "conditions": [],
+              "conditions": [
+                {
+                  "type": {
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "LabelInPercent",
+                    "=",
+                    "\"ValueMaxValue\""
+                  ]
+                }
+              ],
               "actions": [
                 {
                   "type": {
@@ -2557,7 +2588,36 @@
                     "Labels",
                     "Text",
                     "=",
-                    "ToString(round(Object.Value())) + \" / \" + ToString(Object.MaxValue())"
+                    "ToString(round(Object.Value())) + \" / \" + ToString(round(Object.MaxValue()))"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "BooleanVariable"
+                  },
+                  "parameters": [
+                    "LabelInPercent",
+                    "=",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "TextContainerCapability::TextContainerBehavior::SetValue"
+                  },
+                  "parameters": [
+                    "Labels",
+                    "Text",
+                    "=",
+                    "ToString(round((Object.Value() / Object.MaxValue()) * 100)) + \"%\""
                   ]
                 }
               ]
@@ -2648,12 +2708,14 @@
           "value": "3",
           "type": "Number",
           "label": "Maximum value",
+          "group": "Value",
           "name": "MaxValue"
         },
         {
           "value": "3",
           "type": "Number",
           "label": "Initial value",
+          "group": "Value",
           "name": "InitialValue"
         },
         {
@@ -2684,6 +2746,7 @@
           "value": "true",
           "type": "Boolean",
           "label": "Show the label",
+          "group": "Label",
           "extraInformation": [
             "Label"
           ],
@@ -2710,33 +2773,67 @@
           "label": "",
           "hidden": true,
           "name": "OldParentWidth"
+        },
+        {
+          "value": "",
+          "type": "Boolean",
+          "label": "Display the label in percent",
+          "group": "Label",
+          "choices": [
+            {
+              "label": "Value / MaxValue",
+              "value": "ValueMaxValue"
+            },
+            {
+              "label": "Percent (%)",
+              "value": "Percent"
+            },
+            {
+              "label": "Value Only",
+              "value": "ValueOnly"
+            }
+          ],
+          "name": "LabelInPercent"
         }
       ],
       "propertiesFolderStructure": {
         "folderName": "__ROOT",
         "children": [
           {
-            "propertyName": "MaxValue"
+            "folderName": "Value",
+            "children": [
+              {
+                "propertyName": "InitialValue"
+              },
+              {
+                "propertyName": "MaxValue"
+              }
+            ]
           },
           {
-            "propertyName": "InitialValue"
-          },
-          {
-            "propertyName": "PreviousInitialValue"
+            "folderName": "Label",
+            "children": [
+              {
+                "propertyName": "LabelInPercent"
+              },
+              {
+                "propertyName": "ShowLabel"
+              }
+            ]
           },
           {
             "folderName": "Animation",
             "children": [
               {
-                "propertyName": "PreviousHighValueDuration"
+                "propertyName": "EasingDuration"
               },
               {
-                "propertyName": "EasingDuration"
+                "propertyName": "PreviousHighValueDuration"
               }
             ]
           },
           {
-            "propertyName": "ShowLabel"
+            "propertyName": "PreviousInitialValue"
           },
           {
             "propertyName": "BarLeftPlusRightMargin"
