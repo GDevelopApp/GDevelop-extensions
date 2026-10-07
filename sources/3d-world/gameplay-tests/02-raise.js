@@ -5,8 +5,11 @@ harness.setGameResolutionSize(160, 90);
 harness.getCurrentRuntimeScene().getObjects('Grass')[0].hide(true);
 harness.watch('Player');
 const getPlayer = () => harness.getObjects('Player')[0];
-const terrain = harness.getRuntimeObject(harness.getObjects('Terrain')[0].id).__terrain3D;
+const terrainObject = harness.getRuntimeObject(harness.getObjects('Terrain')[0].id);
+const terrain = terrainObject.__terrain3D;
 await harness.stepUntil(() => getPlayer().behaviors.PhysicsCharacter3D.state.IsOnFloor === true, { maxFrames: 40 });
+const getShapePointer = () => Jolt.getPointer(terrainObject.getBehavior('Physics3D').getBody().GetShape());
+const shapePointer = getShapePointer();
 const start = getPlayer();
 // Raise a hill next to the player, then drop the player on its top.
 const hillX = start.centerX + 500;
@@ -16,6 +19,7 @@ terrain.raise(hillX, hillY, hillX, hillY, 300, 150);
 const hillZ = terrain.getHeightAt(hillX, hillY);
 harness.assert(Math.abs(hillZ - groundBefore - 150) < 1, 'The ground is raised by 150 at the center.');
 await harness.stepFrames(2);
+harness.assert(getShapePointer() === shapePointer, 'The heights of the collision shape are changed in place.');
 harness.setObjectPosition(start.id, hillX - 15, hillY - 15, hillZ + 40);
 await harness.stepUntil(() => getPlayer().behaviors.PhysicsCharacter3D.state.IsOnFloor === false, { maxFrames: 5 });
 const landed = await harness.stepUntil(

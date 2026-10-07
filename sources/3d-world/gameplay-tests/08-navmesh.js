@@ -7,7 +7,7 @@ harness.setGameResolutionSize(160, 90);
 scene.getObjects('Grass')[0].hide(true);
 const terrainObject = scene.getObjects('Terrain')[0];
 const terrain = terrainObject.__terrain3D;
-harness.assert(terrainObject.getSurfaceMesh() === terrain.surfaceMesh, 'The terrain gives its surface to navigation meshes.');
+harness.assert(terrainObject.getSurface() === terrain.surface, 'The terrain gives its surface to navigation meshes.');
 const waterZ = scene.getObjects('Water')[0].getZ();
 const walker = scene.getObjects('Walker')[0];
 walker.setZ(terrain.getHeightAt(walker.getX(), walker.getY()));

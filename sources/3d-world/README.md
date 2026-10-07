@@ -9,7 +9,11 @@
 
 ## Grounds
 
-A terrain adds itself to the grounds of its scene (`gdjs.__grounds3D`, defined in `Terrain3D/helper.js`), and the terrain grass grows on any ground of the scene. Another ground (like a floating island from another extension) can be used by the grass by adding itself too: see the functions a ground must have in the helper.
+A terrain adds itself to the grounds of its scene (`getGrounds` in `Terrain3D/helper.js`), which the terrain grass grows on. They are internal to the extension.
+
+## Physics and navigation meshes
+
+A terrain gives its surface to its object: a height field (see `gdjs.Surface` in GDevelop), changed in place when the terrain is sculpted. The Physics3D and NavMesh obstacle behaviors use it instead of the object box. In GDevelop versions without surfaces, the terrain sets the shape of its Physics3D behavior itself (`TerrainBodyUpdater`).
 
 ## World scale
 

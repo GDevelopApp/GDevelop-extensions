@@ -615,7 +615,6 @@ const extensionsAllowedProperties = {
     },
     Terrain3D: {
       gdjsAllowedProperties: [
-        '__grounds3D',
         '__terrain3DExtension',
         '__terrainGrassExtension',
         'Base3DHandler',
@@ -626,8 +625,8 @@ const extensionsAllowedProperties = {
         'RuntimeGame',
         'RuntimeObject',
         'RuntimeScene',
-        'SurfaceMesh',
-        'SurfaceMeshTriangles',
+        'Surface',
+        'SurfaceArea',
         'registerInGameEditorPostStepCallback',
       ],
       gdjsEvtToolsAllowedProperties: ['input'],

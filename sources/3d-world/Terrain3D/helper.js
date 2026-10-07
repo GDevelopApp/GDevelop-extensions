@@ -2,32 +2,42 @@ if (gdjs.__terrain3DExtension) {
     return;
 }
 
+const groundsByScene = new WeakMap();
 /**
- * Grounds (like terrains) that other objects (like the terrain grass, or
- * objects of other extensions) follow, without knowing what they are.
+ * The grounds of a scene (the terrains), followed by the terrain grass.
  *
  * A ground has: `getVersion()` (changing when the ground changes),
  * `containsPoint(x, y)`, `getHeightAt(x, y)` (Z position of the ground),
  * `getSlopeAt(x, y)` (in degrees) and `getLayerWeightAt(x, y, layer)` (how
  * much a painted layer, from 1 to 4, is there, from 0 to 1).
+ * @param {gdjs.RuntimeScene} runtimeScene
+ * @returns {Set<object>}
  */
-if (!gdjs.__grounds3D) {
-    const groundsByScene = new WeakMap();
-    gdjs.__grounds3D = {
-        /**
-         * @param {gdjs.RuntimeScene} runtimeScene
-         * @returns {Set<object>} The grounds of the scene.
-         */
-        getGrounds(runtimeScene) {
-            let grounds = groundsByScene.get(runtimeScene);
-            if (!grounds) {
-                grounds = new Set();
-                groundsByScene.set(runtimeScene, grounds);
-            }
-            return grounds;
-        },
-    };
-}
+const getGrounds = (runtimeScene) => {
+    let grounds = groundsByScene.get(runtimeScene);
+    if (!grounds) {
+        grounds = new Set();
+        groundsByScene.set(runtimeScene, grounds);
+    }
+    return grounds;
+};
+
+/**
+ * Replace parts of the shader code of a Three.js material, with an error if
+ * a part is missing (for example after an update of Three.js).
+ * @param {string} shaderCode
+ * @param {Array<[string, string]>} replacements The searched code and its replacement.
+ * @param {string} materialName
+ */
+const patchShaderCode = (shaderCode, replacements, materialName) => {
+    for (const [searchedCode, newCode] of replacements) {
+        if (!shaderCode.includes(searchedCode)) {
+            console.error(`${materialName}: "${searchedCode}" was not found in the shader, which won't look as expected.`);
+        }
+        shaderCode = shaderCode.replace(searchedCode, newCode);
+    }
+    return shaderCode;
+};
 
 // Size of the object inner area. Instances are scaled from it, so these only
 // define the default size of a new terrain.
@@ -927,13 +937,15 @@ class TerrainRenderer {
         this.material = new THREE.MeshStandardMaterial({ roughness: 1, metalness: 0 });
         this.material.onBeforeCompile = (shader) => {
             Object.assign(shader.uniforms, this.uniforms);
-            shader.vertexShader = shader.vertexShader
-                .replace('#include <common>', '#include <common>\n' + vertexShaderDeclarations)
-                .replace('#include <begin_vertex>', '#include <begin_vertex>\n' + vertexShaderCode);
-            shader.fragmentShader = shader.fragmentShader
-                .replace('#include <common>', '#include <common>\n' + fragmentShaderDeclarations)
-                .replace('#include <map_fragment>', fragmentShaderCode)
-                .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\n' + fragmentShaderNormalCode);
+            shader.vertexShader = patchShaderCode(shader.vertexShader, [
+                ['#include <common>', '#include <common>\n' + vertexShaderDeclarations],
+                ['#include <begin_vertex>', '#include <begin_vertex>\n' + vertexShaderCode],
+            ], 'Terrain3D');
+            shader.fragmentShader = patchShaderCode(shader.fragmentShader, [
+                ['#include <common>', '#include <common>\n' + fragmentShaderDeclarations],
+                ['#include <map_fragment>', fragmentShaderCode],
+                ['#include <normal_fragment_maps>', '#include <normal_fragment_maps>\n' + fragmentShaderNormalCode],
+            ], 'Terrain3D');
         };
         this.material.customProgramCacheKey = () => 'Terrain3D';
         this._cameraPosition = new THREE.Vector3();
@@ -1450,12 +1462,15 @@ const copyTerrainData = (data) => {
 // for every instance and every hot-reload: the results are kept.
 const baseDataCache = new Map();
 const MAX_CACHED_BASE_DATA = 8;
+// Changes of the shape of a terrain kept for consumers of its surface that
+// missed some versions: older changes update the whole surface.
+const MAX_SURFACE_CHANGES = 64;
 // Unique among all terrains: a terrain replaced by another one never has its version.
 let lastGroundVersion = 0;
 
 /**
  * The terrain of a Terrain3D object: its data, how it's drawn and its
- * collisions. Positions are in the scene.
+ * surface (for collisions and navigation meshes). Positions are in the scene.
  */
 class Terrain {
     /** @param {gdjs.CustomRuntimeObject3D} object */
@@ -1472,8 +1487,15 @@ class Terrain {
         this.hasPaintChanged = false;
         /** Increased each time the ground changes, for objects following it (like grass). */
         this.version = 0;
-        /** Increased each time the shape of the ground changes (not its paint), for navigation meshes. */
+        /** Increased each time the shape of the ground changes (not its paint or position). */
         this.surfaceVersion = 0;
+        /**
+         * The last changes of the shape of the ground, for `getChangedArea`.
+         * @type {Array<{version: number, samples: SampleRectangle}>}
+         */
+        this.surfaceChanges = [];
+        /** The changes since this version are all in `surfaceChanges`. */
+        this.surfaceChangesStartVersion = 0;
         this._stroke = { cellWidth: 1, cellHeight: 1, ax: 0, ay: 0, bx: 0, by: 0, radius: 0 };
         this._strokeChangedSamples = new SampleRectangle();
         /** The properties the data was loaded from, to reload it only if they change. */
@@ -1491,15 +1513,21 @@ class Terrain {
         this.savedSculptData = [];
         this.loadFromProperties();
         this._transform = this._getTransform();
-        gdjs.__grounds3D.getGrounds(object.getRuntimeScene()).add(this);
+        getGrounds(object.getRuntimeScene()).add(this);
         /**
-         * The shape of the ground, for navigation meshes (not available in older GDevelop versions).
-         * @type {gdjs.SurfaceMesh}
+         * The shape of the ground, for the physics engine and navigation meshes.
+         * @type {gdjs.Surface}
          */
-        this.surfaceMesh = { getVersion: () => this.surfaceVersion, getTriangles: () => this.getTriangles() };
-        if (typeof object.setSurfaceMesh === 'function') object.setSurfaceMesh(this.surfaceMesh);
-
-        if (gdjs.Physics3DRuntimeBehavior) {
+        this.surface = {
+            getVersion: () => this.surfaceVersion,
+            getChangedArea: (sinceVersion) => this.getChangedArea(sinceVersion),
+            getTriangles: () => null,
+            getHeightField: () => ({ columns: this.data.size, rows: this.data.size, heights: this.data.heights }),
+        };
+        if (typeof object.setSurface === 'function') {
+            object.setSurface(this.surface);
+        } else if (gdjs.Physics3DRuntimeBehavior) {
+            // Older GDevelop versions don't use surfaces.
             for (const behavior of object._behaviors) {
                 if (behavior instanceof gdjs.Physics3DRuntimeBehavior) {
                     this.bodyUpdaters.push(new TerrainBodyUpdater(this, behavior));
@@ -1567,6 +1595,8 @@ class Terrain {
     setData(data) {
         this.version = ++lastGroundVersion;
         this.surfaceVersion = this.version;
+        this.surfaceChanges.length = 0;
+        this.surfaceChangesStartVersion = this.version;
         const hasSameResolution = data.resolution === this.data.resolution && this.renderer.chunks.length > 0;
         this.data = data;
         const allSamples = new SampleRectangle().set(0, 0, data.resolution, data.resolution);
@@ -1676,8 +1706,13 @@ class Terrain {
     _onSamplesChanged(samples, haveHeightsChanged) {
         if (samples.isEmpty()) return;
         this.version = ++lastGroundVersion;
-        if (haveHeightsChanged) this.surfaceVersion = this.version;
         this.changedSamples.add(samples);
+        if (!haveHeightsChanged) return;
+        this.surfaceVersion = this.version;
+        this.surfaceChanges.push({ version: this.version, samples: new SampleRectangle().set(samples.minI, samples.minJ, samples.maxI, samples.maxJ) });
+        if (this.surfaceChanges.length > MAX_SURFACE_CHANGES) {
+            this.surfaceChangesStartVersion = this.surfaceChanges.shift().version;
+        }
         for (const bodyUpdater of this.bodyUpdaters) {
             bodyUpdater.changedSamples.add(samples);
         }
@@ -1788,43 +1823,29 @@ class Terrain {
         this.hasPaintChanged = false;
     }
 
-    /** @returns {number} A number changing each time the ground changes (see `gdjs.__grounds3D`). */
+    /** @returns {number} A number changing each time the ground changes (see `getGrounds`). */
     getVersion() {
         return this.version;
     }
 
-    /** @returns {gdjs.SurfaceMeshTriangles} The triangles of the ground, in the scene. */
-    getTriangles() {
-        const { object, data } = this;
-        const { size, heights } = data;
-        const cellWidth = this.getCellWidth();
-        const cellHeight = this.getCellHeight();
-        const depth = object.getDepth();
-        const positions = new Float32Array(size * size * 3);
-        for (let j = 0; j < size; j++) {
-            for (let i = 0; i < size; i++) {
-                const index = j * size + i;
-                positions[index * 3] = object.getX() + i * cellWidth;
-                positions[index * 3 + 1] = object.getY() + j * cellHeight;
-                positions[index * 3 + 2] = object.getZ() + heights[index] * depth;
-            }
+    /**
+     * @param {number} sinceVersion
+     * @returns {gdjs.SurfaceArea | null} The part of the ground whose shape changed since the version (see `gdjs.Surface`).
+     */
+    getChangedArea(sinceVersion) {
+        if (sinceVersion < this.surfaceChangesStartVersion) return null;
+        const samples = new SampleRectangle();
+        for (const change of this.surfaceChanges) {
+            if (change.version > sinceVersion) samples.add(change.samples);
         }
-        const indices = new Uint32Array(data.resolution * data.resolution * 6);
-        let triangleIndex = 0;
-        for (let j = 0; j < data.resolution; j++) {
-            for (let i = 0; i < data.resolution; i++) {
-                const topLeft = j * size + i;
-                const bottomLeft = topLeft + size;
-                // Triangles facing up.
-                indices[triangleIndex++] = topLeft;
-                indices[triangleIndex++] = topLeft + 1;
-                indices[triangleIndex++] = bottomLeft;
-                indices[triangleIndex++] = topLeft + 1;
-                indices[triangleIndex++] = bottomLeft + 1;
-                indices[triangleIndex++] = bottomLeft;
-            }
-        }
-        return { positions, indices };
+        if (samples.isEmpty()) return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+        const { resolution } = this.data;
+        return {
+            minX: samples.minI / resolution,
+            minY: samples.minJ / resolution,
+            maxX: samples.maxI / resolution,
+            maxY: samples.maxJ / resolution,
+        };
     }
 
     _getTransform() {
@@ -1841,7 +1862,6 @@ class Terrain {
         if (transform !== this._transform) {
             this._transform = transform;
             this.version = ++lastGroundVersion;
-            this.surfaceVersion = this.version;
         }
         this.applyChanges();
         this.renderer.uniforms.terrainWorldScale.value = getWorldScale(this.object);
@@ -1850,9 +1870,9 @@ class Terrain {
     }
 
     dispose() {
-        gdjs.__grounds3D.getGrounds(this.object.getRuntimeScene()).delete(this);
-        if (typeof this.object.setSurfaceMesh === 'function' && this.object.getSurfaceMesh() === this.surfaceMesh) {
-            this.object.setSurfaceMesh(null);
+        getGrounds(this.object.getRuntimeScene()).delete(this);
+        if (typeof this.object.setSurface === 'function' && this.object.getSurface() === this.surface) {
+            this.object.setSurface(null);
         }
         this.renderer.dispose();
         for (const bodyUpdater of this.bodyUpdaters) {
@@ -2127,6 +2147,8 @@ gdjs.__terrain3DExtension = {
     Terrain,
     // Used by the terrain grass.
     getWorldScale,
+    getGrounds,
+    patchShaderCode,
     // Exposed for tests.
     TerrainBodyUpdater,
     TerrainData,

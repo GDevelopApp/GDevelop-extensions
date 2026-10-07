@@ -2,21 +2,25 @@
 await harness.goToScene('Game Scene');
 await harness.stepFrames(1);
 const scene = harness.getCurrentRuntimeScene();
-// Versions without surface meshes for navigation meshes.
-const { getSurfaceMesh, setSurfaceMesh } = gdjs.RuntimeObject.prototype;
-delete gdjs.RuntimeObject.prototype.getSurfaceMesh;
-delete gdjs.RuntimeObject.prototype.setSurfaceMesh;
+// Versions without surfaces for the physics engine and navigation meshes.
+const { getSurface, setSurface } = gdjs.RuntimeObject.prototype;
+delete gdjs.RuntimeObject.prototype.getSurface;
+delete gdjs.RuntimeObject.prototype.setSurface;
 try {
   const terrainObject = scene.createObject('Terrain');
   terrainObject.setPosition(0, 0);
   const terrain = terrainObject.__terrain3D;
-  harness.assert(!!terrain, 'The terrain is created without surface meshes.');
+  harness.assert(!!terrain, 'The terrain is created without surfaces.');
   harness.assert(isFinite(terrain.getHeightAt(100, 100)), 'The terrain has a ground.');
+  harness.assert(terrain.bodyUpdaters.length === 1, 'The terrain changes the shape of its Physics3D behavior.');
   terrainObject.deleteFromScene();
-  harness.assert(!gdjs.__grounds3D.getGrounds(scene).has(terrain), 'The terrain is deleted without surface meshes.');
+  harness.assert(
+    !gdjs.__terrain3DExtension.getGrounds(scene).has(terrain),
+    'The terrain is deleted without surfaces.'
+  );
 } finally {
-  gdjs.RuntimeObject.prototype.getSurfaceMesh = getSurfaceMesh;
-  gdjs.RuntimeObject.prototype.setSurfaceMesh = setSurfaceMesh;
+  gdjs.RuntimeObject.prototype.getSurface = getSurface;
+  gdjs.RuntimeObject.prototype.setSurface = setSurface;
 }
 await harness.stepFrames(1);
 

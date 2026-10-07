@@ -1,8 +1,8 @@
 if (gdjs.__terrainGrassExtension) {
     return;
 }
-// Blades grow on the grounds of the scene (`gdjs.__grounds3D`, defined with
-// the terrain): 3D terrains, or grounds of other extensions.
+// Blades grow on the grounds of the scene: the 3D terrains (see `getGrounds`
+// in the terrain helper).
 
 // Size of the object inner area: instances are scaled from it.
 const AREA_SIZE = 1000;
@@ -95,7 +95,7 @@ normal = normalize(vNormal);
 nonPerturbedNormal = normal;
 `;
 
-const { getWorldScale } = gdjs.__terrain3DExtension;
+const { getWorldScale, getGrounds, patchShaderCode } = gdjs.__terrain3DExtension;
 
 const random = (seed) => {
     let state = seed >>> 0 || 1;
@@ -123,7 +123,7 @@ class Grass {
         this.chunks = [];
         this.builtFrom = '';
         this.timeSinceRebuild = 0;
-        this.grounds = gdjs.__grounds3D.getGrounds(object.getRuntimeScene());
+        this.grounds = getGrounds(object.getRuntimeScene());
         this.uniforms = {
             grassWorldToLocal: { value: new THREE.Matrix3() },
             // Scene units by 3D world unit.
@@ -139,14 +139,16 @@ class Grass {
         this.material = new THREE.MeshStandardMaterial({ roughness: 1, metalness: 0, side: THREE.DoubleSide });
         this.material.onBeforeCompile = (shader) => {
             Object.assign(shader.uniforms, this.uniforms);
-            shader.vertexShader = shader.vertexShader
-                .replace('#include <common>', '#include <common>\n' + vertexShaderDeclarations)
-                .replace('#include <begin_vertex>', vertexShaderPosition)
-                .replace('#include <defaultnormal_vertex>', '#include <defaultnormal_vertex>\n' + vertexShaderNormal);
-            shader.fragmentShader = shader.fragmentShader
-                .replace('#include <common>', '#include <common>\n' + fragmentShaderDeclarations)
-                .replace('#include <color_fragment>', '#include <color_fragment>\n' + fragmentShaderColor)
-                .replace('#include <normal_fragment_begin>', fragmentShaderNormal);
+            shader.vertexShader = patchShaderCode(shader.vertexShader, [
+                ['#include <common>', '#include <common>\n' + vertexShaderDeclarations],
+                ['#include <begin_vertex>', vertexShaderPosition],
+                ['#include <defaultnormal_vertex>', '#include <defaultnormal_vertex>\n' + vertexShaderNormal],
+            ], 'TerrainGrass');
+            shader.fragmentShader = patchShaderCode(shader.fragmentShader, [
+                ['#include <common>', '#include <common>\n' + fragmentShaderDeclarations],
+                ['#include <color_fragment>', '#include <color_fragment>\n' + fragmentShaderColor],
+                ['#include <normal_fragment_begin>', fragmentShaderNormal],
+            ], 'TerrainGrass');
         };
         this.material.customProgramCacheKey = () => 'TerrainGrass';
 

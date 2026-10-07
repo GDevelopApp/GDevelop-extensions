@@ -4,6 +4,10 @@ harness.watch('Player');
 const getPlayer = () => harness.getObjects('Player')[0];
 const terrain = harness.getRuntimeObject(harness.getObjects('Terrain')[0].id);
 harness.assert(!!terrain.__terrain3D, 'The terrain is created.');
+harness.assert(
+  terrain.getSurface() === terrain.__terrain3D.surface && terrain.__terrain3D.bodyUpdaters.length === 0,
+  'The physics engine uses the surface of the terrain.'
+);
 const landed = await harness.stepUntil(
   () => getPlayer().behaviors.PhysicsCharacter3D.state.IsOnFloor === true,
   { maxFrames: 40 }
