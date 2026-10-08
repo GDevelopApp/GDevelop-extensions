@@ -775,6 +775,7 @@ uniform sampler2D terrainLayerNormalMap1;
 uniform sampler2D terrainLayerNormalMap2;
 uniform sampler2D terrainLayerNormalMap3;
 uniform float terrainHasNormalMaps;
+uniform float terrainNormalMapStrength;
 uniform float terrainTextureSize;
 uniform vec4 terrainCliffLayer;
 uniform vec2 terrainCliffCosines;
@@ -839,6 +840,7 @@ if (terrainHasNormalMaps > 0.5) {
     terrainWeights.y * (texture2D(terrainLayerNormalMap1, terrainUv).xyz * 2.0 - 1.0) +
     terrainWeights.z * (texture2D(terrainLayerNormalMap2, terrainUv).xyz * 2.0 - 1.0) +
     terrainWeights.w * (texture2D(terrainLayerNormalMap3, terrainUv).xyz * 2.0 - 1.0);
+  terrainMapNormal.xy *= terrainNormalMapStrength;
   // The X and Y of textures follow the X and Y of the 3D world, projected on
   // the ground (the camera space of the normal is used).
   vec3 terrainTangent = (viewMatrix * vec4(1.0, 0.0, 0.0, 0.0)).xyz;
@@ -928,6 +930,7 @@ class TerrainRenderer {
             terrainLayerNormalMap2: { value: getFlatNormalTexture() },
             terrainLayerNormalMap3: { value: getFlatNormalTexture() },
             terrainHasNormalMaps: { value: 0 },
+            terrainNormalMapStrength: { value: 1 },
             terrainTextureSize: { value: 256 },
             terrainCliffLayer: { value: new THREE.Vector4() },
             terrainCliffCosines: { value: new THREE.Vector2() },
@@ -1130,6 +1133,7 @@ class TerrainRenderer {
             this.uniforms['terrainLayerNormalMap' + layer].value = getLayerTexture(game, normalMaps[layer], true);
         }
         this.uniforms.terrainHasNormalMaps.value = normalMaps.some((normalMap) => !!normalMap) ? 1 : 0;
+        this.uniforms.terrainNormalMapStrength.value = Math.max(object._getNormalMapStrength(), 0);
         this.uniforms.terrainTextureSize.value = Math.max(object._getTextureSize(), 1);
 
         const cliffLayer = parseInt(object._getCliffLayer(), 10);

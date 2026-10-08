@@ -219,6 +219,9 @@ properties = [
          choices=[("64", "64 x 64"), ("128", "128 x 128"), ("256", "256 x 256"), ("512", "512 x 512"),
                   ("1024", "1024 x 1024")]),
 ] + layer_properties + [
+    prop("NormalMapStrength", "Number", 1, "Normal map strength", group="Layers",
+         description="How much the normal maps bump the ground: 0 for none, 1 as they are, more to "
+                     "exaggerate them."),
     prop("TextureSize", "Number", 256, "Texture size", group="Layers", unit="Pixel",
          description="The size, in the scene, of one repetition of the layer textures."),
     prop("CliffLayer", "Choice", "3", "Layer on steep slopes", group="Layers",
