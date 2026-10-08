@@ -205,15 +205,16 @@ properties = [
     prop("HeightmapImage", "Resource", "", "Heightmap image", group="Shape", extra=["image"],
          description="Optional. Replaces the relief: black is the lowest, white the highest (the object depth)."),
     prop("Edits", "MultilineString", "", "Edits", group="Shape", advanced=True,
-         description="Changes of the relief or heightmap, as a JSON list, for example "
+         description="Changes of the relief or heightmap, applied in order, as a JSON list, for example "
                      '[{"tool": "raise", "x": 0.3, "y": 0.4, "radius": 0.15, "height": 0.4}, '
                      '{"tool": "paint", "x": 0.1, "y": 0.9, "toX": 0.8, "toY": 0.2, "radius": 0.02, "layer": 2}]. '
-                     "Tools: raise (height, negative to lower), flatten (z), smooth (strength) and paint (layer, "
-                     "from 1 to 4, and strength). x, y and radius are fractions (0 to 1) of the terrain size "
-                     "(x is (scene X - terrain X) / terrain width), height and z fractions of its depth. Add toX and "
-                     "toY to change the ground along a line (paths, rivers, ridges). An object put on an area "
-                     "flattened at z stands on the ground at Z = terrain Z + z * terrain depth (useful for "
-                     "buildings). Shown in the scene editor."),
+                     "Tools: raise (height added to the ground, negative to lower), flatten (z: the ground is "
+                     "brought to this height, fully at the center, cutting what is above it and filling what is "
+                     "below), smooth (strength) and "
+                     "paint (layer, from 1 to 4, and strength). x, y and radius are fractions (0 to 1) of the "
+                     "terrain size (x is (scene X - terrain X) / terrain width). height and z are fractions of its "
+                     "depth: the ground at z is at Z = terrain Z + z * terrain depth. Add toX and toY to change "
+                     "the ground along a line (paths, rivers, ridges). Shown in the scene editor."),
     prop("Resolution", "Choice", "256", "Resolution", group="Shape",
          description="The number of cells on each side of the terrain. Higher is more detailed but slower.",
          choices=[("64", "64 x 64"), ("128", "128 x 128"), ("256", "256 x 256"), ("512", "512 x 512"),
