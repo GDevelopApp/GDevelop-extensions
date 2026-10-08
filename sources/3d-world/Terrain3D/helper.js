@@ -998,6 +998,14 @@ class TerrainRenderer {
                 geometry.boundingSphere = new THREE.Sphere();
                 const mesh = new THREE.Mesh(geometry, this.material);
                 mesh.matrixAutoUpdate = false;
+                // Rays hit the ground at its full resolution, whatever the level of detail drawn.
+                const chunkCells = this.chunkCells;
+                mesh.raycast = function (raycaster, intersects) {
+                    const drawnIndex = geometry.index;
+                    geometry.setIndex(getLodIndex(chunkCells, LOD_STEPS[0]));
+                    THREE.Mesh.prototype.raycast.call(this, raycaster, intersects);
+                    geometry.setIndex(drawnIndex);
+                };
                 this.group.add(mesh);
                 this.chunks.push({
                     mesh,
