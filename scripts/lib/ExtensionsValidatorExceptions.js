@@ -613,6 +613,26 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: ['_stickerExtension'],
       javaScriptObjectAllowedProperties: [],
     },
+    Terrain3D: {
+      gdjsAllowedProperties: [
+        '__terrain3DExtension',
+        '__terrainGrassExtension',
+        'Base3DHandler',
+        'CustomRuntimeObject3D',
+        'InGameEditor',
+        'InGameEditorToolbarItem',
+        'Physics3DRuntimeBehavior',
+        'RuntimeGame',
+        'RuntimeObject',
+        'RuntimeScene',
+        'Surface',
+        'SurfaceArea',
+        'registerInGameEditorPostStepCallback',
+      ],
+      gdjsEvtToolsAllowedProperties: ['input'],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     Text3D: {
       gdjsAllowedProperties: [
         '__text3DExtension',
@@ -686,6 +706,19 @@ const extensionsAllowedProperties = {
     VoiceRecognition: {
       gdjsAllowedProperties: ['_extensionVoiceRecognition'],
       gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
+    Water3D: {
+      gdjsAllowedProperties: [
+        '__water3DExtension',
+        'Base3DHandler',
+        'CustomRuntimeObject3D',
+        'Physics3DRuntimeBehavior',
+        'RuntimeGame',
+        'RuntimeObject',
+      ],
+      gdjsEvtToolsAllowedProperties: ['object'],
       runtimeSceneAllowedProperties: [],
       javaScriptObjectAllowedProperties: [],
     },
