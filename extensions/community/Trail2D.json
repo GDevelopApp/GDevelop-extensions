@@ -1,0 +1,1558 @@
+{
+  "author": "",
+  "category": "Visual effect",
+  "dimension": "",
+  "extensionNamespace": "",
+  "fullName": "2D Trail",
+  "gdevelopVersion": ">=5.6.0",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9HcmFwaGljcy9TVkcvMS4xL0RURC9zdmcxMS5kdGQiPjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0ibWRpLXJheS1zdGFydCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiB2aWV3Qm94PSIwIDAgMjQgMjQiPjxwYXRoIGQ9Ik00LDlDNS4zMSw5IDYuNDIsOS44MyA2LjgzLDExSDIyVjEzSDYuODNDNi40MiwxNC4xNyA1LjMxLDE1IDQsMTVBMywzIDAgMCwxIDEsMTJBMywzIDAgMCwxIDQsOVoiIC8+PC9zdmc+",
+  "name": "Trail2D",
+  "previewIconUrl": "https://asset-resources.gdevelop.io/public-resources/Icons/6d98d62f7360acc8d71ce442ea3246baf597710c1664b330b45b757d4abe274f_ray-start.svg",
+  "shortDescription": "Add 2D trails, with up to 2 colors and gradients, following any object.",
+  "version": "0.1.0",
+  "description": [
+    "# About",
+    "**Adds 2D trail objects that follow another object as it moves.**",
+    "Customize the trail appearance with up to 2 colors, blended together as a gradient.",
+    "",
+    "# How to use",
+    "1. Add a Trail2D object to your scene, depending on your game's dimension.",
+    "2. Configure the trail's colors and gradient in the object's properties.",
+    "3. Use the object's actions to attach it to the object you want to leave a trail behind."
+  ],
+  "tags": [
+    "trail",
+    "gradient",
+    "color",
+    "visual effect",
+    "2d"
+  ],
+  "authorIds": [
+    "QjE1CI3drHNR9Wklz2gTC5WbEgh1",
+    "IWykYNRvhCZBN3vEgKEbBPOR3Oc2"
+  ],
+  "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
+  "eventsFunctions": [
+    {
+      "description": "Define helper classes JavaScript code.",
+      "fullName": "Define helper classes",
+      "functionType": "Action",
+      "name": "DefineHelperClasses",
+      "private": true,
+      "sentence": "Define helper classes JavaScript code",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "if (gdjs.__trail2DExtension) {",
+            "    return;",
+            "}",
+            "",
+            "/**",
+            " * @param array {Array<number>}",
+            " * @param addedCount {number}",
+            " */",
+            "function duplicateLast(array, addedCount) {",
+            "    const last = array[array.length - 1];",
+            "    for (let i = 0; i < addedCount; i++) {",
+            "        array.push(last);",
+            "    }",
+            "}",
+            "",
+            "class Trail2D {",
+            "    /** @type {gdjs.CustomRuntimeObject2D} */",
+            "    object;",
+            "    /**",
+            "     * The head (most recent position) is at index 0,",
+            "     * the tail (oldest position) is at the end of the array.",
+            "     * @type {Array<number>}",
+            "     */",
+            "    pointsX = [];",
+            "    /** @type {Array<number>} */",
+            "    pointsY = [];",
+            "    /** @type {Float32Array} */",
+            "    vertices;",
+            "    /** @type {Float32Array} */",
+            "    uvs;",
+            "    /** @type {PIXI.MeshGeometry} */",
+            "    geometry;",
+            "    /** @type {PIXI.Mesh} */",
+            "    mesh;",
+            "    /** @type {HTMLCanvasElement} */",
+            "    gradientCanvas;",
+            "    /** @type {PIXI.Texture} */",
+            "    gradientTexture;",
+            "    /** @type {number} */",
+            "    minimumDistance = 0;",
+            "    /** @type {string} */",
+            "    startColor = '255;255;255';",
+            "    /** @type {number} */",
+            "    startOpacity = 255;",
+            "    /** @type {string} */",
+            "    endColor = '255;255;255';",
+            "    /** @type {number} */",
+            "    endOpacity = 0;",
+            "    /**",
+            "     * The name of the image resource used as the trail’s texture.",
+            "     * Empty means a plain white texture (only the tint gradient is",
+            "     * visible).",
+            "     * @type {string}",
+            "     */",
+            "    textureResourceName = '';",
+            "    /** @type {boolean} */",
+            "    repeatTexture = false;",
+            "    /** @type {number} */",
+            "    headWidth = 16;",
+            "    /** @type {number} */",
+            "    tailWidth = 16;",
+            "    /**",
+            "     * The object's position is not reliable yet during onCreated",
+            "     * (it is set to 0;0 until the object is actually placed/moved),",
+            "     * so the whole trail is snapped to the object's position",
+            "     * on the first update() call instead.",
+            "     * @type {boolean}",
+            "     */",
+            "    initialized = false;",
+            "",
+            "    /**",
+            "     * @param object {gdjs.CustomRuntimeObject2D}",
+            "     * @param pointCount {number}",
+            "     */",
+            "    constructor(object, pointCount) {",
+            "        this.object = object;",
+            "        for (let i = 0; i < pointCount; i++) {",
+            "            this.pointsX.push(0);",
+            "            this.pointsY.push(0);",
+            "        }",
+            "",
+            "        this.gradientCanvas = document.createElement('canvas');",
+            "        this.gradientCanvas.width = 256;",
+            "        this.gradientCanvas.height = 64;",
+            "        this.gradientTexture = PIXI.Texture.from(this.gradientCanvas);",
+            "",
+            "        this._buildMesh(pointCount);",
+            "        object.getRendererObject().addChild(this.mesh);",
+            "        this._updateGeometry();",
+            "    }",
+            "",
+            "    /**",
+            "     * (Re)builds the mesh geometry (vertices/UVs/indices) for the given",
+            "     * number of points. Called on creation and whenever the point count",
+            "     * changes.",
+            "     * @param pointCount {number}",
+            "     */",
+            "    _buildMesh(pointCount) {",
+            "        if (this.mesh) {",
+            "            this.object.getRendererObject().removeChild(this.mesh);",
+            "            this.mesh.destroy();",
+            "        }",
+            "",
+            "        this.vertices = new Float32Array(pointCount * 4);",
+            "        this.uvs = new Float32Array(pointCount * 4);",
+            "        const indices = [];",
+            "        for (let i = 0; i < pointCount; i++) {",
+            "            const u = pointCount > 1 ? i / (pointCount - 1) : 0;",
+            "            this.uvs[i * 4] = u;",
+            "            this.uvs[i * 4 + 1] = 0;",
+            "            this.uvs[i * 4 + 2] = u;",
+            "            this.uvs[i * 4 + 3] = 1;",
+            "",
+            "            if (i < pointCount - 1) {",
+            "                const a = i * 2;",
+            "                const b = i * 2 + 1;",
+            "                const c = (i + 1) * 2;",
+            "                const d = (i + 1) * 2 + 1;",
+            "                indices.push(a, b, c, b, d, c);",
+            "            }",
+            "        }",
+            "",
+            "        this.geometry = new PIXI.MeshGeometry(",
+            "            this.vertices,",
+            "            this.uvs,",
+            "            new Uint16Array(indices)",
+            "        );",
+            "        this.mesh = new PIXI.Mesh(",
+            "            this.geometry,",
+            "            new PIXI.MeshMaterial(this.gradientTexture)",
+            "        );",
+            "    }",
+            "",
+            "    /**",
+            "     * Recomputes the mesh vertices from the current points and widths.",
+            "     */",
+            "    _updateGeometry() {",
+            "        const pointCount = this.pointsX.length;",
+            "        for (let i = 0; i < pointCount; i++) {",
+            "            const x = this.pointsX[i];",
+            "            const y = this.pointsY[i];",
+            "",
+            "            let tangentX;",
+            "            let tangentY;",
+            "            if (i === 0) {",
+            "                const nextIndex = Math.min(1, pointCount - 1);",
+            "                tangentX = this.pointsX[nextIndex] - x;",
+            "                tangentY = this.pointsY[nextIndex] - y;",
+            "            } else if (i === pointCount - 1) {",
+            "                tangentX = x - this.pointsX[i - 1];",
+            "                tangentY = y - this.pointsY[i - 1];",
+            "            } else {",
+            "                tangentX = this.pointsX[i + 1] - this.pointsX[i - 1];",
+            "                tangentY = this.pointsY[i + 1] - this.pointsY[i - 1];",
+            "            }",
+            "",
+            "            let length = Math.sqrt(tangentX * tangentX + tangentY * tangentY);",
+            "            if (length === 0) {",
+            "                length = 1;",
+            "            }",
+            "            const normalX = -tangentY / length;",
+            "            const normalY = tangentX / length;",
+            "",
+            "            const t = pointCount > 1 ? i / (pointCount - 1) : 0;",
+            "            const halfWidth = (this.headWidth + (this.tailWidth - this.headWidth) * t) / 2;",
+            "",
+            "            this.vertices[i * 4] = x + normalX * halfWidth;",
+            "            this.vertices[i * 4 + 1] = y + normalY * halfWidth;",
+            "            this.vertices[i * 4 + 2] = x - normalX * halfWidth;",
+            "            this.vertices[i * 4 + 3] = y - normalY * halfWidth;",
+            "        }",
+            "",
+            "        this.geometry.buffers[0].update();",
+            "        this._updateSize();",
+            "    }",
+            "",
+            "    /**",
+            "     * Updates the object's declared size (used by GDevelop for the",
+            "     * selection in the editor, and by some effects like Outline or",
+            "     * Blur to compute their filter area) to match the trail's actual",
+            "     * extent, since the object has no child instance to compute it",
+            "     * from automatically.",
+            "     */",
+            "    _updateSize() {",
+            "        let minX = Infinity;",
+            "        let minY = Infinity;",
+            "        let maxX = -Infinity;",
+            "        let maxY = -Infinity;",
+            "        for (let i = 0; i < this.vertices.length; i += 2) {",
+            "            const vx = this.vertices[i];",
+            "            const vy = this.vertices[i + 1];",
+            "            if (vx < minX) minX = vx;",
+            "            if (vx > maxX) maxX = vx;",
+            "            if (vy < minY) minY = vy;",
+            "            if (vy > maxY) maxY = vy;",
+            "        }",
+            "",
+            "        // _innerArea/_unrotatedAABB are expressed relative to the",
+            "        // object's own position, not in absolute scene coordinates.",
+            "        const objectX = this.object.getX();",
+            "        const objectY = this.object.getY();",
+            "        const localMinX = minX - objectX;",
+            "        const localMinY = minY - objectY;",
+            "        const localMaxX = maxX - objectX;",
+            "        const localMaxY = maxY - objectY;",
+            "",
+            "        const innerArea = this.object._innerArea;",
+            "        if (innerArea) {",
+            "            innerArea.min[0] = localMinX;",
+            "            innerArea.min[1] = localMinY;",
+            "            innerArea.max[0] = localMaxX;",
+            "            innerArea.max[1] = localMaxY;",
+            "        }",
+            "        const hitboxes = this.object._untransformedHitBoxes;",
+            "        if (hitboxes && hitboxes[0]) {",
+            "            hitboxes[0].vertices = [",
+            "                [localMinX, localMinY],",
+            "                [localMaxX, localMinY],",
+            "                [localMaxX, localMaxY],",
+            "                [localMinX, localMaxY],",
+            "            ];",
+            "        }",
+            "    }",
+            "",
+            "    /**",
+            "     * @param pointCount {number}",
+            "     */",
+            "    setPointCount(pointCount) {",
+            "        pointCount = Math.max(2, Math.floor(pointCount));",
+            "        const oldPointCount = this.pointsX.length;",
+            "        if (pointCount === oldPointCount) {",
+            "            return;",
+            "        }",
+            "        if (pointCount < oldPointCount) {",
+            "            // Drop the oldest points, at the end of the array (the tail).",
+            "            this.pointsX.length = pointCount;",
+            "            this.pointsY.length = pointCount;",
+            "        } else {",
+            "            // Extend the tail by duplicating its oldest point.",
+            "            const addedCount = pointCount - oldPointCount;",
+            "            duplicateLast(this.pointsX, addedCount);",
+            "            duplicateLast(this.pointsY, addedCount);",
+            "        }",
+            "",
+            "        this._buildMesh(pointCount);",
+            "        this.object.getRendererObject().addChild(this.mesh);",
+            "        this._updateGeometry();",
+            "    }",
+            "",
+            "    /**",
+            "     * @param headWidth {number}",
+            "     * @param tailWidth {number}",
+            "     */",
+            "    setWidths(headWidth, tailWidth) {",
+            "        this.headWidth = headWidth;",
+            "        this.tailWidth = tailWidth;",
+            "    }",
+            "",
+            "    /**",
+            "     * @param distance {number}",
+            "     */",
+            "    setMinimumDistance(distance) {",
+            "        this.minimumDistance = Math.max(0, distance);",
+            "    }",
+            "",
+            "    /**",
+            "     * @param resourceName {string}",
+            "     * @param repeat {boolean}",
+            "     */",
+            "    setTexture(resourceName, repeat) {",
+            "        this.textureResourceName = resourceName;",
+            "        this.repeatTexture = repeat;",
+            "        this._redrawGradient();",
+            "    }",
+            "",
+            "    /**",
+            "     * @param startColor {string} \"r;g;b\"",
+            "     * @param startOpacity {number} 0-255",
+            "     * @param endColor {string} \"r;g;b\"",
+            "     * @param endOpacity {number} 0-255",
+            "     */",
+            "    setGradient(startColor, startOpacity, endColor, endOpacity) {",
+            "        this.startColor = startColor;",
+            "        this.startOpacity = startOpacity;",
+            "        this.endColor = endColor;",
+            "        this.endOpacity = endOpacity;",
+            "        this._redrawGradient();",
+            "    }",
+            "",
+            "    /**",
+            "     * @return {HTMLImageElement|HTMLCanvasElement|null}",
+            "     */",
+            "    _getTextureImage() {",
+            "        if (!this.textureResourceName) {",
+            "            return null;",
+            "        }",
+            "        const imageManager = this.object.getInstanceContainer().getGame().getImageManager();",
+            "        const pixiTexture = imageManager.getPIXITexture(this.textureResourceName);",
+            "        if (!pixiTexture || !pixiTexture.baseTexture || !pixiTexture.baseTexture.valid) {",
+            "            return null;",
+            "        }",
+            "        const resource = pixiTexture.baseTexture.resource;",
+            "        return resource ? resource.source : null;",
+            "    }",
+            "",
+            "    _redrawGradient() {",
+            "        const width = this.gradientCanvas.width;",
+            "        const height = this.gradientCanvas.height;",
+            "        const context = this.gradientCanvas.getContext('2d');",
+            "        context.clearRect(0, 0, width, height);",
+            "",
+            "        // 1. Draw the texture (or a plain white background if none is set).",
+            "        const image = this._getTextureImage();",
+            "        if (image) {",
+            "            if (this.repeatTexture) {",
+            "                const pattern = context.createPattern(image, 'repeat');",
+            "                context.fillStyle = pattern;",
+            "                context.fillRect(0, 0, width, height);",
+            "            } else {",
+            "                context.drawImage(image, 0, 0, width, height);",
+            "            }",
+            "        } else {",
+            "            context.fillStyle = '#ffffff';",
+            "            context.fillRect(0, 0, width, height);",
+            "        }",
+            "",
+            "        // 2. Multiply the tint gradient (head to tail) on top of the texture.",
+            "        context.globalCompositeOperation = 'multiply';",
+            "        const tintGradient = context.createLinearGradient(0, 0, width, 0);",
+            "        tintGradient.addColorStop(0, `rgb(${this.startColor.replace(/;/g, ',')})`);",
+            "        tintGradient.addColorStop(1, `rgb(${this.endColor.replace(/;/g, ',')})`);",
+            "        context.fillStyle = tintGradient;",
+            "        context.fillRect(0, 0, width, height);",
+            "",
+            "        // 3. Apply the opacity gradient (head to tail) as an alpha mask.",
+            "        context.globalCompositeOperation = 'destination-in';",
+            "        const opacityGradient = context.createLinearGradient(0, 0, width, 0);",
+            "        opacityGradient.addColorStop(0, `rgba(0, 0, 0, ${this.startOpacity / 255})`);",
+            "        opacityGradient.addColorStop(1, `rgba(0, 0, 0, ${this.endOpacity / 255})`);",
+            "        context.fillStyle = opacityGradient;",
+            "        context.fillRect(0, 0, width, height);",
+            "",
+            "        context.globalCompositeOperation = 'source-over';",
+            "        this.gradientTexture.update();",
+            "    }",
+            "",
+            "    update() {",
+            "        const x = this.object.getX();",
+            "        const y = this.object.getY();",
+            "",
+            "        if (!this.initialized) {",
+            "            // Snap the whole trail to the object's actual position now",
+            "            // that it is reliable, instead of stretching from 0;0.",
+            "            this.pointsX.fill(x);",
+            "            this.pointsY.fill(y);",
+            "            this.initialized = true;",
+            "        } else {",
+            "            const headX = this.pointsX[0];",
+            "            const headY = this.pointsY[0];",
+            "            const dx = x - headX;",
+            "            const dy = y - headY;",
+            "            const distance = Math.sqrt(dx * dx + dy * dy);",
+            "",
+            "            // The trail is always pulled towards the object's current",
+            "            // position by at least one point every frame (like Sprite Rope's",
+            "            // \"Pull the rope\" action). This way, it keeps settling and",
+            "            // flattening out when the object stops moving, instead of",
+            "            // staying frozen with its last shape.",
+            "            let stepCount = 1;",
+            "            if (this.minimumDistance > 0 && distance > this.minimumDistance) {",
+            "                // The object may have moved by several times the point",
+            "                // spacing in a single frame (for example on a slower",
+            "                // computer running at a lower framerate). Points are",
+            "                // added at regular intervals along the travelled segment",
+            "                // instead of a single one, so that the trail keeps the",
+            "                // same shape and density regardless of the framerate.",
+            "                stepCount = Math.min(",
+            "                    this.pointsX.length - 1,",
+            "                    Math.floor(distance / this.minimumDistance)",
+            "                );",
+            "            }",
+            "",
+            "            for (let step = 1; step <= stepCount; step++) {",
+            "                let pointX;",
+            "                let pointY;",
+            "                if (step === stepCount || distance === 0) {",
+            "                    // The last point (or the only one, if the object",
+            "                    // did not move) always snaps exactly to the",
+            "                    // object's current position.",
+            "                    pointX = x;",
+            "                    pointY = y;",
+            "                } else {",
+            "                    const ratio = (step * this.minimumDistance) / distance;",
+            "                    pointX = headX + dx * ratio;",
+            "                    pointY = headY + dy * ratio;",
+            "                }",
+            "                this.pointsX.pop();",
+            "                this.pointsY.pop();",
+            "                this.pointsX.unshift(pointX);",
+            "                this.pointsY.unshift(pointY);",
+            "            }",
+            "        }",
+            "",
+            "        this._updateGeometry();",
+            "    }",
+            "}",
+            "",
+            "class Trail2DRenderer extends gdjs.CustomRuntimeObject2DRenderer {",
+            "    constructor(",
+            "      object,",
+            "      instanceContainer,",
+            "      parent",
+            "    ) {",
+            "        super(object, instanceContainer, parent);",
+            "    }",
+            "",
+            "    _updatePIXIContainer() {",
+            "      this._pixiContainer.visible = !this._object.hidden;",
+            "      this._pixiContainer.alpha = this._object.getOpacity() / 255;",
+            "",
+            "      this._isContainerDirty = false;",
+            "    }",
+            "",
+            "    updateX() {}",
+            "    updateY() {}",
+            "    updateAngle() {}",
+            "}",
+            "",
+            "gdjs.__trail2DExtension = {",
+            "    Trail2D,",
+            "    Trail2DRenderer",
+            "};"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": true
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    }
+  ],
+  "eventsFunctionsFolderStructure": {
+    "folderName": "__ROOT",
+    "children": [
+      {
+        "functionName": "DefineHelperClasses"
+      }
+    ]
+  },
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": [
+    {
+      "areaMaxX": 32,
+      "areaMaxY": 32,
+      "areaMaxZ": 64,
+      "areaMinX": 0,
+      "areaMinY": 0,
+      "areaMinZ": 0,
+      "defaultName": "Trail2D",
+      "description": "A 2D trail that follows an object as it moves, with support for up to 3 colors and gradients.",
+      "fullName": "2D Trail",
+      "helpPath": "",
+      "iconUrl": "",
+      "isUsingLegacyInstancesRenderer": true,
+      "name": "Trail2D",
+      "previewIconUrl": "",
+      "objects": [
+        {
+          "assetStoreId": "",
+          "name": "ShowHelper",
+          "persistentUuid": "341691e1-2074-4a49-a2a5-b313f54db176",
+          "type": "PrimitiveDrawing::Drawer",
+          "variables": [],
+          "effects": [],
+          "behaviors": [],
+          "fillOpacity": 255,
+          "outlineSize": 1,
+          "outlineOpacity": 255,
+          "absoluteCoordinates": false,
+          "clearBetweenFrames": true,
+          "antialiasing": "none",
+          "fillColor": {
+            "r": 255,
+            "g": 255,
+            "b": 255
+          },
+          "outlineColor": {
+            "r": 0,
+            "g": 0,
+            "b": 0
+          }
+        }
+      ],
+      "objectsFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "objectName": "ShowHelper"
+          }
+        ]
+      },
+      "objectsGroups": [],
+      "layers": [
+        {
+          "ambientLightColorB": 200,
+          "ambientLightColorG": 200,
+          "ambientLightColorR": 200,
+          "camera2DPlaneMaxDrawingDistance": 5000,
+          "camera3DFarPlaneDistance": 10000,
+          "camera3DFieldOfView": 45,
+          "camera3DNearPlaneDistance": 3,
+          "cameraType": "",
+          "followBaseLayerCamera": false,
+          "isLightingLayer": false,
+          "isLocked": false,
+          "name": "",
+          "renderingType": "",
+          "visibility": true,
+          "cameras": [
+            {
+              "defaultSize": true,
+              "defaultViewport": true,
+              "height": 0,
+              "viewportBottom": 1,
+              "viewportLeft": 0,
+              "viewportRight": 1,
+              "viewportTop": 0,
+              "width": 0
+            }
+          ],
+          "effects": []
+        }
+      ],
+      "instances": [
+        {
+          "angle": 0,
+          "customSize": false,
+          "height": 0,
+          "keepRatio": true,
+          "layer": "",
+          "name": "ShowHelper",
+          "persistentUuid": "f49c078a-6ecb-4c12-8b76-7a939b473a5a",
+          "width": 0,
+          "x": 0,
+          "y": 0,
+          "zOrder": 1,
+          "numberProperties": [],
+          "stringProperties": [],
+          "initialVariables": []
+        }
+      ],
+      "editionSettings": {
+        "grid": false,
+        "gridType": "rectangular",
+        "gridWidth": 32,
+        "gridHeight": 32,
+        "gridDepth": 32,
+        "gridOffsetX": 0,
+        "gridOffsetY": 0,
+        "gridOffsetZ": 0,
+        "gridColor": 10401023,
+        "gridAlpha": 0.8,
+        "snap": false,
+        "zoomFactor": 10.9375,
+        "windowMask": false,
+        "selectedLayer": "",
+        "gameEditorMode": "instances-editor"
+      },
+      "eventsFunctions": [
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onCreated",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Trail2D::DefineHelperClasses"
+                  },
+                  "parameters": [
+                    "",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const { Trail2D, Trail2DRenderer } = gdjs.__trail2DExtension;\r",
+                "\r",
+                "/** @type {gdjs.CustomRuntimeObject2D} */\r",
+                "const object = objects[0];\r",
+                "\r",
+                "// The object has no child instance, so GDevelop can't compute its\r",
+                "// size (getWidth()/getHeight() would return 0). Several effects\r",
+                "// (Outline, Blur...) rely on this size to know their filter area,\r",
+                "// and would otherwise have no visible result. This is updated every\r",
+                "// frame (see Trail2D._updateGeometry) to match the trail's actual\r",
+                "// extent, like the 3D particle emitter forces its own (fixed) size.\r",
+                "object._innerArea = {\r",
+                "    min: [0, 0, 0],\r",
+                "    max: [0, 0, 0],\r",
+                "};\r",
+                "object._untransformedHitBoxes = [new gdjs.Polygon()];\r",
+                "object._updateUntransformedHitBoxes = () => {};\r",
+                "\r",
+                "object._renderer = new Trail2DRenderer(object, object._instanceContainer, object.getInstanceContainer());\r",
+                "\r",
+                "const pointCount = object._getPointsCount();\r",
+                "\r",
+                "object.__trail2DExtension = {};\r",
+                "object.__trail2DExtension.trail = new Trail2D(object, pointCount);\r",
+                "\r",
+                ""
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            },
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Trail2D::Trail2D::UpdateFromProperties"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "onHotReloading",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "Trail2D::Trail2D::UpdateFromProperties"
+                  },
+                  "parameters": [
+                    "Object",
+                    ""
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Update from properties.",
+          "fullName": "Update from properties",
+          "functionType": "Action",
+          "name": "UpdateFromProperties",
+          "private": true,
+          "sentence": "Update from properties of _PARAM0_",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "/** @type {gdjs.CustomRuntimeObject2D} */",
+                "const object = objects[0];",
+                "const trail = object.__trail2DExtension.trail;",
+                "",
+                "trail.setPointCount(object._getPointsCount());",
+                "trail.setMinimumDistance(object._getMinimumDistance());",
+                "trail.setWidths(object._getWidth(), object._getTailWidth());",
+                "trail.setTexture(object._getTexture(), object._getRepeatTexture());",
+                "trail.setGradient(",
+                "    object._getStartColor(),",
+                "    object._getStartOpacity(),",
+                "    object._getEndColor(),",
+                "    object._getEndOpacity()",
+                ");"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "Action",
+          "name": "doStepPostEvents",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "/** @type {gdjs.CustomRuntimeObject2D} */",
+                "const object = objects[0];",
+                "",
+                "object.__trail2DExtension.trail.update();"
+              ],
+              "parameterObjects": "Object",
+              "useStrict": true,
+              "eventsSheetExpanded": true
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the start tint of the object. Tint applied at the head of the trail (the object's current position), multiplied with the texture below (if any).",
+          "fullName": "Start tint",
+          "functionType": "ExpressionAndCondition",
+          "group": "2D Trail configuration",
+          "name": "StartColor",
+          "sentence": "the start tint",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnString"
+                  },
+                  "parameters": [
+                    "StartColor"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "color"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StartColor",
+          "group": "2D Trail configuration",
+          "name": "SetStartColor",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetStringVariable"
+                  },
+                  "parameters": [
+                    "StartColor",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the start opacity of the object. Opacity (0-255) of the trail at the head.",
+          "fullName": "Start opacity",
+          "functionType": "ExpressionAndCondition",
+          "group": "2D Trail configuration",
+          "name": "StartOpacity",
+          "sentence": "the start opacity",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "StartOpacity"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "StartOpacity",
+          "group": "2D Trail configuration",
+          "name": "SetStartOpacity",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "StartOpacity",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the end tint of the object. Tint applied at the tail of the trail (its oldest point), multiplied with the texture below (if any).",
+          "fullName": "End tint",
+          "functionType": "ExpressionAndCondition",
+          "group": "2D Trail configuration",
+          "name": "EndColor",
+          "sentence": "the end tint",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnString"
+                  },
+                  "parameters": [
+                    "EndColor"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "color"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "EndColor",
+          "group": "2D Trail configuration",
+          "name": "SetEndColor",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetStringVariable"
+                  },
+                  "parameters": [
+                    "EndColor",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the end opacity of the object. Opacity (0-255) of the trail at the tail.",
+          "fullName": "End opacity",
+          "functionType": "ExpressionAndCondition",
+          "group": "2D Trail configuration",
+          "name": "EndOpacity",
+          "sentence": "the end opacity",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "EndOpacity"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "EndOpacity",
+          "group": "2D Trail configuration",
+          "name": "SetEndOpacity",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "EndOpacity",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the head width of the object. Thickness of the trail at the object's current position (the head), in pixels.",
+          "fullName": "Head width",
+          "functionType": "ExpressionAndCondition",
+          "group": "2D Trail configuration",
+          "name": "Width",
+          "sentence": "the head width",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "Width"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "Width",
+          "group": "2D Trail configuration",
+          "name": "SetWidth",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "Width",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the tail width of the object. Thickness of the trail at its oldest point (the tail), in pixels. Use a different value than the head width to make the trail taper.",
+          "fullName": "Tail width",
+          "functionType": "ExpressionAndCondition",
+          "group": "2D Trail configuration",
+          "name": "TailWidth",
+          "sentence": "the tail width",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "TailWidth"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "TailWidth",
+          "group": "2D Trail configuration",
+          "name": "SetTailWidth",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "TailWidth",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the points count of the object. Number of points used to draw the trail (higher values make a longer, smoother trail but cost more performance).",
+          "fullName": "Points count",
+          "functionType": "ExpressionAndCondition",
+          "group": "2D Trail configuration",
+          "name": "PointsCount",
+          "sentence": "the points count",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "PointsCount"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "PointsCount",
+          "group": "2D Trail configuration",
+          "name": "SetPointsCount",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "PointsCount",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "the point spacing of the object. Distance (in pixels) represented by each point of the trail. Used to smooth out fast movements (e.g. on a slower computer) by adding several points at once instead of one, so the trail keeps the same density regardless of the framerate.",
+          "fullName": "Point spacing",
+          "functionType": "ExpressionAndCondition",
+          "group": "2D Trail configuration",
+          "name": "MinimumDistance",
+          "sentence": "the point spacing",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "MinimumDistance"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "MinimumDistance",
+          "group": "2D Trail configuration",
+          "name": "SetMinimumDistance",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "MinimumDistance",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "supplementaryInformation": "Trail2D::Trail2D",
+              "type": "object"
+            }
+          ],
+          "objectGroups": []
+        }
+      ],
+      "eventsFunctionsFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "functionName": "onCreated"
+          },
+          {
+            "functionName": "onHotReloading"
+          },
+          {
+            "functionName": "UpdateFromProperties"
+          },
+          {
+            "functionName": "doStepPostEvents"
+          },
+          {
+            "folderName": "2D Trail configuration",
+            "children": [
+              {
+                "functionName": "StartColor"
+              },
+              {
+                "functionName": "SetStartColor"
+              },
+              {
+                "functionName": "StartOpacity"
+              },
+              {
+                "functionName": "SetStartOpacity"
+              },
+              {
+                "functionName": "EndColor"
+              },
+              {
+                "functionName": "SetEndColor"
+              },
+              {
+                "functionName": "EndOpacity"
+              },
+              {
+                "functionName": "SetEndOpacity"
+              },
+              {
+                "functionName": "Width"
+              },
+              {
+                "functionName": "SetWidth"
+              },
+              {
+                "functionName": "TailWidth"
+              },
+              {
+                "functionName": "SetTailWidth"
+              },
+              {
+                "functionName": "PointsCount"
+              },
+              {
+                "functionName": "SetPointsCount"
+              },
+              {
+                "functionName": "MinimumDistance"
+              },
+              {
+                "functionName": "SetMinimumDistance"
+              }
+            ]
+          }
+        ]
+      },
+      "propertyDescriptors": [
+        {
+          "value": "",
+          "type": "Resource",
+          "label": "Texture",
+          "description": "Image used for the trail. If empty, a plain white texture is used (only the tints below will be visible).",
+          "extraInformation": [
+            "image"
+          ],
+          "choices": [],
+          "name": "Texture"
+        },
+        {
+          "value": "false",
+          "type": "Boolean",
+          "label": "Repeat texture",
+          "description": "If checked, the texture repeats along the trail instead of being stretched once from head to tail.",
+          "name": "RepeatTexture"
+        },
+        {
+          "value": "255;255;255",
+          "type": "Color",
+          "label": "Start tint",
+          "description": "Tint applied at the head of the trail (the object's current position), multiplied with the texture below (if any).",
+          "name": "StartColor"
+        },
+        {
+          "value": "255",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Start opacity",
+          "description": "Opacity (0-255) of the trail at the head.",
+          "name": "StartOpacity"
+        },
+        {
+          "value": "255;255;255",
+          "type": "Color",
+          "label": "End tint",
+          "description": "Tint applied at the tail of the trail (its oldest point), multiplied with the texture below (if any).",
+          "name": "EndColor"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "End opacity",
+          "description": "Opacity (0-255) of the trail at the tail.",
+          "name": "EndOpacity"
+        },
+        {
+          "value": "16",
+          "type": "Number",
+          "label": "Head width",
+          "description": "Thickness of the trail at the object's current position (the head), in pixels.",
+          "name": "Width"
+        },
+        {
+          "value": "16",
+          "type": "Number",
+          "label": "Tail width",
+          "description": "Thickness of the trail at its oldest point (the tail), in pixels. Use a different value than the head width to make the trail taper.",
+          "name": "TailWidth"
+        },
+        {
+          "value": "20",
+          "type": "Number",
+          "unit": "Dimensionless",
+          "label": "Points count",
+          "description": "Number of points used to draw the trail (higher values make a longer, smoother trail but cost more performance).",
+          "name": "PointsCount"
+        },
+        {
+          "value": "4",
+          "type": "Number",
+          "label": "Point spacing",
+          "description": "Distance (in pixels) represented by each point of the trail. Used to smooth out fast movements (e.g. on a slower computer) by adding several points at once instead of one, so the trail keeps the same density regardless of the framerate.",
+          "name": "MinimumDistance"
+        }
+      ],
+      "propertiesFolderStructure": {
+        "folderName": "__ROOT",
+        "children": [
+          {
+            "propertyName": "Texture"
+          },
+          {
+            "propertyName": "RepeatTexture"
+          },
+          {
+            "propertyName": "StartColor"
+          },
+          {
+            "propertyName": "StartOpacity"
+          },
+          {
+            "propertyName": "EndColor"
+          },
+          {
+            "propertyName": "EndOpacity"
+          },
+          {
+            "propertyName": "Width"
+          },
+          {
+            "propertyName": "TailWidth"
+          },
+          {
+            "propertyName": "PointsCount"
+          },
+          {
+            "propertyName": "MinimumDistance"
+          }
+        ]
+      }
+    }
+  ]
+}
