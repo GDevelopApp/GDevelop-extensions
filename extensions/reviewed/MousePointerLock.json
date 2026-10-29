@@ -9,7 +9,7 @@
   "name": "MousePointerLock",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/Line Hero Pack/Master/SVG/Virtual Reality/Virtual Reality_360_rotate_vr_movement.svg",
   "shortDescription": "Lock and hide mouse pointer for unlimited movement (e.g., FPS mouse look).",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": [
     "This behavior removes the limit on the distance the mouse can move and hides the cursor.",
     "",
@@ -57,7 +57,7 @@
     {
       "name": "TouchSpeedFactor",
       "type": "number",
-      "value": 4
+      "value": 2
     }
   ],
   "eventsFunctions": [
@@ -305,16 +305,46 @@
           ]
         },
         {
-          "type": "BuiltinCommonInstructions::JsCode",
-          "inlineCode": [
-            "const { handler } = gdjs._MousePointerLockExtension;\r",
-            "\r",
-            "handler.requestPointerLock();\r",
-            ""
+          "type": "BuiltinCommonInstructions::Comment",
+          "color": {
+            "b": 109,
+            "g": 230,
+            "r": 255,
+            "textB": 0,
+            "textG": 0,
+            "textR": 0
+          },
+          "comment": "Fingers are followed instead of locking the pointer, because mobile browsers give tiny pointer movements."
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "NumberVariable"
+              },
+              "parameters": [
+                "TouchId",
+                "<",
+                "2"
+              ]
+            }
           ],
-          "parameterObjects": "",
-          "useStrict": true,
-          "eventsSheetExpanded": false
+          "actions": [],
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::JsCode",
+              "inlineCode": [
+                "const { handler } = gdjs._MousePointerLockExtension;\r",
+                "\r",
+                "handler.requestPointerLock();\r",
+                ""
+              ],
+              "parameterObjects": "",
+              "useStrict": true,
+              "eventsSheetExpanded": false
+            }
+          ]
         }
       ],
       "parameters": [],
@@ -484,6 +514,31 @@
                 "TouchId",
                 ">=",
                 "0"
+              ]
+            }
+          ],
+          "actions": [
+            {
+              "type": {
+                "value": "SetReturnBoolean"
+              },
+              "parameters": [
+                "True"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "BuiltinCommonInstructions::Standard",
+          "conditions": [
+            {
+              "type": {
+                "value": "NumberVariable"
+              },
+              "parameters": [
+                "TouchId",
+                ">=",
+                "2"
               ]
             }
           ],
@@ -804,6 +859,18 @@
               "comment": "TODO It's probably a bad idea to rotate the object around Y."
             },
             {
+              "type": "BuiltinCommonInstructions::Comment",
+              "color": {
+                "b": 109,
+                "g": 230,
+                "r": 255,
+                "textB": 0,
+                "textG": 0,
+                "textR": 0
+              },
+              "comment": "Both rotations are relative to the screen height because the field of view is vertical. This way, the speed doesn't change with the screen ratio."
+            },
+            {
               "type": "BuiltinCommonInstructions::Standard",
               "conditions": [
                 {
@@ -824,7 +891,7 @@
                   "parameters": [
                     "Object",
                     "+",
-                    "MousePointerLock::MovementX() * HorizontalSpeed / SceneWindowWidth()"
+                    "MousePointerLock::MovementX() * HorizontalSpeed / (SceneWindowHeight() * 16 / 9)"
                   ]
                 },
                 {
