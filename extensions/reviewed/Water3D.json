@@ -17,7 +17,7 @@
     "- Resize it to cover a sea or a lake: waves follow its size. Put it at the Z position of the water level.",
     "- **Make objects float** with an action (for objects with the 3D physics behavior), and check if an object is **underwater**.",
     "- Read the height of the waves anywhere with an expression, for example to move a boat.",
-    "- Choose a **variant** for another style: realistic, ocean, cartoon, pixel art or cel-shaded water, lava, pixel magma or toxic slime. Every variant, the default one included, can draw foam around objects, fade into deep water, tint the view underwater, and have pixel art and bubbles: these effects are off at 0.",
+    "- Choose another **style** in the properties: realistic, ocean, cartoon, pixel art or cel-shaded water, lava, pixel magma or toxic slime. Every style, the default one included, can draw foam around objects, fade into deep water, tint the view underwater, and have pixel art and bubbles: these effects are off at 0.",
     "- For more realistic ripples, set a seamless **normal map** of water waves in the properties.",
     "- Works well with the 3D terrain extension: place the water between hills or around an island."
   ],
@@ -332,7 +332,7 @@
             "};",
             "",
             "/**",
-            " * The material of the default variant: lit by the scene, with the waves, the ripples and the crests.",
+            " * The material of the default style: lit by the scene, with the waves, the ripples and the crests.",
             " * @param {Object} uniforms The uniforms of the water.",
             " */",
             "const createDefaultMaterial = (uniforms) => {",
@@ -370,9 +370,8 @@
             "class Water {",
             "    /**",
             "     * @param {gdjs.CustomRuntimeObject3D} object",
-            "     * @param {string} styleName The style of the variant, empty for the default water.",
             "     */",
-            "    constructor(object, styleName) {",
+            "    constructor(object) {",
             "        this.object = object;",
             "        this.time = 0;",
             "        this.uniforms = {",
@@ -392,7 +391,7 @@
             "            waterHasNormalMap: { value: 0 },",
             "            waterPatternScale: { value: 1 },",
             "        };",
-            "        // The material is given by the style of the variant.",
+            "        // The material is given by the style chosen in the properties.",
             "        this.mesh = new THREE.Mesh(new THREE.BufferGeometry());",
             "        this.mesh.userData.isWater3D = true;",
             "        this.mesh.receiveShadow = true;",
@@ -411,13 +410,24 @@
             "        this.segmentsX = 0;",
             "        this.segmentsY = 0;",
             "        this.settings = { waveHeight: 0, waveLength: 1, waveSpeed: 1, vertexSpacing: 1 };",
-            "        const stylePreset = styleName ? gdjs.__water3DExtension.stylePresets[styleName] : null;",
-            "        if (styleName && !stylePreset) {",
+            "        /** @type {string | null} */",
+            "        this.styleName = null;",
+            "        this.style = null;",
+            "        this.updateFromProperties();",
+            "    }",
+            "",
+            "    /** The style property picks a preset: its material is rebuilt when it changes (in the editor). */",
+            "    _updateStyleIfNeeded() {",
+            "        const styleName = this.object._getStyle();",
+            "        if (styleName === this.styleName) return;",
+            "        this.styleName = styleName;",
+            "        const { styleEngine, stylePresets } = gdjs.__water3DExtension;",
+            "        const stylePreset = stylePresets[styleName];",
+            "        if (!stylePreset) {",
             "            console.error(`Water3D: there is no \"${styleName}\" style, the default water is drawn instead.`);",
             "        }",
-            "        const { styleEngine, stylePresets } = gdjs.__water3DExtension;",
+            "        if (this.style) this.style.dispose();",
             "        this.style = new styleEngine.WaterStyle(this, stylePreset || stylePresets.Default);",
-            "        this.updateFromProperties();",
             "    }",
             "",
             "    updateFromProperties() {",
@@ -438,6 +448,7 @@
             "        this.uniforms.waterWaveLength.value = this.settings.waveLength;",
             "        this.uniforms.waterWaveSpeed.value = this.settings.waveSpeed;",
             "        this._updateGeometryIfNeeded();",
+            "        this._updateStyleIfNeeded();",
             "        this.style.updateFromProperties();",
             "    }",
             "",
@@ -557,7 +568,7 @@
             "    getWaveHeight,",
             "    addWaves,",
             "    createDefaultMaterial,",
-            "    // Filled by the next events: the engine and the presets of the styles of the variants.",
+            "    // Filled by the next events: the engine and the presets of the styles.",
             "    styleEngine: null,",
             "    stylePresets: {},",
             "};"
@@ -571,7 +582,7 @@
           "colorG": 176,
           "colorR": 74,
           "creationTime": 0,
-          "name": "Styles of the variants",
+          "name": "Styles",
           "source": "",
           "type": "BuiltinCommonInstructions::Group",
           "events": [
@@ -583,10 +594,9 @@
                 "    return;",
                 "}",
                 "",
-                "// Styles of the variants: each variant of the object draws its surface with one of the presets defined next.",
-                "// The variant names its preset with the \"Style\" variable of its AreaPlaceholder child, the default variant",
-                "// leaves it empty. The colors and settings come from the object properties, and the waves stay the ones of the",
-                "// default water, so the surface Z and the buoyancy are the same for every variant.",
+                "// Styles: the object draws its surface with one of the presets defined next, chosen with its \"Style\"",
+                "// property (the name of the preset). The colors and settings come from the object properties, and the waves",
+                "// stay the ones of the default water, so the surface Z and the buoyancy are the same for every style.",
                 "// Every style can have every effect: foam around objects, deep water, underwater tint, pixel art, bubbles",
                 "// and foam on the wave crests. Each one is off when its property is 0.",
                 "// The edge foam and the underwater tint come from the \"Water shader\" extension (by the GDevelop team).",
@@ -751,9 +761,9 @@
                 "const renderDepthPass = (renderer, originalRender, scene, camera) => {",
                 "    /** @type {Set<WaterStyle>} */",
                 "    const waterStyles = scene.userData.water3DStyles;",
-                "    // Forget the water removed from the scene.",
+                "    // Forget the water removed from the scene, and the styles replaced by another one.",
                 "    for (const waterStyle of waterStyles) {",
-                "        if (!waterStyle.root.parent) waterStyles.delete(waterStyle);",
+                "        if (waterStyle.isDisposed || !waterStyle.root.parent) waterStyles.delete(waterStyle);",
                 "    }",
                 "    const activeStyles = [...waterStyles].filter((waterStyle) => waterStyle.needsDepthPass);",
                 "    if (activeStyles.length === 0) return;",
@@ -1121,7 +1131,7 @@
                 "const surfacePoint = new THREE.Vector3();",
                 "",
                 "/**",
-                " * The surface of a water drawn with the preset of its variant.",
+                " * The surface of a water drawn with the preset of its style.",
                 " */",
                 "class WaterStyle {",
                 "    /**",
@@ -1144,6 +1154,7 @@
                 "        // Shared with the waves: the world scale is updated by the water each frame.",
                 "        this.edgeUniforms.uWorldScale = water.uniforms.waterWorldScale;",
                 "        this.needsDepthPass = false;",
+                "        this.isDisposed = false;",
                 "        this.patternSpeed = 1;",
                 "        this.foamSpeed = 1;",
                 "        this.patternTime = 0;",
@@ -1303,6 +1314,7 @@
                 "    }",
                 "",
                 "    dispose() {",
+                "        this.isDisposed = true;",
                 "        if (this.material) this.material.dispose();",
                 "        if (this.underwaterOverlay) {",
                 "            this.underwaterOverlay.removeFromParent();",
@@ -1315,7 +1327,7 @@
                 "",
                 "water3D.styleEngine = { WaterStyle, toThreeColor, getEdgeFoam: () => edgeFoam };",
                 "",
-                "// The default variant: the lit water of Water3D. Like the other styles, it can have foam around objects, the",
+                "// The default style: the lit water of Water3D. Like the other styles, it can have foam around objects, the",
                 "// deep water color, the underwater tint, pixel art and bubbles. They are all off with the default properties.",
                 "const SHARP_REFLECTIONS_ROUGHNESS = 0.08;",
                 "water3D.stylePresets.Default = {",
@@ -3045,14 +3057,7 @@
           "assetStoreId": "",
           "name": "AreaPlaceholder",
           "type": "Scene3D::Cube3DObject",
-          "variables": [
-            {
-              "folded": true,
-              "name": "Style",
-              "type": "string",
-              "value": ""
-            }
-          ],
+          "variables": [],
           "effects": [],
           "behaviors": [],
           "content": {
@@ -3173,16 +3178,11 @@
               "inlineCode": [
                 "/** @type {gdjs.CustomRuntimeObject3D} */",
                 "const object = objects[0];",
-                "// Each variant gives the style of its surface with the \"Style\" variable of its AreaPlaceholder child.",
-                "let styleName = '';",
                 "for (const child of object.getChildrenContainer().getAdhocListOfAllInstances()) {",
-                "    if (child.getName() === 'AreaPlaceholder') {",
-                "        styleName = child.getVariables().get('Style').getAsString();",
-                "    }",
                 "    child.deleteFromScene();",
                 "}",
                 "if (object.__water3D) object.__water3D.dispose();",
-                "object.__water3D = new gdjs.__water3DExtension.Water(object, styleName);"
+                "object.__water3D = new gdjs.__water3DExtension.Water(object);"
               ],
               "parameterObjects": "Object",
               "useStrict": true,
@@ -3425,6 +3425,55 @@
       ],
       "propertyDescriptors": [
         {
+          "value": "Default",
+          "type": "Choice",
+          "label": "Style",
+          "description": "The look of the surface. The colors, foam and effects of the other properties apply to every style.",
+          "choices": [
+            {
+              "label": "Default",
+              "value": "Default"
+            },
+            {
+              "label": "Realistic water",
+              "value": "RealisticWater"
+            },
+            {
+              "label": "Ocean water",
+              "value": "OceanWater"
+            },
+            {
+              "label": "Fast ocean water",
+              "value": "FastOceanWater"
+            },
+            {
+              "label": "Cartoon water",
+              "value": "CartoonWater"
+            },
+            {
+              "label": "Pixel water",
+              "value": "PixelWater"
+            },
+            {
+              "label": "Cel shaded water",
+              "value": "CelShadedWater"
+            },
+            {
+              "label": "Lava flow",
+              "value": "LavaFlow"
+            },
+            {
+              "label": "Pixel magma",
+              "value": "PixelMagma"
+            },
+            {
+              "label": "Toxic slime",
+              "value": "ToxicSlime"
+            }
+          ],
+          "name": "Style"
+        },
+        {
           "value": "40;120;170",
           "type": "Color",
           "label": "Color",
@@ -3495,7 +3544,7 @@
           "value": "18;62;110",
           "type": "Color",
           "label": "Deep water color",
-          "description": "Color of the deep water, and of the dark parts of the pattern of the other variants.",
+          "description": "Color of the deep water, and of the dark parts of the pattern of the other styles.",
           "group": "Color",
           "name": "DeepColor"
         },
@@ -3503,7 +3552,7 @@
           "value": "241;250;245",
           "type": "Color",
           "label": "Foam color",
-          "description": "Color of the foam around objects, of the bubbles, and of the light parts of the pattern of the other variants.",
+          "description": "Color of the foam around objects, of the bubbles, and of the light parts of the pattern of the other styles.",
           "group": "Color",
           "name": "FoamColor"
         },
@@ -3511,7 +3560,7 @@
           "value": "1",
           "type": "Number",
           "label": "Pattern scale",
-          "description": "Size of the pattern drawn on the surface (the ripples of the default variant).",
+          "description": "Size of the pattern drawn on the surface (the ripples of the default style).",
           "group": "Pattern",
           "name": "PatternScale"
         },
@@ -3519,7 +3568,7 @@
           "value": "1",
           "type": "Number",
           "label": "Pattern speed",
-          "description": "Speed of the pattern drawn on the surface (the ripples of the default variant).",
+          "description": "Speed of the pattern drawn on the surface (the ripples of the default style).",
           "group": "Pattern",
           "name": "PatternSpeed"
         },
@@ -3601,7 +3650,7 @@
           "value": "false",
           "type": "Boolean",
           "label": "Sharp reflections",
-          "description": "Glossier surface with pinpoint sun glints. For the default and the \"Realistic Water\" variants.",
+          "description": "Glossier surface with pinpoint sun glints. For the default and the \"Realistic water\" styles.",
           "group": "Ripples",
           "name": "SharpReflections"
         }
