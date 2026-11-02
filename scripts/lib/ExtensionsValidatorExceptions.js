@@ -126,7 +126,10 @@ const extensionsAllowedProperties = {
     A3F: {
       gdjsAllowedProperties: ['_A3F'],
       gdjsEvtToolsAllowedProperties: ['object', 'tween'],
-      runtimeSceneAllowedProperties: ['getRenderer'],
+      runtimeSceneAllowedProperties: [
+        'getRenderer',
+        'getRenderer3DInverseWorldScale',
+      ],
       javaScriptObjectAllowedProperties: [],
     },
     AdvancedHTTP: {
@@ -270,7 +273,11 @@ const extensionsAllowedProperties = {
         'RuntimeObject3D',
       ],
       gdjsEvtToolsAllowedProperties: [],
-      runtimeSceneAllowedProperties: ['_foliageSwaying3D', 'getTimeManager'],
+      runtimeSceneAllowedProperties: [
+        '_foliageSwaying3D',
+        'getTimeManager',
+        'getRenderer3DInverseWorldScale',
+      ],
       javaScriptObjectAllowedProperties: [],
     },
     GamePixSDK: {
