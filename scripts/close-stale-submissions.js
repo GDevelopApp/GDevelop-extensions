@@ -33,10 +33,13 @@ const delayBetweenSubmissionsInMs = 2000;
  * @typedef {Object} BotPullRequestBranch
  * @property {string} ref The branch name, `extension/<submitter login>/<issue number>`.
  * @property {string} submitterLogin
+ * @property {number} issueNumber The issue that was converted to the pull request.
  */
 
 // Submissions from the team are not closed: they can follow up on them directly.
 const teamAuthorAssociations = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
+// Pull requests from contributors who already follow the pull request workflow.
+const keptSubmissionNumbers = new Set([1075, 1179]);
 
 const githubToken = process.env.GITHUB_TOKEN;
 if (!githubToken) {
@@ -101,11 +104,12 @@ const getBotPullRequestBranches = async () => {
     });
     for (const pullRequest of response.data) {
       const { ref, repo: headRepo } = pullRequest.head;
-      const match = ref.match(/^extension\/([^/]+)\//);
+      const match = ref.match(/^extension\/([^/]+)\/(\d+)$/);
       if (match && headRepo && headRepo.full_name === `${owner}/${repo}`)
         botPullRequestBranchesByNumber.set(pullRequest.number, {
           ref,
           submitterLogin: match[1],
+          issueNumber: Number(match[2]),
         });
     }
     if (response.data.length < 100) return botPullRequestBranchesByNumber;
@@ -175,12 +179,39 @@ const closeSubmission = async (
     const botPullRequestBranch = getBotPullRequestBranch(submission);
     return botPullRequestBranch ? botPullRequestBranch.submitterLogin : null;
   };
-  const teamSubmissions = staleSubmissions.filter(({ author_association }) =>
-    teamAuthorAssociations.has(author_association)
-  );
-  const submissionsToClose = staleSubmissions.filter(
-    ({ author_association }) => !teamAuthorAssociations.has(author_association)
-  );
+  /**
+   * @param {GitHubIssue} submission
+   * @returns {Promise<string>} The association of the submitter with the repository.
+   */
+  const getSubmitterAuthorAssociation = async (submission) => {
+    const botPullRequestBranch = getBotPullRequestBranch(submission);
+    if (!botPullRequestBranch) return submission.author_association;
+    try {
+      /** @type {{data: GitHubIssue}} */
+      const response = await github.get(
+        `/issues/${botPullRequestBranch.issueNumber}`
+      );
+      return response.data.author_association;
+    } catch (error) {
+      // The issue was deleted: only the pull request is left.
+      if (error.response && error.response.status === 404)
+        return submission.author_association;
+      throw error;
+    }
+  };
+
+  /** @type {GitHubIssue[]} */
+  const keptSubmissions = [];
+  /** @type {GitHubIssue[]} */
+  const submissionsToClose = [];
+  for (const submission of staleSubmissions) {
+    const isKept =
+      keptSubmissionNumbers.has(submission.number) ||
+      teamAuthorAssociations.has(
+        await getSubmitterAuthorAssociation(submission)
+      );
+    (isKept ? keptSubmissions : submissionsToClose).push(submission);
+  }
 
   /** @param {GitHubIssue} submission */
   const formatSubmission = (submission) => {
@@ -195,9 +226,9 @@ const closeSubmission = async (
   };
 
   console.log(
-    `Skipping ${teamSubmissions.length} open submissions created before ${createdBeforeDate} by the team:\n`
+    `Keeping ${keptSubmissions.length} open submissions created before ${createdBeforeDate}, from the team or kept explicitly:\n`
   );
-  teamSubmissions.forEach((submission) =>
+  keptSubmissions.forEach((submission) =>
     console.log(formatSubmission(submission))
   );
 
