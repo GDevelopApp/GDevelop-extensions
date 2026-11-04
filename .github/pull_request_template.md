@@ -18,6 +18,8 @@ Drag and drop an example project using the extension, compressed in a ZIP file, 
 
 - [ ] I've followed all of [the best practices](https://wiki.gdevelop.io/gdevelop5/extensions/best-practices). The checks of this pull request must pass.
 - [ ] New extensions are added to `extensions/community/`.
+- [ ] The example project is the whole folder of my project, not a build of my game.
+- [ ] The example project is attached as a ZIP file, not linked to an external service like Google Drive.
 - [ ] I've considered adding my extension to the [GDevelop community list](https://github.com/GDevelopApp/GDevelop-community-list), but think it's better to have it here.
 - [ ] I confirm that this extension can be integrated to this GitHub repository, distributed and MIT licensed.
 - [ ] I am aware that the extension may be updated by anyone, and do not need my explicit consent to do so.
