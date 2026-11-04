@@ -8,7 +8,11 @@
 
 ## Example project
 
-<!-- Drag and drop an example project using the extension, compressed in a ZIP file, here. Do not link to an external service like Google Drive. -->
+<!--
+Drag and drop an example project using the extension, compressed in a ZIP file, here.
+- Do not send a build of your game, but the whole folder of your project: we need to look at the events.
+- Do not link to an external service like Google Drive.
+-->
 
 ## Checklist
 
