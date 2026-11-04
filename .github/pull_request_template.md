@@ -14,6 +14,7 @@
 
 - [ ] I've followed all of [the best practices](https://wiki.gdevelop.io/gdevelop5/extensions/best-practices). The checks of this pull request must pass.
 - [ ] New extensions are added to `extensions/community/`.
+- [ ] I've considered adding my extension to the [GDevelop community list](https://github.com/GDevelopApp/GDevelop-community-list), but think it's better to have it here.
 - [ ] I confirm that this extension can be integrated to this GitHub repository, distributed and MIT licensed.
 - [ ] I am aware that the extension may be updated by anyone, and do not need my explicit consent to do so.
 
