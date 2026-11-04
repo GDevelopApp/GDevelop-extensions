@@ -19,24 +19,30 @@ This repository hosts official and experimental extensions for GDevelop. Extensi
 
 The [GDevelop Community List](https://github.com/GDevelopApp/GDevelop-community-list) is where extensions built by the whole GDevelop community can be found. Check it out!
 
-## ⚙️ Submit your extension to the list of experimental extensions
+## Submit an extension
 
-If you've created an extension with GDevelop, you can submit it to be shared with the rest of the community. This [Trello board has the extensions that are being worked on](https://trello.com/b/AftjL2v1/gdevelop-extensions) by the community. Read the documentation about [functions](https://wiki.gdevelop.io/gdevelop5/events/functions), [custom behaviors](https://wiki.gdevelop.io/gdevelop5/behaviors/events-based-behaviors) and [custom objects](https://wiki.gdevelop.io/gdevelop5/objects/custom-objects-prefab-template/) to build an extension for GDevelop.
+This repository only contains official and experimental extensions: the GDevelop team is responsible for their code. Extensions are submitted with a pull request and reviewed by the _GDevelop Extensions Team_.
 
-If your extension is battle-tested, you can follow the review process in this repository:
+> [!TIP]
+> Not comfortable with Git, or want to keep improving your extension before a review? Add it to the **[GDevelop Community List](https://github.com/GDevelopApp/GDevelop-community-list)** instead. Any extension can be listed there, and this gives it visibility in the GDevelop ecosystem.
 
-> First, make sure it's already in the **[GDevelop Community List](https://github.com/GDevelopApp/GDevelop-community-list)**. Any extension can be added here and this will give it visibility in the GDevelop ecosystem.
+Read the documentation about [functions](https://wiki.gdevelop.io/gdevelop5/events/functions), [custom behaviors](https://wiki.gdevelop.io/gdevelop5/behaviors/events-based-behaviors) and [custom objects](https://wiki.gdevelop.io/gdevelop5/objects/custom-objects-prefab-template/) to build an extension for GDevelop. Then:
 
-1. Make sure the **descriptions**, **tags**, **names** are properly filled in the options of your extension.
-2. **Export** your extension to a _.json file_ from GDevelop.
-3. Submit it. You can either:
-   - **Easy**: [submit it here](https://github.com/4ian/GDevelop-extensions/issues/new/choose), attaching the _.json file_ (as a zip, because GitHub won't accept json files directly).
-   - **If you know how to use git**: fork this repository, clone the git, add your .json file in `extensions/community` folder. Finally [open a Pull Request](https://github.com/4ian/GDevelop-extensions/compare).
-4. A member of the _GDevelop Extensions Team_ will then review it and give you feedback on what to do to have it accepted.
-5. When it's ready, it will be merged and the extension now accessible in the "reviewed" extensions.
+1. Follow the [best practices](https://wiki.gdevelop.io/gdevelop5/extensions/best-practices): fill the **descriptions**, **tags** and **names** in the options of your extension, its functions and its behaviors.
+2. **Export** your extension to a _.json file_ from GDevelop ("Export extension" in the extension options, then "Export to a file"). The file must be named after the extension, for example `Flash.json`.
+3. [Fork this repository](https://github.com/GDevelopApp/GDevelop-extensions/fork) and add the file to your fork. A **new extension** goes in `extensions/community/`. An **update** replaces the existing file in `extensions/community/` or `extensions/reviewed/`. You can do this from GitHub in your browser, with "Add file" > "Upload files" in the folder of your fork: no need to install Git.
+4. [Open a pull request](https://github.com/GDevelopApp/GDevelop-extensions/compare) and fill in the template. Attach an example project, as a zip, showing how to use the extension.
+5. The checks of the pull request verify that the extension follows the best practices. If they fail, click "Details" next to the "Check extensions" check to see the errors. Fix them in GDevelop, export the extension again and upload the new file to the same branch: the pull request is updated.
+6. A member of the _GDevelop Extensions Team_ then reviews the extension. When it's ready, it's merged and becomes available in GDevelop.
 
 > [!NOTE]
 > When your extension gets reviewed, the extension team will ask you to adapt your extension to reach a fairly high quality bar. This is normal! The feedback is here to help get the extension in a state where it's super flexible and useful for all users.
+
+To report a bug or get help with an extension, use the [GDevelop forum](https://forum.gdevelop.io).
+
+### Run the checks locally
+
+If you cloned the repository, run `npm install` then `npm run build` to check all the extensions. Some errors can be fixed automatically with `npm run build -- --fix`.
 
 ## License
 

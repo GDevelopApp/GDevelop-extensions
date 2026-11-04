@@ -1,0 +1,40 @@
+# Check that the extensions of a pull request follow the best practices.
+# Errors are shown as annotations on the files of the pull request and in the summary of the job.
+#
+# This runs on `pull_request` (not `pull_request_target`) so that the code of the pull request
+# never runs with a token having write access. Annotations and summaries work without it,
+# including for pull requests from forks.
+
+name: Check extensions
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check-extensions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The merge commit and its first parent (the base branch), to list the files added by the pull request.
+          fetch-depth: 2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Warn about new extensions added directly to the reviewed extensions
+        run: |
+          git diff --name-only --diff-filter=A -M HEAD^1 HEAD -- extensions/reviewed/ | while read -r file; do
+            echo "::warning file=$file::New extensions must be added to extensions/community/. The extensions team moves them to extensions/reviewed/ after a review."
+          done
+
+      - name: Check extensions
+        run: npm run build

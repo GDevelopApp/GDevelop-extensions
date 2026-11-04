@@ -1,6 +1,4 @@
-const {
-  isValidExtensionName,
-} = require('../scripts/lib/ExtensionNameValidator');
+const { isValidExtensionName } = require('../lib/ExtensionNameValidator');
 
 describe('ExtensionNameValidator.js', () => {
   test('Disallows invalid names', () => {
