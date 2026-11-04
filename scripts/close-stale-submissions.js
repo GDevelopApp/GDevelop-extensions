@@ -4,7 +4,7 @@
 //
 // Usage:
 //   GITHUB_TOKEN=xxx node scripts/close-stale-submissions.js            # Dry run: list what would be closed.
-//   GITHUB_TOKEN=xxx node scripts/close-stale-submissions.js --confirm  # Comment and close.
+//   GITHUB_TOKEN=xxx node scripts/close-stale-submissions.js --confirm  # Comment, close and delete the bot branches.
 // Options:
 //   --months=3   Only close submissions created more than this number of months ago.
 
@@ -27,6 +27,12 @@ const delayBetweenSubmissionsInMs = 2000;
  * @property {{login: string, type: string}} user
  * @property {string} author_association
  * @property {Object} [pull_request] Only set for pull requests.
+ */
+
+/**
+ * @typedef {Object} BotPullRequestBranch
+ * @property {string} ref The branch name, `extension/<submitter login>/<issue number>`.
+ * @property {string} submitterLogin
  */
 
 // Submissions from the team are not closed: they can follow up on them directly.
@@ -81,24 +87,28 @@ const getStaleSubmissions = async (createdBefore) => {
 };
 
 /**
- * Pull requests converted from issues were opened by a bot, on a branch named
- * `extension/<submitter login>/<issue number>`.
- * @returns {Promise<Map<number, string>>} The submitter logins by pull request number.
+ * Pull requests converted from issues were opened by a bot, on a branch of this repository
+ * named `extension/<submitter login>/<issue number>`.
+ * @returns {Promise<Map<number, BotPullRequestBranch>>} The branches by pull request number.
  */
-const getSubmitterLoginsOfBotPullRequests = async () => {
-  /** @type {Map<number, string>} */
-  const submitterLoginsByPullRequestNumber = new Map();
+const getBotPullRequestBranches = async () => {
+  /** @type {Map<number, BotPullRequestBranch>} */
+  const botPullRequestBranchesByNumber = new Map();
   for (let page = 1; ; page++) {
-    /** @type {{data: Array<{number: number, head: {ref: string}}>}} */
+    /** @type {{data: Array<{number: number, head: {ref: string, repo: {full_name: string} | null}}>}} */
     const response = await github.get('/pulls', {
       params: { state: 'open', per_page: 100, page },
     });
     for (const pullRequest of response.data) {
-      const match = pullRequest.head.ref.match(/^extension\/([^/]+)\//);
-      if (match)
-        submitterLoginsByPullRequestNumber.set(pullRequest.number, match[1]);
+      const { ref, repo: headRepo } = pullRequest.head;
+      const match = ref.match(/^extension\/([^/]+)\//);
+      if (match && headRepo && headRepo.full_name === `${owner}/${repo}`)
+        botPullRequestBranchesByNumber.set(pullRequest.number, {
+          ref,
+          submitterLogin: match[1],
+        });
     }
-    if (response.data.length < 100) return submitterLoginsByPullRequestNumber;
+    if (response.data.length < 100) return botPullRequestBranchesByNumber;
   }
 };
 
@@ -120,8 +130,13 @@ Thanks for contributing to GDevelop! 🙌`;
 /**
  * @param {GitHubIssue} submission
  * @param {string | null} submitterLogin
+ * @param {BotPullRequestBranch | null} botPullRequestBranch
  */
-const closeSubmission = async (submission, submitterLogin) => {
+const closeSubmission = async (
+  submission,
+  submitterLogin,
+  botPullRequestBranch
+) => {
   await github.post(`/issues/${submission.number}/comments`, {
     body: getClosingComment(submitterLogin),
   });
@@ -131,6 +146,14 @@ const closeSubmission = async (submission, submitterLogin) => {
       ? { state: 'closed' }
       : { state: 'closed', state_reason: 'not_planned' }
   );
+  if (botPullRequestBranch) {
+    await github.delete(
+      `/git/refs/heads/${botPullRequestBranch.ref
+        .split('/')
+        .map(encodeURIComponent)
+        .join('/')}`
+    );
+  }
 };
 
 (async () => {
@@ -140,13 +163,18 @@ const closeSubmission = async (submission, submitterLogin) => {
   const createdBeforeDate = createdBefore.toISOString().split('T')[0];
 
   const staleSubmissions = await getStaleSubmissions(createdBefore);
-  const submitterLoginsByPullRequestNumber =
-    await getSubmitterLoginsOfBotPullRequests();
+  const botPullRequestBranchesByNumber = await getBotPullRequestBranches();
   /** @param {GitHubIssue} submission */
-  const getSubmitterLogin = (submission) =>
-    submission.user.type === 'Bot'
-      ? submitterLoginsByPullRequestNumber.get(submission.number) || null
-      : submission.user.login;
+  const getBotPullRequestBranch = (submission) =>
+    submission.pull_request
+      ? botPullRequestBranchesByNumber.get(submission.number) || null
+      : null;
+  /** @param {GitHubIssue} submission */
+  const getSubmitterLogin = (submission) => {
+    if (submission.user.type !== 'Bot') return submission.user.login;
+    const botPullRequestBranch = getBotPullRequestBranch(submission);
+    return botPullRequestBranch ? botPullRequestBranch.submitterLogin : null;
+  };
   const teamSubmissions = staleSubmissions.filter(({ author_association }) =>
     teamAuthorAssociations.has(author_association)
   );
@@ -155,10 +183,16 @@ const closeSubmission = async (submission, submitterLogin) => {
   );
 
   /** @param {GitHubIssue} submission */
-  const formatSubmission = (submission) =>
-    `${submission.pull_request ? 'PR   ' : 'Issue'} #${submission.number} (${
-      submission.created_at.split('T')[0]
-    }, by @${getSubmitterLogin(submission) || 'unknown'}): ${submission.title}`;
+  const formatSubmission = (submission) => {
+    const botPullRequestBranch = getBotPullRequestBranch(submission);
+    return `${submission.pull_request ? 'PR   ' : 'Issue'} #${
+      submission.number
+    } (${submission.created_at.split('T')[0]}, by @${
+      getSubmitterLogin(submission) || 'unknown'
+    }): ${submission.title}${
+      botPullRequestBranch ? ` [branch: ${botPullRequestBranch.ref}]` : ''
+    }`;
+  };
 
   console.log(
     `Skipping ${teamSubmissions.length} open submissions created before ${createdBeforeDate} by the team:\n`
@@ -174,8 +208,19 @@ const closeSubmission = async (submission, submitterLogin) => {
     console.log(formatSubmission(submission));
     if (!args['confirm']) continue;
 
-    await closeSubmission(submission, getSubmitterLogin(submission));
-    console.log(`  ✅ Closed ${submission.html_url}`);
+    const botPullRequestBranch = getBotPullRequestBranch(submission);
+    await closeSubmission(
+      submission,
+      getSubmitterLogin(submission),
+      botPullRequestBranch
+    );
+    console.log(
+      `  ✅ Closed ${submission.html_url}${
+        botPullRequestBranch
+          ? ` and deleted the branch ${botPullRequestBranch.ref}`
+          : ''
+      }`
+    );
     await wait(delayBetweenSubmissionsInMs);
   }
 
