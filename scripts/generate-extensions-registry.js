@@ -5,6 +5,8 @@ const {
   validateExtension,
   validateNoDuplicates,
 } = require('./lib/ExtensionValidator');
+const { validateExtensionFile } = require('./lib/ExtensionFileValidator');
+const { reportToGitHubActions } = require('./lib/GitHubActionsReporter');
 const { getExtensionReferencePagePath } = require('./lib/WikiHelpLink');
 const args = require('minimist')(process.argv.slice(2));
 
@@ -23,6 +25,7 @@ const args = require('minimist')(process.argv.slice(2));
 /** @typedef {import('./types').EventsBasedBehaviorInsideExtensionShortHeader} EventsBasedBehaviorInsideExtensionShortHeader */
 /** @typedef {import('./types').EventsFunction} EventsFunction */
 /** @typedef {import('./types').EventsFunctionInsideExtensionShortHeader} EventsFunctionInsideExtensionShortHeader */
+/** @typedef {import('./lib/GitHubActionsReporter').ExtensionFileError} ExtensionFileError */
 
 const extensionsBasePath = path.join(__dirname, '..', 'extensions');
 const reviewedExtensionsTier = 'reviewed';
@@ -281,16 +284,24 @@ const filterEventsFunctions = (eventsFunctions) =>
     let totalErrors = 0;
     let fatalErrors = 0;
     let fixableErrors = 0;
+    /** @type {ExtensionFileError[]} */
+    const extensionFileErrors = [];
 
     const errors = validateNoDuplicates(allExtensionWithFileInfos);
     errors.forEach((error) => {
       totalErrors++;
       fatalErrors++;
+      extensionFileErrors.push({
+        filePath: null,
+        message: error.message,
+        isAutoFixable: false,
+      });
       shell.echo(`❌ ${error.message}`);
     });
 
     await Promise.all(
       allExtensionWithFileInfos.map(async (extensionWithFileInfo) => {
+        const filePath = `extensions/${extensionWithFileInfo.tier}/${extensionWithFileInfo.filename}`;
         if (extensionWithFileInfo.state === 'error') {
           const error = extensionWithFileInfo.error;
           shell.echo(
@@ -298,13 +309,36 @@ const filterEventsFunctions = (eventsFunctions) =>
           );
           totalErrors++;
           fatalErrors++;
+          extensionFileErrors.push({
+            filePath,
+            message: `[Extension file]: The file is not valid JSON (${error.message}). Export the extension again from GDevelop.`,
+            isAutoFixable: false,
+          });
           return;
         }
 
-        const { extension, tier } = extensionWithFileInfo;
+        const { extension, tier, filename } = extensionWithFileInfo;
         const { name } = extension;
 
-        // Check for errors:
+        const fileErrors = validateExtensionFile(filename, extension);
+        if (fileErrors.length !== 0) {
+          shell.echo(
+            `\n❌ The file ${filePath} can't be used as an extension:\n`
+          );
+          fileErrors.forEach((error) => {
+            totalErrors++;
+            fatalErrors++;
+            extensionFileErrors.push({
+              filePath,
+              message: error.message,
+              isAutoFixable: false,
+            });
+            shell.echo(`  ⟶ ❌ ${error.message}`);
+          });
+          return;
+        }
+
+        let hasAppliedFixes = false;
         if (extensionsWithoutValidation.has(name)) {
           shell.echo(`ℹ️ Ignoring validation for extension "${name}".`);
         } else {
@@ -316,21 +350,26 @@ const filterEventsFunctions = (eventsFunctions) =>
               } found in extension '${name}':\n`
             );
             errors.forEach((error) => {
-              totalErrors++;
-              if (error.fix)
-                if (args['fix']) {
-                  totalErrors--;
-                  error.fix();
-                } else fixableErrors++;
               shell.echo(`  ⟶ ❌${error.fix ? ' (🔧)' : ''} ${error.message}`);
+              if (error.fix && args['fix']) {
+                error.fix();
+                hasAppliedFixes = true;
+                return;
+              }
+              totalErrors++;
+              if (error.fix) fixableErrors++;
+              extensionFileErrors.push({
+                filePath,
+                message: error.message,
+                isAutoFixable: !!error.fix,
+              });
             });
           }
         }
 
-        // Override the base extensions when fixing
-        if (args['fix'])
+        if (hasAppliedFixes)
           await writeJSONFile(
-            path.join(extensionsBasePath, tier, `${name}.json`),
+            path.join(extensionsBasePath, tier, filename),
             extension
           );
 
@@ -475,22 +514,22 @@ const filterEventsFunctions = (eventsFunctions) =>
       })
     );
 
+    reportToGitHubActions(extensionFileErrors);
+
     if (totalErrors) {
       shell.echo(
         `\n\n❌ ${totalErrors} Error${
           totalErrors > 1 ? 's' : ''
-        } found in extensions - please fix ${
-          totalErrors > 1 ? 'them' : 'it'
-        } before generating the registry.`
+        } found in extensions - please fix ${totalErrors > 1 ? 'them' : 'it'}.`
       );
-      if (!args['disable-exit-code'] && fixableErrors)
+      if (fixableErrors)
         shell.echo(
           `\n\n🔧 ${fixableErrors} Error${
             fixableErrors > 1 ? 's are' : ' is'
           } auto-fixable - pass the argument --fix to fix them automatically.`
         );
       if (fatalErrors) {
-        shell.exit(args['disable-exit-code'] ? 0 : 1);
+        shell.exit(1);
       }
     }
 
@@ -535,9 +574,12 @@ const filterEventsFunctions = (eventsFunctions) =>
     );
 
     if (totalErrors) {
+      // The registry is still written so that it can be tested locally,
+      // but extensions not following the best practices must not be deployed.
       console.log(
-        `No fatal error found the extension can be updated but still need fixes.`
+        `⚠️ Headers and registry files were updated, but some extensions don't follow the best practices.`
       );
+      shell.exit(1);
     } else {
       console.log(`✅ Headers and registry files successfully updated`);
     }
