@@ -1,0 +1,726 @@
+{
+  "author": "Luqman Hakeem",
+  "category": "Game mechanic",
+  "extensionNamespace": "",
+  "fullName": "Achievements",
+  "gdevelopVersion": ">=5.5.222",
+  "helpPath": "",
+  "iconUrl": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0iI2ZmYzgzZCIgZD0iTTcgMmgxMHYyaDR2M2E1IDUgMCAwIDEtNC42IDVBNSA1IDAgMCAxIDEzIDE1djNoM3YzSDh2LTNoM3YtM2E1IDUgMCAwIDEtMy40LTNBNSA1IDAgMCAxIDMgN1Y0aDRWMnptMCA0SDV2MWEzIDMgMCAwIDAgMiAyLjhWNnptMTAgMHYzLjhBMyAzIDAgMCAwIDE5IDdWNmgtMnoiLz48L3N2Zz4=",
+  "name": "Achievements",
+  "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/trophy-outline.svg",
+  "shortDescription": "Define achievements, unlock them or track their progress, save them on the device, and show a toast when one is unlocked.",
+  "version": "1.0.0",
+  "description": "Add achievements to your game, with no setup.\n\n- Define each achievement once, at the start of the first scene: an identifier, a title, a description and a goal.\n- Unlock it in one go, or add progress (\"collect 10 coins\") and it unlocks when the goal is reached.\n- Progress is saved on the player's device automatically.\n- A toast slides in when an achievement is unlocked. Change its position, colors, duration and label (to translate it).\n- Expressions give the title, description, progress and goal of each achievement, so you can build your own achievements screen.\n\nAchievements are local to the device: they are not linked to Steam, Game Jolt or another platform.",
+  "tags": "achievement,achievements,trophy,toast,progress,unlock,reward",
+  "authorIds": [],
+  "dependencies": [],
+  "globalVariables": [],
+  "sceneVariables": [],
+  "eventsFunctions": [
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onFirstSceneLoaded",
+      "sentence": "",
+      "description": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "// Achievements extension: the runtime core.\n// build_extension.py pastes this file into the extension's \"onFirstSceneLoaded\" function.\n// It runs once per game and keeps one Achievements object on the game, shared by every scene.\nconst game = runtimeScene.getGame();\nif (!game.__achievements) {\n  const LAYER = '__AchievementsToast';\n  const props = game.getGameData().properties || {};\n  // Each game keeps its own save, even when several games share one website.\n  const KEY = 'GDJS_Achievements_' + (props.name || 'game');\n\n  const toColor = (s, fallback) => {\n    s = String(s || '').trim();\n    if (/^#?[0-9a-f]{6}$/i.test(s)) return parseInt(s.replace('#', ''), 16);\n    const p = s.split(';').map(Number);\n    if (p.length === 3 && p.every((n) => n >= 0 && n <= 255)) return (p[0] << 16) | (p[1] << 8) | p[2];\n    return fallback;\n  };\n  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));\n  const easeOut = (t) => 1 - Math.pow(1 - clamp(t, 0, 1), 3);\n\n  // PIXI v7 and v8 draw shapes differently; support both.\n  const roundRect = (g, x, y, w, h, r, color, alpha) => {\n    if (typeof g.roundRect === 'function' && typeof g.fill === 'function' && !g.beginFill) g.roundRect(x, y, w, h, r).fill({ color, alpha });\n    else { g.beginFill(color, alpha); g.drawRoundedRect(x, y, w, h, r); g.endFill(); }\n  };\n  const circle = (g, x, y, r, color) => {\n    if (typeof g.circle === 'function' && typeof g.fill === 'function' && !g.beginFill) g.circle(x, y, r).fill({ color });\n    else { g.beginFill(color, 1); g.drawCircle(x, y, r); g.endFill(); }\n  };\n  const star = (g, x, y, R, color) => {\n    const pts = [];\n    for (let i = 0; i < 10; i++) {\n      const a = -Math.PI / 2 + (i * Math.PI) / 5, r = i % 2 ? R * 0.45 : R;\n      pts.push(x + Math.cos(a) * r, y + Math.sin(a) * r);\n    }\n    if (typeof g.poly === 'function' && typeof g.fill === 'function' && !g.beginFill) g.poly(pts).fill({ color });\n    else { g.beginFill(color, 1); g.drawPolygon(pts); g.endFill(); }\n  };\n  const makeText = (style) => {\n    try { return new PIXI.Text({ text: '', style }); } catch (e) { return new PIXI.Text('', style); }\n  };\n  // Cut a text with \"\u2026\" until it fits in maxWidth.\n  const fit = (t, str, maxWidth) => {\n    t.text = str;\n    let s = str;\n    while (t.width > maxWidth && s.length > 1) {\n      s = s.slice(0, -1);\n      t.text = s.trimEnd() + '\u2026';\n    }\n  };\n\n  const A = {\n    defs: {}, // id -> { title, desc, goal }\n    order: [], // ids, in the order they were defined\n    data: null, // id -> { p: progress, u: unlocked, t: unlock time }, saved in localStorage\n    pending: [], // unlocked during this frame\n    just: [], // unlocked during the previous frame: what \"just unlocked\" sees\n    last: '',\n    queue: [], // toasts waiting to be shown\n    toast: null, // { id, start }\n    view: null,\n    warned: {},\n    style: {\n      enabled: true, position: 'Top', duration: 3,\n      bg: 0x1e2233, fg: 0xffffff, accent: 0xffc83d, label: 'Achievement unlocked',\n    },\n\n    load() {\n      if (this.data) return;\n      this.data = {};\n      try {\n        const o = JSON.parse(localStorage.getItem(KEY) || '{}');\n        if (o && typeof o === 'object' && !Array.isArray(o)) this.data = o;\n      } catch (e) {}\n    },\n    save() {\n      try { localStorage.setItem(KEY, JSON.stringify(this.data)); } catch (e) {}\n    },\n    entry(id) {\n      this.load();\n      const e = this.data[id];\n      if (!e || typeof e !== 'object') this.data[id] = { p: 0, u: false, t: 0 };\n      return this.data[id];\n    },\n    def(id) {\n      if (!this.defs[id]) {\n        if (!this.warned[id]) { this.warned[id] = true; console.warn('Achievements: \"' + id + '\" is used but was never defined. Use the action \"Define an achievement\" first.'); }\n        return { title: id, desc: '', goal: 1 };\n      }\n      return this.defs[id];\n    },\n\n    define(id, title, desc, goal) {\n      id = String(id);\n      if (!id) return;\n      if (!this.defs[id]) this.order.push(id);\n      this.defs[id] = { title: String(title || id), desc: String(desc || ''), goal: Math.max(1, Number(goal) || 1) };\n      // A goal made smaller in an update unlocks it for players who already reached it.\n      const e = this.entry(id);\n      if (!e.u && e.p >= this.defs[id].goal) this.unlock(id);\n    },\n    unlock(id) {\n      id = String(id);\n      if (!id) return;\n      const e = this.entry(id);\n      if (e.u) return;\n      e.u = true;\n      e.t = Date.now();\n      e.p = Math.max(Number(e.p) || 0, this.def(id).goal);\n      this.save();\n      this.pending.push(id);\n      this.last = id;\n      if (this.style.enabled) this.queue.push(id);\n    },\n    setProgress(id, value) {\n      id = String(id);\n      if (!id) return;\n      const e = this.entry(id);\n      if (e.u) return;\n      e.p = Math.max(0, Number(value) || 0);\n      if (e.p >= this.def(id).goal) this.unlock(id);\n      else this.save();\n    },\n    addProgress(id, amount) {\n      id = String(id);\n      if (!id) return;\n      this.setProgress(id, (Number(this.entry(id).p) || 0) + (Number(amount) || 0));\n    },\n    reset(id) {\n      id = String(id);\n      this.load();\n      delete this.data[id];\n      this.save();\n      this.queue = this.queue.filter((q) => q !== id);\n      if (this.toast && this.toast.id === id) this.toast = null;\n    },\n    resetAll() {\n      this.data = {};\n      this.save();\n      this.queue = [];\n      this.pending = [];\n      this.just = [];\n      this.last = '';\n      this.toast = null;\n    },\n\n    isUnlocked(id) { this.load(); const e = this.data[String(id)]; return !!(e && e.u); },\n    progress(id) { this.load(); const e = this.data[String(id)]; return e ? Math.min(Number(e.p) || 0, this.def(String(id)).goal) : 0; },\n    goal(id) { return this.def(String(id)).goal; },\n    percent(id) { return Math.round((this.progress(id) / this.goal(id)) * 100); },\n    unlockedCount() { return this.order.filter((id) => this.isUnlocked(id)).length; },\n\n    // Called before the events of every scene: last frame's unlocks become \"just unlocked\" for one frame.\n    preEvents() {\n      this.just = this.pending;\n      this.pending = [];\n    },\n\n    // ---------------------------------------------------------------- the toast\n    layer(scene) {\n      if (!scene.hasLayer(LAYER)) {\n        scene.addLayer({\n          name: LAYER, visibility: true, cameras: [], effects: [], isLightingLayer: false,\n          followBaseLayerCamera: false, renderingType: '2d', cameraType: '',\n          defaultCameraBehavior: 'top-left-anchored-if-never-moved',\n          ambientLightColorR: 200, ambientLightColorG: 200, ambientLightColorB: 200,\n        });\n      }\n      // Keep it above every other layer, including ones created later by events.\n      const names = [];\n      scene.getAllLayerNames(names);\n      if (names[names.length - 1] !== LAYER) scene.setLayerIndex(LAYER, names.length - 1);\n      return scene.getLayer(LAYER);\n    },\n    destroyView() {\n      if (!this.view) return;\n      const c = this.view.c;\n      if (c.parent) c.parent.removeChild(c);\n      c.destroy({ children: true });\n      this.view = null;\n    },\n    buildView(scene) {\n      this.destroyView();\n      const layer = this.layer(scene);\n      const c = new PIXI.Container();\n      const bg = new PIXI.Graphics(), icon = new PIXI.Graphics();\n      const font = 'Arial, Helvetica, sans-serif';\n      const label = makeText({ fontFamily: font, fontWeight: 'bold', fontSize: 12 });\n      const title = makeText({ fontFamily: font, fontWeight: 'bold', fontSize: 18 });\n      const desc = makeText({ fontFamily: font, fontSize: 13 });\n      c.addChild(bg, icon, label, title, desc);\n      layer.getRendererObject().addChild(c);\n      this.view = { scene, c, bg, icon, label, title, desc, key: '' };\n    },\n    layout(v, id, W, H) {\n      const st = this.style, d = this.def(id);\n      const s = clamp(H / 720, 0.7, 2.5);\n      const w = Math.min(460 * s, W - 24 * s), h = 92 * s, pad = 14 * s, r = 26 * s;\n      v.w = w; v.h = h; v.s = s;\n      v.bg.clear(); v.icon.clear();\n      roundRect(v.bg, 0, 0, w, h, 12 * s, st.accent, 1);\n      roundRect(v.bg, 2 * s, 2 * s, w - 4 * s, h - 4 * s, 10 * s, st.bg, 1);\n      circle(v.icon, pad + r, h / 2, r, st.accent);\n      star(v.icon, pad + r, h / 2 + 1 * s, r * 0.62, st.bg);\n      const x = pad + 2 * r + 12 * s, maxW = w - x - pad;\n      for (const [t, size, color, alpha] of [[v.label, 14, st.accent, 1], [v.title, 22, st.fg, 1], [v.desc, 15, st.fg, 0.75]]) {\n        t.style.fontSize = Math.round(size * s);\n        t.style.fill = color;\n        t.alpha = alpha;\n        t.x = x;\n      }\n      fit(v.label, st.label, maxW);\n      fit(v.title, d.title, maxW);\n      fit(v.desc, d.desc, maxW);\n      v.label.y = 13 * s; v.title.y = 32 * s; v.desc.y = 61 * s;\n    },\n    // Called after the events of every scene: shows the toasts one after another.\n    postEvents(scene) {\n      if (game.isInGameEdition && game.isInGameEdition()) return;\n      const now = performance.now();\n      if (!this.toast && this.queue.length) this.toast = { id: this.queue.shift(), start: now };\n      if (!this.toast) { this.destroyView(); return; }\n      if (!this.view || this.view.scene !== scene) this.buildView(scene);\n      else this.layer(scene);\n      const v = this.view, W = game.getGameResolutionWidth(), H = game.getGameResolutionHeight();\n      const key = [this.toast.id, W, H, JSON.stringify(this.style)].join('|');\n      if (v.key !== key) { this.layout(v, this.toast.id, W, H); v.key = key; }\n      const IN = 350, OUT = 350, HOLD = Math.max(0, this.style.duration) * 1000, t = now - this.toast.start;\n      if (t > IN + HOLD + OUT) { this.toast = null; this.destroyView(); return; }\n      const k = t < IN ? easeOut(t / IN) : t < IN + HOLD ? 1 : 1 - easeOut((t - IN - HOLD) / OUT);\n      const pos = this.style.position, m = 16 * v.s, bottom = /^Bottom/.test(pos);\n      v.c.x = /left$/.test(pos) ? m : /right$/.test(pos) ? W - v.w - m : (W - v.w) / 2;\n      const on = bottom ? H - v.h - m : m, off = bottom ? H + 4 : -v.h - 4;\n      v.c.y = off + (on - off) * k;\n    },\n    setColors(bg, fg, accent) {\n      this.style.bg = toColor(bg, this.style.bg);\n      this.style.fg = toColor(fg, this.style.fg);\n      this.style.accent = toColor(accent, this.style.accent);\n    },\n  };\n  game.__achievements = A;\n}\n",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onScenePreEvents",
+      "sentence": "",
+      "description": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\nA.preEvents();",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "fullName": "",
+      "functionType": "Action",
+      "name": "onScenePostEvents",
+      "sentence": "",
+      "description": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\nA.postEvents(runtimeScene);",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Define an achievement",
+      "functionType": "Action",
+      "name": "DefineAchievement",
+      "sentence": "Define achievement _PARAM1_: _PARAM2_ (goal: _PARAM4_)",
+      "description": "Define an achievement: its title, description and goal. Do this at the start of the first scene, before unlocking anything. Use a goal of 1 for an achievement that unlocks in one go, or a bigger goal (like 10) for one that unlocks when its progress reaches it. Progress is saved on the player's device.",
+      "group": "Setup",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\nA.define(eventsFunctionContext.getArgument(\"Id\"), eventsFunctionContext.getArgument(\"Title\"), eventsFunctionContext.getArgument(\"Description\"), eventsFunctionContext.getArgument(\"Goal\"));",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Achievement identifier (for example: \"first_coin\")",
+          "name": "Id",
+          "type": "string"
+        },
+        {
+          "description": "Title",
+          "name": "Title",
+          "type": "string"
+        },
+        {
+          "description": "Description",
+          "name": "Description",
+          "type": "string"
+        },
+        {
+          "description": "Goal (1 to unlock in one go)",
+          "name": "Goal",
+          "type": "expression",
+          "defaultValue": "1",
+          "optional": true
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Reset an achievement",
+      "functionType": "Action",
+      "name": "ResetAchievement",
+      "sentence": "Reset achievement _PARAM1_",
+      "description": "Lock an achievement again and set its progress back to 0.",
+      "group": "Setup",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\nA.reset(eventsFunctionContext.getArgument(\"Id\"));",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Achievement identifier (for example: \"first_coin\")",
+          "name": "Id",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Reset all achievements",
+      "functionType": "Action",
+      "name": "ResetAll",
+      "sentence": "Reset all achievements",
+      "description": "Lock every achievement again and erase all saved progress. Useful for a \"reset progress\" button or while testing.",
+      "group": "Setup",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\nA.resetAll();",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Unlock an achievement",
+      "functionType": "Action",
+      "name": "Unlock",
+      "sentence": "Unlock achievement _PARAM1_",
+      "description": "Unlock an achievement now. Nothing happens if it is already unlocked.",
+      "group": "Unlock and progress",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\nA.unlock(eventsFunctionContext.getArgument(\"Id\"));",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Achievement identifier (for example: \"first_coin\")",
+          "name": "Id",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Add progress to an achievement",
+      "functionType": "Action",
+      "name": "AddProgress",
+      "sentence": "Add _PARAM2_ to the progress of achievement _PARAM1_",
+      "description": "Add to an achievement's progress. It unlocks when the progress reaches its goal.",
+      "group": "Unlock and progress",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\nA.addProgress(eventsFunctionContext.getArgument(\"Id\"), eventsFunctionContext.getArgument(\"Amount\"));",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Achievement identifier (for example: \"first_coin\")",
+          "name": "Id",
+          "type": "string"
+        },
+        {
+          "description": "Amount to add",
+          "name": "Amount",
+          "type": "expression",
+          "defaultValue": "1",
+          "optional": true
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Set the progress of an achievement",
+      "functionType": "Action",
+      "name": "SetProgress",
+      "sentence": "Set the progress of achievement _PARAM1_ to _PARAM2_",
+      "description": "Set an achievement's progress to a value (for example the best score or the level reached). It unlocks when the progress reaches its goal. Progress never goes down once the achievement is unlocked.",
+      "group": "Unlock and progress",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\nA.setProgress(eventsFunctionContext.getArgument(\"Id\"), eventsFunctionContext.getArgument(\"Value\"));",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Achievement identifier (for example: \"first_coin\")",
+          "name": "Id",
+          "type": "string"
+        },
+        {
+          "description": "Progress",
+          "name": "Value",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Achievement is unlocked",
+      "functionType": "Condition",
+      "name": "IsUnlocked",
+      "sentence": "Achievement _PARAM1_ is unlocked",
+      "description": "Check if an achievement is unlocked.",
+      "group": "Unlock and progress",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\neventsFunctionContext.returnValue = A.isUnlocked(eventsFunctionContext.getArgument(\"Id\"));",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Achievement identifier (for example: \"first_coin\")",
+          "name": "Id",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Achievement was just unlocked",
+      "functionType": "Condition",
+      "name": "JustUnlocked",
+      "sentence": "Achievement _PARAM1_ was just unlocked",
+      "description": "Check if an achievement was just unlocked. This is true for one frame only: use it to play a sound or give a reward.",
+      "group": "Unlock and progress",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\neventsFunctionContext.returnValue = A.just.includes(String(eventsFunctionContext.getArgument(\"Id\")));",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Achievement identifier (for example: \"first_coin\")",
+          "name": "Id",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Any achievement was just unlocked",
+      "functionType": "Condition",
+      "name": "AnyJustUnlocked",
+      "sentence": "Any achievement was just unlocked",
+      "description": "Check if any achievement was just unlocked. This is true for one frame only. The expression LastUnlocked() tells which one.",
+      "group": "Unlock and progress",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\neventsFunctionContext.returnValue = A.just.length > 0;",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Progress",
+      "functionType": "Expression",
+      "name": "Progress",
+      "sentence": "",
+      "description": "The progress of an achievement (0 up to its goal).",
+      "group": "Information",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\neventsFunctionContext.returnValue = A.progress(eventsFunctionContext.getArgument(\"Id\"));",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Achievement identifier (for example: \"first_coin\")",
+          "name": "Id",
+          "type": "string"
+        }
+      ],
+      "objectGroups": [],
+      "expressionType": {
+        "type": "expression"
+      }
+    },
+    {
+      "fullName": "Goal",
+      "functionType": "Expression",
+      "name": "Goal",
+      "sentence": "",
+      "description": "The goal of an achievement.",
+      "group": "Information",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\neventsFunctionContext.returnValue = A.goal(eventsFunctionContext.getArgument(\"Id\"));",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Achievement identifier (for example: \"first_coin\")",
+          "name": "Id",
+          "type": "string"
+        }
+      ],
+      "objectGroups": [],
+      "expressionType": {
+        "type": "expression"
+      }
+    },
+    {
+      "fullName": "Progress in percent",
+      "functionType": "Expression",
+      "name": "ProgressPercent",
+      "sentence": "",
+      "description": "The progress of an achievement in percent (0 to 100). Handy for progress bars.",
+      "group": "Information",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\neventsFunctionContext.returnValue = A.percent(eventsFunctionContext.getArgument(\"Id\"));",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Achievement identifier (for example: \"first_coin\")",
+          "name": "Id",
+          "type": "string"
+        }
+      ],
+      "objectGroups": [],
+      "expressionType": {
+        "type": "expression"
+      }
+    },
+    {
+      "fullName": "Number of achievements",
+      "functionType": "Expression",
+      "name": "Count",
+      "sentence": "",
+      "description": "The number of achievements defined.",
+      "group": "Information",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\neventsFunctionContext.returnValue = A.order.length;",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": [],
+      "expressionType": {
+        "type": "expression"
+      }
+    },
+    {
+      "fullName": "Number of unlocked achievements",
+      "functionType": "Expression",
+      "name": "UnlockedCount",
+      "sentence": "",
+      "description": "The number of defined achievements that are unlocked.",
+      "group": "Information",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\neventsFunctionContext.returnValue = A.unlockedCount();",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": [],
+      "expressionType": {
+        "type": "expression"
+      }
+    },
+    {
+      "fullName": "Achievement identifier by position",
+      "functionType": "StringExpression",
+      "name": "IdAt",
+      "sentence": "",
+      "description": "The identifier of the achievement at a position (0 is the first one defined). Use it with a Repeat event to build an achievements screen.",
+      "group": "Information",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\neventsFunctionContext.returnValue = A.order[Math.floor(Number(eventsFunctionContext.getArgument(\"Index\")))] || '';",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Position (0 is the first achievement)",
+          "name": "Index",
+          "type": "expression"
+        }
+      ],
+      "objectGroups": [],
+      "expressionType": {
+        "type": "string"
+      }
+    },
+    {
+      "fullName": "Title",
+      "functionType": "StringExpression",
+      "name": "Title",
+      "sentence": "",
+      "description": "The title of an achievement.",
+      "group": "Information",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\neventsFunctionContext.returnValue = A.def(String(eventsFunctionContext.getArgument(\"Id\"))).title;",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Achievement identifier (for example: \"first_coin\")",
+          "name": "Id",
+          "type": "string"
+        }
+      ],
+      "objectGroups": [],
+      "expressionType": {
+        "type": "string"
+      }
+    },
+    {
+      "fullName": "Description",
+      "functionType": "StringExpression",
+      "name": "Description",
+      "sentence": "",
+      "description": "The description of an achievement.",
+      "group": "Information",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\neventsFunctionContext.returnValue = A.def(String(eventsFunctionContext.getArgument(\"Id\"))).desc;",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Achievement identifier (for example: \"first_coin\")",
+          "name": "Id",
+          "type": "string"
+        }
+      ],
+      "objectGroups": [],
+      "expressionType": {
+        "type": "string"
+      }
+    },
+    {
+      "fullName": "Last unlocked achievement",
+      "functionType": "StringExpression",
+      "name": "LastUnlocked",
+      "sentence": "",
+      "description": "The identifier of the achievement unlocked most recently in this game session.",
+      "group": "Information",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\neventsFunctionContext.returnValue = A.last;",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [],
+      "objectGroups": [],
+      "expressionType": {
+        "type": "string"
+      }
+    },
+    {
+      "fullName": "Show toasts",
+      "functionType": "Action",
+      "name": "EnableToast",
+      "sentence": "Show a toast when an achievement is unlocked: _PARAM1_",
+      "description": "Show (or hide) the pop-up that slides in when an achievement is unlocked. It is shown by default.",
+      "group": "Toast",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\nA.style.enabled = !!eventsFunctionContext.getArgument(\"Enable\");",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Show toasts",
+          "name": "Enable",
+          "type": "yesorno",
+          "defaultValue": "yes",
+          "optional": true
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Toast position",
+      "functionType": "Action",
+      "name": "SetToastPosition",
+      "sentence": "Show toasts at the _PARAM1_ of the screen",
+      "description": "Change where the toast appears on the screen.",
+      "group": "Toast",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\nA.style.position = String(eventsFunctionContext.getArgument(\"Position\")) || 'Top';",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Position",
+          "name": "Position",
+          "type": "stringWithSelector",
+          "supplementaryInformation": "[\"Top\", \"Top-left\", \"Top-right\", \"Bottom\", \"Bottom-left\", \"Bottom-right\"]",
+          "defaultValue": "\"Top\"",
+          "optional": true
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Toast duration",
+      "functionType": "Action",
+      "name": "SetToastDuration",
+      "sentence": "Show toasts for _PARAM1_ seconds",
+      "description": "Change how long the toast stays on screen.",
+      "group": "Toast",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\nA.style.duration = Math.max(0, Number(eventsFunctionContext.getArgument(\"Seconds\")) || 0);",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Duration (in seconds)",
+          "name": "Seconds",
+          "type": "expression",
+          "defaultValue": "3",
+          "optional": true
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Toast colors",
+      "functionType": "Action",
+      "name": "SetToastColors",
+      "sentence": "Toast colors: background _PARAM1_, text _PARAM2_, accent _PARAM3_",
+      "description": "Change the colors of the toast.",
+      "group": "Toast",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\nA.setColors(eventsFunctionContext.getArgument(\"Background\"), eventsFunctionContext.getArgument(\"Text\"), eventsFunctionContext.getArgument(\"Accent\"));",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Background color",
+          "name": "Background",
+          "type": "color",
+          "defaultValue": "\"30;34;51\"",
+          "optional": true
+        },
+        {
+          "description": "Text color",
+          "name": "Text",
+          "type": "color",
+          "defaultValue": "\"255;255;255\"",
+          "optional": true
+        },
+        {
+          "description": "Accent color (border, star and label)",
+          "name": "Accent",
+          "type": "color",
+          "defaultValue": "\"255;200;61\"",
+          "optional": true
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Toast label",
+      "functionType": "Action",
+      "name": "SetToastLabel",
+      "sentence": "Toast label: _PARAM1_",
+      "description": "Change the small label above the title (\"Achievement unlocked\" by default). Use it to translate the toast, for example \"Pencapaian dibuka\".",
+      "group": "Toast",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\nA.style.label = String(eventsFunctionContext.getArgument(\"Label\"));",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Label",
+          "name": "Label",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "fullName": "Show the toast of an achievement",
+      "functionType": "Action",
+      "name": "ShowToast",
+      "sentence": "Show the toast of achievement _PARAM1_",
+      "description": "Show the toast of an achievement without unlocking it. Useful to preview the toast's look.",
+      "group": "Toast",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": "const A = runtimeScene.getGame().__achievements;\nif (!A) return;\nA.queue.push(String(eventsFunctionContext.getArgument(\"Id\")));",
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Achievement identifier (for example: \"first_coin\")",
+          "name": "Id",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    }
+  ],
+  "eventsBasedBehaviors": [],
+  "eventsBasedObjects": []
+}
