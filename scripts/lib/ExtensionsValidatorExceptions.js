@@ -627,6 +627,7 @@ const extensionsAllowedProperties = {
         '__terrainScatterExtension',
         'Base3DHandler',
         'CustomRuntimeObject3D',
+        'CustomRuntimeObjectInstanceContainer',
         'InGameEditor',
         'InGameEditorToolbarItem',
         'Physics3DRuntimeBehavior',
