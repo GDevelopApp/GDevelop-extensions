@@ -10,7 +10,7 @@
   "name": "FireBullet",
   "previewIconUrl": "https://resources.gdevelop-app.com/assets/Icons/bullet.svg",
   "shortDescription": "Fire bullets with ammo count, reload timer, and overheat management.",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": [
     "This extension allows objects to fire bullets. To use it, add the behavior to the object that will shoot, then use the provided action to launch another object as the bullet.",
     "",
@@ -19,6 +19,7 @@
     "- Firing multiple bullets at a time ([open the project online](https://editor.gdevelop.io/?project=example://fire-bullet))",
     "- Ammo management",
     "- Overheat",
+    "- Burst fire",
     "",
     "The speed can be specified when using the actions to fire the bullets.",
     "The bullets are automatically given a permanent force to make them move in the 2D plane (no need to use a linear movement or move them with another behavior).",
@@ -48,7 +49,8 @@
     "wWP8BSlAW0UP4NeaHa2LcmmDzmH2",
     "xpwUwByyImTDcHEqDUqfyg0oRBt1",
     "2OwwM8ToR9dx9RJ2sAKTcrLmCB92",
-    "gqDaZjCfevOOxBYkK6zlhtZnXCg1"
+    "gqDaZjCfevOOxBYkK6zlhtZnXCg1",
+    "m4hBMBTUilft4s1V4FQQPakVDGx1"
   ],
   "dependencies": [],
   "globalVariables": [],
@@ -209,6 +211,16 @@
                     "ShotsBeforeNextReload",
                     "=",
                     "ShotsPerReload"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "ShotsLeftInBurst",
+                    "=",
+                    "ShotsPerBurst"
                   ]
                 }
               ]
@@ -493,6 +505,87 @@
                         }
                       ],
                       "parameters": []
+                    },
+                    {
+                      "colorB": 228,
+                      "colorG": 176,
+                      "colorR": 74,
+                      "creationTime": 0,
+                      "name": "burst",
+                      "source": "",
+                      "type": "BuiltinCommonInstructions::Group",
+                      "events": [
+                        {
+                          "type": "BuiltinCommonInstructions::Standard",
+                          "conditions": [
+                            {
+                              "type": {
+                                "value": "FireBullet::FireBullet::BurstSize"
+                              },
+                              "parameters": [
+                                "Object",
+                                "Behavior",
+                                ">",
+                                "0",
+                                ""
+                              ]
+                            }
+                          ],
+                          "actions": [
+                            {
+                              "type": {
+                                "value": "SetNumberVariable"
+                              },
+                              "parameters": [
+                                "ShotsLeftInBurst",
+                                "-",
+                                "1"
+                              ]
+                            }
+                          ],
+                          "events": [
+                            {
+                              "type": "BuiltinCommonInstructions::Standard",
+                              "conditions": [
+                                {
+                                  "type": {
+                                    "value": "FireBullet::FireBullet::BurstEmpty"
+                                  },
+                                  "parameters": [
+                                    "Object",
+                                    "Behavior",
+                                    ">"
+                                  ]
+                                },
+                                {
+                                  "type": {
+                                    "value": "FireBullet::FireBullet::BurstCooldown"
+                                  },
+                                  "parameters": [
+                                    "Object",
+                                    "Behavior",
+                                    ">",
+                                    "0",
+                                    ""
+                                  ]
+                                }
+                              ],
+                              "actions": [
+                                {
+                                  "type": {
+                                    "value": "ResetObjectTimer"
+                                  },
+                                  "parameters": [
+                                    "Object",
+                                    "\"__FireBullet.BurstCooldownDuration\""
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "parameters": []
                     }
                   ]
                 }
@@ -504,6 +597,7 @@
               "colorG": 176,
               "colorR": 74,
               "creationTime": 0,
+              "folded": true,
               "name": "Reload",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
@@ -645,6 +739,7 @@
               "colorG": 176,
               "colorR": 74,
               "creationTime": 0,
+              "folded": true,
               "name": "Cooling",
               "source": "",
               "type": "BuiltinCommonInstructions::Group",
@@ -717,6 +812,91 @@
                             "max(0, HeatLevel - TimeDelta() * LinearCoolingRate)"
                           ]
                         }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "parameters": []
+            },
+            {
+              "colorB": 228,
+              "colorG": 176,
+              "colorR": 74,
+              "creationTime": 0,
+              "name": "burst cooldown",
+              "source": "",
+              "type": "BuiltinCommonInstructions::Group",
+              "events": [
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "CompareObjectTimer"
+                      },
+                      "parameters": [
+                        "Object",
+                        "\"__FireBullet.BurstCooldownDuration\"",
+                        ">=",
+                        "BurstCooldown"
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "ShotsLeftInBurst",
+                        "=",
+                        "ShotsPerBurst"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "RemoveObjectTimer"
+                      },
+                      "parameters": [
+                        "Object",
+                        "\"__FireBullet.BurstCooldownDuration\""
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "BuiltinCommonInstructions::Standard",
+                  "conditions": [
+                    {
+                      "type": {
+                        "value": "FireBullet::FireBullet::IsReloadNeeded"
+                      },
+                      "parameters": [
+                        "Object",
+                        "Behavior",
+                        ""
+                      ]
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": {
+                        "value": "SetNumberVariable"
+                      },
+                      "parameters": [
+                        "ShotsLeftInBurst",
+                        "=",
+                        "ShotsPerBurst"
+                      ]
+                    },
+                    {
+                      "type": {
+                        "value": "RemoveObjectTimer"
+                      },
+                      "parameters": [
+                        "Object",
+                        "\"__FireBullet.BurstCooldownDuration\""
                       ]
                     }
                   ]
@@ -4392,6 +4572,17 @@
                             "Behavior",
                             ""
                           ]
+                        },
+                        {
+                          "type": {
+                            "inverted": true,
+                            "value": "FireBullet::FireBullet::BurstEmpty"
+                          },
+                          "parameters": [
+                            "Object",
+                            "Behavior",
+                            ""
+                          ]
                         }
                       ]
                     }
@@ -4894,6 +5085,402 @@
             }
           ],
           "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "BurstSize",
+          "group": "burst fire",
+          "name": "SetBurstSize",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "ShotsPerBurst",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "The size of a burst. 0 means that the player can fire unrestricted.",
+          "fullName": "Burst Size",
+          "functionType": "ExpressionAndCondition",
+          "group": "burst fire",
+          "name": "BurstSize",
+          "sentence": "burst size",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "ShotsPerBurst"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Burst Cooldown (in seconds).",
+          "fullName": "Burst Cooldown",
+          "functionType": "ExpressionAndCondition",
+          "group": "burst fire",
+          "name": "BurstCooldown",
+          "sentence": "Burst Cooldown",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "BurstCooldown"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "fullName": "",
+          "functionType": "ActionWithOperator",
+          "getterName": "BurstCooldown",
+          "group": "burst fire",
+          "name": "SetBurstCooldown",
+          "sentence": "",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetNumberVariable"
+                  },
+                  "parameters": [
+                    "BurstCooldown",
+                    "=",
+                    "Value"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if the burst is empty.",
+          "fullName": "Burst is empty",
+          "functionType": "Condition",
+          "group": "burst fire",
+          "name": "BurstEmpty",
+          "sentence": "_PARAM0_ burst is empty",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "NumberVariable"
+                  },
+                  "parameters": [
+                    "ShotsLeftInBurst",
+                    "<=",
+                    "0"
+                  ]
+                },
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::BurstSize"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ">",
+                    "0",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Number of shots left in burst.",
+          "fullName": "Remaining shots in burst",
+          "functionType": "ExpressionAndCondition",
+          "group": "burst fire",
+          "name": "BurstRemaining",
+          "sentence": "Number of shots left in burst",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "ShotsLeftInBurst"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "Check if the object has a full burst ready (does not take into account remaining ammo).",
+          "fullName": "Full burst",
+          "functionType": "Condition",
+          "group": "burst fire",
+          "name": "FullBurst",
+          "sentence": "_PARAM0_ has a full burst ready",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "value": "FireBullet::FireBullet::BurstRemaining"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ">=",
+                    "ShotsPerBurst",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "True"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Else",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnBoolean"
+                  },
+                  "parameters": [
+                    "False"
+                  ]
+                }
+              ]
+            }
+          ],
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
+        },
+        {
+          "description": "how long until the object can fire another burst.",
+          "fullName": "Burst cooldown left",
+          "functionType": "ExpressionAndCondition",
+          "group": "burst fire",
+          "name": "BurstCooldownRemaining",
+          "sentence": "remaining burst cooldown",
+          "events": [
+            {
+              "type": "BuiltinCommonInstructions::Standard",
+              "conditions": [
+                {
+                  "type": {
+                    "inverted": true,
+                    "value": "FireBullet::FireBullet::BurstEmpty"
+                  },
+                  "parameters": [
+                    "Object",
+                    "Behavior",
+                    ""
+                  ]
+                }
+              ],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "0"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "BuiltinCommonInstructions::Else",
+              "conditions": [],
+              "actions": [
+                {
+                  "type": {
+                    "value": "SetReturnNumber"
+                  },
+                  "parameters": [
+                    "max(0,BurstCooldown-Object.ObjectTimerElapsedTime(\"__FireBullet.BurstCooldownDuration\"))"
+                  ]
+                }
+              ]
+            }
+          ],
+          "expressionType": {
+            "type": "expression"
+          },
+          "parameters": [
+            {
+              "description": "Object",
+              "name": "Object",
+              "type": "object"
+            },
+            {
+              "description": "Behavior",
+              "name": "Behavior",
+              "supplementaryInformation": "FireBullet::FireBullet",
+              "type": "behavior"
+            }
+          ],
+          "objectGroups": []
         }
       ],
       "eventsFunctionsFolderStructure": {
@@ -5077,6 +5664,35 @@
               },
               {
                 "functionName": "IsReloadNeeded"
+              }
+            ]
+          },
+          {
+            "folderName": "burst fire",
+            "children": [
+              {
+                "functionName": "BurstSize"
+              },
+              {
+                "functionName": "BurstCooldownRemaining"
+              },
+              {
+                "functionName": "BurstRemaining"
+              },
+              {
+                "functionName": "FullBurst"
+              },
+              {
+                "functionName": "SetBurstSize"
+              },
+              {
+                "functionName": "BurstCooldown"
+              },
+              {
+                "functionName": "SetBurstCooldown"
+              },
+              {
+                "functionName": "BurstEmpty"
               }
             ]
           },
@@ -5374,6 +5990,27 @@
           "label": "",
           "hidden": true,
           "name": "RandomizedAngle"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "Number of shots in a burst (set 0 for no burst)",
+          "group": "burst fire",
+          "name": "ShotsPerBurst"
+        },
+        {
+          "value": "",
+          "type": "Number",
+          "label": "How long until the next burst (in seconds)",
+          "group": "burst fire",
+          "name": "BurstCooldown"
+        },
+        {
+          "value": "0",
+          "type": "Number",
+          "label": "",
+          "hidden": true,
+          "name": "ShotsLeftInBurst"
         }
       ],
       "propertiesFolderStructure": {
@@ -5411,6 +6048,17 @@
             ]
           },
           {
+            "folderName": "burst fire",
+            "children": [
+              {
+                "propertyName": "ShotsPerBurst"
+              },
+              {
+                "propertyName": "BurstCooldown"
+              }
+            ]
+          },
+          {
             "propertyName": "AmmoQuantity"
           },
           {
@@ -5440,6 +6088,9 @@
                 "propertyName": "UnlimitedAmmo"
               }
             ]
+          },
+          {
+            "propertyName": "ShotsLeftInBurst"
           },
           {
             "propertyName": "ShotsBeforeNextReload"
