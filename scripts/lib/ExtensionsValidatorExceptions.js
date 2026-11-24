@@ -620,6 +620,12 @@ const extensionsAllowedProperties = {
       runtimeSceneAllowedProperties: ['_stickerExtension'],
       javaScriptObjectAllowedProperties: [],
     },
+    StaticBatch3D: {
+      gdjsAllowedProperties: ['__staticBatch3DExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     Terrain3D: {
       gdjsAllowedProperties: [
         '__terrain3DExtension',
