@@ -9,8 +9,8 @@
   "name": "ZokoGames",
   "previewIconUrl": "",
   "shortDescription": "Ads, cloud save, leaderboards, store, achievements and rooms of the ZokoGames portal.",
-  "version": "1.7.2",
-  "description": "ZokoGames SDK 1.7.0 for GDevelop 5: every call of the ZokoGames JavaScript SDK as actions, conditions and expressions.\n\nStart with the action Initialize at the beginning of the first scene. Every request takes a tag: On request completed / On request failed (with the same tag) are true during the frame after the request ends, and every request is asynchronous, so actions placed after it can wait for it.\nAds pause and mute the game by themselves while they play. On localhost the SDK runs in its local mode (fake ads, a fake player, a local cloud save and a test store).",
+  "version": "1.8.0",
+  "description": "ZokoGames SDK 1.8.0 for GDevelop 5: every call of the ZokoGames JavaScript SDK as actions, conditions and expressions.\n\nStart with the action Initialize at the beginning of the first scene. Every request takes a tag: On request completed / On request failed (with the same tag) are true during the frame after the request ends, and every request is asynchronous, so actions placed after it can wait for it.\nAds pause and mute the game by themselves while they play. On localhost the SDK runs in its local mode (fake ads, a fake player, a local cloud save and a test store).",
   "tags": [
     "ads",
     "monetization",
@@ -35,7 +35,7 @@
         {
           "type": "BuiltinCommonInstructions::JsCode",
           "inlineCode": [
-            "// ZokoGames extension for GDevelop 5. Plugin version 1.7.2 (JavaScript SDK 1.7.0).",
+            "// ZokoGames extension for GDevelop 5. Plugin version 1.8.0 (JavaScript SDK 1.8.0).",
             "//",
             "// This file is the code of the extension's \"onFirstSceneLoaded\" lifecycle function: tools/build-extension.mjs puts it in a",
             "// JavaScript code event of ZokoGames.json. It runs once per game start, in the generated function",
@@ -49,7 +49,7 @@
             "// delivered per frame, so two room messages that arrive together are seen in two frames and none is lost.",
             "{",
             "  const SDK_URL = \"https://sdk.zokogames.com/zokogames-sdk-v1.js\";",
-            "  const SDK_VERSION = \"1.7.0\";",
+            "  const SDK_VERSION = \"1.8.0\";",
             "  // The SDK's ERROR_CODES by module (expression ErrorCodes(module)) and ERROR_CODE_DESCRIPTIONS (expression ErrorDescription(code)).",
             "  const ERROR_CODES = {",
             "    ad: [\"adsDisabled\", \"unfilled\", \"adblock\", \"adCooldown\", \"other\"],",
@@ -124,6 +124,7 @@
             "   * SDK 1.4.0 calls: game.reportChat {report}; game.setScreenshotProvider {enabled} + the global event screenshotRequest, which the",
             "   * engine answers with game.answerScreenshot {dataUrl} (a data:image/... URL, or null when it cannot capture; the SDK waits 3 s);",
             "   * data.mirrorLocalStorage {keys?, prefix?, pattern?} (+ data.stopMirrorLocalStorage), failures arrive as the global event mirrorError.",
+            "   * SDK 1.7.0: data.mirrorIndexedDB {databases?} resolves after the restore (+ data.stopMirrorIndexedDB); init snapshot carries gameId.",
             "   * Errors are always plain { code, message, containerId? } objects.",
             "   * Banner rectangles arrive as normalised { nx, ny, nw, nh } (0..1, top-left origin,",
             "   * relative to the game canvas) and are mapped to a fixed-position container <div>.",
@@ -180,6 +181,7 @@
             "        isOffline: false,",
             "        inviteParams: null,",
             "        storeAvailable: false,",
+            "        gameId: '',",
             "        sdkVersion: s.version || (root.ZokoGames && root.ZokoGames.SDK_VERSION) || ''",
             "      };",
             "      if (s.environment === 'disabled') return out;",
@@ -190,6 +192,8 @@
             "      out.isOffline = !!s.game.isOffline;",
             "      out.inviteParams = s.game.inviteParams;",
             "      out.storeAvailable = !!(s.store && s.store.isAvailable);",
+            "      // JS SDK 1.6.2+: the read-only game id the portal sends at init ('' on older SDKs and portals).",
+            "      try { out.gameId = typeof s.game.gameId === 'string' ? s.game.gameId : ''; } catch (e) { out.gameId = ''; }",
             "      return out;",
             "    }",
             "    /** getPurchaseToken is the primary name; older SDK builds only have the deprecated getXsollaUserToken. */",
@@ -284,11 +288,19 @@
             "    function stopMirror() {",
             "      if (mirrorStop) { mirrorStop(); mirrorStop = null; }",
             "    }",
+            "    var idbStop = null;",
+            "    function stopIdbMirror() {",
+            "      if (idbStop) { idbStop(); idbStop = null; }",
+            "    }",
             "",
             "    function simple(mod, fn) {",
             "      return function (a, ev, s) { return s[mod][fn](); };",
             "    }",
             "",
+            "    function since180(mod, name) {",
+            "      if (typeof mod[name] !== 'function') throw { code: 'other', message: name + ' needs ZokoGames SDK 1.8.0 or newer' };",
+            "      return function () { return mod[name].apply(mod, arguments); };",
+            "    }",
             "    function storeOf(s) {",
             "      if (!s.store) throw { code: 'other', message: 'This SDK build has no store module' };",
             "      return s.store;",
@@ -358,6 +370,9 @@
             "      'banner.clearAllBanners': function (a, ev, s) {",
             "        return s.banner.clearAllBanners().then(removeAllContainers);",
             "      },",
+            "      // SDK 1.8.0: hide / show every banner without clearing it (the containers stay where they are).",
+            "      'banner.hideAllBanners': function (a, ev, s) { return since180(s.banner, 'hideAllBanners')(); },",
+            "      'banner.showAllBanners': function (a, ev, s) { return since180(s.banner, 'showAllBanners')(); },",
             "      'game.gameplayStart': simple('game', 'gameplayStart'),",
             "      'game.gameplayStop': simple('game', 'gameplayStop'),",
             "      'game.loadingStart': simple('game', 'loadingStart'),",
@@ -385,6 +400,19 @@
             "      'user.showAccountLinkPrompt': function (a, ev, s) { return refocus(s.user.showAccountLinkPrompt()); },",
             "      'user.submitScore': function (a, ev, s) {",
             "        return s.user.submitScore({ encryptedScore: a.encryptedScore, score: a.score });",
+            "      },",
+            "      // SDK 1.7.0: mirror IndexedDB databases into the cloud save; resolves once the restore finished (await it before the game",
+            "      // reads its saves). Unity and Godot mount their file system at startup: their HTML shells call the SDK before the engine starts.",
+            "      'data.mirrorIndexedDB': function (a, ev, s) {",
+            "        if (typeof s.data.mirrorIndexedDB !== 'function') throw { code: 'other', message: 'data.mirrorIndexedDB needs ZokoGames SDK 1.7.0 or newer' };",
+            "        stopIdbMirror();",
+            "        var o = { onError: function (e) { globalHandler('mirrorError', plainError(e)); } };",
+            "        if (a.databases && a.databases.length) o.databases = a.databases;",
+            "        return s.data.mirrorIndexedDB(o).then(function (stop) { idbStop = stop; return null; });",
+            "      },",
+            "      // SDK 1.8.0: seal a score with the board key; resolves the base64 payload for submitScore. earnedAt 0 / absent = a live run.",
+            "      'user.encryptScore': function (a, ev, s) {",
+            "        return since180(s.user, 'encryptScore')(a.score, a.key, absent(a.earnedAt) || a.earnedAt === 0 ? undefined : { earnedAt: a.earnedAt });",
             "      },",
             "      // SDK 1.7.0: fire-and-forget; resolves with nothing.",
             "      'analytics.track': function (a, ev, s) { s.analytics.track(a.name, absent(a.params) ? undefined : a.params); return Promise.resolve(); },",
@@ -452,6 +480,7 @@
             "        return null;",
             "      },",
             "      'data.stopMirrorLocalStorage': function (a, s) { stopMirror(); return null; },",
+            "      'data.stopMirrorIndexedDB': function (a, s) { stopIdbMirror(); return null; },",
             "      'room.members': function (a, s) { return roomOf(s).members(); },",
             "      'room.getState': function (a, s) { return roomOf(s).getState(); },",
             "      'room.isHost': function (a, s) { return !!roomOf(s).isHost(); },",
@@ -556,6 +585,7 @@
             "      // results kept for the expressions",
             "      user: null,",
             "      token: \"\",",
+            "      encryptedScore: \"\",",
             "      purchaseToken: \"\",",
             "      friends: null,",
             "      cache: new Map(),",
@@ -1604,6 +1634,94 @@
             "try {",
             "  pending = (() => {",
             "    return Z.run(tag, \"banner.clearAllBanners\", {});",
+            "  })();",
+            "} catch (err) {",
+            "  pending = Z.fail(tag, \"other\", String((err && err.message) || err));",
+            "}",
+            "Promise.resolve(pending).then(() => task.resolve(), () => task.resolve());"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Tag (names this request in On request completed / failed)",
+          "name": "Tag",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "SDK 1.8.0: hide every banner without clearing it.",
+      "fullName": "Hide all banners",
+      "functionType": "Action",
+      "group": "Banners",
+      "name": "HideAllBanners",
+      "sentence": "Hide all banners (tag _PARAM1_)",
+      "async": true,
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const Z = gdjs._zokoGamesExtension;",
+            "const arg = (name) => eventsFunctionContext.getArgument(name);",
+            "const task = eventsFunctionContext.task;",
+            "const tag = String(arg(\"Tag\"));",
+            "if (!Z) {",
+            "  task.resolve();",
+            "  return;",
+            "}",
+            "let pending;",
+            "try {",
+            "  pending = (() => {",
+            "    return Z.run(tag, \"banner.hideAllBanners\", {});",
+            "  })();",
+            "} catch (err) {",
+            "  pending = Z.fail(tag, \"other\", String((err && err.message) || err));",
+            "}",
+            "Promise.resolve(pending).then(() => task.resolve(), () => task.resolve());"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Tag (names this request in On request completed / failed)",
+          "name": "Tag",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "SDK 1.8.0: show the banners hidden by Hide all banners.",
+      "fullName": "Show all banners",
+      "functionType": "Action",
+      "group": "Banners",
+      "name": "ShowAllBanners",
+      "sentence": "Show all banners (tag _PARAM1_)",
+      "async": true,
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const Z = gdjs._zokoGamesExtension;",
+            "const arg = (name) => eventsFunctionContext.getArgument(name);",
+            "const task = eventsFunctionContext.task;",
+            "const tag = String(arg(\"Tag\"));",
+            "if (!Z) {",
+            "  task.resolve();",
+            "  return;",
+            "}",
+            "let pending;",
+            "try {",
+            "  pending = (() => {",
+            "    return Z.run(tag, \"banner.showAllBanners\", {});",
             "  })();",
             "} catch (err) {",
             "  pending = Z.fail(tag, \"other\", String((err && err.message) || err));",
@@ -3637,6 +3755,66 @@
       "objectGroups": []
     },
     {
+      "description": "SDK 1.8.0: seal a score with the board key; the payload is in EncryptedScore, to pass to Submit score. userNotAuthenticated for guests, invalidArgument for a bad score or key.",
+      "fullName": "Encrypt score",
+      "functionType": "Action",
+      "group": "User",
+      "name": "EncryptScore",
+      "sentence": "Encrypt score _PARAM2_ with key _PARAM3_, earned at _PARAM4_ (tag _PARAM1_)",
+      "async": true,
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const Z = gdjs._zokoGamesExtension;",
+            "const arg = (name) => eventsFunctionContext.getArgument(name);",
+            "const task = eventsFunctionContext.task;",
+            "const tag = String(arg(\"Tag\"));",
+            "if (!Z) {",
+            "  task.resolve();",
+            "  return;",
+            "}",
+            "let pending;",
+            "try {",
+            "  pending = (() => {",
+            "    return Z.run(tag, \"user.encryptScore\", { score: arg(\"Score\"), key: arg(\"Key\"), earnedAt: arg(\"EarnedAt\") }, (r) => { Z.encryptedScore = Z.str(r); });",
+            "  })();",
+            "} catch (err) {",
+            "  pending = Z.fail(tag, \"other\", String((err && err.message) || err));",
+            "}",
+            "Promise.resolve(pending).then(() => task.resolve(), () => task.resolve());"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Tag (names this request in On request completed / failed)",
+          "name": "Tag",
+          "type": "string"
+        },
+        {
+          "description": "Score",
+          "name": "Score",
+          "type": "expression"
+        },
+        {
+          "description": "Board encryption key",
+          "name": "Key",
+          "type": "string"
+        },
+        {
+          "description": "Earned at (Unix ms; 0 for a live run)",
+          "name": "EarnedAt",
+          "type": "expression",
+          "defaultValue": "0"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
       "description": "Deprecated name of Get purchase token.",
       "fullName": "Get payment provider user token (deprecated)",
       "functionType": "Action",
@@ -4053,6 +4231,103 @@
             "try {",
             "  pending = (() => {",
             "    return Z.run(tag, \"data.stopMirrorLocalStorage\", {});",
+            "  })();",
+            "} catch (err) {",
+            "  pending = Z.fail(tag, \"other\", String((err && err.message) || err));",
+            "}",
+            "Promise.resolve(pending).then(() => task.resolve(), () => task.resolve());"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Tag (names this request in On request completed / failed)",
+          "name": "Tag",
+          "type": "string"
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Restore IndexedDB databases from the cloud save and keep copying their writes into it (SDK 1.7.0). Databases: comma-separated names, empty for all. Run it right after Initialize and wait for On completed before the game reads its saves. Later failures raise On mirror error.",
+      "fullName": "Mirror IndexedDB to cloud save",
+      "functionType": "Action",
+      "group": "Cloud save",
+      "name": "MirrorIndexedDB",
+      "sentence": "Mirror IndexedDB databases _PARAM2_ (tag _PARAM1_)",
+      "async": true,
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const Z = gdjs._zokoGamesExtension;",
+            "const arg = (name) => eventsFunctionContext.getArgument(name);",
+            "const task = eventsFunctionContext.task;",
+            "const tag = String(arg(\"Tag\"));",
+            "if (!Z) {",
+            "  task.resolve();",
+            "  return;",
+            "}",
+            "let pending;",
+            "try {",
+            "  pending = (() => {",
+            "    const a = {};",
+            "    const list = String(arg(\"Databases\") || \"\").split(\",\").map((d) => d.trim()).filter((d) => d !== \"\");",
+            "    if (list.length) a.databases = list;",
+            "    return Z.run(tag, \"data.mirrorIndexedDB\", a);",
+            "  })();",
+            "} catch (err) {",
+            "  pending = Z.fail(tag, \"other\", String((err && err.message) || err));",
+            "}",
+            "Promise.resolve(pending).then(() => task.resolve(), () => task.resolve());"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "parameters": [
+        {
+          "description": "Tag (names this request in On request completed / failed)",
+          "name": "Tag",
+          "type": "string"
+        },
+        {
+          "description": "Comma-separated database names (empty = all)",
+          "name": "Databases",
+          "type": "string",
+          "optional": true
+        }
+      ],
+      "objectGroups": []
+    },
+    {
+      "description": "Stop copying IndexedDB writes.",
+      "fullName": "Stop mirroring IndexedDB",
+      "functionType": "Action",
+      "group": "Cloud save",
+      "name": "StopMirrorIndexedDB",
+      "sentence": "Stop mirroring IndexedDB (tag _PARAM1_)",
+      "async": true,
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const Z = gdjs._zokoGamesExtension;",
+            "const arg = (name) => eventsFunctionContext.getArgument(name);",
+            "const task = eventsFunctionContext.task;",
+            "const tag = String(arg(\"Tag\"));",
+            "if (!Z) {",
+            "  task.resolve();",
+            "  return;",
+            "}",
+            "let pending;",
+            "try {",
+            "  pending = (() => {",
+            "    return Z.run(tag, \"data.stopMirrorIndexedDB\", {});",
             "  })();",
             "} catch (err) {",
             "  pending = Z.fail(tag, \"other\", String((err && err.message) || err));",
@@ -5470,6 +5745,35 @@
             "const arg = (name) => eventsFunctionContext.getArgument(name);",
             "const value = Z ? (() => {",
             "  return Z.token || \"\";",
+            "})() : \"\";",
+            "eventsFunctionContext.returnValue = typeof value === \"string\" ? value : value === undefined || value === null ? \"\" : String(value);"
+          ],
+          "parameterObjects": "",
+          "useStrict": true,
+          "eventsSheetExpanded": false
+        }
+      ],
+      "expressionType": {
+        "type": "string"
+      },
+      "parameters": [],
+      "objectGroups": []
+    },
+    {
+      "description": "The payload of Encrypt score.",
+      "fullName": "Encrypted score",
+      "functionType": "StringExpression",
+      "group": "User",
+      "name": "EncryptedScore",
+      "sentence": "",
+      "events": [
+        {
+          "type": "BuiltinCommonInstructions::JsCode",
+          "inlineCode": [
+            "const Z = gdjs._zokoGamesExtension;",
+            "const arg = (name) => eventsFunctionContext.getArgument(name);",
+            "const value = Z ? (() => {",
+            "  return Z.encryptedScore || \"\";",
             "})() : \"\";",
             "eventsFunctionContext.returnValue = typeof value === \"string\" ? value : value === undefined || value === null ? \"\" : String(value);"
           ],
