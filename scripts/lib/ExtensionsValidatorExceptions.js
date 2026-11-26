@@ -123,6 +123,12 @@ const extensionsAllowedProperties = {
   },
   /** @type {Record<string, ExtensionAllowedProperties>}} */
   extensionSpecificAllowance: {
+    ZokoGames: {
+      gdjsAllowedProperties: ['_zokoGamesExtension'],
+      gdjsEvtToolsAllowedProperties: [],
+      runtimeSceneAllowedProperties: [],
+      javaScriptObjectAllowedProperties: [],
+    },
     A3F: {
       gdjsAllowedProperties: ['_A3F'],
       gdjsEvtToolsAllowedProperties: ['object', 'tween'],
