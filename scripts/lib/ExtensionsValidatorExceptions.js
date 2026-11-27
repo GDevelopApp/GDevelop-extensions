@@ -613,11 +613,16 @@ const extensionsAllowedProperties = {
       gdjsAllowedProperties: [
         '_stickerExtension',
         'registerObjectDeletedFromSceneCallback',
+        'registerRuntimeSceneGetSyncDataCallback',
+        'registerRuntimeSceneUpdateFromSyncDataCallback',
         'RuntimeObject',
         'RuntimeBehavior',
       ],
       gdjsEvtToolsAllowedProperties: ['object'],
-      runtimeSceneAllowedProperties: ['_stickerExtension'],
+      runtimeSceneAllowedProperties: [
+        '_stickerExtension',
+        'getAdhocListOfAllInstances',
+      ],
       javaScriptObjectAllowedProperties: [],
     },
     Terrain3D: {
